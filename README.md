@@ -11,6 +11,12 @@
 - Gonçalo Guerreiro | 69029 | gf.guerreiro@campus.fct.unl.pt
 - Tomás Silva | 68644 | tri.silva@campus.fct.unl.pt
 
+
+---
+
+### Links Uteis:
+- OneDrive ADC: <link>
+
 ---
 
 Atividade de Desenvolvimento curricular - Projeto | 2º Semestre - 2025/2026 | Faculdade de Ciências e Tecnologia da UNL
