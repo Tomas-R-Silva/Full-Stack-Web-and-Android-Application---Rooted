@@ -41,11 +41,13 @@ Funcionalidades a implementar (Obrigatórias):
 - Catalog and Advertisement of Activities and Events (Feed de Eventos)
 - Geolocation, Map Visualization, and Representation of Activities (Maps)
 - Communication and Social Features (Sistema de Amigos)
-- Incentivization Through Gamification and Impact Tracking
+- Incentivization Through Gamification and Impact Tracking (Sistema de Conquistas?,...)
 
 Funcionalidades a implementar (Opcionais):
 - Visualização de eventos estilo Dating App
 - Aplicação Mobile
+- Planeamento de Viagens
+- Comunicação com sistemas externos (ex: Google Calendar,...)
 
 Pequenas Funcionalidades:
 - Perfis com lista de categorias de preferência do utilizador
