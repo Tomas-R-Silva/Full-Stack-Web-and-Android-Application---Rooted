@@ -1,4 +1,4 @@
-# Sprint 1
+# Sprint 2
 
 ## Dates
 
@@ -6,13 +6,23 @@
 
 ## Scrum master
 
-    <Nome | Nr>
+Artur Supelnic | 67727
 
 ## Management info
 ### Sprint Planning Meeting: 
-    <Descrição da reunião>
+Organização das funcionalidades e implementações por cada operação:
+- Activity Management
+- Catalog Ad Activties
+- Communication Social
+- IAM Account Management
+- Incentivation Gamification
+- Map Geolocation
 
-*(This meeting is held at the beginning of the sprint to define the primary purpose and goal of the sprint. The Scrum team, comprising the product manager, development team, and Scrum Master, selects and commits to a set of product backlog items (PBIs) referred to as the sprint backlog. You can use this section to log what happened during this meeting. A few bullet points should be enough.)*
+Delineamento do conteúdo da apresentação ALFA:
+- Nome de Equipa
+- Nome do Projeto
+- O que faz o nosso projeto único
+- Funcionalidades
 
 ### Sprint Review Meeting: 
     <Descrição da reunião>
