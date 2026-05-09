@@ -6,7 +6,7 @@
 
 ### Elementos da Equipa:
 - Artur Supelnic | 67727 | a.supelnic@campus.fct.unl.pt
-- Artur Santos | 67933 | <email>
+- Artur Santos | 67933 | ahc.santos@campus.fct.unl.pt
 - Eduardo Azeitona | 65265 | <email>
 - Gonçalo Guerreiro | 69029 | gf.guerreiro@campus.fct.unl.pt
 - Tomás Silva | 68644 | tri.silva@campus.fct.unl.pt
