@@ -1,0 +1,15 @@
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/resources/UserResources.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/DeleteAccountRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/Token.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/User.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/error/Error.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ShowUsersRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ShowSessionsRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/CreateAccountRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ShowUserRoleRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/LoginRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/LogOutRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/error/Validator.java
+/home/tom-s-silva/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ChangeUserRole.java
