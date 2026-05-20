@@ -26,8 +26,9 @@ Delineamento do conteúdo da apresentação ALFA:
 
 ### Sprint Review Meeting: 
     <Descrição da reunião>
-
-*(Held at the end of the sprint, this meeting is attended by all stakeholders to demo the completed work and validate if the sprint goal has been met.)*
+    
+As funcionalidades e implementações de uma fase inicial foram decididas. (Pasta - Apresentação 15Mai)
+Para além disso foi organizado o conteúdo da apresentação ALFA e posteriormente esta foi apresentada.
 
 ### Sprint Retrospective Meeting: 
     <Descrição da reunião>
