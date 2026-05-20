@@ -3,6 +3,10 @@
 ## Running Dev Server
 
 ```
+cd ./Projeto_Ind_ADC/frontend
+```
+
+```
 npm run dev
 ```
 
