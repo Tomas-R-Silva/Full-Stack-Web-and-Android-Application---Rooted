@@ -1,19 +1,21 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-public class LoginRequest {
-
-    private User input;
-
+public class LoginRequest extends AbstractShortUserRequest<LoginRequest.LoginRequestInput>{
+    public LoginRequest() {}
     
-    public LoginRequest() {
-    }
+    public class LoginRequestInput extends ShortUser{
 
-    public User getInput() {
-        return input;
-    }
+    	private String password;
+    	
+    	public LoginRequestInput() {}
+    	
+        public String getPassword() {
+            return password;
+        }
 
-    public void setInput(User input) {
-        this.input = input;
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
     }
-    
 }

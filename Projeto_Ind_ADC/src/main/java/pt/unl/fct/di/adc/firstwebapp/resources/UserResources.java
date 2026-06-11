@@ -1,94 +1,80 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
+import java.util.logging.Logger;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
+import com.google.cloud.Timestamp;
+import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.DatastoreOptions;
+import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.Query;
+import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StructuredQuery;
+import com.google.cloud.datastore.Transaction;
+
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;   // <-- THIS ONE
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
+import pt.unl.fct.di.adc.firstwebapp.error.Error;
+import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+import pt.unl.fct.di.adc.firstwebapp.error.Validator;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest.PasswordInput;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
+import pt.unl.fct.di.adc.firstwebapp.model.CreateAccountRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.DeleteAccountRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.LogOutRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
+import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
+import pt.unl.fct.di.adc.firstwebapp.model.ShortUser;
 import pt.unl.fct.di.adc.firstwebapp.model.ShowSessionsRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ShowUsersRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.Token;
 import pt.unl.fct.di.adc.firstwebapp.model.User;
 import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
-import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole;
-import pt.unl.fct.di.adc.firstwebapp.model.CreateAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.DeleteAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.LogOutRequest;
-import pt.unl.fct.di.adc.firstwebapp.error.Error;
-import pt.unl.fct.di.adc.firstwebapp.error.Validator;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.logging.Logger;
-import org.apache.commons.codec.digest.DigestUtils;
-
-import com.google.gson.Gson;
-import com.google.cloud.Timestamp;
-import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.Query;
-import com.google.cloud.datastore.QueryResults;
-import com.google.cloud.datastore.StructuredQuery;
-import com.google.cloud.datastore.Entity;
-import com.google.cloud.datastore.Datastore;
-import com.google.cloud.datastore.Transaction;
-import com.google.cloud.datastore.DatastoreOptions;
-
-import jakarta.inject.Singleton;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-import jakarta.ws.rs.Produces;   // <-- THIS ONE
-import jakarta.ws.rs.core.MediaType;
 
 @Path("/")
 public class UserResources{
 
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
-        .setProjectId("adc-ind")
-        .build()
-        .getService();
+			.setProjectId("adc-ind")
+			.build()
+			.getService();
 
-    private static Logger Log = Logger.getLogger(UserResources.class.getName());
-	private static Error error = new Error();
+	private static Logger Log = Logger.getLogger(UserResources.class.getName());
 
-
-
-	public UserResources() {
-	}
+	public UserResources() {}
 
 	@POST
-    @Path("/createaccount")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Path("/createaccount")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response createAccount(CreateAccountRequest request) {
-
 		Transaction txn = datastore.newTransaction();
-
 		try {
-			
-		User user = request.input;
-
-		Log.info("Attempt to register user: " + user.getUsername());
-
-		if (!user.userValidation()) {
-			return error.invalid_input();		
-		}
+			User user = request.getInput();
+			Log.info("Attempt to register user: " + user.getUsername());
+			if (!user.userValidation())
+				return Error.invalid_input();		
 
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
-
 			Entity existingUser = txn.get(userKey);
 
-			if (existingUser != null) {
-				txn.rollback();
-				return error.user_already_exists();
-			}
+			if (existingUser != null) ErrorException.trow(9901);
 
 			Entity newUser = Entity.newBuilder(userKey)
 					.set("user_name", user.getUsername())
@@ -103,188 +89,109 @@ public class UserResources{
 			txn.commit();
 
 			Log.info("User registered: " + user.getUsername());
-
-			return Response.ok()
-					.entity(Map.of(
-							"status", "success",
-							"data", Map.of(
-									"username", user.getUsername(),
-									"role", user.getRole().name()
-							)
-					))
-					.build();
+			return buildresponse(Map.of(
+					"username", user.getUsername(),
+					"role", user.getRole().name()));
 
 		} catch (Exception e) {
 			txn.rollback();
-
 			Log.severe("Error registering user: " + e.getMessage());
-
-			return Response.status(Status.OK)
-					.entity(Map.of(
-							"status", "9906",
-							"data", "INVALID_INPUT"
-					))
-					.build();
+			return Error.fromexception(e);
 		}
 	}
 
 	@POST
-    @Path("/login")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Path("/login")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response userLogin(LoginRequest request) {
-		User userToLog = request.getInput();
+		try {
+			LoginRequestInput userToLog = request.getInput();
 
-		Log.info("Attempt to create userLogin: " + userToLog.getUsername());
+			Log.info("Attempt to create userLogin: " + userToLog.getUsername());
 
-		Key userKey = datastore.newKeyFactory().setKind("User").newKey(userToLog.getUsername());
-		Entity user = datastore.get(userKey);
+			Entity user = getUser(userToLog);
 
-		Response err = Validator.userNotFound(new Entity [] {user});
-		if(err != null){ return err;}
+			Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
 
+			String tokenID = UUID.randomUUID().toString();
+			String userName = user.getKey().getName();
+			Role role = Role.valueof(user.getString("user_role"));
+			Token token = new Token(tokenID, userName, role);
 
-		err = Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
-		if(err != null){ return err;}
+			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(tokenID);
 
-		String tokenID = UUID.randomUUID().toString();
-		String userName = user.getKey().getName();
-		Role role = Role.valueOf(user.getString("user_role"));
-		Token token = new Token(tokenID, userName, role);
+			Entity sessionEntity = Entity.newBuilder(sessionKey)
+					.set("token_id", token.getTokenId())
+					.set("user_name", token.getUsername())
+					.set("role", token.getRole().toString())
+					.set("issued_at", token.getIssuedAt())
+					.set("expires_at", token.getExpiresAt()) // se quiseres expiração
+					.build();
 
-		Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(tokenID);
+			datastore.put(sessionEntity);
+			return buildresponse(Map.of("token", Map.of(
+					"tokenId", tokenID,
+					"username", user.getString("user_name"),
+					"role", role.toString(),
+					"issuedAt", token.getIssuedAt(),
+					"expiresAt", token.getExpiresAt()
+					)));
+		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
 
-		Entity sessionEntity = Entity.newBuilder(sessionKey)
-						.set("token_id", token.getTokenId())
-        				.set("user_name", token.getUsername())
-        				.set("role", token.getRole().toString())
-						.set("issued_at", token.getIssuedAt())
-        				.set("expires_at", token.getExpiresAt()) // se quiseres expiração
-        				.build();
-
-		datastore.put(sessionEntity);
-			return Response.ok()
-			.entity(Map.of(
-				"status", "success",
-				"data", Map.of(
-					"token", Map.of(
-						"tokenId", tokenID,
-						"username", user.getString("user_name"),
-						"role", role.toString(),
-						"issuedAt", token.getIssuedAt(),
-						"expiresAt", token.getExpiresAt()
-					)
-				)
-			))
-			.build();
 	}
 
 	@POST
 	@Path("/showusers")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response showUsers(ShowUsersRequest request) {
+		try {
+			Token tokenJson = request.getToken();
+			getToken(tokenJson);
 
-		Token tokenJson = request.getToken();
-		Key tokenKey = datastore.newKeyFactory().setKind("Session").newKey(tokenJson.getTokenId());
+			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN, Role.BOFFICER});
 
-		Entity token = datastore.get(tokenKey);
-		
+			Query<Entity> query = Query.newEntityQueryBuilder().setKind("User").build();
 
-		Response err = Validator.invalidToken(token, tokenJson.getUsername());
-		if(err != null){ return err;}
+			QueryResults<Entity> results = datastore.run(query);
 
-		Role role = Role.valueOf(token.getString("role"));
+			List<Map<String, String>> users = new ArrayList<>();
 
-		err = Validator.unauthorized(role, new Role []{Role.ADMIN, Role.BOFFICER});
-		if(err != null){ return err;}
-		
-
-		err = Validator.tokenExpired(token);
-		if (err != null) {
-			datastore.delete(tokenKey);
-			return err;
+			while (results.hasNext()) {
+				Entity e = results.next();
+				users.add(Map.of(
+						"username", e.getString("user_name"),
+						"role", e.getString("user_role")
+						));
+			}
+			return buildresponse(Map.of("users", users));
+		}catch(Exception e) {
+			return Error.fromexception(e);
 		}
-
-
-		
-		 Query<Entity> query = Query.newEntityQueryBuilder()
-        .setKind("User")
-        .build();
-
-		QueryResults<Entity> results = datastore.run(query);
-
-		List<Map<String, String>> users = new ArrayList<>();
-
-		while (results.hasNext()) {
-			Entity e = results.next();
-
-			users.add(Map.of(
-				"username", e.getString("user_name"),
-				"role", e.getString("user_role")
-			));
-		}
-
-		return Response.ok(
-			Map.of(
-				"status", "success",
-				"data", Map.of("users", users)
-			)
-		).build();
-
 	}
 
 	@POST
 	@Path("/deleteaccount")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteAccount(DeleteAccountRequest request){
-		User userJson = request.getInput();
-		Token tokenJson = request.getToken();
+		try {
+			ShortUser userJson = request.getInput();
+			Token tokenJson = request.getToken();
+			Key userKeyToBeDeleted = getUser(userJson).getKey();	
+			getToken(tokenJson);
 
-		Key userKeyToBeDeleted = datastore.newKeyFactory().setKind("User").newKey(userJson.getUsername());
-		Entity userToBeDeleted = datastore.get(userKeyToBeDeleted);
+			Validator.unauthorized(tokenJson, new Role []{Role.ADMIN});
 
-
-		Key userKey = datastore.newKeyFactory().setKind("User").newKey(tokenJson.getUsername());
-		Entity user = datastore.get(userKey);
-		
-		Key tokenKey = datastore.newKeyFactory()
-		.setKind("Session")
-		.newKey(tokenJson.getTokenId());
-
-		Entity token = datastore.get(tokenKey);
-	
-		Response err = Validator.userNotFound(new Entity[]{user, userToBeDeleted});
-    	if (err != null) return err;
-
-		err = Validator.invalidToken(token, tokenJson.getUsername());
-		if(err != null){ return err;}
-
-		err = Validator.tokenExpired(token);
-		if(err != null){ 
-			datastore.delete(tokenKey);
-			return err;
+			datastore.delete(userKeyToBeDeleted);
+			deleteAllSessionsForUser(userJson.getUsername());
+			return buildresponse(Map.of("message", "Account deleted successfully"));
+		}catch(Exception e) {
+			return Error.fromexception(e);
 		}
-
-		Role role = Role.valueOf(user.getString("user_role"));
-		err = Validator.unauthorized(role ,new Role []{Role.ADMIN});
-		if (err != null) return err;
-
-		datastore.delete(userKeyToBeDeleted);
-		deleteAllSessionsForUser(userJson.getUsername());
-
-		return Response.ok(
-			Map.of(
-				"status", "success",
-				"data", Map.of("message", "Account deleted successfully")
-			)
-		).build();
-
-	}
-
-	public Response modifyAccountAttributes(ModAccountRequest request){
-		return null;
 	}
 
 	@POST
@@ -292,355 +199,162 @@ public class UserResources{
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response modifyAccount(ModAccountRequest request) {
+		try {
+			ModAccountRequestInput input = request.getInput();
+			Attributes attributes = request.getInput().getAttributes();
+			String username = input.getUsername();
+			Token tokenJson = request.getToken();
 
-		ModAccountRequest.Input input = request.getInput();
-		ModAccountRequest.Attributes attributes = request.getInput().getAttributes();
-		String username = input.getUsername();
-		Token tokenJson = request.getToken();
+			Entity user = getUser(username);
+			Entity token = getToken(tokenJson);
 
-		Key userKey = datastore.newKeyFactory().setKind("User").newKey(username);
-		Entity user = datastore.get(userKey);
+			if (!token.getString("user_name").equals(username)) 
+				Validator.unauthorized(tokenJson, new Role[]{Role.BOFFICER,Role.ADMIN});
 
-		Key tokenKey = datastore.newKeyFactory().setKind("Session").newKey(tokenJson.getTokenId());
-		Entity token = datastore.get(tokenKey);
+			Entity updatedUser = Entity.newBuilder(user)
+					.set("user_address", attributes.getAddress())
+					.set("user_phone", attributes.getPhone())
+					.build();
 
-		Response err = Validator.userNotFound(new Entity[]{user});
-		if (err != null) return err;
-
-		err = Validator.invalidToken(token, tokenJson.getUsername());
-		if (err != null) return err;
-
-		err = Validator.tokenExpired(token);
-		if (err != null) {
-			datastore.delete(tokenKey);
-			return err;
+			datastore.put(updatedUser);
+			return buildresponse(Map.of("message", "Updated successfully"));
+		}catch(Exception e) {
+			return Error.fromexception(e);
 		}
-
-		String requesterUsername = token.getString("user_name");
-		Role requesterRole = Role.valueOf(token.getString("role"));
-		Role targetRole = Role.valueOf(user.getString("user_role"));
-
-		if (requesterRole == Role.USER && !requesterUsername.equals(username)) {
-			return Validator.unauthorized(requesterRole, new Role[]{Role.USER});
-		}
-
-		if (requesterRole == Role.BOFFICER &&
-			(!requesterUsername.equals(username) || targetRole == Role.USER)) {
-			return Validator.unauthorized(requesterRole, new Role[]{Role.BOFFICER});
-		}
-
-		Entity updatedUser = Entity.newBuilder(user)
-				.set("user_address", attributes.getAddress())
-				.set("user_phone", attributes.getPhone())
-				.build();
-
-		datastore.put(updatedUser);
-
-		return Response.ok(Map.of(
-				"status", "success",
-				"data", Map.of("message", "Updated successfully")
-		)).build();
 	}
 
 	@POST
 	@Path("/showuserrole")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response showUserRole (ShowUsersRequest request){
 		try{
-			User userJson = request.getInput();
+			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
-
-			Key userKey = datastore.newKeyFactory()
-			.setKind("User")
-			.newKey(userJson.getUsername());
-
-			Entity user = datastore.get(userKey);
-
-			Response err = Validator.userNotFound(new Entity []{user});
-			if(err != null){ return err;}
-
-			Key tokenKey = datastore.newKeyFactory()
-			.setKind("Session")
-			.newKey(tokenJson.getTokenId());
-
-			Entity token = datastore.get(tokenKey);
-
-
-			err = Validator.invalidToken(token,tokenJson.getUsername());
-			if(err != null){ return err;}
-
-			err = Validator.tokenExpired(token);
-			if(err != null){ 
-				datastore.delete(tokenKey);
-				return err;
-			}
-
-
-			Role role = Role.valueOf(token.getString("role"));
-			err = Validator.unauthorized(role, new Role [] {Role.ADMIN, Role.BOFFICER});
-			if(err != null){return err;}
-
-			return Response.ok()
-					.entity(Map.of(
-							"status", "success",
-							"data", Map.of(
-									"username", user.getString("user_name"),
-									"role", user.getString("user_role")
-							)
-					))
-					.build();
-
+			
+			Entity user = getUser(userJson.getUsername());
+			getToken(tokenJson);
+			
+			Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN, Role.BOFFICER});
+			return buildresponse(Map.of(
+					"username", user.getString("user_name"),
+					"role", user.getString("user_role")
+					));
 		} catch (Exception e) {
-			return Validator.forbidden();
+			return Error.fromexception(e);
 		}
 	}
 
 	@POST
 	@Path("/logout")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-	public Response logOut(LogOutRequest request){ // Não tem erro USER_NOT_FOUND ou seja user mandado existe sempre
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response logOut(LogOutRequest request){
 		try{
-			User userJson = request.getInput();
+			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
 
-			Key userKey = datastore.newKeyFactory()
-			.setKind("User")
-			.newKey(userJson.getUsername());
+			Entity user = getUser(userJson.getUsername());
+			Entity token = getToken(tokenJson);
 
-			Entity user = datastore.get(userKey);
+			if(!token.getString("user_name").equals(user.getString("user_name")))
+				Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN});
 
-			Key tokenKey = datastore.newKeyFactory()
-			.setKind("Session")
-			.newKey(tokenJson.getTokenId());
-
-			Entity token = datastore.get(tokenKey);
-
-
-			Response err = Validator.invalidToken(token,tokenJson.getUsername());
-			if(err != null){ return err;}
-
-			String sessionOwner = token.getString("user_name");
-			String requester = user.getString("user_name");
-
-
-			err = Validator.tokenExpired(token);
-
-			if(err != null){ 
-				datastore.delete(tokenKey);
-				return err;
-			}
-
-
-			Role role = Role.valueOf(user.getString("user_role"));
-
-			if (!sessionOwner.equals(requester) && role != Role.ADMIN) {
-				err = Validator.unauthorized(role, new Role[]{Role.ADMIN});
-				if(err != null){ return err;}
-			}
-
-			datastore.delete(tokenKey);
-			
-
+			deleteAllSessionsForUser(userJson.getUsername());
+			return buildresponse(Map.of("message", "Logout successful"));
 		} catch (Exception e) {
-			return Validator.forbidden();
-		}
-		return Response.ok(Map.of(
-			"status","success",
-			"data", Map.of("message", "Logout successful")
-		)
-		).build();
+			return Error.fromexception(e);
+		}	
 	}
 
 	@POST
 	@Path("/changeuserrole")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response changeUserRole(ChangeUserRole request) {
 		try{
-			ChangeUserRole.Input input = request.getInput();
+			ChangeUserRoleInput input = request.getInput();
 			Token tokenJson = request.getToken();
 
-			Key userKey = datastore.newKeyFactory()
-			.setKind("User")
-			.newKey(input.getUsername());
+			Entity user = getUser(input.getUsername());
+			getToken(tokenJson);
 
-			Entity user = datastore.get(userKey);
-
-			Response err = Validator.userNotFound(new Entity []{user});
-			if(err != null){ return err;}
-
-			Key tokenKey = datastore.newKeyFactory()
-			.setKind("Session")
-			.newKey(tokenJson.getTokenId());
-
-			Entity token = datastore.get(tokenKey);
-
-
-			err = Validator.invalidToken(token,tokenJson.getUsername());
-			if(err != null){ return err;}
-
-			err = Validator.tokenExpired(token);
-			if(err != null){ 
-				datastore.delete(tokenKey);
-				return err;
-			}
-
-
-			Role role = Role.valueOf(token.getString("role"));
-			err = Validator.unauthorized(role, new Role [] {Role.ADMIN});
-			if(err != null){return err;}
-
-			Role newRole = Role.valueOf(input.getNewrole());
-
+			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+			Role newRole = Role.valueof(input.getNewrole());
 			Entity updatedUser = Entity.newBuilder(user)
-			.set("user_role", newRole.name())
-			.build();
+					.set("user_role", newRole.name())
+					.build();
 
 			datastore.put(updatedUser);
 			updateUserTokensRole(input.getUsername(),input.getNewrole());
-
-			return Response.ok()
-					.entity(Map.of(
-							"status", "success",
-							"data", Map.of(
-							"message", "Role updated successfully"
-							)
-					))
-					.build();
-
+			return buildresponse(Map.of("message", "Role updated successfully"));
 		} catch (Exception e) {
-			return Validator.forbidden();
+			return Error.fromexception(e);
 		}
 	}
 
 	@POST
 	@Path("/changeuserpwd")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response changeUserPassword(ChangeUserPasswordRequest request) {
 		try{
-			ChangeUserPasswordRequest.PasswordInput input = request.getInput();
+			PasswordInput input = request.getInput();
 			Token tokenJson = request.getToken();
 
-			Key userKey = datastore.newKeyFactory()
-			.setKind("User")
-			.newKey(input.getUsername());
+			Entity user = getUser(input.getUsername());
+			Entity token = getToken(tokenJson);
 
-			Entity user = datastore.get(userKey);
-
-			Response err = Validator.userNotFound(new Entity []{user});
-			if(err != null){ return err;}
-
-			Key tokenKey = datastore.newKeyFactory()
-			.setKind("Session")
-			.newKey(tokenJson.getTokenId());
-
-			Entity token = datastore.get(tokenKey);
-
-
-			err = Validator.invalidToken(token,tokenJson.getUsername());
-			if(err != null){ return err;}
-
-			err = Validator.tokenExpired(token);
-			if(err != null){ 
-				datastore.delete(tokenKey);
-				return err;
-			}
-
-			if(!token.getString("user_name").equals(user.getString("user_name"))){
-				Role role = Role.valueOf(token.getString("role"));
-				err = Validator.unauthorized(role, new Role [] {Role.ADMIN});
-				if(err != null){return err;}
-			}
+			if(!token.getString("user_name").equals(user.getString("user_name")))
+				Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
 
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
-			 if (!oldPwdHash.equals(user.getString("user_pwd"))) {
-				return Validator.forbidden();
-			}
+			if (!oldPwdHash.equals(user.getString("user_pwd"))) 
+				ErrorException.trow(9907);
 
 			Entity updatedUser = Entity.newBuilder(user)
-                .set("user_pwd", DigestUtils.sha512Hex(input.getNewpassword()))
-                .build();
-        	datastore.put(updatedUser);
-
-			return Response.ok()
-					.entity(Map.of(
-							"status", "success",
-							"data", Map.of("message", "Password changed successfully")
-							)
-					)
+					.set("user_pwd", DigestUtils.sha512Hex(input.getNewpassword()))
 					.build();
+			datastore.put(updatedUser);
+			return buildresponse(Map.of("message", "Password changed successfully"));
 
 		} catch (Exception e) {
-			return Validator.forbidden();
+			return Error.fromexception(e);
 		}
 	}
 
-
 	@POST
 	@Path("/showauthsessions")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response showAuthsessions (ShowSessionsRequest request){
 		try{
 			Token tokenJson = request.getToken();
-
-			Key tokenKey = datastore.newKeyFactory()
-			.setKind("Session")
-			.newKey(tokenJson.getTokenId());
-
-			Entity token = datastore.get(tokenKey);
-
-
-			Response err = Validator.invalidToken(token,tokenJson.getUsername());
-			if(err != null){ return err;}
-
-			err = Validator.tokenExpired(token);
-			if(err != null){ 
-				datastore.delete(tokenKey);
-				return err;
-			}
-
-			Role role = Role.valueOf(token.getString("role"));
-			err = Validator.unauthorized(role, new Role [] {Role.ADMIN});
-			if(err != null){return err;}
-
-			List<Map<String, Object>> allSessions = getAllSessions();
-
-			return Response.ok(
-			Map.of(
-				"status", "success",
-				"data", Map.of("tokens", allSessions)
-			)
-		).build();
+			getToken(tokenJson);
+			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+			return buildresponse(Map.of("tokens", getAllSessions()));
 
 		} catch (Exception e){
-			return Validator.forbidden();
+			return Error.fromexception(e);
 		}
 	}	
 
-
 	private List<Map<String, Object>> getAllSessions (){
-		
 		Query<Entity> query = Query.newEntityQueryBuilder()
-		.setKind("Session")
-		.build();
+				.setKind("Session")
+				.build();
 
 		QueryResults<Entity> sessions = datastore.run(query);
 		List<Map<String, Object>> tokensOutput = new ArrayList<>();
 
 		while(sessions.hasNext()){
 			Entity session = sessions.next();
-
 			tokensOutput.add(Map.of(
-				"tokenID", session.getString("token_id"),
-				"username", session.getString("user_name"),
-				"role", session.getString("role"),
-				"expiresAt", session.getLong("expires_at")
-			));
-			
+					"tokenID", session.getString("token_id"),
+					"username", session.getString("user_name"),
+					"role", session.getString("role"),
+					"expiresAt", session.getLong("expires_at")
+					));
 		}
 
 		return tokensOutput;
@@ -648,11 +362,10 @@ public class UserResources{
 	}
 
 	private void deleteAllSessionsForUser(String username) {
-
 		Query<Entity> query = Query.newEntityQueryBuilder()
-			.setKind("Session")
-			.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
-			.build();
+				.setKind("Session")
+				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
+				.build();
 
 		QueryResults<Entity> sessions = datastore.run(query);
 
@@ -663,7 +376,6 @@ public class UserResources{
 	}
 
 	private void updateUserTokensRole(String username, String newRole) {
-
 		Query<Entity> query = Query.newEntityQueryBuilder()
 				.setKind("Session")
 				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
@@ -671,7 +383,7 @@ public class UserResources{
 
 		QueryResults<Entity> sessions = datastore.run(query);
 
-		List<Entity> updatedSessions = new ArrayList<>();
+		//List<Entity> updatedSessions = new ArrayList<>();
 
 		while (sessions.hasNext()) {
 			Entity session = sessions.next();
@@ -681,5 +393,37 @@ public class UserResources{
 			datastore.put(updated);
 		}
 	}
+
+	private static Response buildresponse(Map<String,Object> map) {
+		return ResponceBuilder.constructor("success",map);
+	}
+
+	private Entity getUser(ShortUser user) throws ErrorException{
+		return getUser(user.getUsername());
+	}
+
+	private Entity getUser(String username) throws ErrorException {
+		Key userKey = datastore.newKeyFactory().setKind("User").newKey(username);
+		Entity user = datastore.get(userKey);
+		Validator.userNotFound(new Entity[]{user});
+		return user;
+	}
+
+	private Entity getToken(Token tokenJson) throws ErrorException {
+		try {
+			Key tokenKey = datastore.newKeyFactory().setKind("Session").newKey(tokenJson.getTokenId());
+			Entity token = datastore.get(tokenKey);
+			Validator.invalidToken(token, tokenJson);
+			Validator.tokenExpired(token, tokenKey);
+			return token;
+		}catch(ErrorException e) {
+			datastore.delete(e.getKey());
+			throw e;
+		}
+
+	}
+
+
+
 
 }

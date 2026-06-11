@@ -1,29 +1,18 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import com.google.cloud.Timestamp;
-
-
-import com.google.appengine.repackaged.io.opencensus.metrics.export.TimeSeries;
-
 import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 
-public class Token {
+public class Token extends ShortUser{
 
     public static final long EXPIRATION_TIME = 15 * 60;
     
     private String tokenId;
-    private String username;
     private Role role;
-    private long  issuedAt;
+    private long issuedAt;
     private long expiresAt;
 
     public Token(){
-        this.tokenId = null;
-        this.username = null;
-        this.role = null;
-        long now = System.currentTimeMillis() / 1000; // segundos
-        this.issuedAt = now;
-        this.expiresAt = now + EXPIRATION_TIME;
+        this(null,null,null);
     }
 
     public Token(String tokenID, String username,Role role){
@@ -33,16 +22,11 @@ public class Token {
         long now = System.currentTimeMillis() / 1000; // segundos
         this.issuedAt = now;
         this.expiresAt = now + EXPIRATION_TIME;
-        
     }
 
 
     public String getTokenId(){
         return tokenId;
-    }
-
-    public String getUsername(){
-        return username;
     }
 
     public Role getRole(){
@@ -63,10 +47,6 @@ public class Token {
 
     public void setRole (Role role){
         this.role = role;
-    }
-
-    public void setUsername (String username){
-        this.username = username;
     }
 
     public void setIssuedAt (long issuedAt){

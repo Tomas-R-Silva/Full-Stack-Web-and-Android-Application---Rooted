@@ -1,71 +1,71 @@
 package pt.unl.fct.di.adc.firstwebapp.error;
-import java.util.Map;
-
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 
 public class Error {
 
-    private final int OK = 200;
-    
-    public Error(){}
+	private static final String INVALID_INPUT="INVALID_INPUT",
+			USER_ALREADY_EXISTS="USER_ALREADY_EXISTS",
+			TOKEN_EXPIRED="TOKEN_EXPIRED",
+			UNAUTHORIZED="UNAUTHORIZED",
+			USER_NOT_FOUND="USER_NOT_FOUND",
+			INVALID_CREDENCIALS="INVALID_CREDENCIALS",
+			FORBIDDEN="FORBIDDEN",
+			INVALID_TOKEN="INVALID_TOKEN";
 
-    public Response invalid_input(){
-        return Response.ok(OK).entity(Map.of("status", "9906","data", "INVALID_INPUT")).build();
+	public static Response invalid_input(){
+		return errorswitch(9906);
 	}
 
-    public Response user_already_exists(){
-        return Response.ok(OK).entity(Map.of("status", "9901","data", "USER_ALREADY_EXISTS")).build();
+	public static Response user_already_exists(){
+		return errorswitch(9901);
 	}
 
-    public Response token_expired(){
-        return Response.ok(Status.OK)
-					.entity(Map.of(
-						"status", "9904",
-						"data" , "TOKEN_EXPIRED"
-				  )).build();
-    }
+	public static Response token_expired(){
+		return errorswitch(9904);
+	}
 
-    public Response unauthorized(){
-        return Response.ok(OK)
-					.entity(Map.of(
-						"status", "9905",
-						"data" , "UNAUTHORIZED"
-				  )).build();
-    }
+	public static Response unauthorized(){
+		return errorswitch(9905);
+	}
 
-    public Response user_not_found(){
-        return Response.ok(OK)
-				  .entity(Map.of(
-					"status", "9902",
-					"data" , "USER_NOT_FOUND"
-				  )).build();
-    }
+	public static Response user_not_found(){
+		return errorswitch(9902);
+	}
 
-    public Response invalid_credencials(){
-        return Response.ok(OK)
-				   .entity(Map.of(
-					"status", "9900",
-					"data" , "INVALID_CREDENCIALS"
-				   )).build();
-    }
+	public static Response invalid_credencials(){
+		return errorswitch(9900);
+	}
 
-    public Response forbidden(){
-        return Response.ok(OK)
-				   .entity(Map.of(
-					"status", "9907",
-					"data" , "FORBIDDEN"
-				   )).build();
-    }
+	public static Response forbidden(){
+		return errorswitch(9907);
+	}
 
-    public Response invalid_token(){
-        return Response.ok(OK)
-				   .entity(Map.of(
-					"status", "9903",
-					"data" , "INVALID_TOKEN"
-				   )).build();
-    }
+	public static Response invalid_token(){
+		return errorswitch(9903);
+	}
 
- }
+	private static Response errorswitch(int status){
+		String data;
+		switch(status){
+		case 9900->data=INVALID_CREDENCIALS;
+		case 9901->data=USER_ALREADY_EXISTS;
+		case 9902->data=USER_NOT_FOUND;
+		case 9903->data=INVALID_TOKEN;
+		case 9904->data=TOKEN_EXPIRED;
+		case 9905->data=UNAUTHORIZED;
+		case 9906->data=INVALID_INPUT;
+		case 9907->data=FORBIDDEN;
+		default->data="";
+		}
+		return ResponceBuilder.constructor(String.format("%d",status),data);
+	}
+
+	public static Response fromexception(Exception e) {
+		if(e instanceof ErrorException)
+			return errorswitch(((ErrorException)e).getStatus());
+		return errorswitch(9907);
+	}	
+}
 
 
