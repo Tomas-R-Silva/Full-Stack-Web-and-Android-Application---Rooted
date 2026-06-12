@@ -3,11 +3,12 @@ package pt.unl.fct.di.adc.firstwebapp.resources;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
@@ -17,6 +18,8 @@ import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.Transaction;
+
+import pt.unl.fct.di.adc.firstwebapp.Utilities.JwtUtils;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -114,28 +117,31 @@ public class UserResources{
 
 			Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
 
-			String tokenID = UUID.randomUUID().toString();
 			String userName = user.getKey().getName();
 			Role role = Role.valueof(user.getString("user_role"));
-			Token token = new Token(tokenID, userName, role);
 
-			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(tokenID);
+			String jwtString = JwtUtils.generate(userName, role);
+			DecodedJWT decoded = JwtUtils.decodeUnsafe(jwtString);
+			String jti = decoded.getId();
+			long issuedAt = decoded.getIssuedAt().getTime() / 1000L;
+			long expiresAt = decoded.getExpiresAt().getTime() / 1000L;
 
+			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jti);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
-					.set("token_id", token.getTokenId())
-					.set("user_name", token.getUsername())
-					.set("role", token.getRole().toString())
-					.set("issued_at", token.getIssuedAt())
-					.set("expires_at", token.getExpiresAt()) // se quiseres expiração
+					.set("jti", jti)
+					.set("user_name", userName)
+					.set("role", role.name())
+					.set("issued_at", issuedAt)
+					.set("expires_at", expiresAt)
 					.build();
 
 			datastore.put(sessionEntity);
 			return buildresponse(Map.of("token", Map.of(
-					"tokenId", tokenID,
-					"username", user.getString("user_name"),
+					"tokenId", jwtString,
+					"username", userName,
 					"role", role.toString(),
-					"issuedAt", token.getIssuedAt(),
-					"expiresAt", token.getExpiresAt()
+					"issuedAt", issuedAt,
+					"expiresAt", expiresAt
 					)));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -411,16 +417,31 @@ public class UserResources{
 
 	private Entity getToken(Token tokenJson) throws ErrorException {
 		try {
-			Key tokenKey = datastore.newKeyFactory().setKind("Session").newKey(tokenJson.getTokenId());
-			Entity token = datastore.get(tokenKey);
-			Validator.invalidToken(token, tokenJson);
-			Validator.tokenExpired(token, tokenKey);
-			return token;
-		}catch(ErrorException e) {
-			datastore.delete(e.getKey());
-			throw e;
-		}
+			DecodedJWT decoded = JwtUtils.verify(tokenJson.getTokenId());
 
+			// Populate tokenJson from JWT claims so callers can use tokenJson.getRole()/getUsername()
+			tokenJson.setUsername(decoded.getSubject());
+			tokenJson.setRole(Role.valueof(decoded.getClaim("role").asString()));
+
+			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(decoded.getId());
+			Entity session = datastore.get(sessionKey);
+			if (session == null) ErrorException.trow(9903); // session revoked (logged out)
+			return session;
+
+		} catch (TokenExpiredException e) {
+			// Clean up expired session
+			try {
+				String jti = JwtUtils.decodeUnsafe(tokenJson.getTokenId()).getId();
+				datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
+			} catch (Exception ignored) {}
+			ErrorException.trow(9904);
+			return null;
+		} catch (ErrorException e) {
+			throw e;
+		} catch (Exception e) {
+			ErrorException.trow(9903);
+			return null;
+		}
 	}
 
 
