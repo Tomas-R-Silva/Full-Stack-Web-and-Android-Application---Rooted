@@ -292,7 +292,8 @@ public class UserResources{
 					.build();
 
 			datastore.put(updatedUser);
-			updateUserTokensRole(input.getUsername(),input.getNewrole());
+			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
+			deleteAllSessionsForUser(input.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
