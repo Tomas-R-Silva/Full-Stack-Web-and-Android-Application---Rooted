@@ -28,7 +28,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import pt.unl.fct.di.adc.firstwebapp.Utilities.JwtUtils;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
@@ -45,7 +45,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 public class EventResources {
 
     private static final Datastore datastore = DatastoreOptions.newBuilder()
-            .setProjectId("adc-ind")
+            .setProjectId("adc-final")
             .build()
             .getService();
 
@@ -161,7 +161,7 @@ public class EventResources {
                     authenticated = true;
                     requesterRole = token.getRole();
                 } catch (ErrorException ignored) {
-                    // Token invalid — treat as unauthenticated
+                    // Token invalid  treat as unauthenticated
                 }
             }
 
@@ -481,7 +481,7 @@ public class EventResources {
         if (tokenJson == null || tokenJson.getTokenId() == null)
             ErrorException.trow(9903);
         try {
-            DecodedJWT decoded = JwtUtils.verify(tokenJson.getTokenId());
+            DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getTokenId());
             tokenJson.setUsername(decoded.getSubject());
             tokenJson.setRole(Role.valueof(decoded.getClaim("role").asString()));
 
@@ -492,7 +492,7 @@ public class EventResources {
             return tokenJson;
         } catch (TokenExpiredException e) {
             try {
-                String jti = JwtUtils.decodeUnsafe(tokenJson.getTokenId()).getId();
+                String jti = JWTToken.decodeUnsafe(tokenJson.getTokenId()).getId();
                 datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
             } catch (Exception ignored) {}
             ErrorException.trow(9904);

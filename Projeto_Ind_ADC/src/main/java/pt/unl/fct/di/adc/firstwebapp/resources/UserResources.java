@@ -19,14 +19,13 @@ import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.Transaction;
 
-import pt.unl.fct.di.adc.firstwebapp.Utilities.JwtUtils;
-
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
@@ -54,7 +53,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 public class UserResources{
 
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-ind")
+			.setProjectId("adc-final")
 			.build()
 			.getService();
 
@@ -120,8 +119,8 @@ public class UserResources{
 			String userName = user.getKey().getName();
 			Role role = Role.valueof(user.getString("user_role"));
 
-			String jwtString = JwtUtils.generate(userName, role);
-			DecodedJWT decoded = JwtUtils.decodeUnsafe(jwtString);
+			String jwtString = JWTToken.createJWT(userName, Map.of("role", role.name()));
+			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
 			String jti = decoded.getId();
 			long issuedAt = decoded.getIssuedAt().getTime() / 1000L;
 			long expiresAt = decoded.getExpiresAt().getTime() / 1000L;
@@ -357,7 +356,7 @@ public class UserResources{
 		while(sessions.hasNext()){
 			Entity session = sessions.next();
 			tokensOutput.add(Map.of(
-					"tokenID", session.getString("token_id"),
+					"tokenID", session.getString("jti"),
 					"username", session.getString("user_name"),
 					"role", session.getString("role"),
 					"expiresAt", session.getLong("expires_at")
@@ -418,7 +417,7 @@ public class UserResources{
 
 	private Entity getToken(Token tokenJson) throws ErrorException {
 		try {
-			DecodedJWT decoded = JwtUtils.verify(tokenJson.getTokenId());
+			DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getTokenId());
 
 			// Populate tokenJson from JWT claims so callers can use tokenJson.getRole()/getUsername()
 			tokenJson.setUsername(decoded.getSubject());
@@ -432,7 +431,7 @@ public class UserResources{
 		} catch (TokenExpiredException e) {
 			// Clean up expired session
 			try {
-				String jti = JwtUtils.decodeUnsafe(tokenJson.getTokenId()).getId();
+				String jti = JWTToken.decodeUnsafe(tokenJson.getTokenId()).getId();
 				datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
 			} catch (Exception ignored) {}
 			ErrorException.trow(9904);

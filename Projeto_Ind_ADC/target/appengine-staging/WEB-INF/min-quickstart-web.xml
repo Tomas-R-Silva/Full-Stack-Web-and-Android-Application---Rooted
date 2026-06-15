@@ -8,7 +8,7 @@
         <param-name>org.eclipse.jetty.containerInitializers</param-name>
             
         <param-value><![CDATA[
-    "ContainerInitializer{org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer,interested=[org.glassfish.jersey.jackson.internal.FilteringJacksonJaxbJsonProvider, pt.unl.fct.di.adc.firstwebapp.resources.UserResources, org.glassfish.jersey.server.wadl.internal.WadlResource, org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider, org.glassfish.jersey.server.ResourceConfig, org.glassfish.jersey.jackson.internal.DefaultJacksonJaxbJsonProvider, org.glassfish.jersey.server.ResourceConfig$WrappingResourceConfig, org.glassfish.jersey.server.ResourceConfig$RuntimeConfig, org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider],applicable=[],annotated=[]}"]]></param-value>
+    "ContainerInitializer{org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer,interested=[org.glassfish.jersey.jackson.internal.FilteringJacksonJaxbJsonProvider, pt.unl.fct.di.adc.firstwebapp.resources.UserResources, org.glassfish.jersey.server.wadl.internal.WadlResource, org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider, org.glassfish.jersey.server.ResourceConfig, org.glassfish.jersey.jackson.internal.DefaultJacksonJaxbJsonProvider, org.glassfish.jersey.server.ResourceConfig$WrappingResourceConfig, pt.unl.fct.di.adc.firstwebapp.resources.EventResources, org.glassfish.jersey.server.ResourceConfig$RuntimeConfig, org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider],applicable=[],annotated=[]}"]]></param-value>
           
     </context-param>
       
@@ -40,9 +40,9 @@
             
         <servlet-name>MainServices</servlet-name>
             
-        <servlet-class origin="WebDescriptor(file:///home/tom-s-silva/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):0">org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <servlet-class origin="WebDescriptor(file:///home/tom-s-silva/Uni/Year%203/ADC/ADC-Final/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):0">org.glassfish.jersey.servlet.ServletContainer</servlet-class>
             
-        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):1">
+        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Uni/Year%203/ADC/ADC-Final/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):1">
                   
             <param-name>jersey.config.server.tracing.type</param-name>
                   
@@ -50,7 +50,7 @@
                 
         </init-param>
             
-        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):2">
+        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Uni/Year%203/ADC/ADC-Final/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):2">
                   
             <param-name>jersey.config.server.provider.scanning.recursive</param-name>
                   
@@ -58,7 +58,7 @@
                 
         </init-param>
             
-        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):3">
+        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Uni/Year%203/ADC/ADC-Final/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):3">
                   
             <param-name>jersey.config.server.provider.packages</param-name>
                   
@@ -66,7 +66,7 @@
                 
         </init-param>
             
-        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):4">
+        <init-param origin="WebDescriptor(file:///home/tom-s-silva/Uni/Year%203/ADC/ADC-Final/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):4">
                   
             <param-name>jersey.config.servlet.filter.contextPath</param-name>
                   
@@ -80,7 +80,7 @@
           
     </servlet>
       
-    <servlet-mapping origin="WebDescriptor(file:///home/tom-s-silva/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):5">
+    <servlet-mapping origin="WebDescriptor(file:///home/tom-s-silva/Uni/Year%203/ADC/ADC-Final/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):5">
             
         <servlet-name>MainServices</servlet-name>
             
