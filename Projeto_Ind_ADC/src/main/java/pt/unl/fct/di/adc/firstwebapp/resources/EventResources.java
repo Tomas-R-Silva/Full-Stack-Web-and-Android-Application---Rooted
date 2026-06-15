@@ -124,7 +124,7 @@ public class EventResources {
 
             boolean isPublic = entity.getBoolean("is_public");
             if (!isPublic) {
-                // Private event — must be authenticated
+                // Private event must be authenticated
                 Token token = verifyToken(req.getToken());
                 String requester = token.getUsername();
                 String organizer = entity.getString("organizer_username");
@@ -174,7 +174,7 @@ public class EventResources {
             if (!authenticated) {
                 filters.add(PropertyFilter.eq("is_public", true));
             } else if (requesterRole != Role.ADMIN && requesterRole != Role.BOFFICER) {
-                // Regular users see public events + their own private events
+                // Regular users see public events and their own private events
                 filters.add(PropertyFilter.eq("is_public", true));
             }
 
