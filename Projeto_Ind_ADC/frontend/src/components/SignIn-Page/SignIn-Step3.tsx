@@ -1,9 +1,28 @@
+import { useState } from "react";
 import type { StepProps } from "../../utils/types";
 
 function SignInStep3({ formData, setFormData, onBack }: StepProps) {
-  const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const categories = [
+    "🌳 Environment",
+    "❤️ Well-being",
+    "🤝 Inclusion",
+    "🎨 Culture",
+    "📚 Education",
+    "⚾ Sports",
+    "💻 Innovation",
+    "⛑️ Vollunteer",
+  ];
+
+  //========== Hook ==========
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const handleChange = (category: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(category)
+        ? prev.categories.filter((c) => c !== category)
+        : [...prev.categories, category],
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -14,42 +33,56 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   return (
     <>
       <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="text"
-            name="email"
-            className="form-control"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Example@email.com"
-          />
+        <div className="row g-2">
+          {categories.map((category) => (
+            <div className="col-6" key={category}>
+              <input
+                type="checkbox"
+                className="btn-check"
+                id={`btn-${category}`}
+                checked={formData.categories.includes(category)}
+                onChange={() => handleChange(category)}
+                autoComplete="off"
+              />
+              <label
+                className="btn w-100"
+                htmlFor={`btn-${category}`}
+                style={{
+                  background: formData.categories.includes(category)
+                    ? "var(--color-green)"
+                    : "var(--color-white)",
+                  color: formData.categories.includes(category)
+                    ? "var(--color-white)"
+                    : "var(--color-green)",
+                }}
+              >
+                {category}
+              </label>
+            </div>
+          ))}
         </div>
-        <div>
-          <label className="form-label">Password</label>
-          <input
-            type="text"
-            name="password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Use a strong password"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Name</label>
-          <input
-            type="text"
-            name="confirmation"
-            className="form-control"
-            value={formData.confirmation}
-            onChange={handleChange}
-            placeholder="Re-enter your password"
-          />
-        </div>
-        <div>
-          <button onClick={() => onBack?.()}>Last Section</button>
-          <button onClick={() => console.log(formData)}>Submit</button>
+        <div className="d-flex justify-content-between mt-3">
+          <button
+            onClick={() => onBack?.()}
+            className="btn rounded-pill"
+            style={{
+              background: "var(--color-green)",
+              color: "var(--color-bege)",
+            }}
+          >
+            Last Section
+          </button>
+          <button
+            type="submit"
+            className="btn rounded-pill"
+            style={{
+              border: "3px solid var(--color-green)",
+              background: "var(--color-white)",
+              color: "var(--color-green)",
+            }}
+          >
+            Sign In
+          </button>
         </div>
       </form>
     </>

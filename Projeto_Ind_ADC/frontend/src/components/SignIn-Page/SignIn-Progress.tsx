@@ -1,5 +1,5 @@
 function SignInProgress({ step }: { step: number }) {
-  const steps = ["Account", "Details", "Themes"];
+  const steps = ["Account", "Details", "Categories"];
 
   return (
     <div className="d-flex align-items-center px-4 py-4">

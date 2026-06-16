@@ -5,6 +5,7 @@ export type FormData = {
   username: string;
   phone: string;
   address: string;
+  categories: string[];
 };
 
 export interface StepProps{

@@ -6,13 +6,22 @@ import SignInProgress from "./SignIn-Progress";
 
 function SignInForm() {
   //========== Hooks ==========
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    email: string;
+    password: string;
+    confirmation: string;
+    username: string;
+    phone: string;
+    address: string;
+    categories: string[];
+  }>({
     email: "",
     password: "",
     confirmation: "",
     username: "",
     phone: "",
     address: "",
+    categories: [],
   });
 
   const [step, setStep] = useState(1);

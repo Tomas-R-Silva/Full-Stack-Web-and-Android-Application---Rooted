@@ -79,9 +79,27 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
             <div className="invalid-feedback">{errors.address}</div>
           )}
         </div>
-        <div>
-          <button onClick={() => onBack?.()}>Last Section</button>
-          <button type="submit">Next Section</button>
+        <div className="d-flex justify-content-between mt-3">
+          <button
+            onClick={() => onBack?.()}
+            className="btn rounded-pill"
+            style={{
+              background: "var(--color-green)",
+              color: "var(--color-bege)",
+            }}
+          >
+            Last Section
+          </button>
+          <button
+            type="submit"
+            className="btn rounded-pill"
+            style={{
+              background: "var(--color-green)",
+              color: "var(--color-bege)",
+            }}
+          >
+            Next Section
+          </button>
         </div>
       </form>
     </>

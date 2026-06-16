@@ -87,8 +87,17 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
             <div className="invalid-feedback">{errors.confirmation}</div>
           )}
         </div>
-        <div>
-          <button type="submit">Next Section</button>
+        <div className="d-flex justify-content-end mt-3">
+          <button
+            type="submit"
+            className="btn rounded-pill"
+            style={{
+              background: "var(--color-green)",
+              color: "var(--color-bege)",
+            }}
+          >
+            Next Section
+          </button>
         </div>
       </form>
     </>
