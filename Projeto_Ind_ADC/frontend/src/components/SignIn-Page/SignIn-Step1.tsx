@@ -59,7 +59,7 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
             <div className="invalid-feedback">{errors.email}</div>
           )}
         </div>
-        <div>
+        <div className="mb-3">
           <label className="form-label">Password</label>
           <input
             type="password"

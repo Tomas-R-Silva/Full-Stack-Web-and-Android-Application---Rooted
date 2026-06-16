@@ -51,7 +51,7 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
             <div className="invalid-feedback">{errors.username}</div>
           )}
         </div>
-        <div>
+        <div className="mb-3">
           <label className="form-label">Phone</label>
           <input
             type="tel"
