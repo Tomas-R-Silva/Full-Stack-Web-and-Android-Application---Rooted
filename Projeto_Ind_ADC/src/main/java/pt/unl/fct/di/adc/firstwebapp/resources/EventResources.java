@@ -27,7 +27,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
+import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
@@ -62,7 +62,7 @@ public class EventResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response createEvent(CreateEventRequest req) {
         try {
-            Token token = verifyToken(req.getToken());
+            Token token = AuthHelper.verifyToken(req.getToken());
 
             Event event = new Event();
             event.setEventId(UUID.randomUUID().toString());
@@ -125,7 +125,7 @@ public class EventResources {
             boolean isPublic = entity.getBoolean("is_public");
             if (!isPublic) {
                 // Private event must be authenticated
-                Token token = verifyToken(req.getToken());
+                Token token = AuthHelper.verifyToken(req.getToken());
                 String requester = token.getUsername();
                 String organizer = entity.getString("organizer_username");
                 Role role = token.getRole();
@@ -157,7 +157,7 @@ public class EventResources {
 
             if (req.getToken() != null && req.getToken().getTokenId() != null) {
                 try {
-                    Token token = verifyToken(req.getToken());
+                    Token token = AuthHelper.verifyToken(req.getToken());
                     authenticated = true;
                     requesterRole = token.getRole();
                 } catch (ErrorException ignored) {
@@ -230,7 +230,7 @@ public class EventResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateEvent(UpdateEventRequest req) {
         try {
-            Token token = verifyToken(req.getToken());
+            Token token = AuthHelper.verifyToken(req.getToken());
 
             if (req.getEventId() == null || req.getEventId().isBlank())
                 return Error.invalid_input();
@@ -282,7 +282,7 @@ public class EventResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteEvent(EventActionRequest req) {
         try {
-            Token token = verifyToken(req.getToken());
+            Token token = AuthHelper.verifyToken(req.getToken());
 
             if (req.getEventId() == null || req.getEventId().isBlank())
                 return Error.invalid_input();
@@ -313,7 +313,7 @@ public class EventResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response cancelEvent(EventActionRequest req) {
         try {
-            Token token = verifyToken(req.getToken());
+            Token token = AuthHelper.verifyToken(req.getToken());
 
             if (req.getEventId() == null || req.getEventId().isBlank())
                 return Error.invalid_input();
@@ -345,7 +345,7 @@ public class EventResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response attendEvent(EventActionRequest req) {
         try {
-            Token token = verifyToken(req.getToken());
+            Token token = AuthHelper.verifyToken(req.getToken());
 
             if (req.getEventId() == null || req.getEventId().isBlank())
                 return Error.invalid_input();
@@ -400,7 +400,7 @@ public class EventResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response unattendEvent(EventActionRequest req) {
         try {
-            Token token = verifyToken(req.getToken());
+            Token token = AuthHelper.verifyToken(req.getToken());
 
             if (req.getEventId() == null || req.getEventId().isBlank())
                 return Error.invalid_input();
@@ -440,7 +440,7 @@ public class EventResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAttendees(EventActionRequest req) {
         try {
-            Token token = verifyToken(req.getToken());
+            Token token = AuthHelper.verifyToken(req.getToken());
 
             if (req.getEventId() == null || req.getEventId().isBlank())
                 return Error.invalid_input();
@@ -476,34 +476,6 @@ public class EventResources {
     }
 
     // Helpers
-
-    private Token verifyToken(Token tokenJson) throws ErrorException {
-        if (tokenJson == null || tokenJson.getTokenId() == null)
-            ErrorException.trow(9903);
-        try {
-            DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getTokenId());
-            tokenJson.setUsername(decoded.getSubject());
-            tokenJson.setRole(Role.valueof(decoded.getClaim("role").asString()));
-
-            Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(decoded.getId());
-            if (datastore.get(sessionKey) == null)
-                ErrorException.trow(9903);
-
-            return tokenJson;
-        } catch (TokenExpiredException e) {
-            try {
-                String jti = JWTToken.decodeUnsafe(tokenJson.getTokenId()).getId();
-                datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
-            } catch (Exception ignored) {}
-            ErrorException.trow(9904);
-            return null;
-        } catch (ErrorException e) {
-            throw e;
-        } catch (Exception e) {
-            ErrorException.trow(9903);
-            return null;
-        }
-    }
 
     private Entity getEventEntity(String eventId) throws ErrorException {
         Key key = datastore.newKeyFactory().setKind("Event").newKey(eventId);

@@ -25,6 +25,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
@@ -50,7 +51,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.User;
 import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 
 @Path("/")
-public class UserResources{
+public class UserResources {
 
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
 			.setProjectId("adc-final")
@@ -155,7 +156,7 @@ public class UserResources{
 	public Response showUsers(ShowUsersRequest request) {
 		try {
 			Token tokenJson = request.getToken();
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 
 			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN, Role.BOFFICER});
 
@@ -187,7 +188,7 @@ public class UserResources{
 			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
 			Key userKeyToBeDeleted = getUser(userJson).getKey();	
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 
 			Validator.unauthorized(tokenJson, new Role []{Role.ADMIN});
 
@@ -211,9 +212,9 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(username);
-			Entity token = getToken(tokenJson);
+			Token token = AuthHelper.verifyToken(tokenJson);
 
-			if (!token.getString("user_name").equals(username)) 
+			if (!token.getUsername().equals(username)) 
 				Validator.unauthorized(tokenJson, new Role[]{Role.BOFFICER,Role.ADMIN});
 
 			Entity updatedUser = Entity.newBuilder(user)
@@ -238,7 +239,7 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 			
 			Entity user = getUser(userJson.getUsername());
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 			
 			Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
@@ -260,9 +261,9 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(userJson.getUsername());
-			Entity token = getToken(tokenJson);
+			Token token = AuthHelper.verifyToken(tokenJson);
 
-			if(!token.getString("user_name").equals(user.getString("user_name")))
+			if(!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN});
 
 			deleteAllSessionsForUser(userJson.getUsername());
@@ -282,7 +283,7 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(input.getUsername());
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 
 			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
 			Role newRole = Role.valueof(input.getNewrole());
@@ -309,9 +310,9 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(input.getUsername());
-			Entity token = getToken(tokenJson);
+			Token token = AuthHelper.verifyToken(tokenJson);
 
-			if(!token.getString("user_name").equals(user.getString("user_name")))
+			if(!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
 
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
@@ -336,7 +337,7 @@ public class UserResources{
 	public Response showAuthsessions (ShowSessionsRequest request){
 		try{
 			Token tokenJson = request.getToken();
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
 			return buildresponse(Map.of("tokens", getAllSessions()));
 
@@ -413,35 +414,6 @@ public class UserResources{
 		Entity user = datastore.get(userKey);
 		Validator.userNotFound(new Entity[]{user});
 		return user;
-	}
-
-	private Entity getToken(Token tokenJson) throws ErrorException {
-		try {
-			DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getTokenId());
-
-			// Populate tokenJson from JWT claims so callers can use tokenJson.getRole()/getUsername()
-			tokenJson.setUsername(decoded.getSubject());
-			tokenJson.setRole(Role.valueof(decoded.getClaim("role").asString()));
-
-			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(decoded.getId());
-			Entity session = datastore.get(sessionKey);
-			if (session == null) ErrorException.trow(9903); // session revoked (logged out)
-			return session;
-
-		} catch (TokenExpiredException e) {
-			// Clean up expired session
-			try {
-				String jti = JWTToken.decodeUnsafe(tokenJson.getTokenId()).getId();
-				datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
-			} catch (Exception ignored) {}
-			ErrorException.trow(9904);
-			return null;
-		} catch (ErrorException e) {
-			throw e;
-		} catch (Exception e) {
-			ErrorException.trow(9903);
-			return null;
-		}
 	}
 
 
