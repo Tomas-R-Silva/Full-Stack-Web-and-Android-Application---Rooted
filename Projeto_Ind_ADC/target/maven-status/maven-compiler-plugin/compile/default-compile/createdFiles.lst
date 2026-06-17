@@ -6,9 +6,11 @@ pt/unl/fct/di/adc/firstwebapp/error/Error.class
 pt/unl/fct/di/adc/firstwebapp/model/ShowUserRoleRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/Event$Status.class
+pt/unl/fct/di/adc/firstwebapp/model/DeleteImageRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest$Attributes.class
 pt/unl/fct/di/adc/firstwebapp/model/CreateEventRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest$PasswordInput.class
+pt/unl/fct/di/adc/firstwebapp/ApplicationConfig.class
 pt/unl/fct/di/adc/firstwebapp/model/EventActionRequest.class
 pt/unl/fct/di/adc/firstwebapp/Utilities/JWTConfig$AlgorithmType.class
 pt/unl/fct/di/adc/firstwebapp/model/LogOutRequest.class
@@ -19,6 +21,7 @@ pt/unl/fct/di/adc/firstwebapp/model/ChangeUserRole.class
 pt/unl/fct/di/adc/firstwebapp/Utilities/JWTToken.class
 pt/unl/fct/di/adc/firstwebapp/model/AbstractTokenUserRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest.class
+pt/unl/fct/di/adc/firstwebapp/Utilities/GCSUploader.class
 pt/unl/fct/di/adc/firstwebapp/model/ChangeUserRole$ChangeUserRoleInput.class
 pt/unl/fct/di/adc/firstwebapp/model/Event$Category.class
 pt/unl/fct/di/adc/firstwebapp/model/LoginRequest$LoginRequestInput.class
@@ -28,6 +31,7 @@ pt/unl/fct/di/adc/firstwebapp/model/AbstractShortUserRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/UpdateEventRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/Token.class
 pt/unl/fct/di/adc/firstwebapp/model/ShowSessionsRequest.class
+pt/unl/fct/di/adc/firstwebapp/Utilities/AuthHelper.class
 pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest$ModAccountRequestInput.class
 pt/unl/fct/di/adc/firstwebapp/resources/UserResources.class
 pt/unl/fct/di/adc/firstwebapp/model/ListEventsRequest.class

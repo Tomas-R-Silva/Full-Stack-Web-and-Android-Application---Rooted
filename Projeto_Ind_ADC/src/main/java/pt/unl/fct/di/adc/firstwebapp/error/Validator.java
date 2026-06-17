@@ -47,7 +47,7 @@ public class Validator {
 
 	public static void invalidToken(Token token) throws ErrorException {
 		if(token == null ||
-				token.getTokenId() == null ||
+				token.getJwt() == null ||
 				token.getUsername() == null ||
 				token.getRole() == null ||
 				token.getIssuedAt() <=0 ||

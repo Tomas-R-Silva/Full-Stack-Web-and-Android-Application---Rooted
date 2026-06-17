@@ -1,5 +1,8 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Event {
 
     public enum Category {
@@ -22,7 +25,7 @@ public class Event {
     private boolean isPublic;
     private Status status;
     private long createdAt;       // epoch seconds
-    private String coverImageUrl; // GCS url, stored after image upload
+    private List<String> imageUrls = new ArrayList<>();
 
     public Event() {}
 
@@ -72,6 +75,6 @@ public class Event {
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
 
-    public String getCoverImageUrl() { return coverImageUrl; }
-    public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 }

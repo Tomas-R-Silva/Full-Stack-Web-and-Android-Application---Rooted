@@ -102,6 +102,19 @@
             <artifactId>google-cloud-datastore</artifactId>
         </dependency>
 
+        <!-- Google Cloud Storage (image uploads) -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+        </dependency>
+
+        <!-- Jersey Multipart (image upload endpoint) -->
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>3.1.10</version>
+        </dependency>
+
     </dependencies>
 
     <build>

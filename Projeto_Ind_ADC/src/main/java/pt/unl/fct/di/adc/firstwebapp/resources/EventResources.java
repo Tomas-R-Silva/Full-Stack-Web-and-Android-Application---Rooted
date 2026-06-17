@@ -1,14 +1,15 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.cloud.datastore.Cursor;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
@@ -17,9 +18,11 @@ import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
+import com.google.cloud.datastore.Value;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -27,12 +30,15 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
-import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.GCSUploader;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
-import pt.unl.fct.di.adc.firstwebapp.model.CreateEventRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.DeleteImageRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.Event;
 import pt.unl.fct.di.adc.firstwebapp.model.Event.Status;
 import pt.unl.fct.di.adc.firstwebapp.model.EventActionRequest;
@@ -54,32 +60,56 @@ public class EventResources {
     public EventResources() {}
 
     // -------------------------------------------------------------------------
-    // POST /rest/events/create
+    // POST /rest/events/create  (multipart/form-data)
+    // Fields: jwt, title, description, category, location, startDate,
+    //         durationMinutes, maxAttendees, isPublic, images (0-5 files)
     // -------------------------------------------------------------------------
     @POST
     @Path("/create")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createEvent(CreateEventRequest req) {
+    public Response createEvent(
+            @FormDataParam("jwt") String jwt,
+            @FormDataParam("title") String title,
+            @FormDataParam("description") String description,
+            @FormDataParam("category") String category,
+            @FormDataParam("location") String location,
+            @FormDataParam("startDate") String startDateStr,
+            @FormDataParam("durationMinutes") String durationMinutesStr,
+            @FormDataParam("maxAttendees") String maxAttendeesStr,
+            @FormDataParam("isPublic") String isPublicStr,
+            @FormDataParam("images") List<FormDataBodyPart> imageParts) {
         try {
-            Token token = AuthHelper.verifyToken(req.getToken());
+            Token tokenObj = AuthHelper.verifyToken(jwt);
 
             Event event = new Event();
             event.setEventId(UUID.randomUUID().toString());
-            event.setTitle(req.getTitle());
-            event.setDescription(req.getDescription());
-            event.setCategory(req.getCategory());
-            event.setLocation(req.getLocation());
-            event.setStartDate(req.getStartDate());
-            event.setDurationMinutes(req.getDurationMinutes());
-            event.setOrganizerUsername(token.getUsername());
-            event.setMaxAttendees(req.getMaxAttendees());
-            event.setPublic(req.isPublic());
+            event.setTitle(title);
+            event.setDescription(description);
+            event.setCategory(Event.Category.valueOf(category));
+            event.setLocation(location);
+            event.setStartDate(Long.parseLong(startDateStr));
+            event.setDurationMinutes(Long.parseLong(durationMinutesStr));
+            event.setOrganizerUsername(tokenObj.getUsername());
+            event.setMaxAttendees(maxAttendeesStr != null ? Integer.parseInt(maxAttendeesStr) : 0);
+            event.setPublic(Boolean.parseBoolean(isPublicStr));
             event.setStatus(Status.UPCOMING);
             event.setCreatedAt(System.currentTimeMillis() / 1000L);
-            event.setCoverImageUrl(req.getCoverImageUrl() != null ? req.getCoverImageUrl() : "");
 
             if (!event.isValid()) return Error.invalid_input();
+
+            // Upload images (max 5)
+            List<StringValue> imageUrlValues = new ArrayList<>();
+            if (imageParts != null) {
+                int count = Math.min(imageParts.size(), 5);
+                for (int i = 0; i < count; i++) {
+                    FormDataBodyPart part = imageParts.get(i);
+                    String contentType = part.getMediaType().toString();
+                    byte[] bytes = part.getValueAs(InputStream.class).readAllBytes();
+                    String url = GCSUploader.uploadImage(bytes, contentType);
+                    imageUrlValues.add(StringValue.of(url));
+                }
+            }
 
             Key key = datastore.newKeyFactory().setKind("Event").newKey(event.getEventId());
             Entity entity = Entity.newBuilder(key)
@@ -96,11 +126,11 @@ public class EventResources {
                     .set("is_public", event.isPublic())
                     .set("status", event.getStatus().name())
                     .set("created_at", event.getCreatedAt())
-                    .set("cover_image_url", event.getCoverImageUrl())
+                    .set("image_urls", imageUrlValues)
                     .build();
 
             datastore.put(entity);
-            Log.info("Event created: " + event.getEventId() + " by " + token.getUsername());
+            Log.info("Event created: " + event.getEventId() + " by " + tokenObj.getUsername());
             return ok(Map.of("eventId", event.getEventId(), "message", "Event created successfully"));
 
         } catch (Exception e) {
@@ -155,7 +185,7 @@ public class EventResources {
             boolean authenticated = false;
             Role requesterRole = null;
 
-            if (req.getToken() != null && req.getToken().getTokenId() != null) {
+            if (req.getToken() != null && req.getToken().getJwt() != null) {
                 try {
                     Token token = AuthHelper.verifyToken(req.getToken());
                     authenticated = true;
@@ -475,6 +505,120 @@ public class EventResources {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // POST /rest/events/uploadimage
+    // -------------------------------------------------------------------------
+    @POST
+    @Path("/uploadimage")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response uploadImage(
+            @FormDataParam("jwt") String jwt,
+            @FormDataParam("eventId") String eventId,
+            @FormDataParam("image") InputStream imageStream,
+            @FormDataParam("image") FormDataContentDisposition fileDetail) {
+        try {
+            if (jwt == null || eventId == null || imageStream == null)
+                return Error.invalid_input();
+
+            Token token = AuthHelper.verifyToken(jwt);
+
+            Entity eventEntity = getEventEntity(eventId);
+            String organizer = eventEntity.getString("organizer_username");
+            if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+                ErrorException.trow(9905);
+
+            List<Value<?>> existing;
+            if (eventEntity.contains("image_urls")) {
+                existing = eventEntity.getList("image_urls");
+            } else {
+                existing = Collections.emptyList();
+            }
+
+            if (existing.size() >= 5)
+                return Error.invalid_input();
+
+            String fileName = fileDetail.getFileName();
+            if (fileName == null) {
+                fileName = "";
+            }
+
+            String contentType = "image/jpeg";
+            if (fileName.endsWith(".png")) {
+                contentType = "image/png";
+            } else if (fileName.endsWith(".gif")) {
+                contentType = "image/gif";
+            } else if (fileName.endsWith(".webp")) {
+                contentType = "image/webp";
+            }
+
+            byte[] bytes = imageStream.readAllBytes();
+            String imageUrl = GCSUploader.uploadImage(bytes, contentType);
+
+            List<StringValue> updatedList = existing.stream()
+                    .map(v -> StringValue.of((String) v.get()))
+                    .collect(Collectors.toList());
+            updatedList.add(StringValue.of(imageUrl));
+
+            Entity updated = Entity.newBuilder(eventEntity)
+                    .set("image_urls", updatedList)
+                    .build();
+            datastore.put(updated);
+
+            return ok(Map.of("imageUrl", imageUrl, "message", "Image uploaded successfully"));
+
+        } catch (Exception e) {
+            return Error.fromexception(e);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /rest/events/deleteimage
+    // -------------------------------------------------------------------------
+    @POST
+    @Path("/deleteimage")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteImage(DeleteImageRequest req) {
+        try {
+            Token token = AuthHelper.verifyToken(req.getToken());
+
+            if (req.getEventId() == null || req.getImageUrl() == null)
+                return Error.invalid_input();
+
+            Entity eventEntity = getEventEntity(req.getEventId());
+            String organizer = eventEntity.getString("organizer_username");
+            if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+                ErrorException.trow(9905);
+
+            List<Value<?>> existing;
+            if (eventEntity.contains("image_urls")) {
+                existing = eventEntity.getList("image_urls");
+            } else {
+                existing = Collections.emptyList();
+            }
+            List<StringValue> updatedList = existing.stream()
+                    .filter(v -> !req.getImageUrl().equals(v.get()))
+                    .map(v -> StringValue.of((String) v.get()))
+                    .collect(Collectors.toList());
+
+            if (updatedList.size() == existing.size())
+                return Error.invalid_input(); // image not found in this event
+
+            GCSUploader.deleteImage(req.getImageUrl());
+
+            Entity updated = Entity.newBuilder(eventEntity)
+                    .set("image_urls", updatedList)
+                    .build();
+            datastore.put(updated);
+
+            return ok(Map.of("message", "Image deleted successfully"));
+
+        } catch (Exception e) {
+            return Error.fromexception(e);
+        }
+    }
+
     // Helpers
 
     private Entity getEventEntity(String eventId) throws ErrorException {
@@ -515,6 +659,12 @@ public class EventResources {
         map.put("status", e.getString("status"));
         map.put("createdAt", e.getLong("created_at"));
         map.put("coverImageUrl", e.getString("cover_image_url"));
+        List<String> imageUrls = e.contains("image_urls")
+                ? e.<Value<?>>getList("image_urls").stream()
+                        .map(v -> (String) v.get())
+                        .collect(Collectors.toList())
+                : Collections.emptyList();
+        map.put("imageUrls", imageUrls);
         return map;
     }
 

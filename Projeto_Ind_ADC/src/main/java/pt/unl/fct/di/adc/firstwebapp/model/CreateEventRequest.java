@@ -1,5 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import java.util.List;
+
 /**
  * {
  *   "token": { "tokenId": "<jwt>" },

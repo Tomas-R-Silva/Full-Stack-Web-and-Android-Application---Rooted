@@ -19,11 +19,17 @@ public class AuthHelper {
 
     private AuthHelper() {}
 
+    public static Token verifyToken(String jwt) throws ErrorException {
+        Token token = new Token();
+        token.setJwt(jwt);
+        return verifyToken(token);
+    }
+
     public static Token verifyToken(Token tokenJson) throws ErrorException {
-        if (tokenJson == null || tokenJson.getTokenId() == null)
+        if (tokenJson == null || tokenJson.getJwt() == null)
             ErrorException.trow(9903);
         try {
-            DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getTokenId());
+            DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getJwt());
             tokenJson.setUsername(decoded.getSubject());
             tokenJson.setRole(Role.valueof(decoded.getClaim("role").asString()));
 
@@ -34,7 +40,7 @@ public class AuthHelper {
             return tokenJson;
         } catch (TokenExpiredException e) {
             try {
-                String jti = JWTToken.decodeUnsafe(tokenJson.getTokenId()).getId();
+                String jti = JWTToken.decodeUnsafe(tokenJson.getJwt()).getId();
                 datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
             } catch (Exception ignored) {}
             ErrorException.trow(9904);

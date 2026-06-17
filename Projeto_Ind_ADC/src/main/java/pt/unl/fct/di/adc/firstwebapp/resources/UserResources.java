@@ -137,7 +137,7 @@ public class UserResources {
 
 			datastore.put(sessionEntity);
 			return buildresponse(Map.of("token", Map.of(
-					"tokenId", jwtString,
+					"jwt", jwtString,
 					"username", userName,
 					"role", role.toString(),
 					"issuedAt", issuedAt,
