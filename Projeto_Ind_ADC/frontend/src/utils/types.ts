@@ -1,4 +1,4 @@
-export type FormData = {
+export type SignInFormData = {
   email: string;
   password: string;
   confirmation: string;
@@ -9,8 +9,8 @@ export type FormData = {
 };
 
 export interface StepProps{
-  formData: FormData;
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  formData: SignInFormData;
+  setFormData: React.Dispatch<React.SetStateAction<SignInFormData>>;
   onNext?: () => void; //? retira a obrgatoriedade de fazer parte
   onBack?: () => void;
 };

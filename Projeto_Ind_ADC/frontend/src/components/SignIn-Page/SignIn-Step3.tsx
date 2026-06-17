@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { StepProps } from "../../utils/types";
+import { registerUser } from "../../api/auth";
 
 function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   const categories = [
@@ -15,6 +17,9 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
 
   //========== Hook ==========
   const [selected, setSelected] = useState<string[]>([]);
+  const [errors, setErrors] = useState({});
+
+  const navigate = useNavigate();
 
   const handleChange = (category: string) => {
     setFormData((prev) => ({
@@ -25,13 +30,21 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
+    try {
+      await registerUser(formData);
+      navigate("/profile");
+    } catch (err) {
+      setErrors(err instanceof Error ? err.message : "Something went wrong");
+    }
   };
 
   return (
     <>
+      <h5 className="text-center mb-3" style={{ color: "var(--color-green)" }}>
+        Your interests:
+      </h5>
       <form onSubmit={handleSubmit}>
         <div className="row g-2">
           {categories.map((category) => (
