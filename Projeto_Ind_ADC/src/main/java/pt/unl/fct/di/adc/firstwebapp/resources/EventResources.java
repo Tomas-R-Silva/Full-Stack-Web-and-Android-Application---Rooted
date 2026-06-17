@@ -82,7 +82,7 @@ public class EventResources {
             event.setStatus(Status.UPCOMING);
             event.setCreatedAt(System.currentTimeMillis() / 1000L);
 
-            if (!event.isValid()) return Error.invalid_input();
+            event.isValid();
 
             Key key = datastore.newKeyFactory().setKind("Event").newKey(event.getEventId());
             Entity entity = Entity.newBuilder(key)
@@ -182,10 +182,10 @@ public class EventResources {
             }
 
             if (req.getCategory() != null)
-                filters.add(PropertyFilter.eq("category", req.getCategory().name()));
+                filters.add(PropertyFilter.eq("category", req.getCategory()));
 
             if (req.getStatus() != null)
-                filters.add(PropertyFilter.eq("status", req.getStatus().name()));
+                filters.add(PropertyFilter.eq("status", req.getStatus()));
 
             if (req.getOrganizerUsername() != null && !req.getOrganizerUsername().isBlank())
                 filters.add(PropertyFilter.eq("organizer_username", req.getOrganizerUsername()));
@@ -254,7 +254,7 @@ public class EventResources {
             if (req.getDescription() != null && !req.getDescription().isBlank())
                 builder.set("description", req.getDescription());
             if (req.getCategory() != null)
-                builder.set("category", req.getCategory().name());
+                builder.set("category", req.getCategory());
             if (req.getLocation() != null && !req.getLocation().isBlank())
                 builder.set("location", req.getLocation());
             if (req.getStartDate() != null && req.getStartDate() > 0)
@@ -633,6 +633,6 @@ public class EventResources {
     }
 
     private static Response ok(Map<String, Object> data) {
-        return ResponceBuilder.constructor("success", data);
+        return ResponceBuilder.constructorsuccess(data);
     }
 }

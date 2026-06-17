@@ -1,6 +1,12 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+import pt.unl.fct.di.adc.firstwebapp.model.Event.Category;
 
 /**
  * Represents a user in the system.
@@ -12,31 +18,22 @@ public class User extends ShortUser{
 		USER,
 		BOFFICER,
 		ADMIN;
-		public static Role valueof(String v) throws ErrorException {
-			Role role;
-			try{
-				role=Role.valueOf(v);
-			}catch (Exception e) {
-				role=null;
-				}
-			return role;
+		public static Role valueof(String v) {
+			try{return Role.valueOf(v);}catch (Exception e) {return null;}
 		}
 	}
-	
+
 	private String password;
 	private String confirmation;
-	private String phone;
-	private String address;
-	private Role role;
+	private String role;
 
 	public User() {}
 
-	public User(String username, String password,String confirmation, String phone, String address, Role role) {
+	public User(String username, String password,String confirmation, String role) {
 		this.password = password;
 		this.username = username;
 		this.confirmation = confirmation;
-		this.phone = phone;
-		this.address = address;
+
 		this.role = role;
 	}
 
@@ -48,23 +45,6 @@ public class User extends ShortUser{
 		this.password = password;
 	}
 
-
-	public String getPhone() {
-		return phone;
-	}
-
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
-
-	public String getAddress() {
-		return address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
 	public String getConfirmation(){
 		return confirmation;
 	}
@@ -73,47 +53,33 @@ public class User extends ShortUser{
 		this.confirmation = confirmation;
 	}
 
-
 	public Role getRole() {
-		return role;
+		return Role.valueof(role);
 	}
 
-	public void setRole(Role role) {
+	public void setRole(String role) {
 		this.role = role;
 	}
-	
-	public boolean userValidation(){
-		return validVariable(getUsername()) &&
-			   validVariable(getPassword()) &&
-			   validVariable(getConfirmation()) &&
-			   validphone() &&
-			   validVariable(getAddress()) &&
-			   getRole() != null &&
-			   getPassword().equals(getConfirmation());      
+
+	public void userValidation() throws ErrorException{
+		List<Map<String,Object>> list=new LinkedList<>();
+		if(!validVariable(getUsername()))
+			list.add(Error.createmap(9902));
+		if(!(validVariable(getPassword())&&validVariable(getConfirmation())&&getPassword().equals(getConfirmation())))
+			list.add(Error.createmap(9909));
+		if(getRole()==null)
+			list.add(Error.createmap(9910));
+		if(list!=null)
+		Error.invalid_input(list);
 	}
 
 	public static boolean validVariable(String var){
 		return var != null && !var.isBlank();
 	}
 
-	public boolean validphone(){
-		boolean valid=validVariable(getPhone());
-		int count=0;
-		if(getPhone().charAt(count)=='+')count++;
-		while(valid&&count<getPhone().length())
-			switch(getPhone().charAt(count++)) {
-			case'0':case'1':case'2':
-			case'3':case'4':case'5':
-			case'6':case'7':case'8':
-			case'9':break;
-			default:valid=false;
-			}
-		return valid;
-	}
-
 	@Override
 	public String toString() {
-		final String str="User{userName=%s, password=%s, confirmation=%s, phone=%s, address=%s, role=%s}";
-		return String.format(str, username,password,confirmation,phone,address,(role!=null?role.name():"null"));
+		final String str="User{userName=%s, password=%s, confirmation=%s, role=%s}";
+		return String.format(str, username,password,confirmation,role);
 	}
 }

@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
@@ -71,8 +70,8 @@ public class UserResources {
 		try {
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-			if (!user.userValidation())
-				return Error.invalid_input();		
+			user.userValidation();
+						
 
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
 			Entity existingUser = txn.get(userKey);
@@ -82,8 +81,6 @@ public class UserResources {
 			Entity newUser = Entity.newBuilder(userKey)
 					.set("user_name", user.getUsername())
 					.set("user_pwd", DigestUtils.sha512Hex(user.getPassword()))
-					.set("user_phone", user.getPhone())
-					.set("user_address", user.getAddress())
 					.set("user_role", user.getRole().name())
 					.set("user_creation_time", Timestamp.now())
 					.build();
@@ -402,7 +399,7 @@ public class UserResources {
 	}
 
 	private static Response buildresponse(Map<String,Object> map) {
-		return ResponceBuilder.constructor("success",map);
+		return ResponceBuilder.constructorsuccess(map);
 	}
 
 	private Entity getUser(ShortUser user) throws ErrorException{

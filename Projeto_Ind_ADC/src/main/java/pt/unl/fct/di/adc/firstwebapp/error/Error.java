@@ -1,17 +1,39 @@
 package pt.unl.fct.di.adc.firstwebapp.error;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.ws.rs.core.Response;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 
 public class Error {
 
-	private static final String INVALID_INPUT="INVALID_INPUT",
+	private static final String INVALID_CREDENCIALS="INVALID_CREDENCIALS",
 			USER_ALREADY_EXISTS="USER_ALREADY_EXISTS",
+			USER_NOT_FOUND="USER_NOT_FOUND",
+			INVALID_TOKEN="INVALID_TOKEN",
 			TOKEN_EXPIRED="TOKEN_EXPIRED",
 			UNAUTHORIZED="UNAUTHORIZED",
-			USER_NOT_FOUND="USER_NOT_FOUND",
-			INVALID_CREDENCIALS="INVALID_CREDENCIALS",
+			INVALID_INPUT="INVALID_INPUT",
 			FORBIDDEN="FORBIDDEN",
-			INVALID_TOKEN="INVALID_TOKEN";
+			PASSWORD_NOT_CONFIRMATION="PASSWORD_NOT_CONFIRMATION",
+			INVALID_ROLE="INVALID_ROLE",
+			INVALID_CATEGORY="INVALID_CATEGORY",
+			INVALID_LOCATION="INVALID_LOCATION",
+			INVALID_ENROLLMENT_DATE_NOW="INVALID_ENROLLMENT_DATE_NOW",
+			INVALID_ENROLLMENT_DATE_START="INVALID_ENROLLMENT_DATE_START",
+			INVALID_START_DATE="INVALID_START_DATE",
+			INVALID_DURATION="INVALID_DURATION",
+			INVALID_MAX_ATTENDEES="INVALID_MAX_ATTENDEES",
+			INVALID_MIN_ATTENDEES="INVALID_MIN_ATTENDEES",
+			INVALID_COVER_IMAGE_URL="INVALID_COVER_IMAGE_URL",
+			FRIENDSHIP_ALREADY_EXISTS="FRIENDSHIP_ALREADY_EXISTS",
+			INVALID_TITLE="INVALID_TITLE",
+			INVALID_DESCRIPTION="INVALID_DESCRIPTION",
+			INVALID_ORGANIZER="INVALID_ORGANIZER";
+
+	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
+		ErrorException.trow(9906,list);
+	}
 
 	public static Response invalid_input(){
 		return errorswitch(9906);
@@ -45,7 +67,15 @@ public class Error {
 		return errorswitch(9903);
 	}
 
-	private static Response errorswitch(int status){
+	public static Map<String,Object> createmap(int status){
+		return Map.of("status", status, "data", errorswitchstr(status));
+	}
+
+	private static Response errorswitch(int status) {
+		return ResponceBuilder.constructor(status,errorswitchstr(status));
+	}
+
+	private static String errorswitchstr(int status){
 		String data;
 		switch(status){
 		case 9900->data=INVALID_CREDENCIALS;
@@ -56,14 +86,35 @@ public class Error {
 		case 9905->data=UNAUTHORIZED;
 		case 9906->data=INVALID_INPUT;
 		case 9907->data=FORBIDDEN;
+		case 9909->data=PASSWORD_NOT_CONFIRMATION;
+		case 9910->data=INVALID_ROLE;
+		case 9911->data=INVALID_CATEGORY;
+		case 9912->data=INVALID_LOCATION;
+		case 9913->data=INVALID_ENROLLMENT_DATE_NOW;
+		case 9914->data=INVALID_ENROLLMENT_DATE_START;
+		case 9915->data=INVALID_START_DATE;
+		case 9916->data=INVALID_DURATION;
+		case 9917->data=INVALID_MAX_ATTENDEES;
+		case 9918->data=INVALID_MIN_ATTENDEES;
+		case 9919->data=INVALID_COVER_IMAGE_URL;
+		case 9920->data=FRIENDSHIP_ALREADY_EXISTS;
+		case 9921->data=INVALID_TITLE;
+		case 9922->data=INVALID_DESCRIPTION;
+		case 9923->data=INVALID_ORGANIZER;
 		default->data="";
 		}
-		return ResponceBuilder.constructor(String.format("%d",status),data);
+		return data;
 	}
 
 	public static Response fromexception(Exception e) {
-		if(e instanceof ErrorException)
-			return errorswitch(((ErrorException)e).getStatus());
+		if(e instanceof ErrorException) {
+			ErrorException ex=(ErrorException)e;
+			int status=ex.getStatus();
+			if(status==9906&&ex.getdata()!=null)
+				ResponceBuilder.constructor(status,ex.getdata());
+			else
+				return errorswitch(status);
+		}
 		return errorswitch(9907);
 	}	
 }

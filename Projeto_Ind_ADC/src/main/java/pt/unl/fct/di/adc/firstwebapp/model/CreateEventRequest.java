@@ -21,7 +21,7 @@ public class CreateEventRequest {
     private Token token;
     private String title;
     private String description;
-    private Event.Category category;
+    private String category;
     private String location;
     private long startDate;
     private long durationMinutes;
@@ -40,8 +40,8 @@ public class CreateEventRequest {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public Event.Category getCategory() { return category; }
-    public void setCategory(Event.Category category) { this.category = category; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }

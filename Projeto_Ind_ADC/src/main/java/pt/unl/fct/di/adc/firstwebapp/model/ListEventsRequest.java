@@ -13,8 +13,8 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 public class ListEventsRequest {
 
     private Token token;
-    private Event.Category category;
-    private Event.Status status;
+    private String category;
+    private String status;
     private String organizerUsername;
     private int pageSize;
     private String cursor;
@@ -26,11 +26,11 @@ public class ListEventsRequest {
     public Token getToken() { return token; }
     public void setToken(Token token) { this.token = token; }
 
-    public Event.Category getCategory() { return category; }
-    public void setCategory(Event.Category category) { this.category = category; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
-    public Event.Status getStatus() { return status; }
-    public void setStatus(Event.Status status) { this.status = status; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public String getOrganizerUsername() { return organizerUsername; }
     public void setOrganizerUsername(String organizerUsername) { this.organizerUsername = organizerUsername; }
