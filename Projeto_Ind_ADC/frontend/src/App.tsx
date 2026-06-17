@@ -5,7 +5,6 @@ function App() {
 
   return (
     <div>
-      <button onClick={() => navigate("/signin")}>Sign In</button>
       <button onClick={() => navigate("/login")}>Log In</button>
       <button onClick={() => navigate("/profile")}>Profile</button>
     </div>

@@ -8,6 +8,12 @@ export type SignInFormData = {
   categories: string[];
 };
 
+export interface accountProps {
+  image?: ImageBitmap;
+  onNext?: () => void; //? retira a obrgatoriedade de fazer parte
+  onBack?: () => void;
+}
+
 export interface StepProps{
   formData: SignInFormData;
   setFormData: React.Dispatch<React.SetStateAction<SignInFormData>>;
