@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { StepProps } from "../../utils/types";
+import { useNavigate } from "react-router-dom";
 
 function LogInStep1({ formData, setFormData }: StepProps) {
   //========== Hook ==========
@@ -9,6 +10,8 @@ function LogInStep1({ formData, setFormData }: StepProps) {
   });
 
   //========== Receber Input e Limpar erros ==========
+  const navigate = useNavigate();
+
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -67,18 +70,40 @@ function LogInStep1({ formData, setFormData }: StepProps) {
             <div className="invalid-feedback">{errors.password}</div>
           )}
         </div>
-        <div className="d-flex justify-content-end mt-3">
+        <div className="d-flex justify-content-center mt-3">
           <button
             type="submit"
             className="btn rounded-pill"
             style={{
-              background: "var(--color-green)",
-              color: "var(--color-bege)",
+              border: "3px solid var(--color-green)",
+              background: "var(--color-white)",
+              color: "var(--color-green)",
             }}
           >
             Log In
           </button>
         </div>
+        <div
+          className="flex-grow-1 mx-2 mt-3"
+          style={{
+            background: "var(--color-green)",
+            height: 2,
+            marginBottom: 20,
+          }}
+        />
+        <p className="text-center">
+          Don't have an account?{" "}
+          <span
+            onClick={() => navigate("/signin")}
+            style={{
+              color: "var(--color-green)",
+              cursor: "pointer",
+              fontWeight: 500,
+            }}
+          >
+            Sign Up
+          </span>
+        </p>
       </form>
     </>
   );
