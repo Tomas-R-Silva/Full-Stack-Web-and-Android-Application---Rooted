@@ -9,6 +9,7 @@
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/EventActionRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ListEventsRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ShowUserRoleRequest.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/UploadImageRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/AuthHelper.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/JWTToken.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/UpdateEventRequest.java
