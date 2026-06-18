@@ -15,7 +15,12 @@ function LogInPage() {
         className="d-flex align-items-center justify-content-center flex-grow-1"
         style={{ background: "var(--color-bege)" }}
       >
-        <LogInForm />
+        <div
+          style={{ width: "100%", maxWidth: "460px" }}
+          className="px-4 px-md-0"
+        >
+          <LogInForm />
+        </div>
       </div>
     </div>
   );

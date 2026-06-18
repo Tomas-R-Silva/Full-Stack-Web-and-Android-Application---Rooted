@@ -15,7 +15,12 @@ function SignInPage() {
         className="d-flex align-items-center justify-content-center flex-grow-1"
         style={{ background: "var(--color-bege)" }}
       >
-        <SignInForms />
+        <div
+          style={{ width: "100%", maxWidth: "460px" }}
+          className="px-4 px-md-0"
+        >
+          <SignInForms />
+        </div>
       </div>
     </div>
   );
