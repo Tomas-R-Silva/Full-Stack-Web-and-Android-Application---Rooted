@@ -109,7 +109,7 @@ const MapsPage = () => {
       };
 
       const addEventMarkers = async () => {
-        const res = await fetch(`${server}/rest/events/list`, {
+        const res = await fetch(`${server}/events/list`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: "UPCOMING" }),
@@ -165,8 +165,7 @@ const MapsPage = () => {
           Rooted
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={() => navigate("/signin")}>Sign In</button>
-          <button onClick={() => navigate("/signup")}>Sign Up</button>
+          <button onClick={() => navigate("/login")}>Log in</button>
         </div>
       </div>
 
