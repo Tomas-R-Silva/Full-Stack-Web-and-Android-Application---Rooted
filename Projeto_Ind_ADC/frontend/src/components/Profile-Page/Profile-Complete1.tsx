@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import { useState } from "react";
 import type { ChangeEvent } from "react";
-import type { accountProps } from "../../utils/types";
+import type { AccountProps } from "../../utils/types";
 
-function ProfileComplete1({ onNext }: accountProps) {
+function ProfileComplete1({ onNext }: AccountProps) {
   const [image, setImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

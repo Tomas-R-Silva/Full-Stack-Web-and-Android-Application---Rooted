@@ -31,7 +31,30 @@ function ProfileCompleteModal({ onClose }: { onClose: () => void }) {
               borderBottom: "4px solid var(--color-green)",
             }}
           >
-            <h5 className="modal-title">Choose your Avatar</h5>
+            {step === 1 && (
+              <h5
+                className="modal-title"
+                style={{ color: "var(--color-green)" }}
+              >
+                Choose your avatar
+              </h5>
+            )}
+            {step === 2 && (
+              <h5
+                className="modal-title"
+                style={{ color: "var(--color-green)" }}
+              >
+                Add a biography
+              </h5>
+            )}
+            {step === 3 && (
+              <h5
+                className="modal-title"
+                style={{ color: "var(--color-green)" }}
+              >
+                Meet some friends
+              </h5>
+            )}
             <button type="button" className="btn-close" onClick={onClose} />
           </div>
 
@@ -54,7 +77,43 @@ function ProfileCompleteModal({ onClose }: { onClose: () => void }) {
               background: "var(--color-bege)",
             }}
           >
-            <button className="btn btn-primary">Next</button>
+            {step !== 1 && (
+              <button
+                className="btn"
+                style={{
+                  background: "var(--color-green)",
+                  color: "var(--color-bege)",
+                }}
+                onClick={lastStep}
+              >
+                Last Section
+              </button>
+            )}
+            {step !== 3 && (
+              <button
+                className="btn"
+                style={{
+                  background: "var(--color-green)",
+                  color: "var(--color-bege)",
+                }}
+                onClick={nextStep}
+              >
+                Next Section
+              </button>
+            )}
+            {step === 3 && (
+              <button
+                type="submit"
+                className="btn fw-bold"
+                style={{
+                  border: "3px solid var(--color-green)",
+                  background: "var(--color-white)",
+                  color: "var(--color-green)",
+                }}
+              >
+                Finish
+              </button>
+            )}
           </div>
         </div>
       </div>

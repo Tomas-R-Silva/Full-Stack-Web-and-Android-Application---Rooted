@@ -8,8 +8,9 @@ export type SignInFormData = {
   categories: string[];
 };
 
-export interface accountProps {
+export interface AccountProps {
   image?: ImageBitmap;
+  bio?: string;
   onNext?: () => void; //? retira a obrgatoriedade de fazer parte
   onBack?: () => void;
 }
