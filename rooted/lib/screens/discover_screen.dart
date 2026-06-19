@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../widgets/events_maps.dart';
 
 class DiscoverPage extends StatelessWidget {
   const DiscoverPage({super.key});
@@ -69,27 +70,12 @@ class DiscoverPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
-
-            _eventCard(
-              title: 'Rock Festival',
-              location: 'City Stadium',
-              attendees: '1.2k attending',
-              icon: Icons.music_note,
-            ),
-
-            _eventCard(
-              title: 'Startup Networking',
-              location: 'Innovation Hub',
-              attendees: '250 attending',
-              icon: Icons.computer,
-            ),
-
-            _eventCard(
-              title: 'Food Market',
-              location: 'Town Square',
-              attendees: '500 attending',
-              icon: Icons.restaurant,
+            const SizedBox(height: 16),
+            // Google Maps widget showing nearby events
+            EventsMaps(
+              // optionally provide server and mapsApiKey here
+              server: '',
+              mapsApiKey: null,
             ),
 
             const SizedBox(height: 24),
