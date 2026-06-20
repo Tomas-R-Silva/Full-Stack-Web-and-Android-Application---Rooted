@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import '../widgets/location_autocomplete.dart';
+
 
 class CreatePage extends StatefulWidget {
   const CreatePage({super.key});
@@ -19,6 +21,7 @@ class _CreatePageState extends State<CreatePage> {
   final TextEditingController _attendeesController = TextEditingController();
 
   String _selectedCategory = 'Music';
+  String? _selectedPlaceId;
   File? _eventImage;
 
   final List<String> _categories = [
@@ -29,6 +32,8 @@ class _CreatePageState extends State<CreatePage> {
     'Art',
     'Culture',
   ];
+
+  final String _placesApiKey = 'AIzaSyAmYzNozAPQB27PHT4uP00qoBOg-cz7jdk';
 
   Future<void> _pickEventImage() async {
     final picker = ImagePicker();
@@ -124,7 +129,7 @@ class _CreatePageState extends State<CreatePage> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
@@ -144,13 +149,12 @@ class _CreatePageState extends State<CreatePage> {
 
               const SizedBox(height: 16),
 
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Location',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
+              LocationAutocomplete(
+                apiKey: _placesApiKey,
+                onPlaceSelected: (p) {
+                  _locationController.text = p.description;
+                  _selectedPlaceId = p.placeId; // add this field in the state
+                },
               ),
 
               const SizedBox(height: 16),
@@ -194,6 +198,15 @@ class _CreatePageState extends State<CreatePage> {
                   ),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                      final eventPayload = {
+                        'title': _titleController.text,
+                        'description': _descriptionController.text,
+                        'category': _selectedCategory,
+                        'location': _locationController.text,
+                        'placeId': _selectedPlaceId,
+                        'maxAttendees': int.tryParse(_attendeesController.text) ?? 0,
+                      };
+                      // TODO: Send eventPayload to backend
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Event created successfully!'),
