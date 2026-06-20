@@ -206,8 +206,7 @@ class _EventsMapsState extends State<EventsMaps> {
 
     return Column(
       children: [
-        SizedBox(
-          height: 500,
+        Flexible(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: _loading
