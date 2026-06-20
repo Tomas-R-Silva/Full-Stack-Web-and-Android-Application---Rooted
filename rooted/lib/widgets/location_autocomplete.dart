@@ -115,8 +115,6 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
           decoration: InputDecoration(
             labelText: 'Location',
             prefixIcon: const Icon(Icons.location_on),
-            suffixIcon:
-                _loading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : null,
             border: const OutlineInputBorder(),
           ),
           onChanged: _search,
@@ -124,6 +122,16 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
               (value) =>
                   value == null || value.isEmpty ? 'Enter a location' : null,
         ),
+
+        if (_loading)
+          const Padding(
+            padding: EdgeInsets.only(top: 8.0),
+            child: SizedBox(
+              height: 4,
+              child: LinearProgressIndicator(),
+            ),
+          ),
+
         if (_predictions.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(top: 8),
