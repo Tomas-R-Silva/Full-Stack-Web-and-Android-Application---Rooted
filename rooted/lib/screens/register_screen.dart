@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/auth_text_field.dart';
+import '../services/api_service.dart';
 import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _displayNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -24,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _displayNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -44,23 +47,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: Replace with actual registration logic
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      await ApiService.createAccount(
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account created successfully!'),
-          backgroundColor: AppTheme.primary,
-        ),
-      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully!'),
+            backgroundColor: AppTheme.primary,
+          ),
+        );
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not reach the server. Please try again.'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
     }
   }
 
@@ -157,6 +184,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             keyboardType: TextInputType.name,
             validator: (value) {
               if (value == null || value.trim().isEmpty) return 'Display Name is required';
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          AuthTextField(
+            label: 'Username',
+            hint: 'john_doe',
+            prefixIcon: Icons.alternate_email_rounded,
+            controller: _usernameController,
+            keyboardType: TextInputType.text,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) return 'Username is required';
+              if (value.trim().length < 3) return 'Username must be at least 3 characters';
+              if (value.trim().contains(' ')) return 'Username cannot contain spaces';
               return null;
             },
           ),

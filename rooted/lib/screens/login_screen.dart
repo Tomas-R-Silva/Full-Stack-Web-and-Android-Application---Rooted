@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/auth_text_field.dart';
+import '../services/api_service.dart';
+import '../services/session_storage.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 
@@ -13,13 +15,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -29,23 +31,54 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: Replace with actual auth logic
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final result = await ApiService.login(
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
+      final token = (result['token'] as Map<String, dynamic>?) ?? {};
+      await SessionStorage.save(
+        jwt: token['jwt']?.toString() ?? '',
+        username: token['username']?.toString() ?? _usernameController.text.trim(),
+        role: token['role']?.toString() ?? '',
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => const HomeScreen(),
           ),
         );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login successful!'),
-          backgroundColor: AppTheme.primary,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: AppTheme.primary,
+          ),
+        );
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not reach the server. Please try again.'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
     }
   }
 
@@ -111,16 +144,13 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         children: [
           AuthTextField(
-            label: 'Email',
-            hint: 'you@example.com',
-            prefixIcon: Icons.email_outlined,
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
+            label: 'Username',
+            hint: 'john_doe',
+            prefixIcon: Icons.alternate_email_rounded,
+            controller: _usernameController,
+            keyboardType: TextInputType.text,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Email is required';
-              if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Enter a valid email address';
-              }
+              if (value == null || value.trim().isEmpty) return 'Username is required';
               return null;
             },
           ),

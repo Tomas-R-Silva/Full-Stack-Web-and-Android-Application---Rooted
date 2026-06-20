@@ -1,8 +1,27 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/session_storage.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String? _username;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final username = await SessionStorage.getUsername();
+    if (mounted) setState(() => _username = username);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,9 +31,9 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '👋 Hey, John',
-              style: TextStyle(
+            Text(
+              '👋 Hey, ${_username ?? '...'}',
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),

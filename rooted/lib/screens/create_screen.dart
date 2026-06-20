@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../widgets/location_autocomplete.dart';
+import '../services/api_service.dart';
+import '../services/session_storage.dart';
 
 
 class CreatePage extends StatefulWidget {
@@ -20,9 +22,15 @@ class _CreatePageState extends State<CreatePage> {
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _attendeesController = TextEditingController();
 
+  final TextEditingController _durationController = TextEditingController(text: '60');
+
   String _selectedCategory = 'Music';
   String? _selectedPlaceId;
   File? _eventImage;
+  DateTime? _selectedDate;
+  bool _isPublic = true;
+  bool _isSubmitting = false;
+  String? _createdEventId;
 
   final List<String> _categories = [
     'Music',
@@ -46,13 +54,107 @@ class _CreatePageState extends State<CreatePage> {
     }
   }
 
+  Future<void> _submitEvent() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please pick a date')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final jwt = await SessionStorage.getJwt();
+    if (jwt == null) {
+      setState(() => _isSubmitting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You need to be logged in to create an event.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      if (_createdEventId == null) {
+        final result = await ApiService.createEvent(
+          jwt: jwt,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          category: _selectedCategory.toUpperCase(),
+          location: _locationController.text.trim(),
+          startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
+          durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
+          maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
+          isPublic: _isPublic,
+        );
+
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+            _createdEventId = result['eventId']?.toString();
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event created successfully!')),
+          );
+        }
+      } else {
+        await ApiService.updateEvent(
+          jwt: jwt,
+          eventId: _createdEventId!,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          category: _selectedCategory.toUpperCase(),
+          location: _locationController.text.trim(),
+          startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
+          durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
+          maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
+          isPublic: _isPublic,
+        );
+
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event updated successfully!')),
+          );
+        }
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not reach the server. Please try again.'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Event'),
+        title: Text(_createdEventId == null ? 'Create Event' : 'Edit Event'),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          if (_createdEventId != null)
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Done', style: TextStyle(color: Colors.white)),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -160,19 +262,48 @@ class _CreatePageState extends State<CreatePage> {
               const SizedBox(height: 16),
 
               TextFormField(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Date',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.calendar_today),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.calendar_today),
+                  hintText: _selectedDate == null
+                      ? null
+                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
+                ),
+                controller: TextEditingController(
+                  text: _selectedDate == null
+                      ? ''
+                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
                 ),
                 readOnly: true,
+                validator: (_) => _selectedDate == null ? 'Pick a date' : null,
                 onTap: () async {
-                  await showDatePicker(
+                  final picked = await showDatePicker(
                     context: context,
                     firstDate: DateTime.now(),
                     lastDate: DateTime(2030),
-                    initialDate: DateTime.now(),
+                    initialDate: _selectedDate ?? DateTime.now(),
                   );
+                  if (picked != null) {
+                    setState(() => _selectedDate = picked);
+                  }
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _durationController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Duration (minutes)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.timer_outlined),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Enter a duration';
+                  if (int.tryParse(value) == null) return 'Must be a number';
+                  return null;
                 },
               ),
 
@@ -187,6 +318,16 @@ class _CreatePageState extends State<CreatePage> {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Public event'),
+                subtitle: const Text('Anyone can find and join this event'),
+                value: _isPublic,
+                onChanged: (value) => setState(() => _isPublic = value),
+              ),
+
               const SizedBox(height: 24),
 
               SizedBox(
@@ -196,28 +337,20 @@ class _CreatePageState extends State<CreatePage> {
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      final eventPayload = {
-                        'title': _titleController.text,
-                        'description': _descriptionController.text,
-                        'category': _selectedCategory,
-                        'location': _locationController.text,
-                        'placeId': _selectedPlaceId,
-                        'maxAttendees': int.tryParse(_attendeesController.text) ?? 0,
-                      };
-                      // TODO: Send eventPayload to backend
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Event created successfully!'),
+                  onPressed: _isSubmitting ? null : _submitEvent,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _createdEventId == null ? 'Create Event' : 'Save Changes',
+                          style: const TextStyle(fontSize: 16),
                         ),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    'Create Event',
-                    style: TextStyle(fontSize: 16),
-                  ),
                 ),
               ),
             ],
