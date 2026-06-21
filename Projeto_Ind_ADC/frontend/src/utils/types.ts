@@ -6,7 +6,22 @@ export type SignInFormData = {
   phone: string;
   address: string;
   categories: string[];
+  role: string;
 };
+
+export type SignInData = {
+  username: string;
+  password: string;
+  confirmation: string;
+  phone: string;
+  address: string;
+  role: string;
+};
+
+export type LogInData = {
+  username: string;
+  password: string;
+}
 
 export interface AccountProps {
   image?: ImageBitmap;

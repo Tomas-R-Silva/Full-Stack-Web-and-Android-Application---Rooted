@@ -34,7 +34,7 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
     e.preventDefault();
     try {
       await registerUser(formData);
-      navigate("/profile");
+      navigate("/login");
     } catch (err) {
       setErrors(err instanceof Error ? err.message : "Something went wrong");
     }

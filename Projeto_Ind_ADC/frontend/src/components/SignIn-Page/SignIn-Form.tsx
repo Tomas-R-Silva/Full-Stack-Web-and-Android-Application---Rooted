@@ -15,6 +15,7 @@ function SignInForm() {
     phone: "",
     address: "",
     categories: [],
+    role: "USER",
   });
 
   const [step, setStep] = useState(1);

@@ -1,11 +1,17 @@
 import { useState } from "react";
-import type { StepProps } from "../../utils/types";
+import type { LogInData } from "../../utils/types";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "../../api/auth";
 
-function LogInStep1({ formData, setFormData }: StepProps) {
+function LogInStep1() {
   //========== Hook ==========
+  const [formData, setFormData] = useState<LogInData>({
+    username: "",
+    password: "",
+  });
+
   const [errors, setErrors] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -19,15 +25,13 @@ function LogInStep1({ formData, setFormData }: StepProps) {
   };
 
   //========== Submissão dos Campos ==========
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors = { email: "", password: "", confirmation: "" };
+    const newErrors = { username: "", password: "", confirmation: "" };
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!formData.email.includes("@")) {
-      newErrors.email = "Invalid Email";
+    if (!formData.username) {
+      newErrors.username = "username is required";
     }
     if (!formData.password) newErrors.password = "Password is required";
 
@@ -36,24 +40,30 @@ function LogInStep1({ formData, setFormData }: StepProps) {
     const hasErrors = Object.values(newErrors).some((error) => error !== "");
     if (hasErrors) return;
 
-    console.log(formData);
+    try {
+      const response = await loginUser(formData);
+      console.log(response);
+      navigate("/profile");
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
   };
 
   return (
     <>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label className="form-label is-invalid">Email</label>
+          <label className="form-label is-invalid">Username</label>
           <input
             type="text"
-            name="email"
-            className={`form-control  ${errors.email ? "is-invalid" : ""}`}
-            value={formData.email}
+            name="username"
+            className={`form-control  ${errors.username ? "is-invalid" : ""}`}
+            value={formData.username}
             onChange={handleChange}
-            placeholder="Example@email.com"
+            placeholder="Your username"
           />
-          {errors.email && (
-            <div className="invalid-feedback">{errors.email}</div>
+          {errors.username && (
+            <div className="invalid-feedback">{errors.username}</div>
           )}
         </div>
         <div className="mb-3">

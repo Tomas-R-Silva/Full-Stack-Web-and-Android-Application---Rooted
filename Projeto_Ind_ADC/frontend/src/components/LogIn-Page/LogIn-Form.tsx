@@ -3,17 +3,6 @@ import type { SignInFormData } from "../../utils/types";
 import LogInStep1 from "./LogIn-Step1";
 
 function LogInForm() {
-  //========== Hooks ==========
-  const [formData, setFormData] = useState<SignInFormData>({
-    email: "",
-    password: "",
-    confirmation: "",
-    username: "",
-    phone: "",
-    address: "",
-    categories: [],
-  });
-
   //========== Return ==========
   return (
     <div style={{ width: "100%" }}>
@@ -23,7 +12,7 @@ function LogInForm() {
       >
         Log In into Rooted
       </h1>
-      <LogInStep1 formData={formData} setFormData={setFormData} />
+      <LogInStep1 />
     </div>
   );
 }
