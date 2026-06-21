@@ -8,9 +8,7 @@ function App() {
     <>
       <NavBar />
       <div>
-        <button onClick={() => navigate("/login")}>Log In</button>
         <button onClick={() => navigate("/profile")}>Profile</button>
-        <button onClick={() => navigate("/maps")}>Maps</button>
       </div>
     </>
   );

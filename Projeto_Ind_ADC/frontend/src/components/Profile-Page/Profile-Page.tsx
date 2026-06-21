@@ -4,6 +4,7 @@ import ProfileIdPoints from "./Profile-Id-Points";
 import ProfileInfo from "./Profile-Info";
 import ProfileStats from "./Profile-stats";
 import ProfileDashboard from "./Profile-Dashboard";
+import NavBar from "../NavBar/NavBar";
 import profileBG from "../../assets/images/profile_bg.png";
 
 function ProfilePage() {
@@ -23,6 +24,8 @@ function ProfilePage() {
           zIndex: -1,
         }}
       />
+
+      <NavBar />
 
       <div
         className="d-flex justify-content-center pt-5"
