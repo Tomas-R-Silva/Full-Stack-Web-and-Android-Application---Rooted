@@ -3,11 +3,11 @@ package pt.unl.fct.di.adc.firstwebapp.resources;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
@@ -24,6 +24,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
@@ -48,10 +50,10 @@ import pt.unl.fct.di.adc.firstwebapp.model.User;
 import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 
 @Path("/")
-public class UserResources{
+public class UserResources {
 
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-ind")
+			.setProjectId("adc-final")
 			.build()
 			.getService();
 
@@ -68,8 +70,8 @@ public class UserResources{
 		try {
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-			if (!user.userValidation())
-				return Error.invalid_input();		
+			user.userValidation();
+						
 
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
 			Entity existingUser = txn.get(userKey);
@@ -79,8 +81,6 @@ public class UserResources{
 			Entity newUser = Entity.newBuilder(userKey)
 					.set("user_name", user.getUsername())
 					.set("user_pwd", DigestUtils.sha512Hex(user.getPassword()))
-					.set("user_phone", user.getPhone())
-					.set("user_address", user.getAddress())
 					.set("user_role", user.getRole().name())
 					.set("user_creation_time", Timestamp.now())
 					.build();
@@ -114,28 +114,31 @@ public class UserResources{
 
 			Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
 
-			String tokenID = UUID.randomUUID().toString();
 			String userName = user.getKey().getName();
 			Role role = Role.valueof(user.getString("user_role"));
-			Token token = new Token(tokenID, userName, role);
 
-			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(tokenID);
+			String jwtString = JWTToken.createJWT(userName, Map.of("role", role.name()));
+			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
+			String jti = decoded.getId();
+			long issuedAt = decoded.getIssuedAt().getTime() / 1000L;
+			long expiresAt = decoded.getExpiresAt().getTime() / 1000L;
 
+			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jti);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
-					.set("token_id", token.getTokenId())
-					.set("user_name", token.getUsername())
-					.set("role", token.getRole().toString())
-					.set("issued_at", token.getIssuedAt())
-					.set("expires_at", token.getExpiresAt()) // se quiseres expiração
+					.set("jti", jti)
+					.set("user_name", userName)
+					.set("role", role.name())
+					.set("issued_at", issuedAt)
+					.set("expires_at", expiresAt)
 					.build();
 
 			datastore.put(sessionEntity);
 			return buildresponse(Map.of("token", Map.of(
-					"tokenId", tokenID,
-					"username", user.getString("user_name"),
+					"jwt", jwtString,
+					"username", userName,
 					"role", role.toString(),
-					"issuedAt", token.getIssuedAt(),
-					"expiresAt", token.getExpiresAt()
+					"issuedAt", issuedAt,
+					"expiresAt", expiresAt
 					)));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -150,7 +153,7 @@ public class UserResources{
 	public Response showUsers(ShowUsersRequest request) {
 		try {
 			Token tokenJson = request.getToken();
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 
 			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN, Role.BOFFICER});
 
@@ -182,7 +185,7 @@ public class UserResources{
 			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
 			Key userKeyToBeDeleted = getUser(userJson).getKey();	
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 
 			Validator.unauthorized(tokenJson, new Role []{Role.ADMIN});
 
@@ -206,9 +209,9 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(username);
-			Entity token = getToken(tokenJson);
+			Token token = AuthHelper.verifyToken(tokenJson);
 
-			if (!token.getString("user_name").equals(username)) 
+			if (!token.getUsername().equals(username)) 
 				Validator.unauthorized(tokenJson, new Role[]{Role.BOFFICER,Role.ADMIN});
 
 			Entity updatedUser = Entity.newBuilder(user)
@@ -233,7 +236,7 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 			
 			Entity user = getUser(userJson.getUsername());
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 			
 			Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
@@ -255,9 +258,9 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(userJson.getUsername());
-			Entity token = getToken(tokenJson);
+			Token token = AuthHelper.verifyToken(tokenJson);
 
-			if(!token.getString("user_name").equals(user.getString("user_name")))
+			if(!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN});
 
 			deleteAllSessionsForUser(userJson.getUsername());
@@ -277,7 +280,7 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(input.getUsername());
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 
 			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
 			Role newRole = Role.valueof(input.getNewrole());
@@ -286,7 +289,8 @@ public class UserResources{
 					.build();
 
 			datastore.put(updatedUser);
-			updateUserTokensRole(input.getUsername(),input.getNewrole());
+			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
+			deleteAllSessionsForUser(input.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -303,9 +307,9 @@ public class UserResources{
 			Token tokenJson = request.getToken();
 
 			Entity user = getUser(input.getUsername());
-			Entity token = getToken(tokenJson);
+			Token token = AuthHelper.verifyToken(tokenJson);
 
-			if(!token.getString("user_name").equals(user.getString("user_name")))
+			if(!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
 
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
@@ -330,7 +334,7 @@ public class UserResources{
 	public Response showAuthsessions (ShowSessionsRequest request){
 		try{
 			Token tokenJson = request.getToken();
-			getToken(tokenJson);
+			AuthHelper.verifyToken(tokenJson);
 			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
 			return buildresponse(Map.of("tokens", getAllSessions()));
 
@@ -350,7 +354,7 @@ public class UserResources{
 		while(sessions.hasNext()){
 			Entity session = sessions.next();
 			tokensOutput.add(Map.of(
-					"tokenID", session.getString("token_id"),
+					"tokenID", session.getString("jti"),
 					"username", session.getString("user_name"),
 					"role", session.getString("role"),
 					"expiresAt", session.getLong("expires_at")
@@ -395,7 +399,7 @@ public class UserResources{
 	}
 
 	private static Response buildresponse(Map<String,Object> map) {
-		return ResponceBuilder.constructor("success",map);
+		return ResponceBuilder.constructorsuccess(map);
 	}
 
 	private Entity getUser(ShortUser user) throws ErrorException{
@@ -407,20 +411,6 @@ public class UserResources{
 		Entity user = datastore.get(userKey);
 		Validator.userNotFound(new Entity[]{user});
 		return user;
-	}
-
-	private Entity getToken(Token tokenJson) throws ErrorException {
-		try {
-			Key tokenKey = datastore.newKeyFactory().setKind("Session").newKey(tokenJson.getTokenId());
-			Entity token = datastore.get(tokenKey);
-			Validator.invalidToken(token, tokenJson);
-			Validator.tokenExpired(token, tokenKey);
-			return token;
-		}catch(ErrorException e) {
-			datastore.delete(e.getKey());
-			throw e;
-		}
-
 	}
 
 

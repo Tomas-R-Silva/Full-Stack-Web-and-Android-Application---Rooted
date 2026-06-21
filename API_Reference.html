@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ADC Final — API Reference</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; background: #fff; padding: 40px; max-width: 900px; margin: 0 auto; }
+
+  h1 { font-size: 2rem; color: #1e3a5f; border-bottom: 3px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 6px; }
+  .subtitle { color: #555; font-size: 0.95rem; margin-bottom: 32px; }
+
+  h2 { font-size: 1.3rem; color: #fff; background: #1e3a5f; padding: 8px 14px; border-radius: 6px; margin: 32px 0 16px; page-break-after: avoid; }
+  h3 { font-size: 1rem; color: #1e3a5f; margin: 20px 0 8px; page-break-after: avoid; }
+
+  .endpoint { background: #f5f8ff; border-left: 4px solid #3a6bc4; border-radius: 0 6px 6px 0; padding: 14px 16px; margin-bottom: 20px; page-break-inside: avoid; }
+  .endpoint-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .method { background: #3a6bc4; color: #fff; font-weight: bold; font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+  .path { font-family: 'Courier New', monospace; font-size: 1rem; color: #1e3a5f; font-weight: bold; }
+  .note { font-size: 0.82rem; color: #888; font-style: italic; margin-left: auto; }
+
+  .desc { font-size: 0.88rem; color: #444; margin-bottom: 10px; }
+
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 12px 14px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.82rem; overflow-x: auto; margin: 6px 0; white-space: pre-wrap; }
+  .key-str { color: #9cdcfe; }
+  .val-str { color: #ce9178; }
+  .val-num { color: #b5cea8; }
+  .val-bool { color: #569cd6; }
+  .comment { color: #6a9955; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.87rem; margin: 8px 0; }
+  th { background: #dce8ff; color: #1e3a5f; text-align: left; padding: 7px 10px; border: 1px solid #b8cff0; }
+  td { padding: 6px 10px; border: 1px solid #dde; vertical-align: top; }
+  td:first-child { font-family: 'Courier New', monospace; color: #c7254e; background: #fafafa; white-space: nowrap; }
+  td:nth-child(2) { color: #3a6bc4; font-weight: 600; }
+  tr:nth-child(even) td { background: #f7f9ff; }
+
+  .tag { display: inline-block; font-size: 0.75rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; margin-right: 4px; }
+  .tag-admin { background: #fde8e8; color: #c0392b; }
+  .tag-bofficer { background: #fef3e2; color: #b7770d; }
+  .tag-auth { background: #e8f5e9; color: #2e7d32; }
+  .tag-public { background: #e3f2fd; color: #1565c0; }
+  .tag-multipart { background: #f3e5f5; color: #6a1b9a; }
+
+  .flow { background: #f0f7f0; border: 1px solid #a5d6a7; border-radius: 6px; padding: 14px 16px; margin-top: 16px; }
+  .flow ol { padding-left: 20px; font-size: 0.9rem; line-height: 1.9; }
+  .flow code { background: #dcedc8; color: #33691e; padding: 1px 5px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.85rem; }
+
+  .errors { background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 12px 16px; margin-top: 24px; }
+  .errors h3 { color: #e65100; margin: 0 0 8px; }
+  .errors table td:first-child { color: #c62828; }
+
+  @media print {
+    body { padding: 20px; }
+    h2 { page-break-before: auto; }
+    .endpoint { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<h1>ADC Final — API Reference</h1>
+<p class="subtitle">Base URL (local): <code>http://localhost:8080/rest</code> &nbsp;|&nbsp; Base URL (deploy): <code>https://adc-final.appspot.com/rest</code></p>
+
+<!-- ===================== USERS ===================== -->
+<h2>Users</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/createaccount</span>
+    <span class="tag tag-public">public</span>
+  </div>
+  <p class="desc">Creates a new user account.</p>
+  <pre><span class="comment">// Request body (JSON)</span>
+{
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"password"</span>: <span class="val-str">"Password123"</span>,
+    <span class="key-str">"phone"</span>:    <span class="val-str">"912345678"</span>,
+    <span class="key-str">"address"</span>:  <span class="val-str">"Lisboa"</span>,
+    <span class="key-str">"role"</span>:     <span class="val-str">"USER"</span>  <span class="comment">// USER | BOFFICER | ADMIN</span>
+  }
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/login</span>
+    <span class="tag tag-public">public</span>
+  </div>
+  <p class="desc">Authenticates a user and returns a JWT. Save the <code>jwt</code> value for all subsequent requests.</p>
+  <pre><span class="comment">// Request</span>
+{
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"password"</span>: <span class="val-str">"Password123"</span>
+  }
+}
+
+<span class="comment">// Response</span>
+{
+  <span class="key-str">"token"</span>: {
+    <span class="key-str">"jwt"</span>:       <span class="val-str">"eyJhbGciOiJIUzI1NiJ9.eyJ..."</span>,
+    <span class="key-str">"username"</span>:  <span class="val-str">"alice"</span>,
+    <span class="key-str">"role"</span>:      <span class="val-str">"USER"</span>,
+    <span class="key-str">"issuedAt"</span>:  <span class="val-num">1750000000</span>,
+    <span class="key-str">"expiresAt"</span>: <span class="val-num">1750007200</span>
+  }
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/logout</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/showusers</span>
+    <span class="tag tag-admin">ADMIN</span>
+    <span class="tag tag-bofficer">BOFFICER</span>
+  </div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> } }</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/modaccount</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Owner or ADMIN/BOFFICER</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"attributes"</span>: {
+      <span class="key-str">"address"</span>: <span class="val-str">"Porto"</span>,
+      <span class="key-str">"phone"</span>:   <span class="val-str">"987654321"</span>
+    }
+  }
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/changeuserpwd</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Owner or ADMIN</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"username"</span>:    <span class="val-str">"alice"</span>,
+    <span class="key-str">"oldpassword"</span>: <span class="val-str">"Password123"</span>,
+    <span class="key-str">"newpassword"</span>: <span class="val-str">"NewPass456"</span>
+  }
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/changeuserrole</span>
+    <span class="tag tag-admin">ADMIN only</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"newrole"</span>:  <span class="val-str">"BOFFICER"</span>
+  }
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/deleteaccount</span>
+    <span class="tag tag-admin">ADMIN only</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/showauthsessions</span>
+    <span class="tag tag-admin">ADMIN only</span>
+  </div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> } }</pre>
+</div>
+
+<!-- ===================== EVENTS ===================== -->
+<h2>Events</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/create</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="tag tag-multipart">multipart/form-data</span>
+  </div>
+  <p class="desc">Creates an event. Images are optional (max 5). All fields sent as form-data text except images.</p>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Example</th></tr>
+    <tr><td>jwt</td><td>Text</td><td>Yes</td><td>eyJhbGciOiJIUzI1NiJ9...</td></tr>
+    <tr><td>title</td><td>Text</td><td>Yes</td><td>Concerto de Jazz</td></tr>
+    <tr><td>description</td><td>Text</td><td>Yes</td><td>Uma noite incrível</td></tr>
+    <tr><td>category</td><td>Text</td><td>Yes</td><td>MUSIC</td></tr>
+    <tr><td>location</td><td>Text</td><td>Yes</td><td>Lisboa</td></tr>
+    <tr><td>startDate</td><td>Text</td><td>Yes</td><td>1760000000</td></tr>
+    <tr><td>durationMinutes</td><td>Text</td><td>Yes</td><td>120</td></tr>
+    <tr><td>maxAttendees</td><td>Text</td><td>No</td><td>50 (0 = unlimited)</td></tr>
+    <tr><td>isPublic</td><td>Text</td><td>Yes</td><td>true / false</td></tr>
+    <tr><td>images</td><td>File</td><td>No</td><td>foto.jpg (repeat up to 5×)</td></tr>
+  </table>
+  <p style="font-size:0.82rem;color:#777;margin-top:6px;">Categories: MUSIC · SPORTS · TECH · ART · FOOD · BUSINESS · COMMUNITY · OTHER</p>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/get</span>
+    <span class="tag tag-public">public (if public event)</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="comment">// optional for public events</span>
+  <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-e29b-41d4-a716-446655440000"</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/list</span>
+    <span class="tag tag-public">public</span>
+  </div>
+  <p class="desc">All filters are optional. Without a token only public events are returned.</p>
+  <pre>{
+  <span class="key-str">"token"</span>:             { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,       <span class="comment">// optional</span>
+  <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,    <span class="comment">// optional — UPCOMING|ONGOING|CANCELLED|COMPLETED</span>
+  <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,       <span class="comment">// optional</span>
+  <span class="key-str">"pageSize"</span>:          <span class="val-num">10</span>,
+  <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>           <span class="comment">// use nextCursor from previous response</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/update</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <p class="desc">Only the fields included in the body are updated.</p>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>,
+  <span class="key-str">"title"</span>:   <span class="val-str">"Novo título"</span>,     <span class="comment">// optional</span>
+  <span class="key-str">"location"</span>: <span class="val-str">"Porto"</span>            <span class="comment">// optional</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/cancel</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/delete</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/attend</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/unattend</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/attendees</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer, ADMIN or BOFFICER</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/uploadimage</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="tag tag-multipart">multipart/form-data</span>
+    <span class="note">Organizer or ADMIN · max 5 images</span>
+  </div>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Example</th></tr>
+    <tr><td>jwt</td><td>Text</td><td>eyJhbGciOiJIUzI1NiJ9...</td></tr>
+    <tr><td>eventId</td><td>Text</td><td>uuid-do-evento</td></tr>
+    <tr><td>image</td><td>File</td><td>foto.jpg</td></tr>
+  </table>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/deleteimage</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <pre>{
+  <span class="key-str">"token"</span>:    { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>:  <span class="val-str">"uuid"</span>,
+  <span class="key-str">"imageUrl"</span>: <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid"</span>
+}</pre>
+</div>
+
+<!-- ===================== FLOW ===================== -->
+<h2>Typical Test Flow</h2>
+<div class="flow">
+  <ol>
+    <li>Call <code>POST /createaccount</code> — create a user</li>
+    <li>Call <code>POST /login</code> — save the <code>jwt</code> from the response</li>
+    <li>Call <code>POST /events/create</code> (form-data) — save the <code>eventId</code></li>
+    <li>Call <code>POST /events/list</code> — confirm the event appears</li>
+    <li>Create a second account, login, and call <code>POST /events/attend</code></li>
+    <li>With the organizer's token, call <code>POST /events/attendees</code></li>
+    <li>Call <code>POST /logout</code> — confirm the JWT is rejected afterwards</li>
+  </ol>
+</div>
+
+<!-- ===================== ERRORS ===================== -->
+<div class="errors">
+  <h3>Error Codes</h3>
+  <table>
+    <tr><th>Code</th><th>Meaning</th></tr>
+    <tr><td>9900</td><td>Invalid credentials (wrong password)</td></tr>
+    <tr><td>9901</td><td>Username already exists</td></tr>
+    <tr><td>9902</td><td>User or event not found</td></tr>
+    <tr><td>9903</td><td>Invalid or revoked token (not logged in)</td></tr>
+    <tr><td>9904</td><td>Token expired — please login again</td></tr>
+    <tr><td>9905</td><td>Unauthorized — insufficient role</td></tr>
+    <tr><td>9906</td><td>Invalid input</td></tr>
+    <tr><td>9907</td><td>Forbidden action (e.g. editing a cancelled event)</td></tr>
+  </table>
+</div>
+
+</body>
+</html>

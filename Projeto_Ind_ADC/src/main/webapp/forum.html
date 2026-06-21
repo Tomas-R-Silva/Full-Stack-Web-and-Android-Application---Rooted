@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fórum do Evento — ADC</title>
+  <style>
+    :root { --blue:#007bff; --blue-d:#0056b3; --bg:#f4f4f4; --line:#e3e3e3; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: var(--bg); margin: 0; padding: 16px; color:#222; }
+    .wrap { max-width: 700px; margin: auto; }
+    h1 { color:#333; font-size: 22px; margin: 4px 0 16px; }
+    .card { background:#fff; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,.08); padding:16px; margin-bottom:16px; }
+    label { display:block; font-size:12px; color:#666; margin-bottom:4px; }
+    input, textarea { width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; font-size:14px; font-family:inherit; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; }
+    .row > div { flex:1; min-width:140px; }
+    button { padding:10px 14px; background:var(--blue); color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; }
+    button:hover { background:var(--blue-d); }
+    button.secondary { background:#6c757d; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .muted { color:#888; font-size:12px; }
+    #status { font-size:12px; min-height:16px; }
+    #status.err { color:#c0392b; } #status.ok { color:#2e7d32; }
+    .messages { display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-right:4px; }
+    .msg { border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:#fafafa; }
+    .msg.reply { margin-left:28px; border-left:3px solid var(--blue); }
+    .msg .head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .msg .author { font-weight:bold; font-size:13px; }
+    .msg .time { color:#999; font-size:11px; }
+    .msg .text { margin:4px 0 2px; white-space:pre-wrap; word-break:break-word; font-size:14px; }
+    .msg .actions { font-size:11px; }
+    .msg .actions a { color:var(--blue); cursor:pointer; margin-right:10px; }
+    .hidden { display:none; }
+    .replybar { font-size:12px; color:#555; margin-bottom:6px; }
+    .replybar a { color:#c0392b; cursor:pointer; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💬 Fórum do Evento</h1>
+
+  <!-- Login -->
+  <div class="card" id="loginCard">
+    <div class="row">
+      <div>
+        <label>Username</label>
+        <input id="username" placeholder="o teu username">
+      </div>
+      <div>
+        <label>Password</label>
+        <input id="password" type="password" placeholder="••••••">
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px; align-items:flex-end;">
+      <div style="flex:2">
+        <label>Base URL da API</label>
+        <input id="baseUrl" value="http://localhost:8080">
+      </div>
+      <div style="flex:0 0 auto">
+        <button id="loginBtn" onclick="login()">Entrar</button>
+      </div>
+    </div>
+    <p class="muted" style="margin-bottom:0">Faz login para obter o JWT. A sessão fica guardada nesta página.</p>
+  </div>
+
+  <!-- Forum -->
+  <div class="card hidden" id="forumCard">
+    <div class="row" style="align-items:flex-end;">
+      <div style="flex:2">
+        <label>Event ID</label>
+        <input id="eventId" placeholder="cola aqui o eventId">
+      </div>
+      <div style="flex:0 0 auto">
+        <button onclick="openForum()">Abrir fórum</button>
+      </div>
+      <div style="flex:0 0 auto">
+        <button class="secondary" onclick="logout()">Sair (<span id="who"></span>)</button>
+      </div>
+    </div>
+
+    <div id="chatArea" class="hidden" style="margin-top:14px;">
+      <div class="messages" id="messages"></div>
+
+      <div id="replybar" class="replybar hidden"></div>
+      <div style="margin-top:10px;">
+        <textarea id="text" rows="2" maxlength="1000" placeholder="Escreve uma mensagem… (máx 1000)"></textarea>
+        <div class="row" style="margin-top:8px; align-items:center;">
+          <div style="flex:0 0 auto"><button id="sendBtn" onclick="send()">Enviar</button></div>
+          <div style="flex:1" id="status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- estado -----------------------------------------------------------
+let JWT = null, ME = null, EVENT = null, REPLY_TO = null, POLL = null;
+
+const $ = id => document.getElementById(id);
+const base = () => $('baseUrl').value.replace(/\/+$/, '');
+function setStatus(msg, kind) { const s = $('status'); s.textContent = msg || ''; s.className = kind || ''; }
+
+// O backend embrulha as respostas em { status, data }.
+async function api(path, body) {
+  const res = await fetch(base() + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const json = await res.json().catch(() => ({}));
+  const data = json.data !== undefined ? json.data : json;
+  if (typeof data === 'string') throw new Error(data);          // erro: data é o código (ex. "FORBIDDEN")
+  if (Array.isArray(data)) throw new Error(JSON.stringify(data)); // erros de validação múltiplos
+  return data;
+}
+
+// ---- login ------------------------------------------------------------
+async function login() {
+  try {
+    $('loginBtn').disabled = true;
+    const data = await api('/rest/login', {
+      input: { username: $('username').value.trim(), password: $('password').value }
+    });
+    JWT = data.token.jwt;
+    ME = data.token.username;
+    $('who').textContent = ME;
+    $('loginCard').classList.add('hidden');
+    $('forumCard').classList.remove('hidden');
+  } catch (e) {
+    alert('Login falhou: ' + e.message);
+  } finally {
+    $('loginBtn').disabled = false;
+  }
+}
+
+function logout() {
+  if (POLL) clearInterval(POLL);
+  JWT = ME = EVENT = REPLY_TO = null;
+  $('forumCard').classList.add('hidden');
+  $('chatArea').classList.add('hidden');
+  $('loginCard').classList.remove('hidden');
+}
+
+// ---- fórum ------------------------------------------------------------
+function openForum() {
+  EVENT = $('eventId').value.trim();
+  if (!EVENT) { alert('Indica um Event ID'); return; }
+  $('chatArea').classList.remove('hidden');
+  refresh();
+  if (POLL) clearInterval(POLL);
+  POLL = setInterval(refresh, 4000); // poll simples a cada 4s
+}
+
+async function refresh() {
+  try {
+    const data = await api('/rest/forum/list', { token: { jwt: JWT }, eventId: EVENT });
+    render(data.posts || []);
+  } catch (e) {
+    setStatus('Erro ao listar: ' + e.message, 'err');
+  }
+}
+
+function render(posts) {
+  const box = $('messages');
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = '';
+  // raízes primeiro, depois respostas logo a seguir ao pai
+  const replies = {};
+  posts.forEach(p => { if (p.parentPostId) (replies[p.parentPostId] ||= []).push(p); });
+  posts.filter(p => !p.parentPostId).forEach(p => {
+    box.appendChild(node(p, false));
+    (replies[p.postId] || []).forEach(r => box.appendChild(node(r, true)));
+  });
+  if (!posts.length) box.innerHTML = '<p class="muted">Ainda sem mensagens. Sê o primeiro!</p>';
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+function node(p, isReply) {
+  const div = document.createElement('div');
+  div.className = 'msg' + (isReply ? ' reply' : '');
+  const when = new Date(p.createdAt * 1000).toLocaleString();
+  const canDelete = p.authorUsername === ME; // organizador/admin também conseguem (validado no servidor)
+  div.innerHTML = `
+    <div class="head">
+      <span class="author">${esc(p.authorUsername)}</span>
+      <span class="time">${when}</span>
+    </div>
+    <div class="text">${esc(p.text)}</div>
+    <div class="actions">
+      <a onclick="setReply('${p.postId}','${esc(p.authorUsername)}')">↩ Responder</a>
+      ${canDelete ? `<a onclick="del('${p.postId}')">🗑 Apagar</a>` : ''}
+    </div>`;
+  return div;
+}
+
+function setReply(id, author) {
+  REPLY_TO = id;
+  const bar = $('replybar');
+  bar.classList.remove('hidden');
+  bar.innerHTML = `A responder a <b>${author}</b> — <a onclick="cancelReply()">cancelar</a>`;
+  $('text').focus();
+}
+function cancelReply() { REPLY_TO = null; $('replybar').classList.add('hidden'); }
+
+async function send() {
+  const text = $('text').value.trim();
+  if (!text) return;
+  try {
+    $('sendBtn').disabled = true;
+    setStatus('A enviar…');
+    const body = { token: { jwt: JWT }, eventId: EVENT, text };
+    if (REPLY_TO) body.parentPostId = REPLY_TO;
+    await api('/rest/forum/post', body);
+    $('text').value = '';
+    cancelReply();
+    setStatus('Enviado ✓', 'ok');
+    refresh();
+  } catch (e) {
+    setStatus('Erro: ' + e.message, 'err');
+  } finally {
+    $('sendBtn').disabled = false;
+  }
+}
+
+async function del(postId) {
+  if (!confirm('Apagar esta mensagem?')) return;
+  try {
+    await api('/rest/forum/delete', { token: { jwt: JWT }, postId });
+    refresh();
+  } catch (e) {
+    setStatus('Erro ao apagar: ' + e.message, 'err');
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+</script>
+</body>
+</html>

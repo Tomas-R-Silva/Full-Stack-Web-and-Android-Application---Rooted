@@ -3,7 +3,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 public class LoginRequest extends AbstractShortUserRequest<LoginRequest.LoginRequestInput>{
     public LoginRequest() {}
     
-    public class LoginRequestInput extends ShortUser{
+    public static class LoginRequestInput extends ShortUser{
 
     	private String password;
     	
