@@ -1,0 +1,55 @@
+.bg-green {
+  background-color: var(--color-green);
+}
+
+.custom-navbar {
+  height: 85px;
+  padding: 0;
+}
+
+.custom-logo {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+}
+
+.custom-logo img {
+  width: 130px;
+  height: auto;
+}
+
+.navbar-link {
+  color: var(--color-bege) !important;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.navbar-link:hover {
+  opacity: 0.8;
+}
+
+.login-button {
+  width: 130px;
+  height: 42px;
+
+  background-color: var(--color-bege);
+  color: var(--color-green);
+
+  border-radius: 10px;
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 700;
+}
+
+.login-button:hover {
+  background-color: var(--color-bege);
+  color: var(--color-green);
+  opacity: 0.9;
+}

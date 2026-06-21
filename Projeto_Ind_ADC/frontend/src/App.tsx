@@ -1,14 +1,18 @@
 import { useNavigate } from "react-router-dom";
+import NavBar from "./components/NavBar/NavBar";
 
 function App() {
   const navigate = useNavigate();
 
   return (
-    <div>
-      <button onClick={() => navigate("/login")}>Log In</button>
-      <button onClick={() => navigate("/profile")}>Profile</button>
-      <button onClick={() => navigate("/maps")}>Maps</button>
-    </div>
+    <>
+      <NavBar />
+      <div>
+        <button onClick={() => navigate("/login")}>Log In</button>
+        <button onClick={() => navigate("/profile")}>Profile</button>
+        <button onClick={() => navigate("/maps")}>Maps</button>
+      </div>
+    </>
   );
 }
 

@@ -3,3 +3,8 @@
   --color-bege: #ECEAE0;
   --color-white: #FFFFFF;
 }
+
+body {
+  margin: 0;
+  background-color: var(--color-bege);
+}

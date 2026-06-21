@@ -27,29 +27,62 @@ function ProfileInfo() {
           {showInfo ? "Hide" : "Show"}
         </button>
       </div>
+
       <div
-        className="mt-3"
+        className="mt-3 w-100"
         style={{
-          filter: showInfo ? "none" : "blur(5px)",
-          transition: "filter 0.2s",
+          position: "relative",
         }}
       >
-        <p>
-          <span className="fw-bold">Name: </span>
-          <span>Placeholder name</span>
-        </p>
-        <p>
-          <span className="fw-bold">Email: </span>
-          <span>Placeholder email</span>
-        </p>
-        <p>
-          <span className="fw-bold">Password: </span>
-          <span>Receive password via email</span>
-        </p>
-        <p>
-          <span className="fw-bold">Role: </span>
-          <span>Placeholder role</span>
-        </p>
+        <div
+          style={{
+            filter: showInfo ? "none" : "blur(5px)",
+            transition: "filter 0.2s",
+            userSelect: showInfo ? "auto" : "none",
+          }}
+        >
+          <p>
+            <span className="fw-bold">Name: </span>
+            <span>Placeholder name</span>
+          </p>
+          <p>
+            <span className="fw-bold">Email: </span>
+            <span>Placeholder email</span>
+          </p>
+          <p>
+            <span className="fw-bold">Password: </span>
+            <span>Receive password via email</span>
+          </p>
+          <p>
+            <span className="fw-bold">Role: </span>
+            <span>Placeholder role</span>
+          </p>
+        </div>
+
+        {!showInfo && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+            }}
+          >
+            <span
+              style={{
+                color: "var(--color-green)",
+                padding: "10px 18px",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                border: "1px solid var(--color-green)",
+              }}
+            >
+              Sensitive information blurred
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

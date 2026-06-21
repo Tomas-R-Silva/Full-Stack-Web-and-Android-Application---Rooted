@@ -4,6 +4,7 @@ import ProfileIdPoints from "./Profile-Id-Points";
 import ProfileInfo from "./Profile-Info";
 import ProfileStats from "./Profile-stats";
 import ProfileDashboard from "./Profile-Dashboard";
+import profileBG from "../../assets/images/profile_bg.png";
 
 function ProfilePage() {
   const [showModal, setShowModal] = useState(false);
@@ -11,12 +12,28 @@ function ProfilePage() {
   return (
     <>
       <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundImage: `url(${profileBG})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: showModal ? "blur(8px)" : "none",
+          transition: "filter 0.2s",
+          zIndex: -1,
+        }}
+      />
+
+      <div
         className="d-flex justify-content-center pt-5"
-        style={{ minHeight: "100vh", background: "var(--color-bege)" }}
+        style={{ minHeight: "100vh", background: "transparent" }}
       >
         <div
           className="container"
           style={{
+            maxWidth: "1000px",
+            width: "100%",
+            margin: "0 auto",
             filter: showModal ? "blur(4px)" : "none",
             transition: "filter 0.2s",
             pointerEvents: showModal ? "none" : "auto",
@@ -48,10 +65,6 @@ function ProfilePage() {
                   Lets finish your profile
                 </button>
               </div>
-            </div>
-
-            <div className="col-4 text-end">
-              <h3>0 / 3 Completed</h3>
             </div>
           </div>
           <ProfileDashboard />

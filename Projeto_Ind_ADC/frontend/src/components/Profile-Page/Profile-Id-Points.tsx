@@ -21,7 +21,7 @@ function ProfileIdPoints() {
         />
       </div>
 
-      <div className="col-6">
+      <div className="col-8">
         <h2 style={{ color: "var(--color-green)" }}>Placeholder Name</h2>
         <p style={{ color: "var(--color-green)" }}>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eget
@@ -31,7 +31,7 @@ function ProfileIdPoints() {
         </p>
       </div>
 
-      <div className="col-4 text-end">
+      <div className="col-2 text-end">
         <h3>Points</h3>
       </div>
     </div>
