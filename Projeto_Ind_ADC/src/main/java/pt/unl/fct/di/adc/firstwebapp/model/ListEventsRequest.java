@@ -10,9 +10,8 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "cursor": "..."                   (optional, for pagination)
  * }
  */
-public class ListEventsRequest {
+public class ListEventsRequest  extends AbstractTokenRequest{
 
-    private Token token;
     private String category;
     private String status;
     private String organizerUsername;
@@ -22,9 +21,6 @@ public class ListEventsRequest {
     public ListEventsRequest() {
         this.pageSize = 20;
     }
-
-    public Token getToken() { return token; }
-    public void setToken(Token token) { this.token = token; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }

@@ -9,15 +9,11 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "eventId": "..."
  * }
  */
-public class EventActionRequest {
+public class EventActionRequest  extends AbstractTokenRequest{
 
-    private Token token;
     private String eventId;
 
     public EventActionRequest() {}
-
-    public Token getToken() { return token; }
-    public void setToken(Token token) { this.token = token; }
 
     public String getEventId() { return eventId; }
     public void setEventId(String eventId) { this.eventId = eventId; }

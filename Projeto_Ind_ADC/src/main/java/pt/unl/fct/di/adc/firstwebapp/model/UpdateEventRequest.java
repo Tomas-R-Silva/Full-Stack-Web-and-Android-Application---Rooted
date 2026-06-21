@@ -15,9 +15,8 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "coverImageUrl": "..."
  * }
  */
-public class UpdateEventRequest {
+public class UpdateEventRequest extends AbstractTokenRequest{
 
-    private Token token;
     private String eventId;
     private String title;
     private String description;
@@ -30,9 +29,6 @@ public class UpdateEventRequest {
     private String coverImageUrl;
 
     public UpdateEventRequest() {}
-
-    public Token getToken() { return token; }
-    public void setToken(Token token) { this.token = token; }
 
     public String getEventId() { return eventId; }
     public void setEventId(String eventId) { this.eventId = eventId; }

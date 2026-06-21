@@ -8,18 +8,14 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "parentPostId": "..."   (optional, for replies)
  * }
  */
-public class PostMessageRequest {
+public class PostMessageRequest  extends AbstractTokenRequest{
 
-	private Token token;
 	private String eventId;
 	private String text;
 	private String parentPostId;
 
 	public PostMessageRequest() {}
-
-	public Token getToken() { return token; }
-	public void setToken(Token token) { this.token = token; }
-
+	
 	public String getEventId() { return eventId; }
 	public void setEventId(String eventId) { this.eventId = eventId; }
 

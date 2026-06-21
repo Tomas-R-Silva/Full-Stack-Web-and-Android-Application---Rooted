@@ -3,17 +3,13 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 import java.util.Collections;
 import java.util.List;
 
-public class UploadImageRequest {
+public class UploadImageRequest extends AbstractTokenRequest{
 
-    private Token token;
     private String eventId;
     // Each string is a Base64 data URL: "data:image/jpeg;base64,/9j/4AAQ..."
     private List<String> images;
 
     public UploadImageRequest() {}
-
-    public Token getToken() { return token; }
-    public void setToken(Token token) { this.token = token; }
 
     public String getEventId() { return eventId; }
     public void setEventId(String eventId) { this.eventId = eventId; }
