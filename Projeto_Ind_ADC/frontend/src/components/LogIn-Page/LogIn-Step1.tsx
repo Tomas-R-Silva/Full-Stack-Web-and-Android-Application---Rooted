@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { LogInData } from "../../utils/types";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../api/auth";
+import { useAuth } from "../AuthContext";
 
 function LogInStep1() {
   //========== Hook ==========
@@ -16,6 +17,7 @@ function LogInStep1() {
   });
 
   //========== Receber Input e Limpar erros ==========
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: any) => {
@@ -42,7 +44,9 @@ function LogInStep1() {
 
     try {
       const response = await loginUser(formData);
-      console.log(response);
+      const token = response.data.token.jwt;
+      const username = response.data.token.username;
+      login(token, username);
       navigate("/profile");
     } catch (err) {
       console.log("Something went wrong!");
