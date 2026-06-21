@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+  <cron>
+    <url>/rest/forum/cleanup</url>
+    <description>Mark ended events COMPLETED and delete their forums</description>
+    <schedule>every 10 minutes</schedule>
+  </cron>
+</cronentries>

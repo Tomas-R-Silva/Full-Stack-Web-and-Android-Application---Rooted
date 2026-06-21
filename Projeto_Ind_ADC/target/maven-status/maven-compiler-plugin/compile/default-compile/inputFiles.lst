@@ -4,9 +4,12 @@
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/AbstractTokenRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/Token.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/CreateAccountRequest.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/DeletePostRequest.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ListForumRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/AbstractTokenUserRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/EventActionRequest.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ForumPost.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ListEventsRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ShowUserRoleRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/UploadImageRequest.java
@@ -17,6 +20,7 @@
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ShowSessionsRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/Event.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/resources/ForumResources.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/DeleteAccountRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/JWTConfig.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/CreateEventRequest.java
@@ -33,3 +37,4 @@
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ShowUsersRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/error/ErrorException.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/ResponceBuilder.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/PostMessageRequest.java

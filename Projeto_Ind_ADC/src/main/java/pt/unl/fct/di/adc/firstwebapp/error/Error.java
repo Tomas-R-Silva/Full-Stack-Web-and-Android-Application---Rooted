@@ -29,7 +29,10 @@ public class Error {
 			FRIENDSHIP_ALREADY_EXISTS="FRIENDSHIP_ALREADY_EXISTS",
 			INVALID_TITLE="INVALID_TITLE",
 			INVALID_DESCRIPTION="INVALID_DESCRIPTION",
-			INVALID_ORGANIZER="INVALID_ORGANIZER";
+			INVALID_ORGANIZER="INVALID_ORGANIZER",
+			INVALID_MESSAGE_TEXT="INVALID_MESSAGE_TEXT",
+			EVENT_NOT_OPEN_FOR_FORUM="EVENT_NOT_OPEN_FOR_FORUM",
+			POST_NOT_FOUND="POST_NOT_FOUND";
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
 		ErrorException.trow(9906,list);
@@ -101,6 +104,9 @@ public class Error {
 		case 9921->data=INVALID_TITLE;
 		case 9922->data=INVALID_DESCRIPTION;
 		case 9923->data=INVALID_ORGANIZER;
+		case 9930->data=INVALID_MESSAGE_TEXT;
+		case 9931->data=EVENT_NOT_OPEN_FOR_FORUM;
+		case 9932->data=POST_NOT_FOUND;
 		default->data="";
 		}
 		return data;
@@ -111,7 +117,7 @@ public class Error {
 			ErrorException ex=(ErrorException)e;
 			int status=ex.getStatus();
 			if(status==9906&&ex.getdata()!=null)
-				ResponceBuilder.constructor(status,ex.getdata());
+				return ResponceBuilder.constructor(status,ex.getdata());
 			else
 				return errorswitch(status);
 		}

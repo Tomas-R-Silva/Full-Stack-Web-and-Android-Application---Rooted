@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<datastore-indexes autoGenerate="false">
+
+  <!-- Forum list: filter posts of one event, ordered chronologically. -->
+  <datastore-index kind="ForumPost" ancestor="false">
+    <property name="event_id" direction="asc"/>
+    <property name="created_at" direction="asc"/>
+  </datastore-index>
+
+</datastore-indexes>
