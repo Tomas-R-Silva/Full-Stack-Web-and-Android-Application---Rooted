@@ -1,6 +1,9 @@
 import app from "../../assets/images/app_white.svg";
+import { useAuth } from "../AuthContext";
 
 function NavBar() {
+  const { isAuthenticated, username, logout } = useAuth();
+
   return (
     <nav
       className="navbar navbar-expand-lg"
@@ -22,6 +25,14 @@ function NavBar() {
         </a>
 
         <div className="d-none d-lg-flex align-items-center gap-4">
+          <a
+            className="navbar-brand fw-bold m-0"
+            style={{ color: "var(--color-bege)" }}
+            href="/profile"
+          >
+            Profile
+          </a>
+
           <a
             className="navbar-brand fw-bold m-0"
             style={{ color: "var(--color-bege)" }}
@@ -47,20 +58,43 @@ function NavBar() {
           </a>
         </div>
 
-        <a
-          className="btn fw-bold ms-auto"
-          style={{
-            border: "none",
-            background: "var(--color-white)",
-            color: "var(--color-green)",
-            width: "130px",
-            height: "42px",
-            borderRadius: "50px",
-          }}
-          href="/login"
-        >
-          Login
-        </a>
+        {isAuthenticated ? (
+          <div className="d-flex align-items-center gap-2">
+            <span style={{ color: "var(--color-green)", fontWeight: 600 }}>
+              {username}
+            </span>
+
+            <button
+              onClick={logout}
+              className="btn fw-bold ms-auto"
+              style={{
+                border: "none",
+                background: "var(--color-white)",
+                color: "var(--color-green)",
+                width: "130px",
+                height: "42px",
+                borderRadius: "50px",
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <a
+            className="btn fw-bold ms-auto"
+            style={{
+              border: "none",
+              background: "var(--color-white)",
+              color: "var(--color-green)",
+              width: "130px",
+              height: "42px",
+              borderRadius: "50px",
+            }}
+            href="/login"
+          >
+            Login
+          </a>
+        )}
       </div>
     </nav>
   );

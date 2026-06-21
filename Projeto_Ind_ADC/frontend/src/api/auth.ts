@@ -24,3 +24,31 @@ export const loginUser = async (data: LogInData) => {
 
   return res.json();
 };
+
+export const saveToken = (token: string) => {
+  sessionStorage.setItem("token", token);
+};
+
+export const getToken = () => {
+  return sessionStorage.getItem("token");
+};
+
+export const removeToken = () => {
+  sessionStorage.removeItem("token");
+};
+
+export const isAuthenticated = () => {
+  return !!sessionStorage.getItem("token");
+};
+
+export const getProfile = async () => {
+  const token = sessionStorage.getItem("token");
+
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.json();
+};

@@ -1,72 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Welcome ADC-Individual</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-
-    h1 {
-      color: #333;
-      margin-bottom: 30px;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    a {
-      display: block;
-      padding: 12px;
-      margin: 8px 0;
-      background: #007bff;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      transition: 0.2s;
-    }
-
-    a:hover {
-      background: #0056b3;
-    }
-
-    footer {
-      margin-top: 40px;
-      color: #777;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>Welcome ADC-Individual</h1>
-
-  <div class="container">
-    <a href="createaccount.html">Op1 - Create Account</a>
-    <a href="login.html">Op2 - Login</a>
-    <a href="showusers.html">Op3 - Show Users</a>
-    <a href="deleteaccount.html">Op4 - Delete Account</a>
-    <a href="modaccount.html">Op5 - Modify Account</a>
-    <a href="showauthsessions.html">Op6 - Show Auth Sessions</a>
-    <a href="showuserrole.html">Op7 - Show User Role</a>
-    <a href="changeuserrole.html">Op8 - Change User Role</a>
-    <a href="changeuserpwd.html">Op9 - Change User Password</a>
-    <a href="logout.html">Op10 - Logout</a>
-    <a href="forum.html">Op11 - Fórum do Evento</a>
-  </div>
-
-  <footer>
-    Copyright: ADC-PEI, FCT NOVA 2026
-  </footer>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="../../../frontend/src/main.tsx"></script>
+  </body>
 </html>

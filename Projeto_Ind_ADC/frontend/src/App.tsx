@@ -7,9 +7,6 @@ function App() {
   return (
     <>
       <NavBar />
-      <div>
-        <button onClick={() => navigate("/profile")}>Profile</button>
-      </div>
     </>
   );
 }
