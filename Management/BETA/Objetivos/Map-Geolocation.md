@@ -1,11 +1,11 @@
 # Geolocation, Map Visualization, and Representation of Activities
 
 ### Must Have Operations:
-- Visualizar atividades no mapa
-- Registar geolocalização de atividades
-- Pesquisa por proximidade
-- Filtrar atividades no mapa
-- Geolocalização do utilizador
+- Visualizar atividades no mapa ✅
+- Registar geolocalização de atividades ✅ (Feito apenas em Móvel)
+- Pesquisa por proximidade ✅ (Feito apenas em Móvel)
+- Filtrar atividades no mapa ✅ (Feito apenas em Móvel)
+- Geolocalização do utilizador ✅
 
 ### Should Have Operation:
 - Heatmap de atividades sustentáveis
