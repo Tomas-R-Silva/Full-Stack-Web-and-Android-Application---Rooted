@@ -16,12 +16,15 @@
   .endpoint { background: #f5f8ff; border-left: 4px solid #3a6bc4; border-radius: 0 6px 6px 0; padding: 14px 16px; margin-bottom: 20px; page-break-inside: avoid; }
   .endpoint-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .method { background: #3a6bc4; color: #fff; font-weight: bold; font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+  .method.get { background: #2e7d32; }
   .path { font-family: 'Courier New', monospace; font-size: 1rem; color: #1e3a5f; font-weight: bold; }
   .note { font-size: 0.82rem; color: #888; font-style: italic; margin-left: auto; }
 
   .desc { font-size: 0.88rem; color: #444; margin-bottom: 10px; }
+  .label { font-size: 0.78rem; font-weight: 700; color: #3a6bc4; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 2px; }
+  .label.out { color: #2e7d32; }
 
-  pre { background: #1e1e1e; color: #d4d4d4; padding: 12px 14px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.82rem; overflow-x: auto; margin: 6px 0; white-space: pre-wrap; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 12px 14px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.82rem; overflow-x: auto; margin: 4px 0 8px; white-space: pre-wrap; }
   .key-str { color: #9cdcfe; }
   .val-str { color: #ce9178; }
   .val-num { color: #b5cea8; }
@@ -32,7 +35,6 @@
   th { background: #dce8ff; color: #1e3a5f; text-align: left; padding: 7px 10px; border: 1px solid #b8cff0; }
   td { padding: 6px 10px; border: 1px solid #dde; vertical-align: top; }
   td:first-child { font-family: 'Courier New', monospace; color: #c7254e; background: #fafafa; white-space: nowrap; }
-  td:nth-child(2) { color: #3a6bc4; font-weight: 600; }
   tr:nth-child(even) td { background: #f7f9ff; }
 
   .tag { display: inline-block; font-size: 0.75rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; margin-right: 4px; }
@@ -40,7 +42,10 @@
   .tag-bofficer { background: #fef3e2; color: #b7770d; }
   .tag-auth { background: #e8f5e9; color: #2e7d32; }
   .tag-public { background: #e3f2fd; color: #1565c0; }
-  .tag-multipart { background: #f3e5f5; color: #6a1b9a; }
+  .tag-cron { background: #ede7f6; color: #4527a0; }
+
+  .callout { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 14px 16px; margin: 16px 0 28px; font-size: 0.88rem; line-height: 1.6; }
+  .callout code { background: #d6e4ff; color: #1e3a5f; padding: 1px 5px; border-radius: 3px; font-family: 'Courier New', monospace; }
 
   .flow { background: #f0f7f0; border: 1px solid #a5d6a7; border-radius: 6px; padding: 14px 16px; margin-top: 16px; }
   .flow ol { padding-left: 20px; font-size: 0.9rem; line-height: 1.9; }
@@ -62,6 +67,17 @@
 <h1>ADC Final — API Reference</h1>
 <p class="subtitle">Base URL (local): <code>http://localhost:8080/rest</code> &nbsp;|&nbsp; Base URL (deploy): <code>https://adc-final.appspot.com/rest</code></p>
 
+<div class="callout">
+  <strong>Response envelope.</strong> Every response — success or error — returns <strong>HTTP&nbsp;200</strong>.
+  The real result is inside the JSON body, wrapped as <code>{ "status": ..., "data": ... }</code>:
+  <pre style="margin-top:8px;"><span class="comment">// success</span>           { <span class="key-str">"status"</span>: <span class="val-num">200</span>,  <span class="key-str">"data"</span>: { ... } }
+<span class="comment">// validation error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9906</span>, <span class="key-str">"data"</span>: [ { <span class="key-str">"status"</span>: <span class="val-num">9930</span>, <span class="key-str">"data"</span>: <span class="val-str">"INVALID_MESSAGE_TEXT"</span> } ] }
+<span class="comment">// generic error</span>     { <span class="key-str">"status"</span>: <span class="val-num">9907</span>, <span class="key-str">"data"</span>: <span class="val-str">"FORBIDDEN"</span> }</pre>
+  Always check the <code>status</code> field — <code>200</code> = ok, any <code>99xx</code> = error.
+  In the examples below, the <span style="color:#2e7d32;font-weight:600;">Response</span> shows only the
+  content of <code>data</code>. Authentication uses <code>"token": { "jwt": "&lt;jwt&gt;" }</code> in the body.
+</div>
+
 <!-- ===================== USERS ===================== -->
 <h2>Users</h2>
 
@@ -71,17 +87,18 @@
     <span class="path">/createaccount</span>
     <span class="tag tag-public">public</span>
   </div>
-  <p class="desc">Creates a new user account.</p>
-  <pre><span class="comment">// Request body (JSON)</span>
-{
+  <p class="desc">Creates a new user account. <code>confirmation</code> must equal <code>password</code>.</p>
+  <div class="label">Request</div>
+  <pre>{
   <span class="key-str">"input"</span>: {
-    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
-    <span class="key-str">"password"</span>: <span class="val-str">"Password123"</span>,
-    <span class="key-str">"phone"</span>:    <span class="val-str">"912345678"</span>,
-    <span class="key-str">"address"</span>:  <span class="val-str">"Lisboa"</span>,
-    <span class="key-str">"role"</span>:     <span class="val-str">"USER"</span>  <span class="comment">// USER | BOFFICER | ADMIN</span>
+    <span class="key-str">"username"</span>:     <span class="val-str">"alice"</span>,
+    <span class="key-str">"password"</span>:     <span class="val-str">"Password123!"</span>,
+    <span class="key-str">"confirmation"</span>: <span class="val-str">"Password123!"</span>,
+    <span class="key-str">"role"</span>:         <span class="val-str">"USER"</span>   <span class="comment">// USER | BOFFICER | ADMIN</span>
   }
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -90,17 +107,13 @@
     <span class="path">/login</span>
     <span class="tag tag-public">public</span>
   </div>
-  <p class="desc">Authenticates a user and returns a JWT. Save the <code>jwt</code> value for all subsequent requests.</p>
-  <pre><span class="comment">// Request</span>
-{
-  <span class="key-str">"input"</span>: {
-    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
-    <span class="key-str">"password"</span>: <span class="val-str">"Password123"</span>
-  }
-}
-
-<span class="comment">// Response</span>
-{
+  <p class="desc">Authenticates a user and returns a JWT (valid 2h). Save <code>data.token.jwt</code> for all subsequent requests.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"password"</span>: <span class="val-str">"Password123!"</span> }
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{
   <span class="key-str">"token"</span>: {
     <span class="key-str">"jwt"</span>:       <span class="val-str">"eyJhbGciOiJIUzI1NiJ9.eyJ..."</span>,
     <span class="key-str">"username"</span>:  <span class="val-str">"alice"</span>,
@@ -117,10 +130,14 @@
     <span class="path">/logout</span>
     <span class="tag tag-auth">auth required</span>
   </div>
+  <p class="desc">Deletes the user's sessions (revokes the JWT). Own account, or ADMIN for others.</p>
+  <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Logout successful"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -130,7 +147,33 @@
     <span class="tag tag-admin">ADMIN</span>
     <span class="tag tag-bofficer">BOFFICER</span>
   </div>
+  <p class="desc">Lists every user.</p>
+  <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> } }</pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"users"</span>: [
+    { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> },
+    { <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>,   <span class="key-str">"role"</span>: <span class="val-str">"ADMIN"</span> }
+  ]
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/showuserrole</span>
+    <span class="tag tag-admin">ADMIN</span>
+    <span class="tag tag-bofficer">BOFFICER</span>
+  </div>
+  <p class="desc">Returns a single user's role.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -140,6 +183,8 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Owner or ADMIN/BOFFICER</span>
   </div>
+  <p class="desc">Updates the user's address and phone attributes.</p>
+  <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
@@ -150,6 +195,8 @@
     }
   }
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Updated successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -159,14 +206,18 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Owner or ADMIN</span>
   </div>
+  <p class="desc">Changes the password. The <code>oldpassword</code> must match the current one.</p>
+  <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
     <span class="key-str">"username"</span>:    <span class="val-str">"alice"</span>,
-    <span class="key-str">"oldpassword"</span>: <span class="val-str">"Password123"</span>,
-    <span class="key-str">"newpassword"</span>: <span class="val-str">"NewPass456"</span>
+    <span class="key-str">"oldpassword"</span>: <span class="val-str">"Password123!"</span>,
+    <span class="key-str">"newpassword"</span>: <span class="val-str">"NewPass456!"</span>
   }
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Password changed successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -175,6 +226,8 @@
     <span class="path">/changeuserrole</span>
     <span class="tag tag-admin">ADMIN only</span>
   </div>
+  <p class="desc">Changes a user's role. All that user's sessions are revoked (they must log in again).</p>
+  <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
@@ -182,6 +235,8 @@
     <span class="key-str">"newrole"</span>:  <span class="val-str">"BOFFICER"</span>
   }
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Role updated successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -190,10 +245,14 @@
     <span class="path">/deleteaccount</span>
     <span class="tag tag-admin">ADMIN only</span>
   </div>
+  <p class="desc">Deletes an account and all of its sessions.</p>
+  <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Account deleted successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -202,7 +261,20 @@
     <span class="path">/showauthsessions</span>
     <span class="tag tag-admin">ADMIN only</span>
   </div>
+  <p class="desc">Lists all active sessions (JWTs) in the system.</p>
+  <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> } }</pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"tokens"</span>: [
+    {
+      <span class="key-str">"tokenID"</span>:   <span class="val-str">"a1b2c3-jti"</span>,
+      <span class="key-str">"username"</span>:  <span class="val-str">"alice"</span>,
+      <span class="key-str">"role"</span>:      <span class="val-str">"USER"</span>,
+      <span class="key-str">"expiresAt"</span>: <span class="val-num">1750007200</span>
+    }
+  ]
+}</pre>
 </div>
 
 <!-- ===================== EVENTS ===================== -->
@@ -213,23 +285,22 @@
     <span class="method">POST</span>
     <span class="path">/events/create</span>
     <span class="tag tag-auth">auth required</span>
-    <span class="tag tag-multipart">multipart/form-data</span>
   </div>
-  <p class="desc">Creates an event. Images are optional (max 5). All fields sent as form-data text except images.</p>
-  <table>
-    <tr><th>Field</th><th>Type</th><th>Required</th><th>Example</th></tr>
-    <tr><td>jwt</td><td>Text</td><td>Yes</td><td>eyJhbGciOiJIUzI1NiJ9...</td></tr>
-    <tr><td>title</td><td>Text</td><td>Yes</td><td>Concerto de Jazz</td></tr>
-    <tr><td>description</td><td>Text</td><td>Yes</td><td>Uma noite incrível</td></tr>
-    <tr><td>category</td><td>Text</td><td>Yes</td><td>MUSIC</td></tr>
-    <tr><td>location</td><td>Text</td><td>Yes</td><td>Lisboa</td></tr>
-    <tr><td>startDate</td><td>Text</td><td>Yes</td><td>1760000000</td></tr>
-    <tr><td>durationMinutes</td><td>Text</td><td>Yes</td><td>120</td></tr>
-    <tr><td>maxAttendees</td><td>Text</td><td>No</td><td>50 (0 = unlimited)</td></tr>
-    <tr><td>isPublic</td><td>Text</td><td>Yes</td><td>true / false</td></tr>
-    <tr><td>images</td><td>File</td><td>No</td><td>foto.jpg (repeat up to 5×)</td></tr>
-  </table>
-  <p style="font-size:0.82rem;color:#777;margin-top:6px;">Categories: MUSIC · SPORTS · TECH · ART · FOOD · BUSINESS · COMMUNITY · OTHER</p>
+  <p class="desc">Creates an event (JSON). The organizer becomes the authenticated user; the event starts as <code>UPCOMING</code> with <code>attendeeCount: 0</code>. Images are added separately via <code>/events/uploadimages</code>.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>:           { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"title"</span>:           <span class="val-str">"Concerto de Jazz"</span>,
+  <span class="key-str">"description"</span>:     <span class="val-str">"Uma noite incrível"</span>,
+  <span class="key-str">"category"</span>:        <span class="val-str">"MUSIC"</span>,        <span class="comment">// MUSIC|SPORTS|TECH|ART|FOOD|BUSINESS|COMMUNITY|OTHER</span>
+  <span class="key-str">"location"</span>:        <span class="val-str">"Lisboa"</span>,
+  <span class="key-str">"startDate"</span>:       <span class="val-num">1760000000</span>,    <span class="comment">// epoch seconds</span>
+  <span class="key-str">"durationMinutes"</span>: <span class="val-num">120</span>,
+  <span class="key-str">"maxAttendees"</span>:    <span class="val-num">50</span>,            <span class="comment">// 0 = unlimited</span>
+  <span class="key-str">"isPublic"</span>:        <span class="val-bool">true</span>
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-...-446655440000"</span>, <span class="key-str">"message"</span>: <span class="val-str">"Event created successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -238,9 +309,31 @@
     <span class="path">/events/get</span>
     <span class="tag tag-public">public (if public event)</span>
   </div>
+  <p class="desc">Returns one event. Token optional for public events; required for private ones (organizer, attendee, ADMIN or BOFFICER).</p>
+  <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="comment">// optional for public events</span>
-  <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-e29b-41d4-a716-446655440000"</span>
+  <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-...-446655440000"</span>
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"event"</span>: {
+    <span class="key-str">"eventId"</span>:           <span class="val-str">"550e8400-..."</span>,
+    <span class="key-str">"title"</span>:             <span class="val-str">"Concerto de Jazz"</span>,
+    <span class="key-str">"description"</span>:       <span class="val-str">"Uma noite incrível"</span>,
+    <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,
+    <span class="key-str">"location"</span>:          <span class="val-str">"Lisboa"</span>,
+    <span class="key-str">"startDate"</span>:         <span class="val-num">1760000000</span>,
+    <span class="key-str">"durationMinutes"</span>:   <span class="val-num">120</span>,
+    <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"maxAttendees"</span>:      <span class="val-num">50</span>,
+    <span class="key-str">"attendeeCount"</span>:     <span class="val-num">3</span>,
+    <span class="key-str">"isPublic"</span>:          <span class="val-bool">true</span>,
+    <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,
+    <span class="key-str">"createdAt"</span>:         <span class="val-num">1759000000</span>,
+    <span class="key-str">"coverImageUrl"</span>:     <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid"</span>,
+    <span class="key-str">"imageUrls"</span>:         [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> ]
+  }
 }</pre>
 </div>
 
@@ -250,14 +343,21 @@
     <span class="path">/events/list</span>
     <span class="tag tag-public">public</span>
   </div>
-  <p class="desc">All filters are optional. Without a token only public events are returned.</p>
+  <p class="desc">All filters are optional. Without a token (or as a regular user) only public events are returned; ADMIN/BOFFICER see all. Paginated with a cursor.</p>
+  <div class="label">Request</div>
   <pre>{
-  <span class="key-str">"token"</span>:             { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,       <span class="comment">// optional</span>
-  <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,    <span class="comment">// optional — UPCOMING|ONGOING|CANCELLED|COMPLETED</span>
-  <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,       <span class="comment">// optional</span>
+  <span class="key-str">"token"</span>:             { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },   <span class="comment">// optional</span>
+  <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,        <span class="comment">// optional</span>
+  <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,     <span class="comment">// optional</span>
+  <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,        <span class="comment">// optional</span>
   <span class="key-str">"pageSize"</span>:          <span class="val-num">10</span>,
-  <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>           <span class="comment">// use nextCursor from previous response</span>
+  <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>            <span class="comment">// use nextCursor from a previous response</span>
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"events"</span>:     [ { <span class="comment">/* same shape as /events/get */</span> } ],
+  <span class="key-str">"count"</span>:      <span class="val-num">10</span>,
+  <span class="key-str">"nextCursor"</span>: <span class="val-str">"Cj0KFR...urlsafe"</span>   <span class="comment">// absent when there are no more pages</span>
 }</pre>
 </div>
 
@@ -268,13 +368,23 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>
   </div>
-  <p class="desc">Only the fields included in the body are updated.</p>
+  <p class="desc">Only the fields present in the body are updated. Blocked if the event is CANCELLED.</p>
+  <div class="label">Request</div>
   <pre>{
-  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>,
-  <span class="key-str">"title"</span>:   <span class="val-str">"Novo título"</span>,     <span class="comment">// optional</span>
-  <span class="key-str">"location"</span>: <span class="val-str">"Porto"</span>            <span class="comment">// optional</span>
+  <span class="key-str">"token"</span>:           { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>:         <span class="val-str">"uuid"</span>,
+  <span class="key-str">"title"</span>:           <span class="val-str">"Novo título"</span>,      <span class="comment">// all below optional</span>
+  <span class="key-str">"description"</span>:     <span class="val-str">"..."</span>,
+  <span class="key-str">"category"</span>:        <span class="val-str">"ART"</span>,
+  <span class="key-str">"location"</span>:        <span class="val-str">"Porto"</span>,
+  <span class="key-str">"startDate"</span>:       <span class="val-num">1760500000</span>,
+  <span class="key-str">"durationMinutes"</span>: <span class="val-num">90</span>,
+  <span class="key-str">"maxAttendees"</span>:    <span class="val-num">80</span>,
+  <span class="key-str">"isPublic"</span>:        <span class="val-bool">false</span>,
+  <span class="key-str">"coverImageUrl"</span>:   <span class="val-str">"https://..."</span>
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Event updated successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -284,10 +394,11 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>
   </div>
-  <pre>{
-  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
-}</pre>
+  <p class="desc">Marks the event as CANCELLED (does not delete it).</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Event cancelled successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -297,10 +408,11 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>
   </div>
-  <pre>{
-  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
-}</pre>
+  <p class="desc">Deletes the event and all its attendances.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Event deleted successfully"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -309,10 +421,12 @@
     <span class="path">/events/attend</span>
     <span class="tag tag-auth">auth required</span>
   </div>
-  <pre>{
-  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
-}</pre>
+  <p class="desc">Registers the authenticated user for a public event. Idempotent. Blocked if cancelled/completed/full/private.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Successfully registered for the event"</span> }
+<span class="comment">// or "Already attending this event" / "Event is full"</span></pre>
 </div>
 
 <div class="endpoint">
@@ -321,10 +435,12 @@
     <span class="path">/events/unattend</span>
     <span class="tag tag-auth">auth required</span>
   </div>
-  <pre>{
-  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
-}</pre>
+  <p class="desc">Cancels the user's registration and decrements the attendee count.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Successfully unregistered from the event"</span> }
+<span class="comment">// or "Not attending this event"</span></pre>
 </div>
 
 <div class="endpoint">
@@ -334,26 +450,43 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer, ADMIN or BOFFICER</span>
   </div>
+  <p class="desc">Lists everyone registered for the event.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> }</pre>
+  <div class="label out">Response</div>
   <pre>{
-  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+  <span class="key-str">"attendees"</span>: [
+    { <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>, <span class="key-str">"joinedAt"</span>: <span class="val-num">1759500000</span> }
+  ],
+  <span class="key-str">"count"</span>: <span class="val-num">1</span>
 }</pre>
 </div>
 
 <div class="endpoint">
   <div class="endpoint-header">
     <span class="method">POST</span>
-    <span class="path">/events/uploadimage</span>
+    <span class="path">/events/uploadimages</span>
     <span class="tag tag-auth">auth required</span>
-    <span class="tag tag-multipart">multipart/form-data</span>
-    <span class="note">Organizer or ADMIN · max 5 images</span>
+    <span class="note">Organizer or ADMIN · max 5 total</span>
   </div>
-  <table>
-    <tr><th>Field</th><th>Type</th><th>Example</th></tr>
-    <tr><td>jwt</td><td>Text</td><td>eyJhbGciOiJIUzI1NiJ9...</td></tr>
-    <tr><td>eventId</td><td>Text</td><td>uuid-do-evento</td></tr>
-    <tr><td>image</td><td>File</td><td>foto.jpg</td></tr>
-  </table>
+  <p class="desc">Uploads images to Google Cloud Storage and stores their URLs on the event. Images are sent as Base64 data URLs.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>:   { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>,
+  <span class="key-str">"images"</span>: [
+    <span class="val-str">"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."</span>,
+    <span class="val-str">"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."</span>
+  ]
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"imageUrls"</span>: [
+    <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid1"</span>,
+    <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span>
+  ],
+  <span class="key-str">"message"</span>: <span class="val-str">"Images uploaded successfully"</span>
+}</pre>
 </div>
 
 <div class="endpoint">
@@ -363,11 +496,100 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>
   </div>
+  <p class="desc">Removes one image from the event and from Cloud Storage.</p>
+  <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>:    { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"eventId"</span>:  <span class="val-str">"uuid"</span>,
   <span class="key-str">"imageUrl"</span>: <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid"</span>
 }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Image deleted successfully"</span> }</pre>
+</div>
+
+<!-- ===================== FORUM ===================== -->
+<h2>Forum</h2>
+<p class="desc" style="margin-bottom:16px;">Each event has its own forum (chat). Posts support threaded replies via <code>parentPostId</code>. Forums of cancelled/completed events are wiped by a cron job.</p>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/forum/post</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Publishes a message in an event's forum. Any authenticated user can post (organizer not required). Blocked if the event is CANCELLED or COMPLETED.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>:        { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>:      <span class="val-str">"uuid"</span>,
+  <span class="key-str">"text"</span>:         <span class="val-str">"Alguém vai de carro?"</span>,   <span class="comment">// 1..1000 chars</span>
+  <span class="key-str">"parentPostId"</span>: <span class="val-bool">null</span>      <span class="comment">// optional: postId being replied to (thread)</span>
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"postId"</span>:         <span class="val-str">"9c2b-...-uuid"</span>,
+  <span class="key-str">"eventId"</span>:        <span class="val-str">"uuid"</span>,
+  <span class="key-str">"authorUsername"</span>: <span class="val-str">"alice"</span>,
+  <span class="key-str">"text"</span>:           <span class="val-str">"Alguém vai de carro?"</span>,
+  <span class="key-str">"createdAt"</span>:      <span class="val-num">1750531234</span>,
+  <span class="key-str">"parentPostId"</span>:   <span class="val-bool">null</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/forum/list</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Lists an event's posts in chronological order. Paginated with a cursor.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>:    { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"eventId"</span>:  <span class="val-str">"uuid"</span>,
+  <span class="key-str">"pageSize"</span>: <span class="val-num">50</span>,        <span class="comment">// optional, default 50, max 100</span>
+  <span class="key-str">"cursor"</span>:   <span class="val-bool">null</span>       <span class="comment">// optional, from a previous nextCursor</span>
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"posts"</span>: [
+    {
+      <span class="key-str">"postId"</span>:       <span class="val-str">"9c2b-..."</span>,
+      <span class="key-str">"eventId"</span>:      <span class="val-str">"uuid"</span>,
+      <span class="key-str">"authorUsername"</span>: <span class="val-str">"alice"</span>,
+      <span class="key-str">"text"</span>:         <span class="val-str">"Olá malta!"</span>,
+      <span class="key-str">"createdAt"</span>:    <span class="val-num">1750531234</span>,
+      <span class="key-str">"parentPostId"</span>: <span class="val-bool">null</span>
+    }
+  ],
+  <span class="key-str">"count"</span>:      <span class="val-num">1</span>,
+  <span class="key-str">"nextCursor"</span>: <span class="val-str">"Cj0KFR...urlsafe"</span>   <span class="comment">// present only when the page is full</span>
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/forum/delete</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Author, event organizer or ADMIN</span>
+  </div>
+  <p class="desc">Deletes a single forum post.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"postId"</span>: <span class="val-str">"9c2b-...-uuid"</span> }</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Post deleted successfully"</span> }</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method get">GET</span>
+    <span class="path">/forum/cleanup</span>
+    <span class="tag tag-cron">cron only</span>
+  </div>
+  <p class="desc">Called automatically by App Engine cron (every 10 min). Marks ended events as COMPLETED and deletes the forums of completed/cancelled events. Rejected (FORBIDDEN) unless the request carries the <code>X-AppEngine-Cron</code> header.</p>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"eventsClosed"</span>: <span class="val-num">2</span>, <span class="key-str">"postsDeleted"</span>: <span class="val-num">17</span> }</pre>
 </div>
 
 <!-- ===================== FLOW ===================== -->
@@ -375,9 +597,10 @@
 <div class="flow">
   <ol>
     <li>Call <code>POST /createaccount</code> — create a user</li>
-    <li>Call <code>POST /login</code> — save the <code>jwt</code> from the response</li>
-    <li>Call <code>POST /events/create</code> (form-data) — save the <code>eventId</code></li>
+    <li>Call <code>POST /login</code> — save the <code>jwt</code> from <code>data.token.jwt</code></li>
+    <li>Call <code>POST /events/create</code> — save the <code>eventId</code></li>
     <li>Call <code>POST /events/list</code> — confirm the event appears</li>
+    <li>Call <code>POST /forum/post</code> then <code>POST /forum/list</code> — chat on the event</li>
     <li>Create a second account, login, and call <code>POST /events/attend</code></li>
     <li>With the organizer's token, call <code>POST /events/attendees</code></li>
     <li>Call <code>POST /logout</code> — confirm the JWT is rejected afterwards</li>
@@ -394,9 +617,15 @@
     <tr><td>9902</td><td>User or event not found</td></tr>
     <tr><td>9903</td><td>Invalid or revoked token (not logged in)</td></tr>
     <tr><td>9904</td><td>Token expired — please login again</td></tr>
-    <tr><td>9905</td><td>Unauthorized — insufficient role</td></tr>
-    <tr><td>9906</td><td>Invalid input</td></tr>
-    <tr><td>9907</td><td>Forbidden action (e.g. editing a cancelled event)</td></tr>
+    <tr><td>9905</td><td>Unauthorized — insufficient role / not owner</td></tr>
+    <tr><td>9906</td><td>Invalid input (the <code>data</code> array lists the offending fields)</td></tr>
+    <tr><td>9907</td><td>Forbidden — generic/unexpected error (e.g. editing a cancelled event, wrong old password, or a server-side exception)</td></tr>
+    <tr><td>9909</td><td>Password does not match confirmation</td></tr>
+    <tr><td>9910</td><td>Invalid role</td></tr>
+    <tr><td>9911 – 9923</td><td>Invalid event fields (category, location, dates, duration, title, description, organizer, …)</td></tr>
+    <tr><td>9930</td><td>Invalid message text (empty or &gt; 1000 chars)</td></tr>
+    <tr><td>9931</td><td>Event not open for forum (cancelled/completed)</td></tr>
+    <tr><td>9932</td><td>Forum post not found</td></tr>
   </table>
 </div>
 
