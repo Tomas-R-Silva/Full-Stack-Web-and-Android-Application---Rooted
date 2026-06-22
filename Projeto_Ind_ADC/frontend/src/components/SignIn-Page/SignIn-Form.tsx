@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SignInFormData } from "../../utils/types";
+import type { SignInData } from "../../utils/types";
 import SignInStep1 from "./SignIn-Step1";
 import SignInStep2 from "./SignIn-Step2";
 import SignInStep3 from "./SignIn-Step3";
@@ -7,14 +7,10 @@ import SignInProgress from "./SignIn-Progress";
 
 function SignInForm() {
   //========== Hooks ==========
-  const [formData, setFormData] = useState<SignInFormData>({
-    email: "",
+  const [formData, setFormData] = useState<SignInData>({
+    username: "",
     password: "",
     confirmation: "",
-    username: "",
-    phone: "",
-    address: "",
-    categories: [],
     role: "USER",
   });
 

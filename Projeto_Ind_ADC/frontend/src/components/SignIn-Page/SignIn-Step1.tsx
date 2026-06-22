@@ -22,11 +22,11 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
 
     const newErrors = { email: "", password: "", confirmation: "" };
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!formData.email.includes("@")) {
-      newErrors.email = "Invalid Email";
-    }
+    //if (!formData.email) {
+    //newErrors.email = "Email is required";
+    //} else if (!formData.email.includes("@")) {
+    //newErrors.email = "Invalid Email";
+    //}
     if (!formData.password) newErrors.password = "Password is required";
     if (!formData.confirmation) {
       newErrors.confirmation = "Please confirm your password";
@@ -51,8 +51,8 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
             type="text"
             name="email"
             className={`form-control  ${errors.email ? "is-invalid" : ""}`}
-            value={formData.email}
-            onChange={handleChange}
+            //value={formData.email}
+            //onChange={handleChange}
             placeholder="Example@email.com"
           />
           {errors.email && (
