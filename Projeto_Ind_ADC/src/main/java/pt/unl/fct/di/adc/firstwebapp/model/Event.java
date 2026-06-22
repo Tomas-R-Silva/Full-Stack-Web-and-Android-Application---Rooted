@@ -55,7 +55,7 @@ public class Event {
 			list.add(Error.createmap(9914));
 		if(durationMinutes<=0)
 			list.add(Error.createmap(9916));
-		if(list!=null)
+		if(!list.isEmpty())
 			Error.invalid_input(list);
 	}
 

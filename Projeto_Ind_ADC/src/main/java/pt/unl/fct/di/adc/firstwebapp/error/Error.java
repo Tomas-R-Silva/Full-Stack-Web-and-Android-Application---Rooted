@@ -32,7 +32,8 @@ public class Error {
 			INVALID_ORGANIZER="INVALID_ORGANIZER",
 			INVALID_MESSAGE_TEXT="INVALID_MESSAGE_TEXT",
 			EVENT_NOT_OPEN_FOR_FORUM="EVENT_NOT_OPEN_FOR_FORUM",
-			POST_NOT_FOUND="POST_NOT_FOUND";
+			POST_NOT_FOUND="POST_NOT_FOUND",
+			INVALID_EMAIL="INVALID_EMAIL";
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
 		ErrorException.trow(9906,list);
@@ -104,6 +105,7 @@ public class Error {
 		case 9921->data=INVALID_TITLE;
 		case 9922->data=INVALID_DESCRIPTION;
 		case 9923->data=INVALID_ORGANIZER;
+		case 9924->data=INVALID_EMAIL;
 		case 9930->data=INVALID_MESSAGE_TEXT;
 		case 9931->data=EVENT_NOT_OPEN_FOR_FORUM;
 		case 9932->data=POST_NOT_FOUND;

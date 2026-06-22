@@ -80,6 +80,7 @@ public class UserResources {
 
 			Entity newUser = Entity.newBuilder(userKey)
 					.set("user_name", user.getUsername())
+					.set("user_email", user.getEmail())
 					.set("user_pwd", DigestUtils.sha512Hex(user.getPassword()))
 					.set("user_role", user.getRole().name())
 					.set("user_creation_time", Timestamp.now())
@@ -136,6 +137,7 @@ public class UserResources {
 			return buildresponse(Map.of("token", Map.of(
 					"jwt", jwtString,
 					"username", userName,
+					"email", user.contains("user_email") ? user.getString("user_email") : "",
 					"role", role.toString(),
 					"issuedAt", issuedAt,
 					"expiresAt", expiresAt
@@ -167,6 +169,7 @@ public class UserResources {
 				Entity e = results.next();
 				users.add(Map.of(
 						"username", e.getString("user_name"),
+						"email", e.contains("user_email") ? e.getString("user_email") : "",
 						"role", e.getString("user_role")
 						));
 			}
@@ -241,6 +244,7 @@ public class UserResources {
 			Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
 					"username", user.getString("user_name"),
+					"email", user.contains("user_email") ? user.getString("user_email") : "",
 					"role", user.getString("user_role")
 					));
 		} catch (Exception e) {

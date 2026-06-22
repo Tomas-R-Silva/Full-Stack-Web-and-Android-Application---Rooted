@@ -26,14 +26,15 @@ public class User extends ShortUser{
 	private String password;
 	private String confirmation;
 	private String role;
+	private String email;
 
 	public User() {}
 
-	public User(String username, String password,String confirmation, String role) {
+	public User(String username, String password,String confirmation, String role, String email) {
 		this.password = password;
 		this.username = username;
 		this.confirmation = confirmation;
-
+		this.email = email;
 		this.role = role;
 	}
 
@@ -43,6 +44,14 @@ public class User extends ShortUser{
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public String getEmail(){
+		return email;
+	}
+
+	public void setEmail(String email){
+		this.email = email;
 	}
 
 	public String getConfirmation(){
@@ -69,12 +78,21 @@ public class User extends ShortUser{
 			list.add(Error.createmap(9909));
 		if(getRole()==null)
 			list.add(Error.createmap(9910));
-		if(list!=null)
-		Error.invalid_input(list);
+		if(!validEmail(getEmail()))
+			list.add(Error.createmap(9924));
+		if(!list.isEmpty())
+			Error.invalid_input(list);
 	}
 
 	public static boolean validVariable(String var){
 		return var != null && !var.isBlank();
+	}
+
+	private static final java.util.regex.Pattern EMAIL_PATTERN =
+			java.util.regex.Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+
+	public static boolean validEmail(String email){
+		return validVariable(email) && EMAIL_PATTERN.matcher(email).matches();
 	}
 
 	@Override
