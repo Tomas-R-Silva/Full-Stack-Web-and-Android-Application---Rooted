@@ -41,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await SessionStorage.save(
         jwt: token['jwt']?.toString() ?? '',
         username: token['username']?.toString() ?? _usernameController.text.trim(),
+        email: token['email']?.toString() ?? '',
         role: token['role']?.toString() ?? '',
       );
 

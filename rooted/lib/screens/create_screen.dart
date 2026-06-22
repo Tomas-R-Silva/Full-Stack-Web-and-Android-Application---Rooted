@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/location_autocomplete.dart';
 import '../services/api_service.dart';
@@ -49,9 +50,37 @@ class _CreatePageState extends State<CreatePage> {
       source: ImageSource.gallery,
       imageQuality: 85,
     );
-    if (picked != null) {
-      setState(() => _eventImage = File(picked.path));
+    if (picked == null) return;
+
+    // Copy out of the OS temp/cache dir into documents so it survives
+    // long form-filling sessions where the cache might get cleared.
+    final docsDir = await getApplicationDocumentsDirectory();
+    final extension = picked.path.split('.').last;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final savedImage = await File(picked.path).copy(
+      '${docsDir.path}/event_image_draft_$timestamp.$extension',
+    );
+
+    // Delete the previous draft if the user swapped the image.
+    final oldImage = _eventImage;
+    if (oldImage != null && await oldImage.exists()) {
+      await oldImage.delete();
     }
+
+    setState(() => _eventImage = savedImage);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _attendeesController.dispose();
+    _durationController.dispose();
+    // Clean up the draft image from disk when the screen is closed
+    // so draft files don't accumulate over time.
+    _eventImage?.delete().ignore();
+    super.dispose();
   }
 
   Future<void> _submitEvent() async {

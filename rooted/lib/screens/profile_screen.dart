@@ -16,7 +16,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const _prefsKey = 'profile_image_path';
+  // Key is per-user so each account starts with a blank avatar and
+  // their chosen picture doesn't bleed into another account's profile.
+  String get _prefsKey => 'profile_image_path_$_username';
 
   File? _profileImage;
   bool _isLoadingImage = true;
@@ -31,7 +33,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSavedImage();
     _loadSession();
   }
 
@@ -39,6 +40,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final username = await SessionStorage.getUsername();
     if (mounted && username != null) {
       setState(() => _username = username);
+      // Load the image only after we know the username so the key is correct.
+      await _loadSavedImage();
+    } else {
+      if (mounted) setState(() => _isLoadingImage = false);
     }
   }
 
@@ -74,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final extension = picked.path.split('.').last;
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final savedImage = await File(picked.path).copy(
-      '${docsDir.path}/profile_picture_$timestamp.$extension',
+      '${docsDir.path}/profile_picture_${_username}_$timestamp.$extension',
     );
 
     // Clean up the previous photo now that we have a new one.
