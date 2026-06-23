@@ -22,4 +22,11 @@
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
 
+	<!-- SPA fallback: client-side routes (e.g. /profile, /maps) have no matching
+	     static file, so serve the React entry point instead of a 404. -->
+	<error-page>
+		<error-code>404</error-code>
+		<location>/index.html</location>
+	</error-page>
+
 </web-app>
