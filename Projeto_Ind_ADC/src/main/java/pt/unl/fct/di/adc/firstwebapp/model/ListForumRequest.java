@@ -8,7 +8,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "pageSize": 50       (optional, default 50, max 100)
  * }
  */
-public class ListForumRequest  extends AbstractTokenRequest{
+public class ListForumRequest  extends TokenRequest{
 
 	private String eventId;
 	private String cursor;

@@ -1,9 +1,15 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-public class AbstractTokenRequest {
+public class TokenRequest {
+	
+	/**
+	 * {
+	 *   "token": { "tokenId": "<jwt>" }
+	 * }
+	 */
 	public Token token;
 	
-	public AbstractTokenRequest() {}
+	public TokenRequest() {}
 	
 	public Token getToken() {
         return token;

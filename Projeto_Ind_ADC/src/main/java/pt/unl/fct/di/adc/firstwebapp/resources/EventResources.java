@@ -38,8 +38,8 @@ import pt.unl.fct.di.adc.firstwebapp.model.CreateEventRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.DeleteImageRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.Event;
 import pt.unl.fct.di.adc.firstwebapp.model.Event.Status;
-import pt.unl.fct.di.adc.firstwebapp.model.EventActionRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.StringTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.Token;
 import pt.unl.fct.di.adc.firstwebapp.model.UpdateEventRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UploadImageRequest;
@@ -77,7 +77,8 @@ public class EventResources {
             event.setStartDate(req.getStartDate());
             event.setDurationMinutes(req.getDurationMinutes());
             event.setOrganizerUsername(tokenObj.getUsername());
-            event.setMaxAttendees(req.getMaxAttendees());
+            event.setMaxAttendees(zeroifnull(req.getMaxAttendees()));
+            event.setMinAttendees(zeroifnull(req.getMinAttendees()));
             event.setPublic(req.isPublic());
             event.setStatus(Status.UPCOMING);
             event.setCreatedAt(System.currentTimeMillis() / 1000L);
@@ -119,12 +120,12 @@ public class EventResources {
     @Path("/get")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getEvent(EventActionRequest req) {
+    public Response getEvent(StringTokenRequest req) {
         try {
-            if (req.getEventId() == null || req.getEventId().isBlank())
+            if (req.getInput() == null || req.getInput().isBlank())
                 return Error.invalid_input();
 
-            Entity entity = getEventEntity(req.getEventId());
+            Entity entity = getEventEntity(req.getInput());
 
             boolean isPublic = entity.getBoolean("is_public");
             if (!isPublic) {
@@ -135,7 +136,7 @@ public class EventResources {
                 Role role = token.getRole();
                 if (!requester.equals(organizer) && role != Role.ADMIN && role != Role.BOFFICER) {
                     // Also allow attendees to see the event
-                    if (!isAttending(req.getEventId(), requester))
+                    if (!isAttending(req.getInput(), requester))
                         ErrorException.trow(9905);
                 }
             }
@@ -284,22 +285,22 @@ public class EventResources {
     @Path("/delete")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteEvent(EventActionRequest req) {
+    public Response deleteEvent(StringTokenRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
 
-            if (req.getEventId() == null || req.getEventId().isBlank())
+            if (req.getInput() == null || req.getInput().isBlank())
                 return Error.invalid_input();
 
-            Entity existing = getEventEntity(req.getEventId());
+            Entity existing = getEventEntity(req.getInput());
             String organizer = existing.getString("organizer_username");
 
             if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
                 ErrorException.trow(9905);
 
-            Key key = datastore.newKeyFactory().setKind("Event").newKey(req.getEventId());
+            Key key = datastore.newKeyFactory().setKind("Event").newKey(req.getInput());
             datastore.delete(key);
-            deleteAllAttendances(req.getEventId());
+            deleteAllAttendances(req.getInput());
 
             return ok(Map.of("message", "Event deleted successfully"));
 
@@ -315,14 +316,14 @@ public class EventResources {
     @Path("/cancel")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response cancelEvent(EventActionRequest req) {
+    public Response cancelEvent(StringTokenRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
 
-            if (req.getEventId() == null || req.getEventId().isBlank())
+            if (req.getInput() == null || req.getInput().isBlank())
                 return Error.invalid_input();
 
-            Entity existing = getEventEntity(req.getEventId());
+            Entity existing = getEventEntity(req.getInput());
             String organizer = existing.getString("organizer_username");
 
             if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
@@ -347,14 +348,14 @@ public class EventResources {
     @Path("/attend")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response attendEvent(EventActionRequest req) {
+    public Response attendEvent(StringTokenRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
 
-            if (req.getEventId() == null || req.getEventId().isBlank())
+            if (req.getInput() == null || req.getInput().isBlank())
                 return Error.invalid_input();
 
-            Entity eventEntity = getEventEntity(req.getEventId());
+            Entity eventEntity = getEventEntity(req.getInput());
 
             if (eventEntity.getString("status").equals(Status.CANCELLED.name()) ||
                     eventEntity.getString("status").equals(Status.COMPLETED.name()))
@@ -364,7 +365,7 @@ public class EventResources {
                 ErrorException.trow(9905); // private event — attend via invite (future feature)
 
             String username = token.getUsername();
-            String attendanceId = req.getEventId() + "_" + username;
+            String attendanceId = req.getInput() + "_" + username;
             Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
 
             if (datastore.get(attendanceKey) != null)
@@ -377,7 +378,7 @@ public class EventResources {
 
             // Register attendance and increment counter
             Entity attendance = Entity.newBuilder(attendanceKey)
-                    .set("event_id", req.getEventId())
+                    .set("event_id", req.getInput())
                     .set("username", username)
                     .set("joined_at", System.currentTimeMillis() / 1000L)
                     .build();
@@ -402,17 +403,17 @@ public class EventResources {
     @Path("/unattend")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response unattendEvent(EventActionRequest req) {
+    public Response unattendEvent(StringTokenRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
 
-            if (req.getEventId() == null || req.getEventId().isBlank())
+            if (req.getInput() == null || req.getInput().isBlank())
                 return Error.invalid_input();
 
-            Entity eventEntity = getEventEntity(req.getEventId());
+            Entity eventEntity = getEventEntity(req.getInput());
 
             String username = token.getUsername();
-            String attendanceId = req.getEventId() + "_" + username;
+            String attendanceId = req.getInput() + "_" + username;
             Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
 
             if (datastore.get(attendanceKey) == null)
@@ -442,14 +443,14 @@ public class EventResources {
     @Path("/attendees")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAttendees(EventActionRequest req) {
+    public Response getAttendees(StringTokenRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
 
-            if (req.getEventId() == null || req.getEventId().isBlank())
+            if (req.getInput() == null || req.getInput().isBlank())
                 return Error.invalid_input();
 
-            Entity eventEntity = getEventEntity(req.getEventId());
+            Entity eventEntity = getEventEntity(req.getInput());
             String organizer = eventEntity.getString("organizer_username");
 
             if (!token.getUsername().equals(organizer) &&
@@ -459,7 +460,7 @@ public class EventResources {
 
             Query<Entity> query = Query.newEntityQueryBuilder()
                     .setKind("Attendance")
-                    .setFilter(PropertyFilter.eq("event_id", req.getEventId()))
+                    .setFilter(PropertyFilter.eq("event_id", req.getInput()))
                     .build();
 
             QueryResults<Entity> results = datastore.run(query);
@@ -632,6 +633,10 @@ public class EventResources {
         return map;
     }
 
+    private static int zeroifnull(Integer n) {
+    	return(n==null)?0:n;
+    }
+    
     private static Response ok(Map<String, Object> data) {
         return ResponceBuilder.constructorsuccess(data);
     }

@@ -31,11 +31,11 @@ import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
-import pt.unl.fct.di.adc.firstwebapp.model.DeletePostRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.Event.Status;
 import pt.unl.fct.di.adc.firstwebapp.model.ForumPost;
 import pt.unl.fct.di.adc.firstwebapp.model.ListForumRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.StringTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.Token;
 import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 
@@ -159,14 +159,14 @@ public class ForumResources {
     @Path("/delete")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deletePost(DeletePostRequest req) {
+    public Response deletePost(StringTokenRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
 
-            if (req.getPostId() == null || req.getPostId().isBlank())
+            if (req.getInput() == null || req.getInput().isBlank())
                 return Error.invalid_input();
 
-            Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getPostId());
+            Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getInput());
             Entity post = datastore.get(key);
             if (post == null)
                 ErrorException.trow(9932);

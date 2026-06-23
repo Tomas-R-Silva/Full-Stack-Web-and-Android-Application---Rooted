@@ -10,7 +10,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "cursor": "..."                   (optional, for pagination)
  * }
  */
-public class ListEventsRequest  extends AbstractTokenRequest{
+public class ListEventsRequest  extends TokenRequest{
 
     private String category;
     private String status;

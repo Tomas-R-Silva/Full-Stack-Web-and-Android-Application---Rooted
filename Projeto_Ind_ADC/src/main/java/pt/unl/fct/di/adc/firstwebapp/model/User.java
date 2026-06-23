@@ -13,6 +13,16 @@ import pt.unl.fct.di.adc.firstwebapp.model.Event.Category;
  * The create account creates an user
  */
 public class User extends ShortUser{
+	/**
+	 * {
+	 *   "username": "...",
+	 *   "password": "...",
+	 * 	 "confirmation": "...",
+	 *	 "role": "...",
+	 *	 "email": "..."
+	 * }
+	 */
+	
 
 	public enum Role {
 		USER,

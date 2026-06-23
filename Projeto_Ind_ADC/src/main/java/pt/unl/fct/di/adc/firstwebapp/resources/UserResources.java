@@ -30,26 +30,14 @@ import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
-import pt.unl.fct.di.adc.firstwebapp.model.AbstractTokenRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.*;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest.PasswordInput;
-import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
-import pt.unl.fct.di.adc.firstwebapp.model.CreateAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.DeleteAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.FriendRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.LogOutRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
-import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
-import pt.unl.fct.di.adc.firstwebapp.model.ShortUser;
-import pt.unl.fct.di.adc.firstwebapp.model.ShowSessionsRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ShowUsersRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.Token;
-import pt.unl.fct.di.adc.firstwebapp.model.User;
+import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
 import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
+
 
 @Path("/")
 public class UserResources {
@@ -67,7 +55,7 @@ public class UserResources {
 	@Path("/createaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createAccount(CreateAccountRequest request) {
+	public Response createAccount(UserRequest request) {
 		Transaction txn = datastore.newTransaction();
 		try {
 			User user = request.getInput();
@@ -154,7 +142,7 @@ public class UserResources {
 	@Path("/showusers")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUsers(ShowUsersRequest request) {
+	public Response showUsers(TokenShortUserRequest request) {
 		try {
 			Token tokenJson = request.getToken();
 			AuthHelper.verifyToken(tokenJson);
@@ -185,7 +173,7 @@ public class UserResources {
 	@Path("/deleteaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteAccount(DeleteAccountRequest request){
+	public Response deleteAccount(ShortUserTokenRequest request){
 		try {
 			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
@@ -236,7 +224,7 @@ public class UserResources {
 	@Path("/showuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUserRole (ShowUsersRequest request){
+	public Response showUserRole (ShortUserTokenRequest request){
 		try{
 			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
@@ -259,7 +247,7 @@ public class UserResources {
 	@Path("/logout")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response logOut(LogOutRequest request){
+	public Response logOut(ShortUserTokenRequest request){
 		try{
 			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
@@ -338,7 +326,7 @@ public class UserResources {
 	@Path("/showauthsessions")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showAuthsessions (ShowSessionsRequest request){
+	public Response showAuthsessions (TokenRequest request){
 		try{
 			Token tokenJson = request.getToken();
 			AuthHelper.verifyToken(tokenJson);
@@ -354,7 +342,7 @@ public class UserResources {
 	@Path("/addfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response addFriend(FriendRequest request) throws ErrorException{
+	public Response addFriend(ShortUserTokenRequest request) throws ErrorException{
 		Transaction txn = datastore.newTransaction();
 		try{
 			Token tokenJson = request.getToken();
@@ -398,7 +386,7 @@ public class UserResources {
 	@Path("/unfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response unfriend(FriendRequest request){
+	public Response unfriend(ShortUserTokenRequest request){
 		try {
 			ShortUser user = request.getInput();
 			Token tokenJson = request.getToken();
@@ -418,7 +406,7 @@ public class UserResources {
 	@Path("/showfriends")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriends(FriendRequest request){
+	public Response showFriends(ShortUserTokenRequest request){
 		try{
 			Token tokenJson = request.getToken();
 			AuthHelper.verifyToken(tokenJson);
@@ -435,7 +423,7 @@ public class UserResources {
 	@Path("/showfriendrequests")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriendRequests(AbstractTokenRequest request){
+	public Response showFriendRequests(TokenRequest request){
 		try{
 			Token tokenJson = request.getToken();
 			Token token = AuthHelper.verifyToken(tokenJson);

@@ -1,6 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-public class DeleteImageRequest extends AbstractTokenRequest{
+public class DeleteImageRequest extends TokenRequest{
 
 
     private String eventId;

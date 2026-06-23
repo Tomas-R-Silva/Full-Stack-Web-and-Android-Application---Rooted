@@ -1,8 +1,14 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-public abstract class AbstractShortUserRequest<E extends ShortUser> {
+public abstract class AbstractInputRequest<E> {
 
-	public AbstractShortUserRequest() {}
+	/**
+	 * {
+	 *   "input": "..."
+	 * }
+	 */
+	
+	public AbstractInputRequest() {}
 
 	private E input;
 

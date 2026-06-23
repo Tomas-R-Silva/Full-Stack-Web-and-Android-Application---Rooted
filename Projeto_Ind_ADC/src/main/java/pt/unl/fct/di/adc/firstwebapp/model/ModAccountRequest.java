@@ -1,6 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-public class ModAccountRequest extends AbstractTokenUserRequest<ModAccountRequest.ModAccountRequestInput>{
+public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountRequest.ModAccountRequestInput>{
 
     public ModAccountRequest() {}
 

@@ -14,7 +14,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "isPublic": true
  * }
  */
-public class UpdateEventRequest extends AbstractTokenRequest{
+public class UpdateEventRequest extends TokenRequest{
 
     private String eventId;
     private String title;

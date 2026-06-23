@@ -1,6 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-public class ChangeUserRole extends AbstractTokenUserRequest<ChangeUserRole.ChangeUserRoleInput>{
+public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.ChangeUserRoleInput>{
 
     public ChangeUserRole(){}
  
