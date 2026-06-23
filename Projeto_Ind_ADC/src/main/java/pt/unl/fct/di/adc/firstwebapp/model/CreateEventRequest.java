@@ -1,7 +1,5 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.List;
-
 /**
  * {
  *   "token": { "tokenId": "<jwt>" },
@@ -16,9 +14,8 @@ import java.util.List;
  *   "coverImageUrl": "..."   (optional)
  * }
  */
-public class CreateEventRequest {
+public class CreateEventRequest extends AbstractTokenRequest{
 
-    private Token token;
     private String title;
     private String description;
     private String category;
@@ -30,9 +27,6 @@ public class CreateEventRequest {
     private String coverImageUrl;
 
     public CreateEventRequest() {}
-
-    public Token getToken() { return token; }
-    public void setToken(Token token) { this.token = token; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
