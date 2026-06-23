@@ -10,6 +10,7 @@ function SignInForm() {
   const [formData, setFormData] = useState<SignInData>({
     username: "",
     password: "",
+    email: "",
     confirmation: "",
     role: "USER",
   });

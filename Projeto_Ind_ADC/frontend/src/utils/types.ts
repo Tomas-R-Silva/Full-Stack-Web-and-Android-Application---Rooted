@@ -3,6 +3,7 @@
 export type SignInData = {
   username: string;
   password: string;
+  email: string;
   confirmation: string;
   role: string;
 };
@@ -46,10 +47,6 @@ export type EventItem = {
   imageUrls: string[];
 };
 
-export type EventResponse = {
-  event: EventItem;
-};
-
 export type RequestEventList = {
   token?: {jwt:String;}
   category?: string;
@@ -60,7 +57,8 @@ export type RequestEventList = {
 };
 
 export type EventListResponse = {
-  events: EventResponse[];
+  data:{events: EventItem[];
   count: number;
   nextCursor?: string;
+  }
 };

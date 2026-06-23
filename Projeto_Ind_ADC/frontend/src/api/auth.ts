@@ -60,12 +60,12 @@ export const getProfile = async () => {
 export const getEventList = async (
   data: RequestEventList
 ): Promise<EventListResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/event/list`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/list`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ input: data }),
+    body: JSON.stringify(data),
   });
 
   if (!res.ok) {

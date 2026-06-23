@@ -87,11 +87,12 @@
     <span class="path">/createaccount</span>
     <span class="tag tag-public">public</span>
   </div>
-  <p class="desc">Creates a new user account. <code>confirmation</code> must equal <code>password</code>.</p>
+  <p class="desc">Creates a new user account. <code>confirmation</code> must equal <code>password</code>; <code>email</code> must match <code>algo@algo.algo</code>.</p>
   <div class="label">Request</div>
   <pre>{
   <span class="key-str">"input"</span>: {
     <span class="key-str">"username"</span>:     <span class="val-str">"alice"</span>,
+    <span class="key-str">"email"</span>:        <span class="val-str">"alice@mail.com"</span>,
     <span class="key-str">"password"</span>:     <span class="val-str">"Password123!"</span>,
     <span class="key-str">"confirmation"</span>: <span class="val-str">"Password123!"</span>,
     <span class="key-str">"role"</span>:         <span class="val-str">"USER"</span>   <span class="comment">// USER | BOFFICER | ADMIN</span>
@@ -117,6 +118,7 @@
   <span class="key-str">"token"</span>: {
     <span class="key-str">"jwt"</span>:       <span class="val-str">"eyJhbGciOiJIUzI1NiJ9.eyJ..."</span>,
     <span class="key-str">"username"</span>:  <span class="val-str">"alice"</span>,
+    <span class="key-str">"email"</span>:     <span class="val-str">"alice@mail.com"</span>,
     <span class="key-str">"role"</span>:      <span class="val-str">"USER"</span>,
     <span class="key-str">"issuedAt"</span>:  <span class="val-num">1750000000</span>,
     <span class="key-str">"expiresAt"</span>: <span class="val-num">1750007200</span>
@@ -153,8 +155,8 @@
   <div class="label out">Response</div>
   <pre>{
   <span class="key-str">"users"</span>: [
-    { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> },
-    { <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>,   <span class="key-str">"role"</span>: <span class="val-str">"ADMIN"</span> }
+    { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> },
+    { <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>,   <span class="key-str">"email"</span>: <span class="val-str">"bob@mail.com"</span>,   <span class="key-str">"role"</span>: <span class="val-str">"ADMIN"</span> }
   ]
 }</pre>
 </div>
@@ -173,7 +175,7 @@
   <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{ <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> }</pre>
+  <pre>{ <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> }</pre>
 </div>
 
 <div class="endpoint">
@@ -623,6 +625,7 @@
     <tr><td>9909</td><td>Password does not match confirmation</td></tr>
     <tr><td>9910</td><td>Invalid role</td></tr>
     <tr><td>9911 – 9923</td><td>Invalid event fields (category, location, dates, duration, title, description, organizer, …)</td></tr>
+    <tr><td>9924</td><td>Invalid email (empty or not matching <code>algo@algo.algo</code>)</td></tr>
     <tr><td>9930</td><td>Invalid message text (empty or &gt; 1000 chars)</td></tr>
     <tr><td>9931</td><td>Event not open for forum (cancelled/completed)</td></tr>
     <tr><td>9932</td><td>Forum post not found</td></tr>

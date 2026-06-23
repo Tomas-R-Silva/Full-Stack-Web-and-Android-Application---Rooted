@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import NavBar from "../NavBar/NavBar";
 import { getEventList } from "../../api/auth";
-import type { EventResponse, EventListResponse } from "../../utils/types";
+import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCard from "./Event-Card";
 
 function EventsPage() {
-  const [events, setEvents] = useState<EventResponse[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | undefined>();
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
+  //================= Hooks ===================
+  const [events, setEvents] = useState<EventItem[]>([]); //Events got from the request
+  const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
+  const [loading, setLoading] = useState(false); //if the main page is being loaded
+  const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
   const [error, setError] = useState<string | null>(null);
 
+  //============== Get the events =============
   const loadEvents = async (cursor?: string) => {
     try {
       if (cursor) {
@@ -19,29 +21,33 @@ function EventsPage() {
         setLoading(true);
       }
 
-      setError(null);
+      setError(null); //reset errors
 
+      //TODO change in order to have filters
       const res: EventListResponse = await getEventList({
-        pageSize: 8,
-        cursor,
+        pageSize: 10,
+        cursor: cursor ?? "",
       });
 
+      console.log(res.data.events);
+
       if (cursor) {
-        setEvents((prev) => [...prev, ...res.events]);
+        setEvents((prev) => [...prev, ...res.data.events]); //carregar mais => anteriores mais todos os restantes
       } else {
-        setEvents(res.events);
+        setEvents(res.data.events);
       }
 
-      setNextCursor(res.nextCursor);
+      setNextCursor(res.data.nextCursor);
     } catch (err) {
       console.error(err);
-      setError("Não foi possível carregar os eventos.");
+      setError("Could not load the events.");
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
   };
 
+  //fetch on page render
   useEffect(() => {
     loadEvents();
   }, []);
@@ -78,8 +84,8 @@ function EventsPage() {
         {!loading && events.length > 0 && (
           <>
             <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-              {events.map(({ event }) => (
-                <EventCard key={event.eventId} event={event} />
+              {events.map((e) => (
+                <EventCard key={e.eventId} event={e} />
               ))}
             </div>
 
