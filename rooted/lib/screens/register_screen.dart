@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/auth_text_field.dart';
 import '../services/api_service.dart';
+import '../services/session_storage.dart';
 import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -14,7 +15,6 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -25,7 +25,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _displayNameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -50,7 +49,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await ApiService.createAccount(
         username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
         password: _passwordController.text,
+      );
+
+      // Auto-login so SessionStorage is populated before reaching HomeScreen
+      final result = await ApiService.login(
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+      );
+      print("REGISTER RESPONSE: $result");
+      final token = (result['token'] as Map<String, dynamic>?) ?? {};
+      await SessionStorage.save(
+        jwt: token['jwt']?.toString() ?? '',
+        username: token['username']?.toString() ?? _usernameController.text.trim(),
+        email: token['email']?.toString() ?? _emailController.text.trim(),
+        role: token['role']?.toString() ?? '',
       );
 
       if (mounted) {
@@ -172,18 +186,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             validator: (value) {
               if (value == null || value.trim().isEmpty) return 'Name is required';
               if (value.trim().length < 2) return 'Name must be at least 2 characters';
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          AuthTextField(
-            label: 'Display Name',
-            hint: 'John123',
-            prefixIcon: Icons.assignment_ind,
-            controller: _displayNameController,
-            keyboardType: TextInputType.name,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) return 'Display Name is required';
               return null;
             },
           ),

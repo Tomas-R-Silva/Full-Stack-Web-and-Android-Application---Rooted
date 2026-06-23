@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
     HomePage(),
     DiscoverPage(),
     CreatePage(),
-    ConnectionsPage(),
+    ConnectionsScreen(),
     ProfileScreen(),
   ];
 

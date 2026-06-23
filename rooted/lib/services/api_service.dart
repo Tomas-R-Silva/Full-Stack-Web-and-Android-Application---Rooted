@@ -11,21 +11,24 @@ class ApiException implements Exception {
 }
 
 class ApiService {
+  // Your deployed Google Cloud backend.
   static const String baseUrl = 'https://adc-final.ey.r.appspot.com';
+  // NOTE: If you get 404s, your backend may be deployed under a sub-path.
+  // Try changing baseUrl to 'https://adc-final.ey.r.appspot.com/rest'
+  // (check your @ApplicationPath annotation or web.xml for the correct prefix).
 
   /// Calls POST /createaccount.
   ///
-  /// Mirrors UserResources.createAccount, which expects a User with
-  /// username, password and role. The User entity stored server-side
-  /// only has user_name/user_pwd/user_role/user_creation_time -- phone
-  /// and address are NOT persisted at registration time (only via
-  /// /modaccount later), so they're omitted here.
+  /// Mirrors UserResources.createAccount, which stores user_name,
+  /// user_email, user_pwd, user_role and user_creation_time.
+
   static Future<Map<String, dynamic>> createAccount({
     required String username,
+    required String email,
     required String password,
     String role = 'USER',
   }) async {
-    final uri = Uri.parse('$baseUrl/createaccount');
+    final uri = Uri.parse('$baseUrl/rest/createaccount');
 
     final response = await http.post(
       uri,
@@ -34,8 +37,10 @@ class ApiService {
         'input': {
           'username': username,
           'password': password,
+          'confirmation' : password,
           'role': role,
-        },
+          'email': email,
+        }
       }),
     );
 
@@ -50,11 +55,13 @@ class ApiService {
       return body;
     }
 
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Registration failed (status ${response.statusCode})';
-    throw ApiException(message);
+    throw ApiException(
+        body['message']?.toString() ??
+            body['error']?.toString() ??
+            'Registration failed'
+    );
   }
+
 
   /// Calls POST /login.
   ///
@@ -65,7 +72,7 @@ class ApiService {
     required String username,
     required String password,
   }) async {
-    final uri = Uri.parse('$baseUrl/login');
+    final uri = Uri.parse('$baseUrl/rest/login');
 
     final response = await http.post(
       uri,
@@ -104,7 +111,7 @@ class ApiService {
     required String username,
     required String jwt,
   }) async {
-    final uri = Uri.parse('$baseUrl/logout');
+    final uri = Uri.parse('$baseUrl/rest/logout');
 
     final response = await http.post(
       uri,
@@ -141,7 +148,7 @@ class ApiService {
     required String username,
     required String jwt,
   }) async {
-    final uri = Uri.parse('$baseUrl/deleteaccount');
+    final uri = Uri.parse('$baseUrl/rest/deleteaccount');
 
     final response = await http.post(
       uri,
@@ -174,7 +181,7 @@ class ApiService {
   /// Mirrors EventResources.createEvent, which authenticates via
   /// AuthHelper.verifyToken(req.getToken()) (needs a jwt) and expects
   /// title, description, category, location, startDate (epoch seconds),
-  /// durationMinutes, maxAttendees and isPublic. Returns the new eventId.
+  /// durationMinutes, maxAttendees and public. Returns the new eventId.
   static Future<Map<String, dynamic>> createEvent({
     required String jwt,
     required String title,
@@ -184,9 +191,9 @@ class ApiService {
     required int startDate,
     required int durationMinutes,
     required int maxAttendees,
-    required bool isPublic,
+    required bool public,
   }) async {
-    final uri = Uri.parse('$baseUrl/events/create');
+    final uri = Uri.parse('$baseUrl/rest/events/create');
 
     final response = await http.post(
       uri,
@@ -200,7 +207,7 @@ class ApiService {
         'startDate': startDate,
         'durationMinutes': durationMinutes,
         'maxAttendees': maxAttendees,
-        'isPublic': isPublic,
+        'public': public,
       }),
     );
 
@@ -235,9 +242,9 @@ class ApiService {
     int? startDate,
     int? durationMinutes,
     int? maxAttendees,
-    bool? isPublic,
+    bool? public,
   }) async {
-    final uri = Uri.parse('$baseUrl/events/update');
+    final uri = Uri.parse('$baseUrl/rest/events/update');
 
     final response = await http.post(
       uri,
@@ -252,7 +259,7 @@ class ApiService {
         if (startDate != null) 'startDate': startDate,
         if (durationMinutes != null) 'durationMinutes': durationMinutes,
         if (maxAttendees != null) 'maxAttendees': maxAttendees,
-        if (isPublic != null) 'isPublic': isPublic,
+        if (public != null) 'public': public,
       }),
     );
 
@@ -284,7 +291,7 @@ class ApiService {
     required String phone,
     required String address,
   }) async {
-    final uri = Uri.parse('$baseUrl/modaccount');
+    final uri = Uri.parse('$baseUrl/rest/modaccount');
 
     final response = await http.post(
       uri,
@@ -316,5 +323,182 @@ class ApiService {
         body['error']?.toString() ??
         'Profile update failed (status ${response.statusCode})';
     throw ApiException(message);
+  }
+
+  static Map<String, dynamic> _parseBody(String raw) {
+    try {
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static String _errorMessage(Map<String, dynamic> body, String fallback) =>
+      body['message']?.toString() ?? body['error']?.toString() ?? fallback;
+
+  /// Calls POST /rest/events/get.
+  static Future<Map<String, dynamic>> getEvent({
+    required String eventId,
+    String? jwt,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/get');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'input': {'eventId': eventId},
+        if (jwt != null) 'token': {'jwt': jwt},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw ApiException(_errorMessage(body, 'Failed to load event'));
+  }
+
+  /// Calls POST /rest/events/list.
+  ///
+  /// Pass [organizerUsername] to get events created by that user.
+  /// NOTE: there is currently no backend filter for "events I'm attending" —
+  /// once that endpoint exists, add an [attendingUsername] parameter here.
+  static Future<Map<String, dynamic>> listEvents({
+    String? jwt,
+    String? organizerUsername,
+    String? status,
+    String? category,
+    int pageSize = 50,
+    String? cursor,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/list');
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        if (jwt != null) 'token': {'jwt': jwt}, // ✅ IMPORTANT FIX (see below)
+        if (organizerUsername != null) 'organizerUsername': organizerUsername,
+        if (status != null) 'status': status,
+        if (category != null) 'category': category,
+        'pageSize': pageSize,
+        if (cursor != null) 'cursor': cursor,
+      }),
+    );
+
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw ApiException(_errorMessage(body, 'Failed to list events'));
+  }
+
+  /// Calls POST /rest/forum/post.
+  static Future<Map<String, dynamic>> postForumMessage({
+    required String jwt,
+    required String eventId,
+    required String text,
+    String? parentPostId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/forum/post');
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'eventId': eventId, // ✅ FIXED
+        'text': text,       // ✅ FIXED
+        if (parentPostId != null) 'parentPostId': parentPostId,
+      }),
+    );
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return body;
+    }
+
+    throw ApiException(
+        body['message']?.toString() ??
+            body['error']?.toString() ??
+            'Failed to send message'
+    );
+  }
+
+
+
+  /// Calls POST /rest/forum/list.
+  static Future<Map<String, dynamic>> listForumMessages({
+    required String jwt,
+    required String eventId,
+    int pageSize = 50,
+    String? cursor,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/forum/list');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'eventId': eventId,
+        'pageSize': pageSize,
+        if (cursor != null) 'cursor': cursor,
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw ApiException(_errorMessage(body, 'Failed to load messages'));
+  }
+
+  /// Calls POST /rest/forum/delete.
+  static Future<void> deleteForumPost({
+    required String jwt,
+    required String postId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/forum/delete');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'postId': postId,
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to delete message'));
+  }
+
+  /// Calls POST /rest/events/attend.
+  static Future<Map<String, dynamic>> attendEvent({
+    required String jwt,
+    required String eventId,
+  }) async {
+    final uri = Uri.parse('\$baseUrl/rest/events/attend');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'eventId': eventId},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw ApiException(_errorMessage(body, 'Failed to join event'));
+  }
+
+  /// Calls POST /rest/events/unattend.
+  static Future<Map<String, dynamic>> unattendEvent({
+    required String jwt,
+    required String eventId,
+  }) async {
+    final uri = Uri.parse('\$baseUrl/rest/events/unattend');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'eventId': eventId},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw ApiException(_errorMessage(body, 'Failed to leave event'));
   }
 }
