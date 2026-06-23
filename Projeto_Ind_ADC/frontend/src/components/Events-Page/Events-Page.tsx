@@ -3,6 +3,7 @@ import NavBar from "../NavBar/NavBar";
 import { getEventList } from "../../api/auth";
 import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCard from "./Event-Card";
+import EventModal from "./Event-Modal";
 
 function EventsPage() {
   //================= Hooks ===================
@@ -11,6 +12,7 @@ function EventsPage() {
   const [loading, setLoading] = useState(false); //if the main page is being loaded
   const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   //============== Get the events =============
   const loadEvents = async (cursor?: string) => {
@@ -56,7 +58,10 @@ function EventsPage() {
     <>
       <NavBar />
 
-      <main className="container py-5">
+      <div
+        className="container py-5"
+        style={{ filter: showModal ? "blur(4px)" : "none" }}
+      >
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="mb-0">Events</h1>
 
@@ -66,6 +71,7 @@ function EventsPage() {
               background: "var(--color-green)",
               color: "var(--color-white)",
             }}
+            onClick={() => setShowModal(true)}
           >
             Create Event
           </button>
@@ -116,7 +122,8 @@ function EventsPage() {
             )}
           </>
         )}
-      </main>
+      </div>
+      {showModal && <EventModal onClose={() => setShowModal(false)} />}
     </>
   );
 }

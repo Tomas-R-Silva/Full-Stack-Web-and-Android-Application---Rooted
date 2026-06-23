@@ -8,8 +8,8 @@ function SignInModal({
   const isSuccess = response?.status === 200;
 
   const messageMap: Record<number, string> = {
-    9901: "This email is already registered.",
-    // add more codes here as needed
+    9900: "Wrong Passord",
+    9901: "This username already exists.",
   };
 
   const message = isSuccess

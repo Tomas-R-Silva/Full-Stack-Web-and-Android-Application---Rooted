@@ -8,6 +8,7 @@ function App() {
   return (
     <>
       <NavBar />
+      <a>⚠️ Under Construction ⚠️</a>
     </>
   );
 }

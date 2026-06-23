@@ -27,14 +27,6 @@ function NavBar() {
           <a
             className="navbar-brand fw-bold m-0"
             style={{ color: "var(--color-bege)" }}
-            href="/profile"
-          >
-            Profile
-          </a>
-
-          <a
-            className="navbar-brand fw-bold m-0"
-            style={{ color: "var(--color-bege)" }}
             href="/events"
           >
             Events
@@ -69,22 +61,12 @@ function NavBar() {
           {isAuthenticated ? (
             <div className="d-flex align-items-center gap-2">
               <a
-                style={{
-                  color: "var(--color-bege)",
-                  fontWeight: 600,
-                  fontSize: 18,
-                }}
+                className="navbar-brand fw-bold m-0"
+                style={{ color: "var(--color-bege)" }}
+                href="/profile"
               >
-                Account:{" "}
+                Profile
               </a>
-              <span
-                style={{
-                  color: "var(--color-bege)",
-                  fontSize: 12,
-                }}
-              >
-                {username}
-              </span>
 
               <button
                 onClick={logout}

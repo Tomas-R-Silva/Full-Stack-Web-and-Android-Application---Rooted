@@ -47,6 +47,18 @@ export type EventItem = {
   imageUrls: string[];
 };
 
+export type RequestEventCreation = {
+  token: { jwt: string },
+  title: string,
+  description: string,
+  category: string,        // MUSIC|SPORTS|TECH|ART|FOOD|BUSINESS|COMMUNITY|OTHER
+  location: string,
+  startDate: number,
+  durationMinutes: number,
+  maxAttendees: number,
+  isPublic: boolean
+}
+
 export type RequestEventList = {
   token?: {jwt:String;}
   category?: string;
