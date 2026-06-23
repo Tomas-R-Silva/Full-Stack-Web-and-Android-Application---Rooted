@@ -49,15 +49,23 @@ export type EventItem = {
 
 export type RequestEventCreation = {
   token: { jwt: string },
+  input:{
   title: string,
   description: string,
-  category: string,        // MUSIC|SPORTS|TECH|ART|FOOD|BUSINESS|COMMUNITY|OTHER
+  category: string,
   location: string,
   startDate: number,
   durationMinutes: number,
   maxAttendees: number,
-  isPublic: boolean
-}
+  minAttendees: number,
+  public: boolean
+  }
+};
+
+export type EventCreationResponse = {
+  eventId: string,
+  message: string,
+};
 
 export type RequestEventList = {
   token?: {jwt:String;}

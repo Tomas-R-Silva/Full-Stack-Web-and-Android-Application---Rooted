@@ -1,4 +1,4 @@
-import type { SignInData, LogInData, RequestEventList, EventListResponse } from "../utils/types";
+import type { SignInData, LogInData, RequestEventList, EventListResponse, RequestEventCreation, EventCreationResponse } from "../utils/types";
 
 //========== USER ==========
 
@@ -57,6 +57,26 @@ export const getProfile = async () => {
 
 //========== EVENT ==========
 
+export const createEvent = async (
+  data: RequestEventCreation
+): Promise<EventCreationResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify( data ),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch event list");
+  }
+
+  const json: EventCreationResponse = await res.json();
+
+  return json;
+};
+
 export const getEventList = async (
   data: RequestEventList
 ): Promise<EventListResponse> => {
@@ -65,7 +85,7 @@ export const getEventList = async (
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ input: data }),
   });
 
   if (!res.ok) {

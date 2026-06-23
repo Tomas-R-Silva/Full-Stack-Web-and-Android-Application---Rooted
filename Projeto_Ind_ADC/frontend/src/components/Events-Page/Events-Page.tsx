@@ -4,6 +4,7 @@ import { getEventList } from "../../api/auth";
 import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCard from "./Event-Card";
 import EventModal from "./Event-Modal";
+import { useAuth } from "../AuthContext";
 
 function EventsPage() {
   //================= Hooks ===================
@@ -13,6 +14,7 @@ function EventsPage() {
   const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   //============== Get the events =============
   const loadEvents = async (cursor?: string) => {
@@ -49,6 +51,12 @@ function EventsPage() {
     }
   };
 
+  const authenticatedToModal = () => {
+    if (isAuthenticated) {
+      setShowModal(true);
+    }
+  };
+
   //fetch on page render
   useEffect(() => {
     loadEvents();
@@ -71,7 +79,7 @@ function EventsPage() {
               background: "var(--color-green)",
               color: "var(--color-white)",
             }}
-            onClick={() => setShowModal(true)}
+            onClick={authenticatedToModal}
           >
             Create Event
           </button>
