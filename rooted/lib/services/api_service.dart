@@ -389,6 +389,7 @@ class ApiService {
   }
 
   /// Calls POST /rest/forum/post.
+
   static Future<Map<String, dynamic>> postForumMessage({
     required String jwt,
     required String eventId,
@@ -402,23 +403,23 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'token': {'jwt': jwt},
-        'eventId': eventId, // ✅ FIXED
-        'text': text,       // ✅ FIXED
-        if (parentPostId != null) 'parentPostId': parentPostId,
+        'input': {
+          'eventId': eventId,
+          'text': text,
+          if (parentPostId != null) 'parentPostId': parentPostId,
+        }
       }),
     );
-    final body = jsonDecode(response.body);
+
+    final body = _parseBody(response.body);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     }
 
-    throw ApiException(
-        body['message']?.toString() ??
-            body['error']?.toString() ??
-            'Failed to send message'
-    );
+    throw ApiException(_errorMessage(body, 'Failed to post message'));
   }
+
 
 
 
@@ -435,9 +436,11 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'token': {'jwt': jwt},
-        'eventId': eventId,
-        'pageSize': pageSize,
-        if (cursor != null) 'cursor': cursor,
+        'input' : {
+          'eventId': eventId,
+          'pageSize': pageSize,
+          if (cursor != null) 'cursor': cursor,
+      }
       }),
     );
     final body = _parseBody(response.body);
