@@ -4,7 +4,7 @@ public abstract class AbstractInputRequest<E> {
 
 	/**
 	 * {
-	 *   "input": "..."
+	 *   "input": E
 	 * }
 	 */
 	

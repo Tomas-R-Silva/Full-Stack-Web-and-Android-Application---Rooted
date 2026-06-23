@@ -1,17 +1,15 @@
-package pt.unl.fct.di.adc.firstwebapp.model;
+package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import com.google.cloud.datastore.Value;
+import java.util.UUID;
 
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
-import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 
-public class Event {
+public class Event extends EventAtributsid {
 
 	public enum Category {
 		MUSIC, SPORTS, TECH, ART, FOOD, BUSINESS, COMMUNITY, OTHER;
@@ -24,23 +22,30 @@ public class Event {
 		public static Status valueof(String v) {
 			try{return Status.valueOf(v);}catch (Exception e) {return null;}}
 	}
-
-	private String eventId;
-	private String title;
-	private String description;
-	private String category;
-	private String location;
-	private long startDate;       // epoch seconds
-	private long durationMinutes; // how long the event lasts
+	
 	private String organizerUsername;
-	private int maxAttendees;     // 0 = unlimited
-	private int minAttendees;
-	private boolean isPublic;
 	private Status status;
-	private long createdAt;       // epoch seconds
+	private long createdAt;  // epoch seconds
 	private List<String> imageUrls = new ArrayList<>();
 
 	public Event() {}
+
+	public Event(EventAtributs input,String username) throws ErrorException {
+		this.setEventId(UUID.randomUUID().toString());
+		this.setTitle(input.getTitle());
+		this.setDescription(input.getDescription());
+		this.setCategory(input.getCategory());
+		this.setLocation(input.getLocation());
+		this.setStartDate(input.getStartDate());
+		this.setDurationMinutes(input.getDurationMinutes());
+		this.setOrganizerUsername(username);
+		this.setMaxAttendees(input.getMaxAttendees());
+		this.setMinAttendees(input.getMinAttendees());
+		this.setPublic(input.isPublic());
+		this.setStatus(Status.UPCOMING);
+		this.setCreatedAt(System.currentTimeMillis() / 1000L);
+		isValid();
+	}
 
 	public void isValid() throws ErrorException{
 		List<Map<String,Object>> list=new LinkedList<>();
@@ -70,35 +75,8 @@ public class Event {
 		return var != null && !var.isBlank();
 	}
 
-	public String getEventId() { return eventId; }
-	public void setEventId(String eventId) { this.eventId = eventId; }
-
-	public String getTitle() { return title; }
-	public void setTitle(String title) { this.title = title; }
-
-	public String getDescription() { return description; }
-	public void setDescription(String description) { this.description = description; }
-
-	public Category getCategory() { return Category.valueof(category); }
-	public void setCategory(String category) { this.category = category; }
-
-	public String getLocation() { return location; }
-	public void setLocation(String location) { this.location = location; }
-
-	public long getStartDate() { return startDate; }
-	public void setStartDate(long startDate) { this.startDate = startDate; }
-
-	public long getDurationMinutes() { return durationMinutes; }
-	public void setDurationMinutes(long durationMinutes) { this.durationMinutes = durationMinutes; }
-
 	public String getOrganizerUsername() { return organizerUsername; }
 	public void setOrganizerUsername(String organizerUsername) { this.organizerUsername = organizerUsername; }
-
-	public int getMaxAttendees() { return maxAttendees; }
-	public void setMaxAttendees(int maxAttendees) { this.maxAttendees = maxAttendees; }
-
-	public boolean isPublic() { return isPublic; }
-	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 
 	public Status getStatus() { return status; }
 	public void setStatus(Status status) { this.status = status; }
@@ -109,6 +87,4 @@ public class Event {
 	public List<String> getImageUrls() { return imageUrls; }
 	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 
-	public int getMinAttendees() { return minAttendees; }
-	public void setMinAttendees(int minAttendees) { this.minAttendees = minAttendees; }
 }

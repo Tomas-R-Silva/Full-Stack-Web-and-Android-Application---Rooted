@@ -1,4 +1,4 @@
-package pt.unl.fct.di.adc.firstwebapp.model;
+package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -6,13 +6,13 @@ import java.util.Map;
 
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
-import pt.unl.fct.di.adc.firstwebapp.model.Event.Category;
 
 /**
  * Represents a user in the system.
  * The create account creates an user
  */
 public class User extends ShortUser{
+	
 	/**
 	 * {
 	 *   "username": "...",
@@ -22,7 +22,6 @@ public class User extends ShortUser{
 	 *	 "email": "..."
 	 * }
 	 */
-	
 
 	public enum Role {
 		USER,

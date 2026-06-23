@@ -27,17 +27,18 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ForumPost;
+import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Status;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
-import pt.unl.fct.di.adc.firstwebapp.model.Event.Status;
-import pt.unl.fct.di.adc.firstwebapp.model.ForumPost;
+import pt.unl.fct.di.adc.firstwebapp.model.ForumKeyTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ListForumRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.StringTokenRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.Token;
-import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest.PostMessageinput;
 
 @Path("/forum")
 public class ForumResources {
@@ -65,11 +66,11 @@ public class ForumResources {
     public Response postMessage(PostMessageRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
-
-            if (req.getEventId() == null || req.getEventId().isBlank())
+            PostMessageinput input =req.getInput();
+            if (input.getEventId() == null || input.getEventId().isBlank())
                 return Error.invalid_input();
 
-            Entity eventEntity = getEventEntity(req.getEventId());
+            Entity eventEntity = getEventEntity(input.getEventId());
 
             String status = eventEntity.getString("status");
             if (status.equals(Status.CANCELLED.name()) || status.equals(Status.COMPLETED.name()))
@@ -77,10 +78,10 @@ public class ForumResources {
 
             ForumPost post = new ForumPost();
             post.setPostId(UUID.randomUUID().toString());
-            post.setEventId(req.getEventId());
+            post.setEventId(input.getEventId());
             post.setAuthorUsername(token.getUsername());
-            post.setText(req.getText());
-            post.setParentPostId(req.getParentPostId());
+            post.setText(input.getText());
+            post.setParentPostId(input.getParentPostId());
             post.setCreatedAt(System.currentTimeMillis() / 1000L);
 
             post.isValid();
@@ -159,7 +160,7 @@ public class ForumResources {
     @Path("/delete")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deletePost(StringTokenRequest req) {
+    public Response deletePost(ForumKeyTokenRequest req) {
         try {
             Token token = AuthHelper.verifyToken(req.getToken());
 

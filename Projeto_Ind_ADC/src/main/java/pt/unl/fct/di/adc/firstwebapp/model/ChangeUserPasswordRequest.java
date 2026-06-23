@@ -1,14 +1,16 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
+
 public class ChangeUserPasswordRequest extends AbstractTokenInputRequest<ChangeUserPasswordRequest.PasswordInput>{
 
 	/**
 	 * {
 	 *   "token": { "tokenId": "<jwt>" },
 	 *   "input": {
-	 *   "oldpassword": "...",
-	 * 	 "newpassword": "..."
-	 *	 }
+	 *   	"username": "...",
+	 *   	"oldpassword": "...",
+	 * 	 	"newpassword": "..." }
 	 * }
 	 */
 	

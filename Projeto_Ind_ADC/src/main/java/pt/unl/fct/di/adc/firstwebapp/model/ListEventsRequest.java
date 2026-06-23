@@ -1,17 +1,19 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-/**
- * {
- *   "token": { "tokenId": "<jwt>" },  (optional — required only to see private events)
- *   "category": "MUSIC",              (optional filter)
- *   "status": "UPCOMING",             (optional filter, defaults to UPCOMING)
- *   "organizerUsername": "...",        (optional filter)
- *   "pageSize": 20,                   (optional, default 20)
- *   "cursor": "..."                   (optional, for pagination)
- * }
- */
+
 public class ListEventsRequest  extends TokenRequest{
 
+	/**
+	 * {
+	 *   "token": { "tokenId": "<jwt>" },  (optional — required only to see private events)
+	 *   "category": "MUSIC",              (optional filter)
+	 *   "status": "UPCOMING",             (optional filter, defaults to UPCOMING)
+	 *   "organizerUsername": "...",        (optional filter)
+	 *   "pageSize": 20,                   (optional, default 20)
+	 *   "cursor": "..."                   (optional, for pagination)
+	 * }
+	 */
+	
     private String category;
     private String status;
     private String organizerUsername;

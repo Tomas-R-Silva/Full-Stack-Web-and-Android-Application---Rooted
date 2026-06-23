@@ -2,8 +2,8 @@ package pt.unl.fct.di.adc.firstwebapp.error;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.Entity;
 
-import pt.unl.fct.di.adc.firstwebapp.model.Token;
-import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 
 public class Validator {
 	public static void userNotFound(Entity[] users) throws ErrorException {

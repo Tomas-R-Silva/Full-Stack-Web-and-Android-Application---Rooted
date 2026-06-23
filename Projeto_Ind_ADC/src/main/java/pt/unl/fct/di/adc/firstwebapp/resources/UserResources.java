@@ -24,6 +24,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
+import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
@@ -36,7 +40,6 @@ import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
-import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
 
 
 @Path("/")
@@ -142,7 +145,7 @@ public class UserResources {
 	@Path("/showusers")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUsers(TokenShortUserRequest request) {
+	public Response showUsers(ShortUserTokenRequest request) {
 		try {
 			Token tokenJson = request.getToken();
 			AuthHelper.verifyToken(tokenJson);

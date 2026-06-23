@@ -1,7 +1,11 @@
-package pt.unl.fct.di.adc.firstwebapp.model;
+package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 public class ShortUser {
 
+	/**
+	 * { "username": "..." }
+	 */
+	
 	protected String username;
 	
 	public ShortUser() {}

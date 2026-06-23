@@ -1,4 +1,4 @@
-package pt.unl.fct.di.adc.firstwebapp.model;
+package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.LinkedList;
 import java.util.List;

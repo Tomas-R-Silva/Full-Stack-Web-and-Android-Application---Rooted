@@ -1,7 +1,18 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
+
 public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.ChangeUserRoleInput>{
 
+	/**
+	 * {
+	 *   "token": { "tokenId": "<jwt>" },
+	 *   "input": {
+	 *   	"username": "...",
+	 *   	"newrole": "..." }
+	 * }
+	 */
+	
     public ChangeUserRole(){}
  
     public static class ChangeUserRoleInput extends ShortUser{

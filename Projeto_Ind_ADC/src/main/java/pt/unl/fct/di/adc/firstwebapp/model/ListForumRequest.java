@@ -1,15 +1,17 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-/**
- * {
- *   "token": { "jwt": "<jwt>" },
- *   "eventId": "...",
- *   "cursor": "...",     (optional, from a previous response's nextCursor)
- *   "pageSize": 50       (optional, default 50, max 100)
- * }
- */
+
 public class ListForumRequest  extends TokenRequest{
 
+	/**
+	 * {
+	 *   "token": { "jwt": "<jwt>" },
+	 *   "eventId": "...",
+	 *   "cursor": "...",     (optional, from a previous response's nextCursor)
+	 *   "pageSize": 50       (optional, default 50, max 100)
+	 * }
+	 */
+	
 	private String eventId;
 	private String cursor;
 	private int pageSize;

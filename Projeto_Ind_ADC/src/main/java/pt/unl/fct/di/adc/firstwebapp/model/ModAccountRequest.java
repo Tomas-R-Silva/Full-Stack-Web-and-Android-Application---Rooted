@@ -1,5 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
+
 public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountRequest.ModAccountRequestInput>{
 
     public ModAccountRequest() {}

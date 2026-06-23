@@ -1,5 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+
 public class TokenRequest {
 	
 	/**

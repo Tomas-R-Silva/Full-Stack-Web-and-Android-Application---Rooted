@@ -1,6 +1,6 @@
-package pt.unl.fct.di.adc.firstwebapp.model;
+package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 
 public class Token extends ShortUser {
 
