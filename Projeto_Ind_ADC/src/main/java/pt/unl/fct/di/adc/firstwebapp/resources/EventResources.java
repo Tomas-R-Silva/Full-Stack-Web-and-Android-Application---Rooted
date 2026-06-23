@@ -45,6 +45,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.EventTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest.ImageRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest.ListEventsInput;
 import pt.unl.fct.di.adc.firstwebapp.model.UpdateEventRequest;
 
 @Path("/events")
@@ -143,7 +144,7 @@ public class EventResources {
 		try {
 			boolean authenticated = false;
 			Role requesterRole = null;
-
+			ListEventsInput input =req.getInput();
 			if (req.getToken() != null && req.getToken().getJwt() != null) {
 				try {
 					Token token = AuthHelper.verifyToken(req.getToken());
@@ -167,14 +168,14 @@ public class EventResources {
 				filters.add(PropertyFilter.eq("is_public", true));
 			}
 
-			if (req.getCategory() != null)
-				filters.add(PropertyFilter.eq("category", req.getCategory()));
+			if (input.getCategory() != null)
+				filters.add(PropertyFilter.eq("category", input.getCategory()));
 
-			if (req.getStatus() != null)
-				filters.add(PropertyFilter.eq("status", req.getStatus()));
+			if (input.getStatus() != null)
+				filters.add(PropertyFilter.eq("status", input.getStatus()));
 
-			if (req.getOrganizerUsername() != null && !req.getOrganizerUsername().isBlank())
-				filters.add(PropertyFilter.eq("organizer_username", req.getOrganizerUsername()));
+			if (input.getOrganizerUsername() != null && !input.getOrganizerUsername().isBlank())
+				filters.add(PropertyFilter.eq("organizer_username", input.getOrganizerUsername()));
 
 			if (!filters.isEmpty()) {
 				if (filters.size() == 1) {
@@ -186,10 +187,10 @@ public class EventResources {
 				}
 			}
 
-			queryBuilder.setLimit(req.getPageSize());
+			queryBuilder.setLimit(input.getPageSize());
 
-			if (req.getCursor() != null && !req.getCursor().isBlank())
-				queryBuilder.setStartCursor(Cursor.fromUrlSafe(req.getCursor()));
+			if (input.getCursor() != null && !input.getCursor().isBlank())
+				queryBuilder.setStartCursor(Cursor.fromUrlSafe(input.getCursor()));
 
 			QueryResults<Entity> results = datastore.run(queryBuilder.build());
 
