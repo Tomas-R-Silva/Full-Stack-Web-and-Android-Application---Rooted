@@ -199,9 +199,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {
-          'jwt': jwt,
-        },
+        'token': {'jwt': jwt},
         'title': title,
         'description': description,
         'category': category,
@@ -348,7 +346,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'eventId': eventId,
+        'input': {'eventId': eventId},
         if (jwt != null) 'token': {'jwt': jwt},
       }),
     );
@@ -464,5 +462,43 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
     throw ApiException(_errorMessage(body, 'Failed to delete message'));
+  }
+
+  /// Calls POST /rest/events/attend.
+  static Future<Map<String, dynamic>> attendEvent({
+    required String jwt,
+    required String eventId,
+  }) async {
+    final uri = Uri.parse('\$baseUrl/rest/events/attend');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'eventId': eventId},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw ApiException(_errorMessage(body, 'Failed to join event'));
+  }
+
+  /// Calls POST /rest/events/unattend.
+  static Future<Map<String, dynamic>> unattendEvent({
+    required String jwt,
+    required String eventId,
+  }) async {
+    final uri = Uri.parse('\$baseUrl/rest/events/unattend');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'eventId': eventId},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw ApiException(_errorMessage(body, 'Failed to leave event'));
   }
 }

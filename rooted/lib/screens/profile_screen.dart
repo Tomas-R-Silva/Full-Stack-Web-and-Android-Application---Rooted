@@ -16,19 +16,16 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Key is per-user so each account starts with a blank avatar and
-  // their chosen picture doesn't bleed into another account's profile.
   String get _prefsKey => 'profile_image_path_$_username';
 
   File? _profileImage;
   bool _isLoadingImage = true;
   bool _isLoggingOut = false;
   bool _isDeletingAccount = false;
-  bool _isSavingProfile = false;
 
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
   String _username = '';
+  String _email = '';
+  String _role = '';
 
   @override
   void initState() {
@@ -38,21 +35,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadSession() async {
     final username = await SessionStorage.getUsername();
-    if (mounted && username != null) {
-      setState(() => _username = username);
-      // Load the image only after we know the username so the key is correct.
+    final email    = await SessionStorage.getEmail();
+    final role     = await SessionStorage.getRole();
+    if (mounted) {
+      setState(() {
+        _username = username ?? '';
+        _email    = email    ?? '';
+        _role     = role     ?? '';
+      });
       await _loadSavedImage();
     } else {
       if (mounted) setState(() => _isLoadingImage = false);
     }
   }
 
-  // Re-read whatever path we saved last time, so the picture is still
-  // there the next time the user opens the app.
   Future<void> _loadSavedImage() async {
     final prefs = await SharedPreferences.getInstance();
     final savedPath = prefs.getString(_prefsKey);
-
     if (savedPath != null && await File(savedPath).exists()) {
       setState(() => _profileImage = File(savedPath));
     }
@@ -61,120 +60,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickProfileImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked == null) return;
 
-    // image_picker hands back a file in a temp/cache location that the OS
-    // can wipe at any time. Copy it into this app's own documents folder
-    // so the photo sticks around for good.
-    //
-    // The filename includes a timestamp on purpose: Flutter's image cache
-    // keys a FileImage by its path, not its bytes. Reusing the same
-    // filename would let the avatar keep showing the *old* picture even
-    // after the file on disk was replaced.
-    final docsDir = await getApplicationDocumentsDirectory();
+    final docsDir   = await getApplicationDocumentsDirectory();
     final extension = picked.path.split('.').last;
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final savedImage = await File(picked.path).copy(
       '${docsDir.path}/profile_picture_${_username}_$timestamp.$extension',
     );
 
-    // Clean up the previous photo now that we have a new one.
     final oldImage = _profileImage;
-    if (oldImage != null && await oldImage.exists()) {
-      await oldImage.delete();
-    }
+    if (oldImage != null && await oldImage.exists()) await oldImage.delete();
 
-    // Remember where we put it so we can reload it on the next launch.
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefsKey, savedImage.path);
 
     setState(() => _profileImage = savedImage);
   }
 
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    _addressController.dispose();
-    super.dispose();
+  // ── Edit profile bottom sheet ─────────────────────────────────────────────
+
+  void _openEditProfile() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditProfileSheet(
+        username: _username,
+        onSaved: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              backgroundColor: AppTheme.primary,
+            ),
+          );
+        },
+      ),
+    );
   }
 
-  Future<void> _handleSaveProfile() async {
-    setState(() => _isSavingProfile = true);
-
-    final jwt = await SessionStorage.getJwt();
-    final username = _username.isNotEmpty ? _username : await SessionStorage.getUsername();
-
-    if (jwt == null || username == null) {
-      setState(() => _isSavingProfile = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You need to be logged in to update your profile.')),
-        );
-      }
-      return;
-    }
-
-    try {
-      await ApiService.modifyAccount(
-        jwt: jwt,
-        username: username,
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
-      );
-
-      if (mounted) {
-        setState(() => _isSavingProfile = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: AppTheme.primary,
-          ),
-        );
-      }
-    } on ApiException catch (e) {
-      if (mounted) {
-        setState(() => _isSavingProfile = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isSavingProfile = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
-    }
-  }
+  // ── Logout / Delete ───────────────────────────────────────────────────────
 
   Future<void> _handleLogout() async {
     setState(() => _isLoggingOut = true);
-
     final username = await SessionStorage.getUsername();
-    final jwt = await SessionStorage.getJwt();
-
+    final jwt      = await SessionStorage.getJwt();
     try {
       if (username != null && jwt != null) {
         await ApiService.logout(username: username, jwt: jwt);
       }
     } on ApiException catch (e) {
-      // Even if the server call fails (e.g. session already expired),
-      // we still want to clear the local session and send the user
-      // back to login -- just let them know what happened.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppTheme.error,
-          ),
+          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
         );
       }
     } catch (_) {
@@ -187,13 +126,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     }
-
     await SessionStorage.clear();
-
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     }
@@ -215,35 +152,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: AppTheme.error),
-            ),
+            child: const Text('Delete', style: TextStyle(color: AppTheme.error)),
           ),
         ],
       ),
     );
-
     if (confirmed != true) return;
 
     setState(() => _isDeletingAccount = true);
-
     final username = await SessionStorage.getUsername();
-    final jwt = await SessionStorage.getJwt();
-
+    final jwt      = await SessionStorage.getJwt();
     try {
-      if (username == null || jwt == null) {
-        throw ApiException('You are not logged in.');
-      }
+      if (username == null || jwt == null) throw ApiException('You are not logged in.');
       await ApiService.deleteAccount(username: username, jwt: jwt);
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _isDeletingAccount = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppTheme.error,
-          ),
+          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
         );
       }
       return;
@@ -259,28 +185,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       return;
     }
-
     await SessionStorage.clear();
-
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     }
   }
 
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
+      appBar: AppBar(title: const Text('Profile')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            // Avatar
             Stack(
               children: [
                 CircleAvatar(
@@ -297,53 +222,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   right: 0,
                   child: FloatingActionButton.small(
                     onPressed: _pickProfileImage,
-                    child: const Icon(Icons.camera_alt),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    child: const Icon(Icons.camera_alt, size: 18),
                   ),
                 ),
               ],
             ),
+
+            const SizedBox(height: 20),
+
+            // Username + role badge
+            Text(
+              _username.isEmpty ? '—' : _username,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            if (_role.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _role,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 32),
+
+            // Info cards
+            _InfoCard(children: [
+              _InfoRow(icon: Icons.alternate_email_rounded, label: 'Username', value: _username),
+              const Divider(height: 1),
+              _InfoRow(icon: Icons.email_outlined, label: 'Email', value: _email.isEmpty ? '—' : _email),
+            ]),
+
             const SizedBox(height: 24),
 
-            TextFormField(
-              initialValue: _username.isEmpty ? null : _username,
-              key: ValueKey(_username),
-              enabled: false,
-              decoration: const InputDecoration(labelText: 'Username'),
+            // Edit profile button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _openEditProfile,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit Profile'),
+              ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Phone'),
-            ),
-
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _addressController,
-              decoration: const InputDecoration(labelText: 'Address'),
-            ),
-
-            const SizedBox(height: 24),
-
-            ElevatedButton(
-              onPressed: _isSavingProfile ? null : _handleSaveProfile,
-              child: _isSavingProfile
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.5,
-                      ),
-                    )
-                  : const Text('Save Changes'),
-            ),
-
-            const SizedBox(height: 16),
-
+            // Logout / Delete
             Row(
               children: [
                 Expanded(
@@ -351,13 +292,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: _isLoggingOut ? null : _handleLogout,
                     icon: _isLoggingOut
                         ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                            height: 16, width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.logout_rounded, color: AppTheme.error),
                     label: Text(
-                      _isLoggingOut ? 'Logging out...' : 'Log Out',
+                      _isLoggingOut ? 'Logging out…' : 'Log Out',
                       style: const TextStyle(color: AppTheme.error),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -372,17 +311,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: _isDeletingAccount ? null : _handleDeleteAccount,
                     icon: _isDeletingAccount
                         ? const SizedBox(
-                            height: 16,
-                            width: 16,
+                            height: 16, width: 16,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                                strokeWidth: 2, color: Colors.white))
                         : const Icon(Icons.delete_forever_rounded),
-                    label: Text(
-                      _isDeletingAccount ? 'Deleting...' : 'Delete Account',
-                    ),
+                    label: Text(_isDeletingAccount ? 'Deleting…' : 'Delete Account'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.error,
                       foregroundColor: Colors.white,
@@ -394,6 +327,243 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Edit Profile bottom sheet ─────────────────────────────────────────────────
+
+class _EditProfileSheet extends StatefulWidget {
+  final String username;
+  final VoidCallback onSaved;
+
+  const _EditProfileSheet({required this.username, required this.onSaved});
+
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  final _formKey        = GlobalKey<FormState>();
+  final _phoneController   = TextEditingController();
+  final _addressController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
+
+    final jwt = await SessionStorage.getJwt();
+    if (jwt == null) {
+      setState(() => _isSaving = false);
+      return;
+    }
+
+    try {
+      await ApiService.modifyAccount(
+        jwt: jwt,
+        username: widget.username,
+        phone: _phoneController.text.trim(),
+        address: _addressController.text.trim(),
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onSaved();
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not reach the server. Please try again.'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          const Text(
+            'Edit Profile',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Update your contact information.',
+            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 24),
+
+          Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: 'Phone number',
+                    hintText: '+351 912 345 678',
+                    prefixIcon: Icon(Icons.phone_outlined,
+                        color: AppTheme.textSecondary, size: 20),
+                  ),
+                  validator: (v) {
+                    if (v != null && v.trim().isNotEmpty) {
+                      final digits = v.replaceAll(RegExp(r'\D'), '');
+                      if (digits.length < 7) return 'Enter a valid phone number';
+                    }
+                    return null; // phone is optional
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _addressController,
+                  textInputAction: TextInputAction.done,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: 'Address',
+                    hintText: 'Rua Exemplo, 123, Lisboa',
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Icon(Icons.home_outlined,
+                          color: AppTheme.textSecondary, size: 20),
+                    ),
+                    alignLabelWithHint: true,
+                  ),
+                  // address is optional — no validator needed
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _isSaving ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _save,
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20, width: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2.5))
+                      : const Text('Save'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Small reusable widgets ────────────────────────────────────────────────────
+
+class _InfoCard extends StatelessWidget {
+  final List<Widget> children;
+  const _InfoCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.inputBorder),
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _InfoRow({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppTheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

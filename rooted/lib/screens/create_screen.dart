@@ -24,11 +24,14 @@ class _CreatePageState extends State<CreatePage> {
   final TextEditingController _attendeesController = TextEditingController();
 
   final TextEditingController _durationController = TextEditingController(text: '60');
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
 
   String _selectedCategory = 'Music';
   String? _selectedPlaceId;
   File? _eventImage;
   DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
   bool _isPublic = true;
   bool _isSubmitting = false;
   String? _createdEventId;
@@ -79,6 +82,8 @@ class _CreatePageState extends State<CreatePage> {
     _locationController.dispose();
     _attendeesController.dispose();
     _durationController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
     _eventImage?.delete().ignore();
     super.dispose();
   }
@@ -86,9 +91,9 @@ class _CreatePageState extends State<CreatePage> {
   Future<void> _submitEvent() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedDate == null) {
+    if (_selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please pick a date')),
+        const SnackBar(content: Text('Please pick a date and time')),
       );
       return;
     }
@@ -114,7 +119,10 @@ class _CreatePageState extends State<CreatePage> {
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),
           location: _locationController.text.trim(),
-          startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
+          startDate: DateTime(
+            _selectedDate!.year, _selectedDate!.month, _selectedDate!.day,
+            _selectedTime!.hour, _selectedTime!.minute,
+          ).millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
           public: _isPublic,
@@ -137,7 +145,10 @@ class _CreatePageState extends State<CreatePage> {
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),
           location: _locationController.text.trim(),
-          startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
+          startDate: DateTime(
+            _selectedDate!.year, _selectedDate!.month, _selectedDate!.day,
+            _selectedTime!.hour, _selectedTime!.minute,
+          ).millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
           public: _isPublic,
@@ -291,33 +302,60 @@ class _CreatePageState extends State<CreatePage> {
 
               const SizedBox(height: 16),
 
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Date',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  hintText: _selectedDate == null
-                      ? null
-                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                ),
-                controller: TextEditingController(
-                  text: _selectedDate == null
-                      ? ''
-                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                ),
-                readOnly: true,
-                validator: (_) => _selectedDate == null ? 'Pick a date' : null,
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(2030),
-                    initialDate: _selectedDate ?? DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => _selectedDate = picked);
-                  }
-                },
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Date',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.calendar_today),
+                      ),
+                      controller: _dateController,
+                      readOnly: true,
+                      validator: (_) => _selectedDate == null ? 'Pick a date' : null,
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2030),
+                          initialDate: _selectedDate ?? DateTime.now(),
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedDate = picked);
+                          _dateController.text =
+                              '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Time',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.access_time_rounded),
+                      ),
+                      controller: _timeController,
+                      readOnly: true,
+                      validator: (_) => _selectedTime == null ? 'Pick a time' : null,
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: _selectedTime ?? TimeOfDay.now(),
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedTime = picked);
+                          _timeController.text =
+                              '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
