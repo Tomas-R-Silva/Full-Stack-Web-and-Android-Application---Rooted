@@ -1,4 +1,8 @@
+import { useAuth } from "../AuthContext";
+
 function ProfileIdPoints() {
+  const { username } = useAuth();
+
   return (
     <div
       className="row align-items-center mb-4"
@@ -22,7 +26,7 @@ function ProfileIdPoints() {
       </div>
 
       <div className="col-8">
-        <h2 style={{ color: "var(--color-green)" }}>Placeholder Name</h2>
+        <h2 style={{ color: "var(--color-green)" }}>{username}</h2>
         <p style={{ color: "var(--color-green)" }}>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eget
           ligula eu lectus lobortis condimentum. Aliquam nonummy auctor massa.

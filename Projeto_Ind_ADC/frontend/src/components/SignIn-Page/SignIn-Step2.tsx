@@ -5,8 +5,6 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
   //========== Hook ==========
   const [errors, setErrors] = useState({
     username: "",
-    phone: "",
-    address: "",
   });
 
   //========== Receber Input e Limpar erros ==========
@@ -23,8 +21,6 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
     const newErrors = { username: "", phone: "", address: "" };
 
     if (!formData.username) newErrors.username = "Username is required";
-    if (!formData.phone) newErrors.phone = "Phone is required";
-    if (!formData.address) newErrors.address = "Address is required";
 
     setErrors(newErrors);
 
@@ -49,34 +45,6 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
           />
           {errors.username && (
             <div className="invalid-feedback">{errors.username}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Phone</label>
-          <input
-            type="tel"
-            name="phone"
-            className={`form-control  ${errors.phone ? "is-invalid" : ""}`}
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Your phone number here"
-          />
-          {errors.phone && (
-            <div className="invalid-feedback">{errors.phone}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Address</label>
-          <input
-            type="text"
-            name="address"
-            className={`form-control  ${errors.address ? "is-invalid" : ""}`}
-            value={formData.address}
-            onChange={handleChange}
-            placeholder="Your address here"
-          />
-          {errors.address && (
-            <div className="invalid-feedback">{errors.address}</div>
           )}
         </div>
         <div className="d-flex justify-content-between mt-3">

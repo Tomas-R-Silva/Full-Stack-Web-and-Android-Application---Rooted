@@ -5,12 +5,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    // In dev the frontend calls a relative "/rest/..." path (see .env.development).
+    // In dev the frontend calls a relative "/rest/..." path (VITE_API_URL=/rest).
     // Vite proxies those requests to the deployed backend server-side, which avoids
-    // browser CORS issues without needing the backend redeployed.
+    // browser CORS issues. In production the app is served from the same App Engine
+    // domain, so "/rest" is same-origin and needs no proxy.
     proxy: {
-      '/rest': {
-        target: 'https://adc-final.ey.r.appspot.com',
+      "/rest": {
+        target: "https://adc-final.ey.r.appspot.com",
         changeOrigin: true,
         secure: true,
       },

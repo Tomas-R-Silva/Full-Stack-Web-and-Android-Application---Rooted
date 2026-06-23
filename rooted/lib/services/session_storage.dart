@@ -5,16 +5,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SessionStorage {
   static const _jwtKey = 'jwt';
   static const _usernameKey = 'username';
+  static const _emailKey = 'email';
   static const _roleKey = 'role';
 
   static Future<void> save({
     required String jwt,
     required String username,
     required String role,
+    String email = '',
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_jwtKey, jwt);
     await prefs.setString(_usernameKey, username);
+    await prefs.setString(_emailKey, email);
     await prefs.setString(_roleKey, role);
   }
 
@@ -28,6 +31,11 @@ class SessionStorage {
     return prefs.getString(_usernameKey);
   }
 
+  static Future<String?> getEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_emailKey);
+  }
+
   static Future<String?> getRole() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_roleKey);
@@ -37,6 +45,7 @@ class SessionStorage {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_jwtKey);
     await prefs.remove(_usernameKey);
+    await prefs.remove(_emailKey);
     await prefs.remove(_roleKey);
   }
 }

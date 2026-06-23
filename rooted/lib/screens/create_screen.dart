@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/location_autocomplete.dart';
 import '../services/api_service.dart';
@@ -23,11 +24,14 @@ class _CreatePageState extends State<CreatePage> {
   final TextEditingController _attendeesController = TextEditingController();
 
   final TextEditingController _durationController = TextEditingController(text: '60');
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
 
   String _selectedCategory = 'Music';
   String? _selectedPlaceId;
   File? _eventImage;
   DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
   bool _isPublic = true;
   bool _isSubmitting = false;
   String? _createdEventId;
@@ -38,7 +42,9 @@ class _CreatePageState extends State<CreatePage> {
     'Tech',
     'Food',
     'Art',
-    'Culture',
+    'Business',
+    'Community',
+    'Other',
   ];
 
   final String _placesApiKey = 'AIzaSyAmYzNozAPQB27PHT4uP00qoBOg-cz7jdk';
@@ -49,17 +55,45 @@ class _CreatePageState extends State<CreatePage> {
       source: ImageSource.gallery,
       imageQuality: 85,
     );
-    if (picked != null) {
-      setState(() => _eventImage = File(picked.path));
+    if (picked == null) return;
+
+    // Copy out of the OS temp/cache dir into documents so it survives
+    // long form-filling sessions where the cache might get cleared.
+    final docsDir = await getApplicationDocumentsDirectory();
+    final extension = picked.path.split('.').last;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final savedImage = await File(picked.path).copy(
+      '${docsDir.path}/event_image_draft_$timestamp.$extension',
+    );
+
+    // Delete the previous draft if the user swapped the image.
+    final oldImage = _eventImage;
+    if (oldImage != null && await oldImage.exists()) {
+      await oldImage.delete();
     }
+
+    setState(() => _eventImage = savedImage);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _attendeesController.dispose();
+    _durationController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
+    _eventImage?.delete().ignore();
+    super.dispose();
   }
 
   Future<void> _submitEvent() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedDate == null) {
+    if (_selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please pick a date')),
+        const SnackBar(content: Text('Please pick a date and time')),
       );
       return;
     }
@@ -67,7 +101,7 @@ class _CreatePageState extends State<CreatePage> {
     setState(() => _isSubmitting = true);
 
     final jwt = await SessionStorage.getJwt();
-    if (jwt == null) {
+    if (jwt == null || jwt.isEmpty) {
       setState(() => _isSubmitting = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -85,10 +119,13 @@ class _CreatePageState extends State<CreatePage> {
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),
           location: _locationController.text.trim(),
-          startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
+          startDate: DateTime(
+            _selectedDate!.year, _selectedDate!.month, _selectedDate!.day,
+            _selectedTime!.hour, _selectedTime!.minute,
+          ).millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
-          isPublic: _isPublic,
+          public: _isPublic,
         );
 
         if (mounted) {
@@ -108,10 +145,13 @@ class _CreatePageState extends State<CreatePage> {
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),
           location: _locationController.text.trim(),
-          startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
+          startDate: DateTime(
+            _selectedDate!.year, _selectedDate!.month, _selectedDate!.day,
+            _selectedTime!.hour, _selectedTime!.minute,
+          ).millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
-          isPublic: _isPublic,
+          public: _isPublic,
         );
 
         if (mounted) {
@@ -162,7 +202,6 @@ class _CreatePageState extends State<CreatePage> {
           key: _formKey,
           child: Column(
             children: [
-              // ── Event image picker ──────────────────────────────
               GestureDetector(
                 onTap: _pickEventImage,
                 child: Container(
@@ -226,6 +265,8 @@ class _CreatePageState extends State<CreatePage> {
                   labelText: 'Description',
                   border: OutlineInputBorder(),
                 ),
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Enter a description' : null,
               ),
 
               const SizedBox(height: 16),
@@ -261,33 +302,60 @@ class _CreatePageState extends State<CreatePage> {
 
               const SizedBox(height: 16),
 
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Date',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  hintText: _selectedDate == null
-                      ? null
-                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                ),
-                controller: TextEditingController(
-                  text: _selectedDate == null
-                      ? ''
-                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                ),
-                readOnly: true,
-                validator: (_) => _selectedDate == null ? 'Pick a date' : null,
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(2030),
-                    initialDate: _selectedDate ?? DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => _selectedDate = picked);
-                  }
-                },
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Date',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.calendar_today),
+                      ),
+                      controller: _dateController,
+                      readOnly: true,
+                      validator: (_) => _selectedDate == null ? 'Pick a date' : null,
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2030),
+                          initialDate: _selectedDate ?? DateTime.now(),
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedDate = picked);
+                          _dateController.text =
+                              '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Time',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.access_time_rounded),
+                      ),
+                      controller: _timeController,
+                      readOnly: true,
+                      validator: (_) => _selectedTime == null ? 'Pick a time' : null,
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: _selectedTime ?? TimeOfDay.now(),
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedTime = picked);
+                          _timeController.text =
+                              '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),

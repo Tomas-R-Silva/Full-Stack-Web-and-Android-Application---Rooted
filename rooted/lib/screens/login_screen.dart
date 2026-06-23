@@ -4,6 +4,7 @@ import '../widgets/auth_text_field.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,19 +32,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
+
+
     try {
       final result = await ApiService.login(
+
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
+      final data = (result['data'] as Map<String, dynamic>?) ?? {};
+      final token = (data['token'] as Map<String, dynamic>?) ?? {};
 
-      final token = (result['token'] as Map<String, dynamic>?) ?? {};
       await SessionStorage.save(
         jwt: token['jwt']?.toString() ?? '',
         username: token['username']?.toString() ?? _usernameController.text.trim(),
+        email: token['email']?.toString() ?? '',
         role: token['role']?.toString() ?? '',
       );
-
       if (mounted) {
         setState(() => _isLoading = false);
         Navigator.pushReplacement(
@@ -179,7 +184,10 @@ class _LoginScreenState extends State<LoginScreen> {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: () {
-          // TODO: Navigate to forgot password screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+          );
         },
         child: const Text('Forgot password?'),
       ),

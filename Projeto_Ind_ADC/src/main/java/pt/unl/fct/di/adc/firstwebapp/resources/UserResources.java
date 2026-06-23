@@ -180,10 +180,12 @@ public class UserResources {
 		try {
 			ShortUser userJson = request.getInput();
 			Token tokenJson = request.getToken();
-			Key userKeyToBeDeleted = getUser(userJson).getKey();	
-			AuthHelper.verifyToken(tokenJson);
+			Entity user= getUser(userJson);
+			Key userKeyToBeDeleted = user.getKey();	
+			Token token = AuthHelper.verifyToken(tokenJson);
 
-			Validator.unauthorized(tokenJson, new Role []{Role.ADMIN});
+			if(!token.getUsername().equals(user.getString("user_name")))
+				Validator.unauthorized(tokenJson, new Role []{Role.ADMIN});
 
 			datastore.delete(userKeyToBeDeleted);
 			deleteAllSessionsForUser(userJson.getUsername());
@@ -301,6 +303,36 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response changeUserPassword(ChangeUserPasswordRequest request) {
 		try{
+			PasswordInput input = request.getInput();
+			Token tokenJson = request.getToken();
+
+			Entity user = getUser(input.getUsername());
+			Token token = AuthHelper.verifyToken(tokenJson);
+
+			if(!token.getUsername().equals(user.getString("user_name")))
+				Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+
+			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
+			if (!oldPwdHash.equals(user.getString("user_pwd"))) 
+				ErrorException.trow(9907);
+
+			Entity updatedUser = Entity.newBuilder(user)
+					.set("user_pwd", DigestUtils.sha512Hex(input.getNewpassword()))
+					.build();
+			datastore.put(updatedUser);
+			return buildresponse(Map.of("message", "Password changed successfully"));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/forgotuserpwd")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response forgotUserPassword(ChangeUserPasswordRequest request) {
+		try{//TODO
 			PasswordInput input = request.getInput();
 			Token tokenJson = request.getToken();
 

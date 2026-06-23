@@ -10,7 +10,6 @@ function NavBar() {
       style={{ background: "var(--color-green)", height: "85px" }}
     >
       <div className="container-fluid h-100 d-flex align-items-center">
-        {/* Logo */}
         <a className="navbar-brand d-flex align-items-center me-4" href="/">
           <img
             src={app}
@@ -28,9 +27,9 @@ function NavBar() {
           <a
             className="navbar-brand fw-bold m-0"
             style={{ color: "var(--color-bege)" }}
-            href="/profile"
+            href="/events"
           >
-            Profile
+            Events
           </a>
 
           <a
@@ -58,15 +57,35 @@ function NavBar() {
           </a>
         </div>
 
-        {isAuthenticated ? (
-          <div className="d-flex align-items-center gap-2">
-            <span style={{ color: "var(--color-green)", fontWeight: 600 }}>
-              {username}
-            </span>
+        <div className="ms-auto">
+          {isAuthenticated ? (
+            <div className="d-flex align-items-center gap-2">
+              <a
+                className="navbar-brand fw-bold m-0"
+                style={{ color: "var(--color-bege)" }}
+                href="/profile"
+              >
+                Profile
+              </a>
 
-            <button
-              onClick={logout}
-              className="btn fw-bold ms-auto"
+              <button
+                onClick={logout}
+                className="btn fw-bold"
+                style={{
+                  border: "none",
+                  background: "var(--color-white)",
+                  color: "var(--color-green)",
+                  width: "130px",
+                  height: "42px",
+                  borderRadius: "50px",
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <a
+              className="btn fw-bold"
               style={{
                 border: "none",
                 background: "var(--color-white)",
@@ -75,26 +94,12 @@ function NavBar() {
                 height: "42px",
                 borderRadius: "50px",
               }}
+              href="/login"
             >
-              Logout
-            </button>
-          </div>
-        ) : (
-          <a
-            className="btn fw-bold ms-auto"
-            style={{
-              border: "none",
-              background: "var(--color-white)",
-              color: "var(--color-green)",
-              width: "130px",
-              height: "42px",
-              borderRadius: "50px",
-            }}
-            href="/login"
-          >
-            Login
-          </a>
-        )}
+              Login
+            </a>
+          )}
+        </div>
       </div>
     </nav>
   );

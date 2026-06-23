@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { StepProps } from "../../utils/types";
 import { registerUser } from "../../api/auth";
+import SignInModal from "./SignIn-Modal";
 
 function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   const categories = [
@@ -17,24 +18,30 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
 
   //========== Hook ==========
   const [, setErrors] = useState({});
+  const [showSignIn, setShowSignIn] = useState(false);
 
   const navigate = useNavigate();
+  const [response, setResponse] = useState<any>(null);
 
-  const handleChange = (category: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      categories: prev.categories.includes(category)
-        ? prev.categories.filter((c) => c !== category)
-        : [...prev.categories, category],
-    }));
-  };
+  //const handleChange = (category: string) => {
+  //setFormData((prev) => ({
+  //...prev,
+  //categories: prev.categories.includes(category)
+  //? prev.categories.filter((c) => c !== category)
+  //: [...prev.categories, category],
+  //}));
+  //};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await registerUser(formData);
-      navigate("/login");
+      console.log(formData);
+      const response = await registerUser(formData);
+      setResponse(response);
+      console.log(response);
+      setShowSignIn(true);
     } catch (err) {
+      setResponse(err);
       setErrors(err instanceof Error ? err.message : "Something went wrong");
     }
   };
@@ -52,21 +59,23 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
                 type="checkbox"
                 className="btn-check"
                 id={`btn-${category}`}
-                checked={formData.categories.includes(category)}
-                onChange={() => handleChange(category)}
+                //checked={formData.categories.includes(category)}
+                //onChange={() => handleChange(category)}
                 autoComplete="off"
               />
               <label
                 className="btn w-100"
                 htmlFor={`btn-${category}`}
-                style={{
-                  background: formData.categories.includes(category)
-                    ? "var(--color-green)"
-                    : "var(--color-white)",
-                  color: formData.categories.includes(category)
-                    ? "var(--color-white)"
-                    : "var(--color-green)",
-                }}
+                style={
+                  {
+                    //background: formData.categories.includes(category)
+                    //</div>? "var(--color-green)"
+                    //: "var(--color-white)",
+                    //color: formData.categories.includes(category)
+                    //? "var(--color-white)"
+                    //: "var(--color-green)",
+                  }
+                }
               >
                 {category}
               </label>
@@ -97,6 +106,9 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
           </button>
         </div>
       </form>
+      {showSignIn && (
+        <SignInModal onClose={() => setShowSignIn(false)} response={response} />
+      )}
     </>
   );
 }

@@ -1,38 +1,76 @@
-export type SignInFormData = {
-  email: string;
-  password: string;
-  confirmation: string;
-  username: string;
-  phone: string;
-  address: string;
-  categories: string[];
-  role: string;
-};
+//========== USER ==========
 
 export type SignInData = {
   username: string;
   password: string;
+  email: string;
   confirmation: string;
-  phone: string;
-  address: string;
   role: string;
 };
 
 export type LogInData = {
   username: string;
   password: string;
-}
+};
 
 export interface AccountProps {
   image?: ImageBitmap;
   bio?: string;
   onNext?: () => void; //? retira a obrgatoriedade de fazer parte
   onBack?: () => void;
-}
+};
 
 export interface StepProps{
-  formData: SignInFormData;
-  setFormData: React.Dispatch<React.SetStateAction<SignInFormData>>;
+  formData: SignInData;
+  setFormData: React.Dispatch<React.SetStateAction<SignInData>>;
   onNext?: () => void; //? retira a obrgatoriedade de fazer parte
   onBack?: () => void;
+};
+
+//========== EVENT ==========
+
+export type EventItem = {
+  eventId: string;
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  startDate: number;
+  durationMinutes: number;
+  organizerUsername: string;
+  maxAttendees: number;
+  attendeeCount: number;
+  isPublic: boolean;
+  status: string;
+  createdAt: number;
+  coverImageUrl?: string;
+  imageUrls: string[];
+};
+
+export type RequestEventCreation = {
+  token: { jwt: string },
+  title: string,
+  description: string,
+  category: string,        // MUSIC|SPORTS|TECH|ART|FOOD|BUSINESS|COMMUNITY|OTHER
+  location: string,
+  startDate: number,
+  durationMinutes: number,
+  maxAttendees: number,
+  isPublic: boolean
+}
+
+export type RequestEventList = {
+  token?: {jwt:String;}
+  category?: string;
+  status?: string;
+  organizerUsername?: string;
+  pageSize: number;
+  cursor?: string;
+};
+
+export type EventListResponse = {
+  data:{events: EventItem[];
+  count: number;
+  nextCursor?: string;
+  }
 };
