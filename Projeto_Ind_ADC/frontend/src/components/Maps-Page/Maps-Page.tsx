@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import NavBar from "../NavBar/NavBar";
+import { getEventList } from "../../api/auth";
 
 declare global {
   interface Window {
@@ -112,32 +113,6 @@ const MapsPage = () => {
         }
       };
 
-      const placeholderEvents = [
-        { eventId: "placeholder-1", 
-          title: "Yoga at Parque Eduardo VII", 
-          location: "Parque Eduardo VII, Lisbon", 
-          category: "WELLNESS", status: "UPCOMING", 
-          organizerUsername: "rooted",
-          position: {lat: 0, lng: 0},
-        },
-        { eventId: "placeholder-2", 
-          title: "Street Art Walking Tour", 
-          location: "LX Factory, Lisbon", 
-          category: "CULTURE", 
-          status: "UPCOMING", 
-          organizerUsername: "rooted", 
-          position: {lat: 0, lng: 0},
-        },
-        { eventId: "placeholder-3", 
-          title: "Sustainable Cooking Workshop", 
-          location: "Campo de Ourique, Lisbon", 
-          category: "FOOD", 
-          status: "UPCOMING", 
-          organizerUsername: "rooted", 
-          position: {lat: 0, lng: 0},
-        },
-      ];
-
       const renderEvents = (eventList: any[]) => {
         eventList.forEach((event) => {
             geocoder.geocode({ address: event.location }, (results: any, status: any) => {
@@ -180,22 +155,14 @@ const MapsPage = () => {
 
       const addEventMarkers = async () => {
         try {
-          const res = await fetch(`${server}/events/list`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "UPCOMING" }),
-          });
-          const data = await res.json();
-          const eventsData = Array.isArray(data.events) && data.events.length > 0
-            ? data.events
-            : placeholderEvents;
-
+          const res = await getEventList({ pageSize: 100, cursor: "" });
+          const eventsData = Array.isArray(res.data.events) && res.data.events.length > 0
+            ? res.data.events
+            : [];
           setEvents(eventsData);
           renderEvents(eventsData);
         } catch (err) {
           console.error("Failed to fetch server events:", err);
-          setEvents(placeholderEvents);
-          renderEvents(placeholderEvents);
         }
       };
 
@@ -213,8 +180,8 @@ const MapsPage = () => {
       <main className="container py-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h1 className="mb-0">Mapa de eventos</h1>
-            <p className="text-muted mb-0">Explore os eventos próximos e veja sua localização no mapa.</p>
+            <h1 className="mb-0">Events Map</h1>
+            <p className="text-muted mb-0">Explore the nearby events and see their location on the map.</p>
           </div>
         </div>
 
@@ -224,7 +191,7 @@ const MapsPage = () => {
               <div className="card-body">
                 <h3 className="card-title">Nearby events</h3>
                 {sortedEvents.length === 0 ? (
-                  <div className="alert alert-info mt-3">Ainda não há eventos carregados.</div>
+                  <div className="alert alert-info mt-3">There are no events loadedda.</div>
                 ) : (
                   sortedEvents.map((event, idx) => (
                     <div key={`${event.eventId}-${idx}`} className="mb-3 p-3 rounded bg-white border">
