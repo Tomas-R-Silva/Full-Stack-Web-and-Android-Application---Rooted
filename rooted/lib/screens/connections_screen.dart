@@ -44,7 +44,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         organizerUsername: _username,
         pageSize: 50,
       );
-      final events = (result['events'] as List<dynamic>? ?? [])
+      final data = result['data'] ?? {};
+      final events = (data['events'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
       if (mounted) {
         setState(() {

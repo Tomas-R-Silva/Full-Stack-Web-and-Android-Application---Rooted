@@ -58,7 +58,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         eventId: _event['eventId'] as String,
         pageSize: 50,
       );
-      final posts = (result['posts'] as List<dynamic>? ?? [])
+      final data  = result['data'] ?? {};
+      final posts = (data['posts'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
       if (mounted) {
         setState(() {
@@ -84,7 +85,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         eventId: _event['eventId'] as String,
         pageSize: 50,
       );
-      final posts = (result['posts'] as List<dynamic>? ?? [])
+      final data  = result['data'] ?? {};
+      final posts = (data['posts'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
       if (!mounted) return;
       if (posts.length != _posts.length ||
@@ -129,8 +131,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         text: text,
       );
       if (mounted) {
+        final data = post['data'] ?? post;
         setState(() {
-          _posts.add(post);
+          _posts.add(data);
           _sendingMessage = false;
         });
         _scrollToBottom();

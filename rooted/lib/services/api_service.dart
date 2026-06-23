@@ -118,7 +118,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'input': {'username': username},
-        'token': {'tokenId': jwt},
+        'token': {'jwt': jwt},
       }),
     );
 
@@ -155,7 +155,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'input': {'username': username},
-        'token': {'tokenId': jwt},
+        'token': {'jwt': jwt},
       }),
     );
 
@@ -252,7 +252,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'tokenId': jwt},
+        'token': {'jwt': jwt},
         'eventId': eventId,
         if (title != null) 'title': title,
         if (description != null) 'description': description,
@@ -306,7 +306,7 @@ class ApiService {
             'address': address,
           },
         },
-        'token': {'tokenId': jwt},
+        'token': {'jwt': jwt},
       }),
     );
 
@@ -349,7 +349,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'eventId': eventId,
-        if (jwt != null) 'token': {'tokenId': jwt},
+        if (jwt != null) 'token': {'jwt': jwt},
       }),
     );
     final body = _parseBody(response.body);
@@ -371,11 +371,12 @@ class ApiService {
     String? cursor,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/events/list');
+
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        if (jwt != null) 'token': {'tokenId': jwt},
+        if (jwt != null) 'token': {'jwt': jwt}, // ✅ IMPORTANT FIX (see below)
         if (organizerUsername != null) 'organizerUsername': organizerUsername,
         if (status != null) 'status': status,
         if (category != null) 'category': category,
@@ -383,6 +384,7 @@ class ApiService {
         if (cursor != null) 'cursor': cursor,
       }),
     );
+
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) return body;
     throw ApiException(_errorMessage(body, 'Failed to list events'));
@@ -396,20 +398,31 @@ class ApiService {
     String? parentPostId,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/forum/post');
+
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'tokenId': jwt},
-        'eventId': eventId,
-        'text': text,
+        'token': {'jwt': jwt},
+        'eventId': eventId, // ✅ FIXED
+        'text': text,       // ✅ FIXED
         if (parentPostId != null) 'parentPostId': parentPostId,
       }),
     );
-    final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) return body;
-    throw ApiException(_errorMessage(body, 'Failed to send message'));
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return body;
+    }
+
+    throw ApiException(
+        body['message']?.toString() ??
+            body['error']?.toString() ??
+            'Failed to send message'
+    );
   }
+
+
 
   /// Calls POST /rest/forum/list.
   static Future<Map<String, dynamic>> listForumMessages({
@@ -423,7 +436,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'tokenId': jwt},
+        'token': {'jwt': jwt},
         'eventId': eventId,
         'pageSize': pageSize,
         if (cursor != null) 'cursor': cursor,
@@ -444,7 +457,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'tokenId': jwt},
+        'token': {'jwt': jwt},
         'postId': postId,
       }),
     );
