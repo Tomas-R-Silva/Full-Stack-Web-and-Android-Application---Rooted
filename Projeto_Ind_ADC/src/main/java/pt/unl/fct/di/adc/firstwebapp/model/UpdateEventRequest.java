@@ -11,8 +11,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
  *   "startDate": 1234567890,
  *   "durationMinutes": 120,
  *   "maxAttendees": 100,
- *   "isPublic": true,
- *   "coverImageUrl": "..."
+ *   "isPublic": true
  * }
  */
 public class UpdateEventRequest extends AbstractTokenRequest{
@@ -27,7 +26,6 @@ public class UpdateEventRequest extends AbstractTokenRequest{
     private Integer maxAttendees;
     private Integer minAttendees;
     private Boolean isPublic;
-    private String coverImageUrl;
 
     public UpdateEventRequest() {}
 
@@ -60,8 +58,4 @@ public class UpdateEventRequest extends AbstractTokenRequest{
     
     public Boolean getIsPublic() { return isPublic; }
     public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
-
-    public String getCoverImageUrl() { return coverImageUrl; }
-    public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
-
 }

@@ -268,8 +268,6 @@ public class EventResources {
                 builder.set("min_attendees", req.getMinAttendees().longValue());
             if (req.getIsPublic() != null)
                 builder.set("is_public", req.getIsPublic());
-            if (req.getCoverImageUrl() != null)
-                builder.set("cover_image_url", req.getCoverImageUrl());
 
             datastore.put(builder.build());
             return ok(Map.of("message", "Event updated successfully"));
@@ -625,7 +623,6 @@ public class EventResources {
         map.put("isPublic", e.getBoolean("is_public"));
         map.put("status", e.getString("status"));
         map.put("createdAt", e.getLong("created_at"));
-        map.put("coverImageUrl", e.getString("cover_image_url"));
         List<String> imageUrls = e.contains("image_urls")
                 ? e.<Value<?>>getList("image_urls").stream()
                         .map(v -> (String) v.get())
