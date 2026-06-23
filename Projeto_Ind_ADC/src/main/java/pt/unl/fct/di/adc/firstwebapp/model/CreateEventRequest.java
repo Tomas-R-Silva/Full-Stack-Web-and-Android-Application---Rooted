@@ -1,7 +1,5 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.List;
-
 /**
  * {
  *   "token": { "tokenId": "<jwt>" },
@@ -12,8 +10,7 @@ import java.util.List;
  *   "startDate": 1234567890,
  *   "durationMinutes": 120,
  *   "maxAttendees": 100,
- *   "isPublic": true,
- *   "coverImageUrl": "..."   (optional)
+ *   "isPublic": true
  * }
  */
 public class CreateEventRequest {
@@ -27,7 +24,6 @@ public class CreateEventRequest {
     private long durationMinutes;
     private int maxAttendees;
     private boolean isPublic;
-    private String coverImageUrl;
 
     public CreateEventRequest() {}
 
@@ -57,7 +53,4 @@ public class CreateEventRequest {
 
     public boolean isPublic() { return isPublic; }
     public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
-
-    public String getCoverImageUrl() { return coverImageUrl; }
-    public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
 }
