@@ -21,6 +21,7 @@ class ApiService {
   ///
   /// Mirrors UserResources.createAccount, which stores user_name,
   /// user_email, user_pwd, user_role and user_creation_time.
+
   static Future<Map<String, dynamic>> createAccount({
     required String username,
     required String email,
@@ -35,10 +36,11 @@ class ApiService {
       body: jsonEncode({
         'input': {
           'username': username,
-          'email': email,
           'password': password,
+          'confirmation' : password,
           'role': role,
-        },
+          'email': email,
+        }
       }),
     );
 
@@ -53,11 +55,13 @@ class ApiService {
       return body;
     }
 
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Registration failed (status ${response.statusCode})';
-    throw ApiException(message);
+    throw ApiException(
+        body['message']?.toString() ??
+            body['error']?.toString() ??
+            'Registration failed'
+    );
   }
+
 
   /// Calls POST /login.
   ///
@@ -114,7 +118,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'input': {'username': username},
-        'token': {'jwt': jwt},
+        'token': {'tokenId': jwt},
       }),
     );
 
@@ -151,7 +155,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'input': {'username': username},
-        'token': {'jwt': jwt},
+        'token': {'tokenId': jwt},
       }),
     );
 
@@ -177,7 +181,7 @@ class ApiService {
   /// Mirrors EventResources.createEvent, which authenticates via
   /// AuthHelper.verifyToken(req.getToken()) (needs a jwt) and expects
   /// title, description, category, location, startDate (epoch seconds),
-  /// durationMinutes, maxAttendees and isPublic. Returns the new eventId.
+  /// durationMinutes, maxAttendees and public. Returns the new eventId.
   static Future<Map<String, dynamic>> createEvent({
     required String jwt,
     required String title,
@@ -187,7 +191,7 @@ class ApiService {
     required int startDate,
     required int durationMinutes,
     required int maxAttendees,
-    required bool isPublic,
+    required bool public,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/events/create');
 
@@ -195,7 +199,9 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'jwt': jwt},
+        'token': {
+          'jwt': jwt,
+        },
         'title': title,
         'description': description,
         'category': category,
@@ -203,7 +209,7 @@ class ApiService {
         'startDate': startDate,
         'durationMinutes': durationMinutes,
         'maxAttendees': maxAttendees,
-        'isPublic': isPublic,
+        'public': public,
       }),
     );
 
@@ -238,7 +244,7 @@ class ApiService {
     int? startDate,
     int? durationMinutes,
     int? maxAttendees,
-    bool? isPublic,
+    bool? public,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/events/update');
 
@@ -246,7 +252,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'jwt': jwt},
+        'token': {'tokenId': jwt},
         'eventId': eventId,
         if (title != null) 'title': title,
         if (description != null) 'description': description,
@@ -255,7 +261,7 @@ class ApiService {
         if (startDate != null) 'startDate': startDate,
         if (durationMinutes != null) 'durationMinutes': durationMinutes,
         if (maxAttendees != null) 'maxAttendees': maxAttendees,
-        if (isPublic != null) 'isPublic': isPublic,
+        if (public != null) 'public': public,
       }),
     );
 
@@ -300,7 +306,7 @@ class ApiService {
             'address': address,
           },
         },
-        'token': {'jwt': jwt},
+        'token': {'tokenId': jwt},
       }),
     );
 
@@ -320,8 +326,6 @@ class ApiService {
         'Profile update failed (status ${response.statusCode})';
     throw ApiException(message);
   }
-
-  // ── Private helpers ────────────────────────────────────────────────────────
 
   static Map<String, dynamic> _parseBody(String raw) {
     try {
@@ -345,7 +349,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'eventId': eventId,
-        if (jwt != null) 'token': {'jwt': jwt},
+        if (jwt != null) 'token': {'tokenId': jwt},
       }),
     );
     final body = _parseBody(response.body);
@@ -371,7 +375,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        if (jwt != null) 'token': {'jwt': jwt},
+        if (jwt != null) 'token': {'tokenId': jwt},
         if (organizerUsername != null) 'organizerUsername': organizerUsername,
         if (status != null) 'status': status,
         if (category != null) 'category': category,
@@ -396,7 +400,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'jwt': jwt},
+        'token': {'tokenId': jwt},
         'eventId': eventId,
         'text': text,
         if (parentPostId != null) 'parentPostId': parentPostId,
@@ -419,7 +423,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'jwt': jwt},
+        'token': {'tokenId': jwt},
         'eventId': eventId,
         'pageSize': pageSize,
         if (cursor != null) 'cursor': cursor,
@@ -440,7 +444,7 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'jwt': jwt},
+        'token': {'tokenId': jwt},
         'postId': postId,
       }),
     );

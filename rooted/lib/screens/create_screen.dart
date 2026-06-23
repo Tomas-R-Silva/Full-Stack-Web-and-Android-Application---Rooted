@@ -39,7 +39,9 @@ class _CreatePageState extends State<CreatePage> {
     'Tech',
     'Food',
     'Art',
-    'Culture',
+    'Business',
+    'Community',
+    'Other',
   ];
 
   final String _placesApiKey = 'AIzaSyAmYzNozAPQB27PHT4uP00qoBOg-cz7jdk';
@@ -77,8 +79,6 @@ class _CreatePageState extends State<CreatePage> {
     _locationController.dispose();
     _attendeesController.dispose();
     _durationController.dispose();
-    // Clean up the draft image from disk when the screen is closed
-    // so draft files don't accumulate over time.
     _eventImage?.delete().ignore();
     super.dispose();
   }
@@ -96,7 +96,7 @@ class _CreatePageState extends State<CreatePage> {
     setState(() => _isSubmitting = true);
 
     final jwt = await SessionStorage.getJwt();
-    if (jwt == null) {
+    if (jwt == null || jwt.isEmpty) {
       setState(() => _isSubmitting = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -117,7 +117,7 @@ class _CreatePageState extends State<CreatePage> {
           startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
-          isPublic: _isPublic,
+          public: _isPublic,
         );
 
         if (mounted) {
@@ -140,7 +140,7 @@ class _CreatePageState extends State<CreatePage> {
           startDate: _selectedDate!.millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
-          isPublic: _isPublic,
+          public: _isPublic,
         );
 
         if (mounted) {
@@ -191,7 +191,6 @@ class _CreatePageState extends State<CreatePage> {
           key: _formKey,
           child: Column(
             children: [
-              // ── Event image picker ──────────────────────────────
               GestureDetector(
                 onTap: _pickEventImage,
                 child: Container(
@@ -255,6 +254,8 @@ class _CreatePageState extends State<CreatePage> {
                   labelText: 'Description',
                   border: OutlineInputBorder(),
                 ),
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Enter a description' : null,
               ),
 
               const SizedBox(height: 16),

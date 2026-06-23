@@ -58,7 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
-
+      print("REGISTER RESPONSE: $result");
       final token = (result['token'] as Map<String, dynamic>?) ?? {};
       await SessionStorage.save(
         jwt: token['jwt']?.toString() ?? '',

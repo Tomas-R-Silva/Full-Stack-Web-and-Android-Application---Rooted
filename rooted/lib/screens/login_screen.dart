@@ -31,20 +31,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
+
+
     try {
       final result = await ApiService.login(
+
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
+      final data = (result['data'] as Map<String, dynamic>?) ?? {};
+      final token = (data['token'] as Map<String, dynamic>?) ?? {};
 
-      final token = (result['token'] as Map<String, dynamic>?) ?? {};
       await SessionStorage.save(
         jwt: token['jwt']?.toString() ?? '',
         username: token['username']?.toString() ?? _usernameController.text.trim(),
         email: token['email']?.toString() ?? '',
         role: token['role']?.toString() ?? '',
       );
-
       if (mounted) {
         setState(() => _isLoading = false);
         Navigator.pushReplacement(
