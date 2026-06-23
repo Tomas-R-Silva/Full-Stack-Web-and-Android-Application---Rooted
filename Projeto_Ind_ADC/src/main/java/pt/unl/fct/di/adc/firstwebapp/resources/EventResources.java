@@ -95,6 +95,7 @@ public class EventResources {
                     .set("duration_minutes", event.getDurationMinutes())
                     .set("organizer_username", event.getOrganizerUsername())
                     .set("max_attendees", event.getMaxAttendees())
+                    .set("min_attendees", event.getMinAttendees())
                     .set("attendee_count", 0L)
                     .set("is_public", event.isPublic())
                     .set("status", event.getStatus().name())
@@ -263,6 +264,8 @@ public class EventResources {
                 builder.set("duration_minutes", req.getDurationMinutes());
             if (req.getMaxAttendees() != null)
                 builder.set("max_attendees", req.getMaxAttendees().longValue());
+            if (req.getMaxAttendees() != null)
+                builder.set("min_attendees", req.getMinAttendees().longValue());
             if (req.getIsPublic() != null)
                 builder.set("is_public", req.getIsPublic());
             if (req.getCoverImageUrl() != null)

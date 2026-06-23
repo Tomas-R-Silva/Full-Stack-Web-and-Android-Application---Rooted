@@ -12,7 +12,3 @@
 
 ### Could Have Operation:
 - Swipe
-
-
-
-### Feito

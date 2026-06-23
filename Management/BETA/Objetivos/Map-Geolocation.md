@@ -19,7 +19,3 @@
 - Rotas ecológicas otimizadas
 - Real-time participant tracking
 - Offline map support
-
-
-
-### Feito

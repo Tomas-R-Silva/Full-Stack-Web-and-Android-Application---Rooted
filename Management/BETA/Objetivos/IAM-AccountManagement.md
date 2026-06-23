@@ -7,7 +7,7 @@
 - Password Recovery
 
 ### Should Have Operation:
-- Password Double Check
+- Password Double Check✅
 - User profile personalization (avatar, privacy settings)
 
 ### Could Have Operation:
@@ -17,3 +17,5 @@
 
 
 ### Feito
+- Account Creation, Authentication (Java Tokens), Delete
+- Different Roles (EndUser, Bofficer, Admin)

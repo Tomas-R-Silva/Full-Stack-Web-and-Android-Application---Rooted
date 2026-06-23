@@ -25,6 +25,7 @@ public class UpdateEventRequest extends AbstractTokenRequest{
     private Long startDate;
     private Long durationMinutes;
     private Integer maxAttendees;
+    private Integer minAttendees;
     private Boolean isPublic;
     private String coverImageUrl;
 
@@ -54,9 +55,13 @@ public class UpdateEventRequest extends AbstractTokenRequest{
     public Integer getMaxAttendees() { return maxAttendees; }
     public void setMaxAttendees(Integer maxAttendees) { this.maxAttendees = maxAttendees; }
 
+    public Integer getMinAttendees() { return minAttendees; }
+    public void setMinAttendees(Integer minAttendees) { this.minAttendees = minAttendees; }
+    
     public Boolean getIsPublic() { return isPublic; }
     public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
 
     public String getCoverImageUrl() { return coverImageUrl; }
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
+
 }

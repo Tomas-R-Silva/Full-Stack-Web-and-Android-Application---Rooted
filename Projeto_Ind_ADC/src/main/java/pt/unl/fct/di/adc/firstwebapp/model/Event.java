@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.cloud.datastore.Value;
+
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
@@ -32,6 +34,7 @@ public class Event {
 	private long durationMinutes; // how long the event lasts
 	private String organizerUsername;
 	private int maxAttendees;     // 0 = unlimited
+	private int minAttendees;
 	private boolean isPublic;
 	private Status status;
 	private long createdAt;       // epoch seconds
@@ -55,6 +58,10 @@ public class Event {
 			list.add(Error.createmap(9914));
 		if(durationMinutes<=0)
 			list.add(Error.createmap(9916));
+		if(maxAttendees<0)
+			list.add(Error.createmap(9917));
+		if(minAttendees<0||(maxAttendees!=0&&minAttendees>maxAttendees))
+			list.add(Error.createmap(9918));
 		if(!list.isEmpty())
 			Error.invalid_input(list);
 	}
@@ -101,4 +108,7 @@ public class Event {
 
 	public List<String> getImageUrls() { return imageUrls; }
 	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
+
+	public int getMinAttendees() { return minAttendees; }
+	public void setMinAttendees(int minAttendees) { this.minAttendees = minAttendees; }
 }

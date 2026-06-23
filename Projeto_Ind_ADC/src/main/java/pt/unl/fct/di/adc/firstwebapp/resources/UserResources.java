@@ -453,14 +453,16 @@ public class UserResources {
 		List<Map<String, Object>> friends = new ArrayList<>();
 		while(sessions.hasNext()){
 			Entity session = sessions.next();
-			if(!(session.getBoolean("accepted")^accepted)) {
-				String friend1=session.getString("username_1"),
-						friend2=session.getString("username_2");
+			String friend1=session.getString("username_1"),
+					friend2=session.getString("username_2");
+			if(accepted&&session.getBoolean("accepted")) {
 				if(friend1.equals(username))
 					friends.add(Map.of(friend, friend2,start, session.getLong("issued_at")));
 				else if(friend2.equals(username))
 					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")));
-			}			
+			}
+			else if(!accepted&&!session.getBoolean("accepted")&&friend2.equals(username))
+				friends.add(Map.of("from", friend1,"Sent at", session.getLong("issued_at")));
 		}
 		return friends;
 	}
