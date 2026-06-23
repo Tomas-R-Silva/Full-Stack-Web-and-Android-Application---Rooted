@@ -2,7 +2,7 @@
 
 ### Must Have Operations:
 - Dashboard with all the events displayed
-- Event filter (search bar, data filter, content type filter)
+- Event filter (search bar, data filter✅, content type filter)
 
 ### Should Have Operation:
 - Friends suggestions
