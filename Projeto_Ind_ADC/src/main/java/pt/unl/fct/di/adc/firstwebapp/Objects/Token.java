@@ -29,7 +29,9 @@ public class Token extends ShortUser {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
-
+    public void setRole(String role) { this.role =Role.valueof(role); }
+    
+    
     public long getIssuedAt() { return issuedAt; }
     public void setIssuedAt(long issuedAt) { this.issuedAt = issuedAt; }
 

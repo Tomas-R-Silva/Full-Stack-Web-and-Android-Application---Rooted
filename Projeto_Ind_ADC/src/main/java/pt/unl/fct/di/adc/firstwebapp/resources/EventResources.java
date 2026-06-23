@@ -332,7 +332,7 @@ public class EventResources {
 				ErrorException.trow(9907);
 
 			if (!eventEntity.getBoolean("is_public"))
-				ErrorException.trow(9905); // private event — attend via invite (future feature)
+				ErrorException.trow(9905); //TODO private event — attend via invite (future feature)
 
 			String username = token.getUsername();
 			String attendanceId = req.getInput() + "_" + username;
@@ -344,7 +344,7 @@ public class EventResources {
 			long maxAttendees = eventEntity.getLong("max_attendees");
 			long currentCount = eventEntity.getLong("attendee_count");
 			if (maxAttendees > 0 && currentCount >= maxAttendees)
-				return ok(Map.of("message", "Event is full"));
+				ErrorException.trow(9928);
 
 			// Register attendance and increment counter
 			Entity attendance = Entity.newBuilder(attendanceKey)
