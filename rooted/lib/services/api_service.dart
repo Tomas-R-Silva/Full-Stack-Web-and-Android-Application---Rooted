@@ -200,32 +200,26 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'token': {'jwt': jwt},
-        'title': title,
-        'description': description,
-        'category': category,
-        'location': location,
-        'startDate': startDate,
-        'durationMinutes': durationMinutes,
-        'maxAttendees': maxAttendees,
-        'public': public,
+        'input': {
+          'title': title,
+          'description': description,
+          'category': category,
+          'location': location,
+          'startDate': startDate,
+          'durationMinutes': durationMinutes,
+          'maxAttendees': maxAttendees,
+          'public': public,
+        }
       }),
     );
 
-    Map<String, dynamic> body;
-    try {
-      body = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      body = {};
-    }
+    final body = jsonDecode(response.body);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     }
 
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Event creation failed (status ${response.statusCode})';
-    throw ApiException(message);
+    throw ApiException(body['message'] ?? 'Event creation failed');
   }
 
   /// Calls POST /events/update.
@@ -374,15 +368,16 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        if (jwt != null) 'token': {'jwt': jwt}, // ✅ IMPORTANT FIX (see below)
-        if (organizerUsername != null) 'organizerUsername': organizerUsername,
-        if (status != null) 'status': status,
-        if (category != null) 'category': category,
-        'pageSize': pageSize,
-        if (cursor != null) 'cursor': cursor,
+        if (jwt != null) 'token': {'jwt': jwt},
+        'input': {
+          if (organizerUsername != null) 'organizerUsername': organizerUsername,
+          if (status != null) 'status': status,
+          if (category != null) 'category': category,
+          'pageSize': pageSize,
+          if (cursor != null) 'cursor': cursor,
+        }
       }),
     );
-
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) return body;
     throw ApiException(_errorMessage(body, 'Failed to list events'));
@@ -436,11 +431,9 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'token': {'jwt': jwt},
-        'input' : {
           'eventId': eventId,
           'pageSize': pageSize,
           if (cursor != null) 'cursor': cursor,
-      }
       }),
     );
     final body = _parseBody(response.body);
