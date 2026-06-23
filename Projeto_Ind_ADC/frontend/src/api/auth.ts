@@ -1,5 +1,6 @@
-import type { SignInData } from "../utils/types";
-import type { LogInData } from "../utils/types";
+import type { SignInData, LogInData, RequestEventList, EventListResponse } from "../utils/types";
+
+//========== USER ==========
 
 export const registerUser = async (data: SignInData) => {
   const res = await fetch(`${import.meta.env.VITE_API_URL}/createaccount`, {
@@ -41,6 +42,7 @@ export const isAuthenticated = () => {
   return !!sessionStorage.getItem("token");
 };
 
+//TODO
 export const getProfile = async () => {
   const token = sessionStorage.getItem("token");
 
@@ -51,4 +53,26 @@ export const getProfile = async () => {
   });
 
   return res.json();
+};
+
+//========== EVENT ==========
+
+export const getEventList = async (
+  data: RequestEventList
+): Promise<EventListResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/event/list`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ input: data }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch event list");
+  }
+
+  const json: EventListResponse = await res.json();
+
+  return json;
 };

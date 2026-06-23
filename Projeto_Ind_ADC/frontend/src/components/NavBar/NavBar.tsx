@@ -36,6 +36,14 @@ function NavBar() {
           <a
             className="navbar-brand fw-bold m-0"
             style={{ color: "var(--color-bege)" }}
+            href="/events"
+          >
+            Events
+          </a>
+
+          <a
+            className="navbar-brand fw-bold m-0"
+            style={{ color: "var(--color-bege)" }}
             href="/maps"
           >
             Maps

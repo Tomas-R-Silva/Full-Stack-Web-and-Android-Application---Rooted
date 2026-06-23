@@ -10,6 +10,7 @@ import ProfilePage from "./components/Profile-Page/Profile-Page.tsx";
 import MapsPage from "./components/Maps-Page/Maps-Page.tsx";
 import ProtectedRoute from "./components/Protected-Route.tsx";
 import { AuthProvider } from "./components/AuthContext.tsx";
+import EventsPage from "./components/Events-Page/Events-Page.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -27,6 +28,7 @@ createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
+          <Route path="/events" element={<EventsPage />} />
           <Route path="/maps" element={<MapsPage />} />
         </Routes>
       </AuthProvider>
