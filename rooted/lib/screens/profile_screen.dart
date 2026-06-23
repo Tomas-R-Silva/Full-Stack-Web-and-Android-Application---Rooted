@@ -195,8 +195,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
