@@ -33,11 +33,26 @@ function EventCard({ event }: EventCardProps) {
 
         <div className="card-body d-flex flex-column">
           <div className="d-flex justify-content-between align-items-start mb-2">
-            <span className="badge bg-success">{event.category}</span>
-            <span className="badge bg-secondary">{event.status}</span>
+            <span
+              className="badge "
+              style={{ background: "var(--color-green)" }}
+            >
+              {event.category}
+            </span>
+            <span
+              className="badge"
+              style={{
+                background: "var(--color-bege)",
+                color: "var(--color-green)",
+              }}
+            >
+              {event.status}
+            </span>
           </div>
 
-          <h5 className="card-title">{event.title}</h5>
+          <h5 className="card-title" style={{ color: "var(--color-green)" }}>
+            {event.title}
+          </h5>
 
           <p className="card-text text-muted mb-2">{event.location}</p>
 
@@ -45,24 +60,32 @@ function EventCard({ event }: EventCardProps) {
 
           <div className="mt-auto">
             <p className="mb-1">
-              <strong>Data:</strong> {formattedDate}
+              <strong style={{ color: "var(--color-green)" }}>Data:</strong>{" "}
+              {formattedDate}
             </p>
 
             <p className="mb-1">
-              <strong>Hora:</strong> {formattedTime}
+              <strong style={{ color: "var(--color-green)" }}>Hora:</strong>{" "}
+              {formattedTime}
             </p>
 
             <p className="mb-1">
-              <strong>Duração:</strong> {event.durationMinutes} min
+              <strong style={{ color: "var(--color-green)" }}>Duração:</strong>{" "}
+              {event.durationMinutes} min
             </p>
 
             <p className="mb-3">
-              <strong>Vagas:</strong> {event.attendeeCount}/{event.maxAttendees}
+              <strong style={{ color: "var(--color-green)" }}>Vagas:</strong>{" "}
+              {event.attendeeCount}/{event.maxAttendees}
             </p>
 
             <a
               href={`/events/${event.eventId}`}
-              className="btn btn-success w-100"
+              className="btn w-100"
+              style={{
+                background: "var(--color-green)",
+                color: "var(--color-white)",
+              }}
             >
               Ver evento
             </a>

@@ -58,13 +58,23 @@ function EventsPage() {
 
       <main className="container py-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="mb-0">Eventos</h1>
+          <h1 className="mb-0">Events</h1>
+
+          <button
+            className="btn"
+            style={{
+              background: "var(--color-green)",
+              color: "var(--color-white)",
+            }}
+          >
+            Create Event
+          </button>
         </div>
 
         {loading && (
           <div className="text-center py-5">
             <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">A carregar...</span>
+              <span className="visually-hidden">Loading...</span>
             </div>
           </div>
         )}
@@ -77,7 +87,7 @@ function EventsPage() {
 
         {!loading && !error && events.length === 0 && (
           <div className="alert alert-info" role="alert">
-            Ainda não existem eventos disponíveis.
+            There is no events availables.
           </div>
         )}
 
@@ -92,9 +102,13 @@ function EventsPage() {
             {nextCursor && (
               <div className="text-center mt-5">
                 <button
-                  className="btn btn-success px-4"
+                  className="btn px-4"
                   onClick={() => loadEvents(nextCursor)}
                   disabled={loadingMore}
+                  style={{
+                    background: "var(--color-green)",
+                    color: "var(--color-white)",
+                  }}
                 >
                   {loadingMore ? "A carregar..." : "Carregar mais"}
                 </button>
