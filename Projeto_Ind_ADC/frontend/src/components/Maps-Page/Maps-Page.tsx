@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import NavBar from "../NavBar/NavBar";
 
 declare global {
   interface Window {
@@ -9,10 +9,10 @@ declare global {
 }
 
 const MapsPage = () => {
-  const server = "";
-  const mapsApiKey = "";
+  const server = import.meta.env.VITE_API_URL || "";
+  const mapsApiKey = import.meta.env.VITE_API_KEY;
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const navigate = useNavigate();
+  const userMarkerRef = useRef<any | null>(null);
 
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [events, setEvents] = useState<any[]>([]);
@@ -47,7 +47,7 @@ const MapsPage = () => {
 
       const script = document.createElement("script");
       script.id = "google-maps-script";
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${mapsApiKey}&callback=initMap`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${mapsApiKey}&callback=initMap&loading=async`;
       script.async = true;
       script.defer = true;
       window.initMap = initMap;
@@ -67,6 +67,25 @@ const MapsPage = () => {
 
       const geocoder = new window.google.maps.Geocoder();
 
+      const addUserMarker = (position: { lat: number; lng: number }) => {
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setMap(null);
+        }
+        userMarkerRef.current = new window.google.maps.Marker({
+          position,
+          map,
+          title: "You",
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "blue",
+            fillOpacity: 1,
+            strokeColor: "white",
+            strokeWeight: 2,
+          },
+        });
+      };
+
       const setMapCenter = (location: { lat: number; lng: number }, zoom: number) => {
         map.setCenter(location);
         map.setZoom(zoom);
@@ -74,81 +93,110 @@ const MapsPage = () => {
       };
 
       const centerMapOnUserByIP = () => {
-        const ipLookup = () => {
-          fetch("https://ipapi.co/json/")
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.latitude && data.longitude) {
-                setMapCenter({ lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) }, 11);
-              } else if (data.city) {
-                const addr = [data.city, data.region, data.country_name].filter(Boolean).join(", ");
-                geocoder.geocode({ address: addr }, (results: any, status: any) => {
-                  if (status === "OK" && results[0]) {
-                    const loc = results[0].geometry.location;
-                    setMapCenter({ lat: loc.lat(), lng: loc.lng() }, 11);
-                  }
-                });
-              }
-            })
-            .catch((err) => console.error("IP geolocation failed:", err));
-        };
-
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (pos) => {
-              setMapCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }, 13);
+              const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+              setMapCenter(userPos, 13);
+              addUserMarker(userPos);
             },
             () => {
-              ipLookup();
+              console.warn("Geolocation denied or unavailable. Using default center.");
+              setMapCenter({ lat: 0, lng: 0 }, 3);
             },
             { timeout: 5000 }
           );
         } else {
-          ipLookup();
+          console.warn("Navigator geolocation unavailable. Using default center.");
+          setMapCenter({ lat: 0, lng: 0 }, 3);
         }
       };
 
+      const placeholderEvents = [
+        { eventId: "placeholder-1", 
+          title: "Yoga at Parque Eduardo VII", 
+          location: "Parque Eduardo VII, Lisbon", 
+          category: "WELLNESS", status: "UPCOMING", 
+          organizerUsername: "rooted",
+          position: {lat: 0, lng: 0},
+        },
+        { eventId: "placeholder-2", 
+          title: "Street Art Walking Tour", 
+          location: "LX Factory, Lisbon", 
+          category: "CULTURE", 
+          status: "UPCOMING", 
+          organizerUsername: "rooted", 
+          position: {lat: 0, lng: 0},
+        },
+        { eventId: "placeholder-3", 
+          title: "Sustainable Cooking Workshop", 
+          location: "Campo de Ourique, Lisbon", 
+          category: "FOOD", 
+          status: "UPCOMING", 
+          organizerUsername: "rooted", 
+          position: {lat: 0, lng: 0},
+        },
+      ];
+
+      const renderEvents = (eventList: any[]) => {
+        eventList.forEach((event) => {
+            geocoder.geocode({ address: event.location }, (results: any, status: any) => {
+              if (status === "OK" && results[0]) {
+                const pos = {
+                  lat: results[0].geometry.location.lat(),
+                  lng: results[0].geometry.location.lng(),
+                };
+                const updatedEvent = { ...event, position: pos };
+                setEvents((current) =>
+                  current.map((item) =>
+                    item.eventId === updatedEvent.eventId ? updatedEvent : item
+                  )
+                );
+                addMarker(pos, updatedEvent);
+              }
+            });
+        });
+      };
+
+      const addMarker = (position: { lat: number; lng: number }, event: any) => {
+        const marker = new window.google.maps.Marker({
+          position,
+          map,
+          title: event.title,
+          icon: {
+            path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+            scale: 9,
+            fillColor: "green",
+            fillOpacity: 1,
+            strokeColor: "white",
+            strokeWeight: 2,
+          },
+        });
+        const infoWindow = new window.google.maps.InfoWindow({
+          content: `<div><h3>${event.title}</h3><p>${event.location}</p></div>`,
+        });
+        marker.addListener("click", () => infoWindow.open(map, marker));
+      };
+
       const addEventMarkers = async () => {
-        const res = await fetch(`${server}/events/list`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "UPCOMING" }),
-        });
-        const data = await res.json();
-        const eventsData = data.events || [];
-
-        eventsData.forEach((event: any) => {
-          if (!event.location) return;
-
-          geocoder.geocode({ address: event.location }, (results: any, status: any) => {
-            if (status === "OK" && results[0]) {
-              const position = {
-                lat: results[0].geometry.location.lat(),
-                lng: results[0].geometry.location.lng(),
-              };
-
-              new window.google.maps.Marker({
-                position,
-                map,
-              });
-
-              const infoWindow = new window.google.maps.InfoWindow({
-                content: `<div><h1>${event.title}</h1><p>${event.location}</p></div>`,
-              });
-
-              const marker = new window.google.maps.Marker({
-                position,
-                map,
-              });
-
-              marker.addListener("click", () => {
-                infoWindow.open(map, marker);
-              });
-
-              setEvents((prev) => [...prev, { ...event, position }]);
-            }
+        try {
+          const res = await fetch(`${server}/events/list`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "UPCOMING" }),
           });
-        });
+          const data = await res.json();
+          const eventsData = Array.isArray(data.events) && data.events.length > 0
+            ? data.events
+            : placeholderEvents;
+
+          setEvents(eventsData);
+          renderEvents(eventsData);
+        } catch (err) {
+          console.error("Failed to fetch server events:", err);
+          setEvents(placeholderEvents);
+          renderEvents(placeholderEvents);
+        }
       };
 
       centerMapOnUserByIP();
@@ -159,35 +207,51 @@ const MapsPage = () => {
   }, []);
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <div style={{ height: "60px", width: "100%", background: "#ffffffcc", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", boxShadow: "0 2px 6px rgba(0,0,0,0.1)", zIndex: 1 }}>
-        <div onClick={() => navigate("/")} style={{ cursor: "pointer", fontWeight: "bold", fontSize: "18px" }}>
-          Rooted
-        </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={() => navigate("/login")}>Log in</button>
-        </div>
-      </div>
+    <>
+      <NavBar />
 
-      <div style={{ flex: 1, display: "flex" }}>
-        <div style={{ width: 320, background: "#f4f5f7", padding: 12, overflowY: "auto", borderRight: "1px solid #ddd" }}>
-          <h3 style={{ margin: "0 0 12px 0" }}>Nearby events</h3>
-          {sortedEvents.map((event, idx) => (
-            <div key={`${event.eventId}-${idx}`} style={{ marginBottom: 12, padding: 12, borderRadius: 12, background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <div style={{ fontWeight: 700 }}>{event.title}</div>
-              <div style={{ fontSize: 12, color: "#555", margin: "6px 0" }}>{event.location}</div>
-              {event.distance != null && event.distance !== Infinity ? (
-                <div style={{ fontSize: 12, color: "#333" }}>{(event.distance / 1000).toFixed(1)} km away</div>
-              ) : (
-                <div style={{ fontSize: 12, color: "#999" }}>Distance unknown</div>
-              )}
+      <main className="container py-5">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 className="mb-0">Mapa de eventos</h1>
+            <p className="text-muted mb-0">Explore os eventos próximos e veja sua localização no mapa.</p>
+          </div>
+        </div>
+
+        <div className="row g-4">
+          <div className="col-12 col-lg-4">
+            <div className="card shadow-sm h-100">
+              <div className="card-body">
+                <h3 className="card-title">Nearby events</h3>
+                {sortedEvents.length === 0 ? (
+                  <div className="alert alert-info mt-3">Ainda não há eventos carregados.</div>
+                ) : (
+                  sortedEvents.map((event, idx) => (
+                    <div key={`${event.eventId}-${idx}`} className="mb-3 p-3 rounded bg-white border">
+                      <div className="fw-bold">{event.title}</div>
+                      <div className="text-muted small my-1">{event.location}</div>
+                      {event.distance != null && event.distance !== Infinity ? (
+                        <div className="small text-dark">{(event.distance / 1000).toFixed(1)} km away</div>
+                      ) : (
+                        <div className="small text-muted">Distance unknown</div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        <div ref={mapRef} style={{ flex: 1 }} />
-      </div>
-    </div>
+          <div className="col-12 col-lg-8">
+            <div className="card shadow-sm h-100">
+              <div className="card-body p-0" style={{ minHeight: "70vh" }}>
+                <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </>
   );
 };
 
