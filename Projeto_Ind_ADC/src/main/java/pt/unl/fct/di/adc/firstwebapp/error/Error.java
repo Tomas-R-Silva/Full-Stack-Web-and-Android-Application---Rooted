@@ -33,7 +33,11 @@ public class Error {
 			INVALID_MESSAGE_TEXT="INVALID_MESSAGE_TEXT",
 			EVENT_NOT_OPEN_FOR_FORUM="EVENT_NOT_OPEN_FOR_FORUM",
 			POST_NOT_FOUND="POST_NOT_FOUND",
-			INVALID_EMAIL="INVALID_EMAIL";
+			INVALID_EMAIL="INVALID_EMAIL",
+			FRIEND_SELF="FRIEND_SELF",
+			ALREADY_FRIEND="ALREADY_FRIEND",
+			FRIEND_REQUEST_ALREADY_SENT="FRIEND_REQUEST_ALREADY_SENT";
+	
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
 		ErrorException.trow(9906,list);
@@ -106,6 +110,9 @@ public class Error {
 		case 9922->data=INVALID_DESCRIPTION;
 		case 9923->data=INVALID_ORGANIZER;
 		case 9924->data=INVALID_EMAIL;
+		case 9925->data=FRIEND_SELF;
+		case 9926->data=ALREADY_FRIEND;
+		case 9927->data=FRIEND_REQUEST_ALREADY_SENT;
 		case 9930->data=INVALID_MESSAGE_TEXT;
 		case 9931->data=EVENT_NOT_OPEN_FOR_FORUM;
 		case 9932->data=POST_NOT_FOUND;

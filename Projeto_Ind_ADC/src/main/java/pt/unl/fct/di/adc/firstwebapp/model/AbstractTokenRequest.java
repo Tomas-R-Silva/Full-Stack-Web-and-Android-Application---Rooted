@@ -1,6 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-public abstract class AbstractTokenRequest {
+public class AbstractTokenRequest {
 	public Token token;
 	
 	public AbstractTokenRequest() {}
