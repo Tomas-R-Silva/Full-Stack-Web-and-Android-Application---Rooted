@@ -4,7 +4,7 @@ import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 
 public interface TokenRequestInterface {
 
-	public Token getToken();
+	Token getToken();
 	
-	public void setToken(Token token);
+	void setToken(Token token);
 }

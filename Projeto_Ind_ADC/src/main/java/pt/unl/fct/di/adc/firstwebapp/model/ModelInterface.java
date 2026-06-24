@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 public interface ModelInterface {
 
 	public Map<String,Object> getformat();
+
 	public static final String defaultstr="\"...\"";
 	public static final int defaultint=0;
 	public static final boolean defaultbool=false;
@@ -30,9 +31,10 @@ public interface ModelInterface {
 				continuea(b,(Map<String,Object>)obj);
 			else
 				b.append(obj);
-			b.append(it.hasNext()?",\n":"}");
+			if(it.hasNext()) 
+				b.append(",\n");
 		}
-		return b;
+		return b.append("}");
 
 	}
 
