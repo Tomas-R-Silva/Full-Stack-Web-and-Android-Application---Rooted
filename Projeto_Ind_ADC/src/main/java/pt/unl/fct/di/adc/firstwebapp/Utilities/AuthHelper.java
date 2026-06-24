@@ -9,6 +9,7 @@ import com.google.cloud.datastore.Key;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequestInterface;
 
 public class AuthHelper {
@@ -20,12 +21,15 @@ public class AuthHelper {
 
 	private AuthHelper() {}
 
-	public static <E extends Object> E verifyInput(Object obj,Class<E> e) throws ErrorException {
-		if(!e.isInstance(obj))
-			ErrorException.trow(9929);
-		return e.cast(obj);
+	public static <E extends ModelInterface> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
+		if(!clas.isInstance(obj)) 
+			try {
+				ErrorException.trow(9929,ModelInterface.formate(clas));
+			}catch (Exception e) {
+				ErrorException.trow(9929);}
+		return clas.cast(obj);
 	}
-	
+
 	public static Token verifyToken(TokenRequestInterface token) throws ErrorException {
 		return verifyToken(token.getToken());
 	}

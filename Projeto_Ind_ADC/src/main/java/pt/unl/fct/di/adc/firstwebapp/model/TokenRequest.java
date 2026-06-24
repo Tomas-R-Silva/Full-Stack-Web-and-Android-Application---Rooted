@@ -1,8 +1,10 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import java.util.Map;
+
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 
-public class TokenRequest implements TokenRequestInterface{
+public class TokenRequest implements ModelInterface, TokenRequestInterface{
 	
 	/**
 	 * {
@@ -20,4 +22,10 @@ public class TokenRequest implements TokenRequestInterface{
 	public void setToken(Token token) {
         this.token = token;
     }
+
+	@Override
+	public Map<String, Object> getformat() {
+		return Map.of("token","\"<jwt>\"");
+	}
+
 }

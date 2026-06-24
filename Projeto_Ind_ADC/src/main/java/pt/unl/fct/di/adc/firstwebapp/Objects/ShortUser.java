@@ -1,6 +1,10 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-public class ShortUser {
+import java.util.Map;
+
+import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
+
+public class ShortUser implements ModelInterface{
 
 	/**
 	 * { "username": "..." }
@@ -17,5 +21,10 @@ public class ShortUser {
     public void setUsername(String username) {
         this.username = username;
     }
+    
+	@Override
+	public Map<String, Object> getformat() {
+		return Map.of("username",ModelInterface.defaultstr);
+	}
 
 }

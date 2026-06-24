@@ -1,8 +1,9 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 
-public class Token extends ShortUser {
+public class Token extends ShortUser implements ModelInterface {
 
     public static final long EXPIRATION_TIME = 15 * 60;
 

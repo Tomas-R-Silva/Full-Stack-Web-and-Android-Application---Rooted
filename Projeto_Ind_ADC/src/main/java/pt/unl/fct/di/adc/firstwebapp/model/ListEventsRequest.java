@@ -1,7 +1,8 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import java.util.Map;
 
-public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsRequest.ListEventsInput>{
+public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsRequest.ListEventsInput>implements ModelInterface{
 
 	/**
 	 * {
@@ -19,7 +20,7 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	
 	public ListEventsRequest() {}
 	
-	public class ListEventsInput{
+	public class ListEventsInput implements ModelInterface{
 		private String category;
 	    private String status;
 	    private String organizerUsername;
@@ -43,6 +44,15 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 
 	    public String getCursor() { return cursor; }
 	    public void setCursor(String cursor) { this.cursor = cursor; }
+
+		@Override
+		public Map<String, Object> getformat() {
+			return Map.of("category", ModelInterface.defaultstr, 
+					"status", ModelInterface.defaultstr, 
+					"organizerUsername", ModelInterface.defaultstr, 
+					"pageSize", 20, 
+					"cursor", ModelInterface.defaultstr);
+		}
 	}
     
 }

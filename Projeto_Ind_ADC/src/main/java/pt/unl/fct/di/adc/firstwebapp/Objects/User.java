@@ -6,12 +6,13 @@ import java.util.Map;
 
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 
 /**
  * Represents a user in the system.
  * The create account creates an user
  */
-public class User extends ShortUser{
+public class User extends ShortUser implements ModelInterface{
 	
 	/**
 	 * {

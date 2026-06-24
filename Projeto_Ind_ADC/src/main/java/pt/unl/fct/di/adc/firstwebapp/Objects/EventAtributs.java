@@ -1,8 +1,11 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Category;
+import java.util.Map;
 
-public class EventAtributs {
+import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Category;
+import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
+
+public class EventAtributs implements ModelInterface{
 
 	protected String title;
 	protected String description;
@@ -57,5 +60,18 @@ public class EventAtributs {
 	}
 	private static boolean zeroifnull(Boolean n) {
 		return(n==null)?false:n;
+	}
+
+	@Override
+	public Map<String, Object> getformat() {
+		return Map.of("title",ModelInterface.defaultstr,
+				"description",ModelInterface.defaultstr,
+				"category","MUSIC",
+				"location",ModelInterface.defaultstr,
+				"startDate",1234567890,
+				"durationMinutes", 120,
+				"maxAttendees", 100,
+			   	"minAttendees", 10,
+			   	"isPublic", true );
 	}
 }

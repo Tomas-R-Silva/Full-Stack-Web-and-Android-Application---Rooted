@@ -166,7 +166,7 @@ public class ForumResources {
         try {
         	ForumKeyTokenRequest req=AuthHelper.verifyInput(obj,ForumKeyTokenRequest.class);
             Token token = AuthHelper.verifyToken(req);
-            Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getInput());
+            Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getInput().getForumKey());
             Entity post = datastore.get(key);
             if (post == null)
                 ErrorException.trow(9932);

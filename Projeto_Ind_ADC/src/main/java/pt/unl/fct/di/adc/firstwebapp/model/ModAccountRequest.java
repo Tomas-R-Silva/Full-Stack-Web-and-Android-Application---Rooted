@@ -1,12 +1,14 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import java.util.Map;
+
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
-public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountRequest.ModAccountRequestInput>{
+public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountRequest.ModAccountRequestInput>implements ModelInterface{
 
     public ModAccountRequest() {}
 
-    public static class ModAccountRequestInput extends ShortUser{
+    public static class ModAccountRequestInput extends ShortUser implements ModelInterface{
         private Attributes attributes;
 
         public ModAccountRequestInput() {}
@@ -18,9 +20,15 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
         public void setAttributes(Attributes attributes) {
             this.attributes = attributes;
         }
+        @Override
+    	public Map<String, Object> getformat() {
+        Map<String, Object> map=super.getformat();
+        map.put("attributes", attributes.getformat());
+        return map;
+        }
     }
 
-    public static class Attributes {
+    public static class Attributes implements ModelInterface {
         private String phone;
         private String address;
 
@@ -41,5 +49,12 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
         public void setAddress(String address) {
             this.address = address;
         }
+        @Override
+    	public Map<String, Object> getformat() {
+        return Map.of("phone",ModelInterface.defaultstr
+        		,"address",ModelInterface.defaultstr);
+        }
+        
+        
     }
 }

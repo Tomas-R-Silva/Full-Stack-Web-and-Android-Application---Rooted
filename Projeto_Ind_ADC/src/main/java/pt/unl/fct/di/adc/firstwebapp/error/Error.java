@@ -39,7 +39,7 @@ public class Error {
 			ALREADY_FRIEND="ALREADY_FRIEND",
 			FRIEND_REQUEST_ALREADY_SENT="FRIEND_REQUEST_ALREADY_SENT",
 			WRONG_JSON_STRUCTURE="WRONG_JSON_STRUCTURE";
-	
+
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
 		ErrorException.trow(9906,list);
@@ -129,10 +129,9 @@ public class Error {
 		if(e instanceof ErrorException) {
 			ErrorException ex=(ErrorException)e;
 			int status=ex.getStatus();
-			if(status==9906&&ex.getdata()!=null)
-				return ResponceBuilder.constructor(status,ex.getdata());
-			else
-				return errorswitch(status);
+			return((ex.getdata()!=null)? 
+					ResponceBuilder.constructor(status,ex.getdata()):
+					errorswitch(status));
 		}
 		return errorswitch(9907);
 	}	

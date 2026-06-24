@@ -2,7 +2,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 
-public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsid>{
+public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsid>implements ModelInterface{
 	
 	/**
 	 * {
