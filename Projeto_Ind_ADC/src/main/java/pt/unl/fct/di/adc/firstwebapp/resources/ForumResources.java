@@ -27,6 +27,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ForumPost;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Status;
@@ -37,6 +38,7 @@ import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.model.ForumKeyTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ListForumRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.ListForumRequest.ListForumInput;
 import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest.PostMessageinput;
 
@@ -63,14 +65,13 @@ public class ForumResources {
     @Path("/post")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postMessage(PostMessageRequest req) {
+    public Response postMessage(Object obj) {
         try {
-            Token token = AuthHelper.verifyToken(req.getToken());
+        	PostMessageRequest req=AuthHelper.verifyInput(obj,PostMessageRequest.class);
+            Token token = AuthHelper.verifyToken(req);
             PostMessageinput input =req.getInput();
-            if (input.getEventId() == null || input.getEventId().isBlank())
-                return Error.invalid_input();
-
-            Entity eventEntity = getEventEntity(input.getEventId());
+            
+            Entity eventEntity = getEventEntity(input);
 
             String status = eventEntity.getString("status");
             if (status.equals(Status.CANCELLED.name()) || status.equals(Status.COMPLETED.name()))
@@ -114,23 +115,24 @@ public class ForumResources {
     @Path("/list")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listMessages(ListForumRequest req) {
+    public Response listMessages(Object obj) {
         try {
-            AuthHelper.verifyToken(req.getToken());
-
-            if (req.getEventId() == null || req.getEventId().isBlank())
+        	ListForumRequest req =AuthHelper.verifyInput(obj,ListForumRequest.class);
+            AuthHelper.verifyToken(req);
+            ListForumInput input=req.getInput();
+            if (input.getEventId() == null || input.getEventId().isBlank())
                 return Error.invalid_input();
 
-            int pageSize = req.getPageSize() > 0 ? Math.min(req.getPageSize(), MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
+            int pageSize = input.getPageSize() > 0 ? Math.min(input.getPageSize(), MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
 
             EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder()
                     .setKind("ForumPost")
-                    .setFilter(PropertyFilter.eq("event_id", req.getEventId()))
+                    .setFilter(PropertyFilter.eq("event_id", input.getEventId()))
                     .setOrderBy(OrderBy.asc("created_at"))
                     .setLimit(pageSize);
 
-            if (req.getCursor() != null && !req.getCursor().isBlank())
-                queryBuilder.setStartCursor(Cursor.fromUrlSafe(req.getCursor()));
+            if (input.getCursor() != null && !input.getCursor().isBlank())
+                queryBuilder.setStartCursor(Cursor.fromUrlSafe(input.getCursor()));
 
             QueryResults<Entity> results = datastore.run(queryBuilder.build());
 
@@ -160,13 +162,10 @@ public class ForumResources {
     @Path("/delete")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deletePost(ForumKeyTokenRequest req) {
+    public Response deletePost(Object obj) {
         try {
-            Token token = AuthHelper.verifyToken(req.getToken());
-
-            if (req.getInput() == null || req.getInput().isBlank())
-                return Error.invalid_input();
-
+        	ForumKeyTokenRequest req=AuthHelper.verifyInput(obj,ForumKeyTokenRequest.class);
+            Token token = AuthHelper.verifyToken(req);
             Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getInput());
             Entity post = datastore.get(key);
             if (post == null)
@@ -244,13 +243,19 @@ public class ForumResources {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private Entity getEventEntity(String eventId) throws ErrorException {
-        Key key = datastore.newKeyFactory().setKind("Event").newKey(eventId);
-        Entity entity = datastore.get(key);
-        if (entity == null) ErrorException.trow(9902);
-        return entity;
-    }
-
+	private Entity getEventEntity(EventInputInterface event) throws ErrorException {
+		if (event.getEventId() == null || event.getEventId().isBlank())
+			ErrorException.trow(9906);
+		return getEventEntity(event.getEventId());
+	}
+	private Entity getEventEntity(String event) throws ErrorException {
+		Key key = datastore.newKeyFactory().setKind("Event").newKey(event);
+		Entity entity = datastore.get(key);
+		if (entity == null) ErrorException.trow(9902);
+		return entity;
+	}
+	
+	
     /** Deletes every ForumPost for an event in batches; returns how many were deleted. */
     private int deleteForum(String eventId) {
         Query<Key> query = Query.newKeyQueryBuilder()

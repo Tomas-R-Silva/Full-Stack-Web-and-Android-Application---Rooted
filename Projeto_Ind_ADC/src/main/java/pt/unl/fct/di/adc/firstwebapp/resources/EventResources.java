@@ -67,9 +67,10 @@ public class EventResources {
 	@Path("/create")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createEvent(CreateEventRequest req) {
+	public Response createEvent(Object obj) {
 		try {
-			Token tokenObj = AuthHelper.verifyToken(req.getToken());
+			CreateEventRequest req=AuthHelper.verifyInput(obj,CreateEventRequest.class);
+			Token tokenObj = AuthHelper.verifyToken(req);
 
 			Event event = new Event(req.getInput(),tokenObj.getUsername());
 
@@ -108,14 +109,15 @@ public class EventResources {
 	@Path("/get")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getEvent(EventTokenRequest req) {
+	public Response getEvent(Object obj) {
 		try {
+			EventTokenRequest req=AuthHelper.verifyInput(obj,EventTokenRequest.class);
 			Entity entity = getEventEntity(req.getInput());
 
 			boolean isPublic = entity.getBoolean("is_public");
 			if (!isPublic) {
 				// Private event must be authenticated
-				Token token = AuthHelper.verifyToken(req.getToken());
+				Token token = AuthHelper.verifyToken(req);
 				String requester = token.getUsername();
 				String organizer = entity.getString("organizer_username");
 				Role role = token.getRole();
@@ -140,14 +142,15 @@ public class EventResources {
 	@Path("/list")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response listEvents(ListEventsRequest req) {
+	public Response listEvents(Object obj) {
 		try {
+			ListEventsRequest req=AuthHelper.verifyInput(obj,ListEventsRequest.class);
 			boolean authenticated = false;
 			Role requesterRole = null;
 			ListEventsInput input =req.getInput();
 			if (req.getToken() != null && req.getToken().getJwt() != null) {
 				try {
-					Token token = AuthHelper.verifyToken(req.getToken());
+					Token token = AuthHelper.verifyToken(req);
 					authenticated = true;
 					requesterRole = token.getRole();
 				} catch (ErrorException ignored) {
@@ -218,9 +221,10 @@ public class EventResources {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response updateEvent(UpdateEventRequest req) {
+	public Response updateEvent(Object obj) {
 		try {
-			Token token = AuthHelper.verifyToken(req.getToken());
+			UpdateEventRequest req=AuthHelper.verifyInput(obj,UpdateEventRequest.class);
+			Token token = AuthHelper.verifyToken(req);
 			EventAtributsid input=req.getInput();
 			Entity existing = getEventEntity(input);
 			String organizer = existing.getString("organizer_username");
@@ -267,9 +271,10 @@ public class EventResources {
 	@Path("/delete")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteEvent(EventTokenRequest req) {
+	public Response deleteEvent(Object obj) {
 		try {
-			Token token = AuthHelper.verifyToken(req.getToken());
+			EventTokenRequest req=AuthHelper.verifyInput(obj,EventTokenRequest.class);
+			Token token = AuthHelper.verifyToken(req);
 			Entity existing = getEventEntity(req.getInput());
 			String organizer = existing.getString("organizer_username");
 
@@ -294,9 +299,10 @@ public class EventResources {
 	@Path("/cancel")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response cancelEvent(EventTokenRequest req) {
+	public Response cancelEvent(Object obj) {
 		try {
-			Token token = AuthHelper.verifyToken(req.getToken());
+			EventTokenRequest req=AuthHelper.verifyInput(obj,EventTokenRequest.class);
+			Token token = AuthHelper.verifyToken(req);
 			Entity existing = getEventEntity(req.getInput());
 			String organizer = existing.getString("organizer_username");
 
@@ -322,9 +328,10 @@ public class EventResources {
 	@Path("/attend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response attendEvent(EventTokenRequest req) {
+	public Response attendEvent(Object obj) {
 		try {
-			Token token = AuthHelper.verifyToken(req.getToken());
+			EventTokenRequest req=AuthHelper.verifyInput(obj,EventTokenRequest.class);
+			Token token = AuthHelper.verifyToken(req);
 			Entity eventEntity = getEventEntity(req.getInput());
 
 			if (eventEntity.getString("status").equals(Status.CANCELLED.name()) ||
@@ -373,9 +380,10 @@ public class EventResources {
 	@Path("/unattend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response unattendEvent(EventTokenRequest req) {
+	public Response unattendEvent(Object obj) {
 		try {
-			Token token = AuthHelper.verifyToken(req.getToken());
+			EventTokenRequest req=AuthHelper.verifyInput(obj,EventTokenRequest.class);
+			Token token = AuthHelper.verifyToken(req);
 
 			Entity eventEntity = getEventEntity(req.getInput());
 
@@ -410,9 +418,10 @@ public class EventResources {
 	@Path("/attendees")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAttendees(EventTokenRequest req) {
+	public Response getAttendees(Object obj) {
 		try {
-			Token token = AuthHelper.verifyToken(req.getToken());
+			EventTokenRequest req=AuthHelper.verifyInput(obj,EventTokenRequest.class);
+			Token token = AuthHelper.verifyToken(req);
 			Entity eventEntity = getEventEntity(req.getInput());
 			String organizer = eventEntity.getString("organizer_username");
 
@@ -450,10 +459,11 @@ public class EventResources {
 	@Path("/uploadimages")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response uploadImages(ImageRequest req) {
+	public Response uploadImages(Object obj) {
 		try {
+			ImageRequest req=AuthHelper.verifyInput(obj,ImageRequest.class);
 			ImageRequestInput input=req.getInput();
-			Token token = AuthHelper.verifyToken(req.getToken());
+			Token token = AuthHelper.verifyToken(req);
 
 			Entity eventEntity = getEventEntity(input);
 			String organizer = eventEntity.getString("organizer_username");
@@ -506,10 +516,11 @@ public class EventResources {
 	@Path("/deleteimage")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteImage(ImageRequest req) {
+	public Response deleteImage(Object obj) {
 		Transaction txn = datastore.newTransaction();
 		try {
-			Token token = AuthHelper.verifyToken(req.getToken());
+			ImageRequest req=AuthHelper.verifyInput(obj,ImageRequest.class);
+			Token token = AuthHelper.verifyToken(req);
 			ImageRequestInput input=req.getInput();
 			if (input.getImages().isEmpty())
 				ErrorException.trow(9906);

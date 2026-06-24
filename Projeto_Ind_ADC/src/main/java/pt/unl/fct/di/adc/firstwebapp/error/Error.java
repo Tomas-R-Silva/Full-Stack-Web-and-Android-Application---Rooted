@@ -37,7 +37,8 @@ public class Error {
 			EVENT_FULL="EVENT_FULL",
 			FRIEND_SELF="FRIEND_SELF",
 			ALREADY_FRIEND="ALREADY_FRIEND",
-			FRIEND_REQUEST_ALREADY_SENT="FRIEND_REQUEST_ALREADY_SENT";
+			FRIEND_REQUEST_ALREADY_SENT="FRIEND_REQUEST_ALREADY_SENT",
+			WRONG_JSON_STRUCTURE="WRONG_JSON_STRUCTURE";
 	
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
@@ -115,6 +116,7 @@ public class Error {
 		case 9926->data=ALREADY_FRIEND;
 		case 9927->data=FRIEND_REQUEST_ALREADY_SENT;
 		case 9928->data=EVENT_FULL;
+		case 9929->data=WRONG_JSON_STRUCTURE;
 		case 9930->data=INVALID_MESSAGE_TEXT;
 		case 9931->data=EVENT_NOT_OPEN_FOR_FORUM;
 		case 9932->data=POST_NOT_FOUND;

@@ -9,47 +9,58 @@ import com.google.cloud.datastore.Key;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+import pt.unl.fct.di.adc.firstwebapp.model.TokenRequestInterface;
 
 public class AuthHelper {
 
-    private static final Datastore datastore = DatastoreOptions.newBuilder()
-            .setProjectId("adc-final")
-            .build()
-            .getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder()
+			.setProjectId("adc-final")
+			.build()
+			.getService();
 
-    private AuthHelper() {}
+	private AuthHelper() {}
 
-    public static Token verifyToken(String jwt) throws ErrorException {
-        Token token = new Token();
-        token.setJwt(jwt);
-        return verifyToken(token);
-    }
+	public static <E extends Object> E verifyInput(Object obj,Class<E> e) throws ErrorException {
+		if(!e.isInstance(obj))
+			ErrorException.trow(9929);
+		return e.cast(obj);
+	}
+	
+	public static Token verifyToken(TokenRequestInterface token) throws ErrorException {
+		return verifyToken(token.getToken());
+	}
 
-    public static Token verifyToken(Token tokenJson) throws ErrorException {
-        if (tokenJson == null || tokenJson.getJwt() == null)
-            ErrorException.trow(9903);
-        try {
-            DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getJwt());
-            tokenJson.setUsername(decoded.getSubject());
-            tokenJson.setRole(Role.valueof(decoded.getClaim("role").asString()));
+	public static Token verifyToken(String jwt) throws ErrorException {
+		Token token = new Token();
+		token.setJwt(jwt);
+		return verifyToken(token);
+	}
 
-            Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(decoded.getId());
-            if (datastore.get(sessionKey) == null)
-                ErrorException.trow(9903);
+	public static Token verifyToken(Token tokenJson) throws ErrorException {
+		if (tokenJson == null || tokenJson.getJwt() == null)
+			ErrorException.trow(9903);
+		try {
+			DecodedJWT decoded = JWTToken.verifyJWT(tokenJson.getJwt());
+			tokenJson.setUsername(decoded.getSubject());
+			tokenJson.setRole(Role.valueof(decoded.getClaim("role").asString()));
 
-            return tokenJson;
-        } catch (TokenExpiredException e) {
-            try {
-                String jti = JWTToken.decodeUnsafe(tokenJson.getJwt()).getId();
-                datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
-            } catch (Exception ignored) {}
-            ErrorException.trow(9904);
-            return null;
-        } catch (ErrorException e) {
-            throw e;
-        } catch (Exception e) {
-            ErrorException.trow(9903);
-            return null;
-        }
-    }
+			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(decoded.getId());
+			if (datastore.get(sessionKey) == null)
+				ErrorException.trow(9903);
+
+			return tokenJson;
+		} catch (TokenExpiredException e) {
+			try {
+				String jti = JWTToken.decodeUnsafe(tokenJson.getJwt()).getId();
+				datastore.delete(datastore.newKeyFactory().setKind("Session").newKey(jti));
+			} catch (Exception ignored) {}
+			ErrorException.trow(9904);
+			return null;
+		} catch (ErrorException e) {
+			throw e;
+		} catch (Exception e) {
+			ErrorException.trow(9903);
+			return null;
+		}
+	}
 }

@@ -2,7 +2,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 
-public abstract class AbstractTokenInputRequest<E> extends AbstractInputRequest<E>{
+public abstract class AbstractTokenInputRequest<E> extends AbstractInputRequest<E> implements TokenRequestInterface{
 	
 	/**
 	 * {

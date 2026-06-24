@@ -1,29 +1,31 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventInput;
 
-public class ListForumRequest  extends TokenRequest{
+public class ListForumRequest extends AbstractTokenInputRequest<ListForumRequest.ListForumInput>{
 
 	/**
 	 * {
 	 *   "token": { "jwt": "<jwt>" },
-	 *   "eventId": "...",
-	 *   "cursor": "...",     (optional, from a previous response's nextCursor)
-	 *   "pageSize": 50       (optional, default 50, max 100)
+	 *   "input": {
+	 *   	"eventId": "...",
+	 *   	"cursor": "...",     (optional, from a previous response's nextCursor)
+	 *   	"pageSize": 50       (optional, default 50, max 100)
+	 *   }
 	 * }
 	 */
-	
-	private String eventId;
-	private String cursor;
-	private int pageSize;
-
 	public ListForumRequest() {}
+	public class ListForumInput extends EventInput{
 
-	public String getEventId() { return eventId; }
-	public void setEventId(String eventId) { this.eventId = eventId; }
+		private String cursor;
+		private int pageSize;
 
-	public String getCursor() { return cursor; }
-	public void setCursor(String cursor) { this.cursor = cursor; }
+		public ListForumInput() {}
 
-	public int getPageSize() { return pageSize; }
-	public void setPageSize(int pageSize) { this.pageSize = pageSize; }
+		public String getCursor() { return cursor; }
+		public void setCursor(String cursor) { this.cursor = cursor; }
+
+		public int getPageSize() { return pageSize; }
+		public void setPageSize(int pageSize) { this.pageSize = pageSize; }
+	}
 }

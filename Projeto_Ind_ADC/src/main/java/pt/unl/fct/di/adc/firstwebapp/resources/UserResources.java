@@ -58,19 +58,18 @@ public class UserResources {
 	@Path("/createaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createAccount(UserRequest request) {
+	public Response createAccount(Object obj) {
 		Transaction txn = datastore.newTransaction();
 		try {
+			UserRequest request=AuthHelper.verifyInput(obj,UserRequest.class);
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-			user.userValidation();
-
-
+			
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
 			Entity existingUser = txn.get(userKey);
 
 			if (existingUser != null) ErrorException.trow(9901);
-
+			user.userValidation();
 			Entity newUser = Entity.newBuilder(userKey)
 					.set("user_name", user.getUsername())
 					.set("user_email", user.getEmail())
@@ -98,8 +97,9 @@ public class UserResources {
 	@Path("/login")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response userLogin(LoginRequest request) {
+	public Response userLogin(Object obj) {
 		try {
+			LoginRequest request=AuthHelper.verifyInput(obj,LoginRequest.class);
 			LoginRequestInput userToLog = request.getInput();
 
 			Log.info("Attempt to create userLogin: " + userToLog.getUsername());
@@ -145,12 +145,12 @@ public class UserResources {
 	@Path("/showusers")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUsers(ShortUserTokenRequest request) {
+	public Response showUsers(Object obj) {
 		try {
-			Token tokenJson = request.getToken();
-			AuthHelper.verifyToken(tokenJson);
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
 
-			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN, Role.BOFFICER});
+			Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
 			Query<Entity> query = Query.newEntityQueryBuilder().setKind("User").build();
 
@@ -176,19 +176,18 @@ public class UserResources {
 	@Path("/deleteaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteAccount(ShortUserTokenRequest request){
+	public Response deleteAccount(Object obj){
 		try {
-			ShortUser userJson = request.getInput();
-			Token tokenJson = request.getToken();
-			Entity user= getUser(userJson);
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = getUser(request.getInput());
 			Key userKeyToBeDeleted = user.getKey();	
-			Token token = AuthHelper.verifyToken(tokenJson);
 
 			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(tokenJson, new Role []{Role.ADMIN});
+				Validator.unauthorized(token, new Role []{Role.ADMIN});
 
 			datastore.delete(userKeyToBeDeleted);
-			deleteAllSessionsForUser(userJson.getUsername());
+			deleteAllSessionsForUser(user.getString("user_name"));
 			return buildresponse(Map.of("message", "Account deleted successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -199,18 +198,16 @@ public class UserResources {
 	@Path("/modaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response modifyAccount(ModAccountRequest request) {
+	public Response modifyAccount(Object obj) {
 		try {//TODO
+			ModAccountRequest request=AuthHelper.verifyInput(obj,ModAccountRequest.class);
 			ModAccountRequestInput input = request.getInput();
 			Attributes attributes = request.getInput().getAttributes();
-			String username = input.getUsername();
-			Token tokenJson = request.getToken();
+			Entity user = getUser(input);
+			Token token = AuthHelper.verifyToken(request);
 
-			Entity user = getUser(username);
-			Token token = AuthHelper.verifyToken(tokenJson);
-
-			if (!token.getUsername().equals(username)) 
-				Validator.unauthorized(tokenJson, new Role[]{Role.BOFFICER,Role.ADMIN});
+			if (!token.getUsername().equals(user.getString("user_name"))) 
+				Validator.unauthorized(token, new Role[]{Role.BOFFICER,Role.ADMIN});
 			/*
 			Entity updatedUser = Entity.newBuilder(user)
 					.set("user_address", attributes.getAddress())
@@ -229,15 +226,12 @@ public class UserResources {
 	@Path("/showuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUserRole (ShortUserTokenRequest request){
+	public Response showUserRole (Object obj){
 		try{
-			ShortUser userJson = request.getInput();
-			Token tokenJson = request.getToken();
-
-			Entity user = getUser(userJson.getUsername());
-			AuthHelper.verifyToken(tokenJson);
-
-			Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN, Role.BOFFICER});
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = getUser(request.getInput());
+			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
 					"username", user.getString("user_name"),
 					"email", user.contains("user_email") ? user.getString("user_email") : "",
@@ -252,18 +246,16 @@ public class UserResources {
 	@Path("/logout")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response logOut(ShortUserTokenRequest request){
+	public Response logOut(Object obj){
 		try{
-			ShortUser userJson = request.getInput();
-			Token tokenJson = request.getToken();
-
-			Entity user = getUser(userJson.getUsername());
-			Token token = AuthHelper.verifyToken(tokenJson);
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = getUser(request.getInput());
 
 			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN});
+				Validator.unauthorized(token, new Role [] {Role.ADMIN});
 
-			deleteAllSessionsForUser(userJson.getUsername());
+			deleteAllSessionsForUser(user.getString("user_name"));
 			return buildresponse(Map.of("message", "Logout successful"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -274,15 +266,13 @@ public class UserResources {
 	@Path("/changeuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response changeUserRole(ChangeUserRole request) {
+	public Response changeUserRole(Object obj) {
 		try{
+			ChangeUserRole request=AuthHelper.verifyInput(obj,ChangeUserRole.class);
 			ChangeUserRoleInput input = request.getInput();
-			Token tokenJson = request.getToken();
-
-			Entity user = getUser(input.getUsername());
-			AuthHelper.verifyToken(tokenJson);
-
-			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+			Entity user = getUser(input);
+			Token token = AuthHelper.verifyToken(request);
+			Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			Role newRole = Role.valueof(input.getNewrole());
 			Entity updatedUser = Entity.newBuilder(user)
 					.set("user_role", newRole.name())
@@ -301,16 +291,15 @@ public class UserResources {
 	@Path("/changeuserpwd")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response changeUserPassword(ChangeUserPasswordRequest request) {
+	public Response changeUserPassword(Object obj) {
 		try{
+			ChangeUserPasswordRequest request=AuthHelper.verifyInput(obj,ChangeUserPasswordRequest.class);
 			PasswordInput input = request.getInput();
-			Token tokenJson = request.getToken();
-
 			Entity user = getUser(input.getUsername());
-			Token token = AuthHelper.verifyToken(tokenJson);
+			Token token = AuthHelper.verifyToken(request);
 
 			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+				Validator.unauthorized(token, new Role[] {Role.ADMIN});
 
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
 			if (!oldPwdHash.equals(user.getString("user_pwd"))) 
@@ -331,16 +320,16 @@ public class UserResources {
 	@Path("/forgotuserpwd")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response forgotUserPassword(ChangeUserPasswordRequest request) {
+	public Response forgotUserPassword(Object obj) {
 		try{//TODO
+			ChangeUserPasswordRequest request=AuthHelper.verifyInput(obj,ChangeUserPasswordRequest.class);
 			PasswordInput input = request.getInput();
-			Token tokenJson = request.getToken();
 
-			Entity user = getUser(input.getUsername());
-			Token token = AuthHelper.verifyToken(tokenJson);
+			Entity user = getUser(input);
+			Token token = AuthHelper.verifyToken(request);
 
 			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+				Validator.unauthorized(token, new Role[] {Role.ADMIN});
 
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
 			if (!oldPwdHash.equals(user.getString("user_pwd"))) 
@@ -361,11 +350,10 @@ public class UserResources {
 	@Path("/showauthsessions")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showAuthsessions (TokenRequest request){
-		try{
-			Token tokenJson = request.getToken();
-			AuthHelper.verifyToken(tokenJson);
-			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+	public Response showAuthsessions(Object obj){
+		try{ 
+			Token token = AuthHelper.verifyToken(AuthHelper.verifyInput(obj,TokenRequest.class));
+			Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			return buildresponse(Map.of("tokens", getAllSessions()));
 
 		} catch (Exception e){
@@ -377,22 +365,18 @@ public class UserResources {
 	@Path("/addfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response addFriend(ShortUserTokenRequest request) throws ErrorException{
+	public Response addFriend(Object obj) throws ErrorException{
 		Transaction txn = datastore.newTransaction();
 		try{
-			Token tokenJson = request.getToken();
-			Token token = AuthHelper.verifyToken(tokenJson);
-			ShortUser user = request.getInput();
-			int compare=user.getUsername().compareTo(token.getUsername());
-			if(compare==0)
-				ErrorException.trow(9925);
-			String key=String.format("%s@@@%s", ((compare>0)?user:token).getUsername(),((compare<0)?user:token).getUsername());
-			Key friendKey = datastore.newKeyFactory().setKind("Friend").newKey(key);
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = getUser(request.getInput());
+			Key friendKey = getFriendKey(token,user);
 			Entity existingfriend = txn.get(friendKey);
 			if (existingfriend == null) {
 				Entity friendrequest = Entity.newBuilder(friendKey)
 						.set("username_1", token.getUsername())
-						.set("username_2", user.getUsername())
+						.set("username_2", user.getString("user_name"))
 						.set("accepted", false)
 						.set("issued_at", Timestamp.now())
 						.build();
@@ -421,16 +405,12 @@ public class UserResources {
 	@Path("/unfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response unfriend(ShortUserTokenRequest request){
+	public Response unfriend(Object obj){
 		try {
-			ShortUser user = request.getInput();
-			Token tokenJson = request.getToken();
-			Token token = AuthHelper.verifyToken(tokenJson);
-
-			int compare=user.getUsername().compareTo(token.getUsername());
-			String key=String.format("%s@@@%s", ((compare>0)?user:token).getUsername(),((compare<0)?user:token).getUsername());
-			Key friendKey = datastore.newKeyFactory().setKind("Friend").newKey(key);
-			datastore.delete(friendKey);
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Entity user = getUser(request.getInput());
+			Token token = AuthHelper.verifyToken(request);
+			datastore.delete(getFriendKey(token,user));
 			return buildresponse(Map.of("message", "Friendship Ended"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -441,13 +421,11 @@ public class UserResources {
 	@Path("/showfriends")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriends(ShortUserTokenRequest request){
+	public Response showFriends(Object obj){
 		try{
-			Token tokenJson = request.getToken();
-			AuthHelper.verifyToken(tokenJson);
-			ShortUser userJson = request.getInput();
-			Entity user = getUser(userJson);
-
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			AuthHelper.verifyToken(request);
+			Entity user = getUser(request.getInput());
 			return buildresponse(Map.of("friends", showFriends(user.getString("user_name"),true)));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -458,11 +436,9 @@ public class UserResources {
 	@Path("/showfriendrequests")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriendRequests(TokenRequest request){
+	public Response showFriendRequests(Object obj){
 		try{
-			Token tokenJson = request.getToken();
-			Token token = AuthHelper.verifyToken(tokenJson);
-
+			Token token = AuthHelper.verifyToken(AuthHelper.verifyInput(obj,TokenRequest.class));
 			return buildresponse(Map.of("friends", showFriends(token.getUsername(),true)));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -553,13 +529,28 @@ public class UserResources {
 		return getUser(user.getUsername());
 	}
 
-	private Entity getUser(String username) throws ErrorException {
+	private Entity getUser(String username) throws ErrorException{
 		Key userKey = datastore.newKeyFactory().setKind("User").newKey(username);
 		Entity user = datastore.get(userKey);
 		Validator.userNotFound(new Entity[]{user});
 		return user;
 	}
 
+	private Key getFriendKey(Token token,Entity user) throws ErrorException{
+		int compare=user.getString("user_name").compareTo(token.getUsername());
+		if(compare==0)
+			ErrorException.trow(9925);
+		String f1,f2;
+		if((compare>0)) {
+			f1=user.getString("user_name");
+			f2=token.getUsername();
+		}else{
+			f2=user.getString("user_name");
+			f1=token.getUsername();
+		}
+		return datastore.newKeyFactory().setKind("Friend").newKey(String.format("%s@@@%s", f1,f2));
+
+	}
 
 
 
