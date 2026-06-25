@@ -423,25 +423,9 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showFriends(Object obj){
 		try{
-			TokenRequestInterface tokenrequest=null;
-			ShortUserTokenRequest request=null;
-			boolean invalid=false,self=false;
-			String username=null;
-			try {
-				tokenrequest=AuthHelper.verifyInput(obj,TokenRequest.class);
-			}catch (Exception e){invalid=true;}
-			try {
-				request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
-				tokenrequest=request;
-				username = getUser(request.getInput()).getString("user_name");
-			}catch (Exception e){
-				if(invalid)throw e;
-				self=(e instanceof ErrorException&&((ErrorException)e).getStatus()==9929);
-				throw e;
-			}
-			Token token=AuthHelper.verifyToken(tokenrequest);
-			if(self)
-				username=token.getUsername();
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);;
+			String username=getUser(request.getInput()).getString("user_name");
+			AuthHelper.verifyToken(request);
 			return buildresponse(Map.of("friends", showFriends(username,true)));
 		} catch (Exception e){
 			return Error.fromexception(e);
