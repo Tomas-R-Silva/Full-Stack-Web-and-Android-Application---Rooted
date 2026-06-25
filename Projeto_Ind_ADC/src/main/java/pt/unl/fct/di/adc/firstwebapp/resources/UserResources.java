@@ -64,7 +64,7 @@ public class UserResources {
 			UserRequest request=AuthHelper.verifyInput(obj,UserRequest.class);
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-			
+
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
 			Entity existingUser = txn.get(userKey);
 
@@ -423,10 +423,26 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showFriends(Object obj){
 		try{
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
-			AuthHelper.verifyToken(request);
-			Entity user = getUser(request.getInput());
-			return buildresponse(Map.of("friends", showFriends(user.getString("user_name"),true)));
+			TokenRequestInterface tokenrequest=null;
+			ShortUserTokenRequest request=null;
+			boolean invalid=false,self=false;
+			String username=null;
+			try {
+				tokenrequest=AuthHelper.verifyInput(obj,TokenRequest.class);
+			}catch (Exception e){invalid=true;}
+			try {
+				request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+				tokenrequest=request;
+				username = getUser(request.getInput()).getString("user_name");
+			}catch (Exception e){
+				if(invalid)throw e;
+				self=(e instanceof ErrorException&&((ErrorException)e).getStatus()==9929);
+				throw e;
+			}
+			Token token=AuthHelper.verifyToken(tokenrequest);
+			if(self)
+				username=token.getUsername();
+			return buildresponse(Map.of("friends", showFriends(username,true)));
 		} catch (Exception e){
 			return Error.fromexception(e);
 		}
@@ -461,7 +477,7 @@ public class UserResources {
 					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")));
 			}
 			else if(!accepted&&!session.getBoolean("accepted")&&friend2.equals(username))
-				friends.add(Map.of("from", friend1,"Sent at", session.getLong("issued_at")));
+				friends.add(Map.of("From", friend1,"Sent at", session.getLong("issued_at")));
 		}
 		return friends;
 	}

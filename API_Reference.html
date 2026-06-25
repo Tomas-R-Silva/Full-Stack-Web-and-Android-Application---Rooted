@@ -72,15 +72,14 @@
   The real result is inside the JSON body, wrapped as <code>{ "status": ..., "data": ... }</code>:
   <pre style="margin-top:8px;"><span class="comment">// success</span>           { <span class="key-str">"status"</span>: <span class="val-num">200</span>,  <span class="key-str">"data"</span>: { ... } }
 <span class="comment">// validation error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9906</span>, <span class="key-str">"data"</span>: [ { <span class="key-str">"status"</span>: <span class="val-num">9930</span>, <span class="key-str">"data"</span>: <span class="val-str">"INVALID_MESSAGE_TEXT"</span> } ] }
+<span class="comment">// json format error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9929</span>, <span class="key-str">"data"</span>: { <span class="key-str">"token"</span>: { <span class="key-str">"tokenId"</span>: <span class="val-str">"&ltjwt&gt"</span> } } }
 <span class="comment">// generic error</span>     { <span class="key-str">"status"</span>: <span class="val-num">9907</span>, <span class="key-str">"data"</span>: <span class="val-str">"FORBIDDEN"</span> }</pre>
   Always check the <code>status</code> field — <code>200</code> = ok, any <code>99xx</code> = error.
   In the examples below, the <span style="color:#2e7d32;font-weight:600;">Response</span> shows only the
   content of <code>data</code>. Authentication uses <code>"token": { "jwt": "&lt;jwt&gt;" }</code> in the body.
   <br><br>
-  <strong>Request envelope.</strong> Most endpoints wrap their domain fields under an <code>"input"</code> object,
+  <strong>Request envelope.</strong> All endpoints wrap their domain fields under an <code>"input"</code> object,
   alongside the top-level <code>"token"</code> — e.g. <code>{ "token": {...}, "input": { ... } }</code>.
-  The only exceptions are the list endpoints (<code>/events/list</code>, <code>/forum/list</code>), whose filters
-  sit at the top level (no <code>input</code> wrapper).
 </div>
 
 <!-- ===================== USERS ===================== -->
@@ -265,6 +264,84 @@
 <div class="endpoint">
   <div class="endpoint-header">
     <span class="method">POST</span>
+    <span class="path">/addfriend</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Send/Accepts friend request to other user.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Friend Request Sent"</span> }</pre>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Friend Request Accepted"</span> }
+  <span class="comment">//if already had a friend request from alice(other user)</span></pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/unfriend</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Stop being friends with user.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{ <span class="key-str">"message"</span>: <span class="val-str">"Friendship Ended"</span> }</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/showfriends</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Get list of friends of user.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }
+} <span class="comment">//check the friends of other users</span></pre>
+<pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }
+} <span class="comment">//check your friends</span></pre></pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"friends"</span>: [
+    { <span class="key-str">"Friend"</span>: <span class="val-str">"bob"</span>, <span class="key-str">"Start"</span>: <span class="val-num">1761500000</span> },
+    { <span class="key-str">"Friend"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"Start"</span>: <span class="val-num">1351510000</span> }
+  ]
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/showfriendrequests</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Get list of friend requests.</p>
+  <div class="label">Request</div>
+<pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }
+} <span class="comment">//check your friends</span></pre></pre>
+  <div class="label out">Response</div>
+  <pre>{
+  <span class="key-str">"friends"</span>: [
+    { <span class="key-str">"From"</span>: <span class="val-str">"gabriel"</span>, <span class="key-str">"Sent at"</span>: <span class="val-num">1125500000</span> },
+    { <span class="key-str">"From"</span>: <span class="val-str">"ada"</span>, <span class="key-str">"Sent at"</span>: <span class="val-num">1531510000</span> }
+  ]
+}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
     <span class="path">/showauthsessions</span>
     <span class="tag tag-admin">ADMIN only</span>
   </div>
@@ -356,12 +433,14 @@
   <p class="desc">All filters are optional. Without a token (or as a regular user) only public events are returned; ADMIN/BOFFICER see all. Paginated with a cursor.</p>
   <div class="label">Request</div>
   <pre>{
-  <span class="key-str">"token"</span>:             { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },   <span class="comment">// optional</span>
-  <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,        <span class="comment">// optional</span>
-  <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,     <span class="comment">// optional</span>
-  <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,        <span class="comment">// optional</span>
-  <span class="key-str">"pageSize"</span>:          <span class="val-num">10</span>,
-  <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>            <span class="comment">// use nextCursor from a previous response</span>
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"category"</span>:        <span class="val-str">"MUSIC"</span>,        <span class="comment">// optional</span>
+    <span class="key-str">"status"</span>:          <span class="val-str">"UPCOMING"</span>,     <span class="comment">// optional</span>
+    <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,        <span class="comment">// optional</span>
+    <span class="key-str">"pageSize"</span>:          <span class="val-num">10</span>,
+    <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>            <span class="comment">// use nextCursor from a previous </span>
+  }
 }</pre>
   <div class="label out">Response</div>
   <pre>{
@@ -563,10 +642,12 @@
   <p class="desc">Lists an event's posts in chronological order. Paginated with a cursor.</p>
   <div class="label">Request</div>
   <pre>{
-  <span class="key-str">"token"</span>:    { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
-  <span class="key-str">"eventId"</span>:  <span class="val-str">"uuid"</span>,
-  <span class="key-str">"pageSize"</span>: <span class="val-num">50</span>,        <span class="comment">// optional, default 50, max 100</span>
-  <span class="key-str">"cursor"</span>:   <span class="val-bool">null</span>       <span class="comment">// optional, from a previous nextCursor</span>
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"eventId"</span>:  <span class="val-str">"uuid"</span>,
+    <span class="key-str">"pageSize"</span>: <span class="val-num">50</span>,        <span class="comment">// optional, default 50, max 100</span>
+    <span class="key-str">"cursor"</span>:   <span class="val-bool">null</span>       <span class="comment">// optional, from a previous nextCursor</span>
+  }
 }</pre>
   <div class="label out">Response</div>
   <pre>{
@@ -642,6 +723,11 @@
     <tr><td>9910</td><td>Invalid role</td></tr>
     <tr><td>9911 – 9923</td><td>Invalid event fields (category, location, dates, duration, title, description, organizer, …)</td></tr>
     <tr><td>9924</td><td>Invalid email (empty or not matching <code>algo@algo.algo</code>)</td></tr>
+    <tr><td>9925</td><td>Can't become friend with it self</td></tr>
+    <tr><td>9926</td><td>Are already friends</td></tr>
+    <tr><td>9927</td><td>Already sent friend request</td></tr>
+    <tr><td>9928</td><td>Event already reached the maximum number of users</td></tr>
+    <tr><td>9929</td><td>The structure of the json sent is not valid for that funcion</td></tr>
     <tr><td>9930</td><td>Invalid message text (empty or &gt; 1000 chars)</td></tr>
     <tr><td>9931</td><td>Event not open for forum (cancelled/completed)</td></tr>
     <tr><td>9932</td><td>Forum post not found</td></tr>
