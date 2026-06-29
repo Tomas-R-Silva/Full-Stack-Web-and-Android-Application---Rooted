@@ -82,3 +82,12 @@ export type EventListResponse = {
   nextCursor?: string;
   }
 };
+
+//========== SDO ==========
+
+export type SdoItem = {
+  id: number;
+  title: string;
+  image: string;
+  href: string;
+};

@@ -1,0 +1,83 @@
+import "./SDO-Spinner.css";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { sdoItems } from "../../utils/sdo";
+
+const ROTATION_STEP = 360 / sdoItems.length;
+
+function SDOspinner() {
+  const navigate = useNavigate();
+  const wheelRef = React.useRef<HTMLDivElement | null>(null);
+  const angleRef = React.useRef(0);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    let frame: number;
+
+    const animate = () => {
+      angleRef.current = (angleRef.current - 0.3) % 360;
+
+      if (wheelRef.current) {
+        wheelRef.current.style.transform = `rotate(${angleRef.current}deg)`;
+      }
+
+      const normalized = (360 - angleRef.current) % 360;
+      const index = Math.floor(normalized / ROTATION_STEP) % sdoItems.length;
+
+      setActiveIndex(index);
+
+      frame = requestAnimationFrame(animate);
+    };
+
+    frame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <div
+      className="d-flex justify-content-center pt-5"
+      style={{ minHeight: "100vh" }}
+    >
+      <div
+        ref={wheelRef}
+        style={{
+          position: "relative",
+          width: 300,
+          height: 300,
+          transformOrigin: "center",
+        }}
+      >
+        {sdoItems.map((item, i) => (
+          <img
+            key={item.id}
+            src={item.image}
+            alt={item.title}
+            title={item.title}
+            onClick={() => navigate(item.href)}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: `
+                translate(-50%, -50%)
+                rotate(${i * ROTATION_STEP}deg)
+                
+              `,
+              transformOrigin: "center",
+              cursor: "pointer",
+              transition: "transform 0.2s ease, filter 0.2s ease",
+              filter:
+                i === activeIndex
+                  ? "brightness(1.2) drop-shadow(0 0 8px white)"
+                  : "brightness(0.9)",
+              zIndex: i === activeIndex ? 1 : 0,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default SDOspinner;

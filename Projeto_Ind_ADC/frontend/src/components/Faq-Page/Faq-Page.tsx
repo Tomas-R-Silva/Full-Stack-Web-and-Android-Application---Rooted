@@ -12,27 +12,27 @@ function FaqPage() {
     {
       question: "Q: What is ROOTED?",
       answer:
-        "This service helps users find clear answers to common questions quickly and easily.",
+        "A: This service helps users find clear answers to common questions quickly and easily.",
     },
     {
       question: "Q: How do I create an account?",
       answer:
-        "You can create an account by clicking the sign up button and filling in your details.",
+        "A: You can create an account by clicking the sign up button and filling in your details.",
     },
     {
       question: "Q: Can I change my password?",
       answer:
-        "Yes. Go to your account settings and choose the option to change your password.",
+        "A: Yes. Go to your account settings and choose the option to change your password.",
     },
     {
       question: "Q: How can I create an event?",
       answer:
-        "We take data protection seriously and use standard security practices to help keep your information safe.",
+        "A: We take data protection seriously and use standard security practices to help keep your information safe.",
     },
     {
       question: "Q: How much ODS must be associated with an event?",
       answer:
-        "You can contact support through the contact form or by sending us an email.",
+        "A: You can contact support through the contact form or by sending us an email.",
     },
   ];
 
