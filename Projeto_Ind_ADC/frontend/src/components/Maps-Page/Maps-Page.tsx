@@ -15,16 +15,23 @@ const MapsPage = () => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const userMarkerRef = useRef<any | null>(null);
 
-  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   const [events, setEvents] = useState<any[]>([]);
 
-  const computeDistanceMeters = (p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) => {
+  const computeDistanceMeters = (
+    p1: { lat: number; lng: number },
+    p2: { lat: number; lng: number },
+  ) => {
     const toRad = (deg: number) => (deg * Math.PI) / 180;
     const dLat = toRad(p2.lat - p1.lat);
     const dLng = toRad(p2.lng - p1.lng);
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(p1.lat)) * Math.cos(toRad(p2.lat)) * Math.sin(dLng / 2) ** 2;
+      Math.cos(toRad(p1.lat)) *
+        Math.cos(toRad(p2.lat)) *
+        Math.sin(dLng / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return 6371000 * c;
   };
@@ -34,7 +41,9 @@ const MapsPage = () => {
     return [...events]
       .map((event) => ({
         ...event,
-        distance: event.position ? computeDistanceMeters(center, event.position) : Number.POSITIVE_INFINITY,
+        distance: event.position
+          ? computeDistanceMeters(center, event.position)
+          : Number.POSITIVE_INFINITY,
       }))
       .sort((a, b) => a.distance - b.distance);
   }, [center, events]);
@@ -87,7 +96,10 @@ const MapsPage = () => {
         });
       };
 
-      const setMapCenter = (location: { lat: number; lng: number }, zoom: number) => {
+      const setMapCenter = (
+        location: { lat: number; lng: number },
+        zoom: number,
+      ) => {
         map.setCenter(location);
         map.setZoom(zoom);
         setCenter(location);
@@ -97,25 +109,34 @@ const MapsPage = () => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (pos) => {
-              const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+              const userPos = {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+              };
               setMapCenter(userPos, 13);
               addUserMarker(userPos);
             },
             () => {
-              console.warn("Geolocation denied or unavailable. Using default center.");
+              console.warn(
+                "Geolocation denied or unavailable. Using default center.",
+              );
               setMapCenter({ lat: 0, lng: 0 }, 3);
             },
-            { timeout: 5000 }
+            { timeout: 5000 },
           );
         } else {
-          console.warn("Navigator geolocation unavailable. Using default center.");
+          console.warn(
+            "Navigator geolocation unavailable. Using default center.",
+          );
           setMapCenter({ lat: 0, lng: 0 }, 3);
         }
       };
 
       const renderEvents = (eventList: any[]) => {
         eventList.forEach((event) => {
-            geocoder.geocode({ address: event.location }, (results: any, status: any) => {
+          geocoder.geocode(
+            { address: event.location },
+            (results: any, status: any) => {
               if (status === "OK" && results[0]) {
                 const pos = {
                   lat: results[0].geometry.location.lat(),
@@ -124,16 +145,20 @@ const MapsPage = () => {
                 const updatedEvent = { ...event, position: pos };
                 setEvents((current) =>
                   current.map((item) =>
-                    item.eventId === updatedEvent.eventId ? updatedEvent : item
-                  )
+                    item.eventId === updatedEvent.eventId ? updatedEvent : item,
+                  ),
                 );
                 addMarker(pos, updatedEvent);
               }
-            });
+            },
+          );
         });
       };
 
-      const addMarker = (position: { lat: number; lng: number }, event: any) => {
+      const addMarker = (
+        position: { lat: number; lng: number },
+        event: any,
+      ) => {
         const marker = new window.google.maps.Marker({
           position,
           map,
@@ -156,9 +181,10 @@ const MapsPage = () => {
       const addEventMarkers = async () => {
         try {
           const res = await getEventList({ pageSize: 100, cursor: "" });
-          const eventsData = Array.isArray(res.data.events) && res.data.events.length > 0
-            ? res.data.events
-            : [];
+          const eventsData =
+            Array.isArray(res.data.events) && res.data.events.length > 0
+              ? res.data.events
+              : [];
           setEvents(eventsData);
           renderEvents(eventsData);
         } catch (err) {
@@ -180,8 +206,12 @@ const MapsPage = () => {
       <main className="container py-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h1 className="mb-0">Events Map</h1>
-            <p className="text-muted mb-0">Explore the nearby events and see their location on the map.</p>
+            <h1 className="mb-0" style={{ color: "var(--color-white)" }}>
+              Events Map
+            </h1>
+            <p className="mb-0" style={{ color: "var(--color-white)" }}>
+              Explore the nearby events and see their location on the map.
+            </p>
           </div>
         </div>
 
@@ -189,16 +219,33 @@ const MapsPage = () => {
           <div className="col-12 col-lg-4">
             <div className="card shadow-sm h-100">
               <div className="card-body">
-                <h3 className="card-title">Nearby events</h3>
+                <h3
+                  className="card-title"
+                  style={{ color: "var(--color-white)" }}
+                >
+                  Nearby events
+                </h3>
                 {sortedEvents.length === 0 ? (
-                  <div className="alert alert-info mt-3">There are no events loadedda.</div>
+                  <div
+                    className="alert alert-info mt-3"
+                    style={{ color: "var(--color-white)" }}
+                  >
+                    There are no events loadedda.
+                  </div>
                 ) : (
                   sortedEvents.map((event, idx) => (
-                    <div key={`${event.eventId}-${idx}`} className="mb-3 p-3 rounded bg-white border">
+                    <div
+                      key={`${event.eventId}-${idx}`}
+                      className="mb-3 p-3 rounded bg-white border"
+                    >
                       <div className="fw-bold">{event.title}</div>
-                      <div className="text-muted small my-1">{event.location}</div>
+                      <div className="text-muted small my-1">
+                        {event.location}
+                      </div>
                       {event.distance != null && event.distance !== Infinity ? (
-                        <div className="small text-dark">{(event.distance / 1000).toFixed(1)} km away</div>
+                        <div className="small text-dark">
+                          {(event.distance / 1000).toFixed(1)} km away
+                        </div>
                       ) : (
                         <div className="small text-muted">Distance unknown</div>
                       )}
