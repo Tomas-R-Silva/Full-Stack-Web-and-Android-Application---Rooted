@@ -10,13 +10,16 @@ declare global {
 }
 
 const MapsPage = () => {
-  const server = import.meta.env.VITE_API_URL || "";
   const mapsApiKey = import.meta.env.VITE_API_KEY;
   const mapRef = useRef<HTMLDivElement | null>(null);
   const userMarkerRef = useRef<any | null>(null);
+  const mapInstanceRef = useRef<any | null>(null);
+  const markersRef = useRef<Map<string, { marker: any; infoWindow: any }>>(new Map());
+  const activeInfoWindowRef = useRef<any | null>(null);
 
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [events, setEvents] = useState<any[]>([]);
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
 
   const computeDistanceMeters = (p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) => {
     const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -38,6 +41,32 @@ const MapsPage = () => {
       }))
       .sort((a, b) => a.distance - b.distance);
   }, [center, events]);
+
+  const focusEvent = (event: any) => {
+    const map = mapInstanceRef.current;
+    if (!map || !event.position) return;
+
+    map.panTo(event.position);
+    map.setZoom(15);
+    setActiveEventId(event.eventId);
+
+    const entry = markersRef.current.get(event.eventId);
+    if (entry) {
+      openInfoWindow(entry.infoWindow, entry.marker);
+    }
+  };
+
+  const openInfoWindow = (infoWindow: any, marker: any) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (activeInfoWindowRef.current && activeInfoWindowRef.current !== infoWindow) {
+      activeInfoWindowRef.current.close();
+    }
+
+    infoWindow.open(map, marker);
+    activeInfoWindowRef.current = infoWindow;
+  };
 
   useEffect(() => {
     const loadScript = () => {
@@ -65,6 +94,7 @@ const MapsPage = () => {
         streetViewControl: false,
         fullscreenControl: false,
       });
+      mapInstanceRef.current = map;
 
       const geocoder = new window.google.maps.Geocoder();
 
@@ -113,26 +143,6 @@ const MapsPage = () => {
         }
       };
 
-      const renderEvents = (eventList: any[]) => {
-        eventList.forEach((event) => {
-            geocoder.geocode({ address: event.location }, (results: any, status: any) => {
-              if (status === "OK" && results[0]) {
-                const pos = {
-                  lat: results[0].geometry.location.lat(),
-                  lng: results[0].geometry.location.lng(),
-                };
-                const updatedEvent = { ...event, position: pos };
-                setEvents((current) =>
-                  current.map((item) =>
-                    item.eventId === updatedEvent.eventId ? updatedEvent : item
-                  )
-                );
-                addMarker(pos, updatedEvent);
-              }
-            });
-        });
-      };
-
       const addMarker = (position: { lat: number; lng: number }, event: any) => {
         const marker = new window.google.maps.Marker({
           position,
@@ -148,9 +158,43 @@ const MapsPage = () => {
           },
         });
         const infoWindow = new window.google.maps.InfoWindow({
-          content: `<div><h3>${event.title}</h3><p>${event.location}</p></div>`,
+          content: `
+          <div>
+            <h3>${event.title}</h3>
+            <p>${event.location}</p>
+            <a
+              href="/events/${event.eventId}"
+              class="btn btn-sm"
+              style="background-color: var(--color-green); color: var(--color-white); border: none; display: block; width: 100%; text-align: center;"
+            >
+              View event
+            </a>
+          </div>
+          `,
         });
-        marker.addListener("click", () => infoWindow.open(map, marker));
+        marker.addListener("click", () => openInfoWindow(infoWindow, marker));
+
+        markersRef.current.set(event.eventId, { marker, infoWindow });
+      };
+
+      const renderEvents = (eventList: any[]) => {
+        eventList.forEach((event) => {
+          geocoder.geocode({ address: event.location }, (results: any, status: any) => {
+            if (status === "OK" && results[0]) {
+              const pos = {
+                lat: results[0].geometry.location.lat(),
+                lng: results[0].geometry.location.lng(),
+              };
+              const updatedEvent = { ...event, position: pos };
+              setEvents((current) =>
+                current.map((item) =>
+                  item.eventId === updatedEvent.eventId ? updatedEvent : item
+                )
+              );
+              addMarker(pos, updatedEvent);
+            }
+          });
+        });
       };
 
       const addEventMarkers = async () => {
@@ -188,22 +232,66 @@ const MapsPage = () => {
         <div className="row g-4">
           <div className="col-12 col-lg-4">
             <div className="card shadow-sm h-100">
-              <div className="card-body">
+              <div className="card-body d-flex flex-column">
                 <h3 className="card-title">Nearby events</h3>
                 {sortedEvents.length === 0 ? (
-                  <div className="alert alert-info mt-3">There are no events loadedda.</div>
+                  <div className="alert alert-info mt-3">There are no events loaded.</div>
                 ) : (
-                  sortedEvents.map((event, idx) => (
-                    <div key={`${event.eventId}-${idx}`} className="mb-3 p-3 rounded bg-white border">
-                      <div className="fw-bold">{event.title}</div>
-                      <div className="text-muted small my-1">{event.location}</div>
-                      {event.distance != null && event.distance !== Infinity ? (
-                        <div className="small text-dark">{(event.distance / 1000).toFixed(1)} km away</div>
-                      ) : (
-                        <div className="small text-muted">Distance unknown</div>
-                      )}
-                    </div>
-                  ))
+                  <div className="overflow-auto pe-3" style={{ maxHeight: "65vh" }}>
+                    {sortedEvents.map((event, idx) => {
+                      const isLocated = event.position != null;
+                      const isActive = event.eventId === activeEventId;
+                      return (
+                        <div
+                          key={`${event.eventId}-${idx}`}
+                          className={`mb-3 p-3 rounded bg-white border d-flex align-items-center justify-content-between ${
+                            isActive ? "border-primary" : ""
+                          }`}
+                        >
+                          <div>
+                            <div className="fw-bold">{event.title}</div>
+                            <div className="text-muted small my-1">{event.location}</div>
+                            {event.distance != null && event.distance !== Infinity ? (
+                              <div className="small text-dark">{(event.distance / 1000).toFixed(1)} km away</div>
+                            ) : (
+                              <div className="small text-muted">Distance unknown</div>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ms-3 border-0"
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              backgroundColor: "var(--color-green)",
+                              color: "var(--color-white)",
+                              opacity: isLocated ? 1 : 0.5,
+                              cursor: isLocated ? "pointer" : "not-allowed",
+                            }}
+                            disabled={!isLocated}
+                            onClick={() => focusEvent(event)}
+                            aria-label={`Go to ${event.title} on the map`}
+                            title={isLocated ? "Go to location" : "Location not available yet"}
+                          >
+                            <svg
+                              width="18"
+                              height="18"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M5 12h14" />
+                              <path d="m13 5 7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>
