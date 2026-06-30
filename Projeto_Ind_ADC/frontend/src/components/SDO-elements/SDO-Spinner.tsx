@@ -36,46 +36,46 @@ function SDOspinner() {
 
   return (
     <div
-      className="d-flex justify-content-center pt-5"
-      style={{ minHeight: "100vh" }}
+      ref={wheelRef}
+      style={{
+        position: "absolute",
+        width: 300,
+        height: 300,
+
+        /* Push half of the wheel outside the wrapper */
+        right: -350,
+
+        /* Vertically center it */
+        top: "20%",
+        transformOrigin: "center",
+      }}
     >
-      <div
-        ref={wheelRef}
-        style={{
-          position: "relative",
-          width: 300,
-          height: 300,
-          transformOrigin: "center",
-        }}
-      >
-        {sdoItems.map((item, i) => (
-          <img
-            key={item.id}
-            src={item.image}
-            alt={item.title}
-            title={item.title}
-            onClick={() => navigate(item.href)}
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: `
-                translate(-50%, -50%)
-                rotate(${i * ROTATION_STEP}deg)
-                
-              `,
-              transformOrigin: "center",
-              cursor: "pointer",
-              transition: "transform 0.2s ease, filter 0.2s ease",
-              filter:
-                i === activeIndex
-                  ? "brightness(1.2) drop-shadow(0 0 8px white)"
-                  : "brightness(0.9)",
-              zIndex: i === activeIndex ? 1 : 0,
-            }}
-          />
-        ))}
-      </div>
+      {sdoItems.map((item, i) => (
+        <img
+          key={item.id}
+          src={item.image}
+          alt={item.title}
+          title={item.title}
+          onClick={() => navigate(item.href)}
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: `
+            translate(-50%, -50%)
+            rotate(${i * ROTATION_STEP}deg)
+            
+          `,
+            transformOrigin: "center",
+            cursor: "pointer",
+            filter:
+              i === activeIndex
+                ? "brightness(1.2) drop-shadow(0 0 8px white)"
+                : "brightness(0.9)",
+            zIndex: i === activeIndex ? 1 : 0,
+          }}
+        />
+      ))}
     </div>
   );
 }
