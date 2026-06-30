@@ -93,6 +93,13 @@ function SDGelements() {
           </div>
         </div>
       </div>
+
+      <div className="container py-5">
+        <h1 style={{ color: "var(--color-white" }}>
+          Events related with objective {sdg.id}
+        </h1>
+        <EventsList filter={String(sdg.id)} />
+      </div>
     </>
   );
 }

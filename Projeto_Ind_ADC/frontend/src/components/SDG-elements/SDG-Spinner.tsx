@@ -41,11 +41,7 @@ function SDGspinner() {
         position: "absolute",
         width: 300,
         height: 300,
-
-        /* Push half of the wheel outside the wrapper */
         right: -350,
-
-        /* Vertically center it */
         top: "20%",
         transformOrigin: "center",
       }}
