@@ -1,9 +1,9 @@
-import SDOslider from "../SDO-elements/SDO-slider";
+import SDGslider from "../SDG-elements/SDG-slider";
 
 function Row2() {
   return (
     <div className="row">
-      <SDOslider />
+      <SDGslider />
     </div>
   );
 }

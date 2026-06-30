@@ -1,4 +1,4 @@
-import SDOspinner from "../SDO-elements/SDO-Spinner";
+import SDGspinner from "../SDG-elements/SDG-Spinner";
 
 function Row1() {
   return (
@@ -66,7 +66,7 @@ function Row1() {
           style={{ background: "var(--color-green)" }}
         >
           <div className="spinner-wrapper">
-            <SDOspinner />
+            <SDGspinner />
           </div>
         </div>
       </div>

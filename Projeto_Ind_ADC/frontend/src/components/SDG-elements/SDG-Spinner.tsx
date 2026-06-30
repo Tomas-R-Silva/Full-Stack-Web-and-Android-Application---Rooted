@@ -1,11 +1,11 @@
-import "./SDO-Spinner.css";
+import "./SDG-Spinner.css";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { sdoItems } from "../../utils/sdo";
+import { sdgItems } from "../../utils/sdgCircle";
 
-const ROTATION_STEP = 360 / sdoItems.length;
+const ROTATION_STEP = 360 / 17;
 
-function SDOspinner() {
+function SDGspinner() {
   const navigate = useNavigate();
   const wheelRef = React.useRef<HTMLDivElement | null>(null);
   const angleRef = React.useRef(0);
@@ -22,7 +22,7 @@ function SDOspinner() {
       }
 
       const normalized = (360 - angleRef.current) % 360;
-      const index = Math.floor(normalized / ROTATION_STEP) % sdoItems.length;
+      const index = Math.floor(normalized / ROTATION_STEP) % sdgItems.length;
 
       setActiveIndex(index);
 
@@ -50,7 +50,7 @@ function SDOspinner() {
         transformOrigin: "center",
       }}
     >
-      {sdoItems.map((item, i) => (
+      {sdgItems.map((item, i) => (
         <img
           key={item.id}
           src={item.image}
@@ -80,4 +80,4 @@ function SDOspinner() {
   );
 }
 
-export default SDOspinner;
+export default SDGspinner;

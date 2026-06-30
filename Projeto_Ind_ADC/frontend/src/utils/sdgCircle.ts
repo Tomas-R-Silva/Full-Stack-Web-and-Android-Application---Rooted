@@ -1,24 +1,24 @@
-import type { SdoItem } from "./types";
+import type { SdgItem } from "./types";
 
-import image1 from "../assets/images/1.png";
-import image2 from "../assets/images/2.png";
-import image3 from "../assets/images/3.png";
-import image4 from "../assets/images/4.png";
-import image5 from "../assets/images/5.png";
-import image6 from "../assets/images/6.png";
-import image7 from "../assets/images/7.png";
-import image8 from "../assets/images/8.png";
-import image9 from "../assets/images/9.png";
-import image10 from "../assets/images/10.png";
-import image11 from "../assets/images/11.png";
-import image12 from "../assets/images/12.png";
-import image13 from "../assets/images/13.png";
-import image14 from "../assets/images/14.png";
-import image15 from "../assets/images/15.png";
-import image16 from "../assets/images/16.png";
-import image17 from "../assets/images/17.png";
+import image1 from "../assets/images/ods1.png";
+import image2 from "../assets/images/ods2.png";
+import image3 from "../assets/images/ods3.png";
+import image4 from "../assets/images/ods4.png";
+import image5 from "../assets/images/ods5.png";
+import image6 from "../assets/images/ods6.png";
+import image7 from "../assets/images/ods7.png";
+import image8 from "../assets/images/ods8.png";
+import image9 from "../assets/images/ods9.png";
+import image10 from "../assets/images/ods10.png";
+import image11 from "../assets/images/ods11.png";
+import image12 from "../assets/images/ods12.png";
+import image13 from "../assets/images/ods13.png";
+import image14 from "../assets/images/ods14.png";
+import image15 from "../assets/images/ods15.png";
+import image16 from "../assets/images/ods16.png";
+import image17 from "../assets/images/ods17.png";
 
-export const sdoLinearItems: SdoItem[] = [
+export const sdgItems: SdgItem[] = [
   {
     id: 1,
     title: "No Poverty",

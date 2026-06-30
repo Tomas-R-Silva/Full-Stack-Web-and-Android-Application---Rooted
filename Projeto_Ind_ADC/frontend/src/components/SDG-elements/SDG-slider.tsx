@@ -1,12 +1,12 @@
-import "./SDO-Slider.css";
+import "./SDG-Slider.css";
 import { useNavigate } from "react-router-dom";
-import { sdoLinearItems } from "../../utils/sdoLinear";
+import { sdgLinearItems } from "../../utils/sdgLinear";
 
-function SDOslider() {
+function SDGslider() {
   const navigate = useNavigate();
 
   //======== Duplication ========
-  const loopItems = [...sdoLinearItems, ...sdoLinearItems];
+  const loopItems = [...sdgLinearItems, ...sdgLinearItems];
 
   return (
     <div className="slider">
@@ -26,4 +26,4 @@ function SDOslider() {
   );
 }
 
-export default SDOslider;
+export default SDGslider;

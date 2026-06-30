@@ -85,7 +85,7 @@ export type EventListResponse = {
 
 //========== SDO ==========
 
-export type SdoItem = {
+export type SdgItem = {
   id: number;
   title: string;
   image: string;

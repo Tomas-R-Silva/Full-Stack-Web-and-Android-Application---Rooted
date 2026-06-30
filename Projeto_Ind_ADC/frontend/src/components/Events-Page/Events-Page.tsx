@@ -5,7 +5,7 @@ import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCard from "./Event-Card";
 import EventModal from "./Event-Modal";
 import { useAuth } from "../AuthContext";
-import SDOslider from "../SDO-elements/SDO-slider";
+import SDGslider from "../SDG-elements/SDG-slider";
 
 function EventsPage() {
   //================= Hooks ===================
@@ -88,7 +88,7 @@ function EventsPage() {
           </button>
         </div>
 
-        <SDOslider />
+        <SDGslider />
 
         {loading && (
           <div className="text-center py-5">
