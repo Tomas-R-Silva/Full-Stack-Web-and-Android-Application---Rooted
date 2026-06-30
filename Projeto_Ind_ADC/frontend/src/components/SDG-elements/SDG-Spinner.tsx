@@ -53,7 +53,7 @@ function SDGspinner() {
       {sdgItems.map((item, i) => (
         <img
           key={item.id}
-          src={item.image}
+          src={item.spinner}
           alt={item.title}
           title={item.title}
           onClick={() => navigate(item.href)}

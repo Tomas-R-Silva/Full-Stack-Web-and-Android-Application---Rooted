@@ -83,11 +83,19 @@ export type EventListResponse = {
   }
 };
 
+export type FilterProps = {
+  filter: string;
+};
+
 //========== SDO ==========
 
 export type SdgItem = {
   id: number;
   title: string;
-  image: string;
+  image?: string;
   href: string;
+  description?: string;
+  spinner?: string;
+  circle?: string;
+  photo?: string;
 };
