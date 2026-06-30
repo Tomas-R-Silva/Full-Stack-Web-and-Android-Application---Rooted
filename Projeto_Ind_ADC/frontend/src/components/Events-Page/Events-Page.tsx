@@ -5,6 +5,7 @@ import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCard from "./Event-Card";
 import EventModal from "./Event-Modal";
 import { useAuth } from "../AuthContext";
+import SDOslider from "../SDO-elements/SDO-slider";
 
 function EventsPage() {
   //================= Hooks ===================
@@ -71,19 +72,23 @@ function EventsPage() {
         style={{ filter: showModal ? "blur(4px)" : "none" }}
       >
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="mb-0">Events</h1>
+          <h1 className="mb-0" style={{ color: "var(--color-white" }}>
+            Events
+          </h1>
 
           <button
             className="btn"
             style={{
-              background: "var(--color-green)",
-              color: "var(--color-white)",
+              background: "var(--color-white)",
+              color: "var(--color-green)",
             }}
             onClick={authenticatedToModal}
           >
             Create Event
           </button>
         </div>
+
+        <SDOslider />
 
         {loading && (
           <div className="text-center py-5">
@@ -107,7 +112,7 @@ function EventsPage() {
 
         {!loading && events.length > 0 && (
           <>
-            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 pt-4">
               {events.map((e) => (
                 <EventCard key={e.eventId} event={e} />
               ))}
