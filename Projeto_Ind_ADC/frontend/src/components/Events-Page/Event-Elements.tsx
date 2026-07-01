@@ -40,7 +40,6 @@ function EventElements() {
           {event && (
             <img
               src={event.coverImageUrl || "/placeholder-event.jpg"}
-              className="card-img-top"
               alt={event.title}
               style={{
                 height: "180px",

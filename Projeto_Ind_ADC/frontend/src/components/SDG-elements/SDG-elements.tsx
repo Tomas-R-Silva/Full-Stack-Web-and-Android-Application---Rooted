@@ -66,8 +66,20 @@ function SDGelements() {
                   ← All Sustainable Development Goals
                 </p>
 
-                <p style={{ color: "white", fontSize: "16px" }}>
-                  Objective {sdg.id}
+                <p
+                  className={"fw-bold"}
+                  style={{ color: "white", fontSize: "16px" }}
+                >
+                  Objective{" "}
+                  <img
+                    src={sdg.icon}
+                    alt={`SDG ${sdg.id} icon`}
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "8px",
+                    }}
+                  />
                 </p>
 
                 <h1
@@ -96,7 +108,17 @@ function SDGelements() {
 
       <div className="container py-5">
         <h1 style={{ color: "var(--color-white" }}>
-          Events related with objective {sdg.id}
+          Related Events{" "}
+          <img
+            src={sdg.icon}
+            alt={`SDG ${sdg.id} icon`}
+            style={{
+              width: "50px",
+              height: "50px",
+              borderRadius: "16px",
+            }}
+          />
+          :
         </h1>
         <EventsList filter={String(sdg.id)} />
       </div>

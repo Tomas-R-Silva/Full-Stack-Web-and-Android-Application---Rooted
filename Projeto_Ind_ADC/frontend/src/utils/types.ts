@@ -111,4 +111,5 @@ export type SdgItem = {
   spinner?: string;
   circle?: string;
   photo?: string;
+  icon?: string;
 };
