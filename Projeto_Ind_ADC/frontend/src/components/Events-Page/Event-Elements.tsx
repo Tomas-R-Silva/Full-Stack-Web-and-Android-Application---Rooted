@@ -54,7 +54,7 @@ function EventElements() {
             <div className="row">
               <div className="col-8">
                 <h2 style={{ color: "var(--color-white)" }}>
-                  Event Descriprion
+                  Event Descriprion:
                 </h2>
                 <p className="mb-1" style={{ color: "var(--color-white)" }}>
                   {event?.description}
@@ -64,8 +64,10 @@ function EventElements() {
             </div>
             <div className="row pt-5">
               <h2 style={{ color: "var(--color-white)" }}>
-                Event photo collection:
+                Event Photo Collection:
               </h2>
+              {event?.imageUrls &&
+                event.imageUrls.map((url) => <img src={url} />)}
             </div>
           </div>
         </section>

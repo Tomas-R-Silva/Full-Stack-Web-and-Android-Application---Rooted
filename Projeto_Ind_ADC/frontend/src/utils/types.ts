@@ -81,7 +81,7 @@ export type EventGetterResponse = {
 }
 
 export type RequestEventList = {
-  token?: {jwt:String;}
+  token?: {jwt:string;}
   category?: string;
   status?: string;
   organizerUsername?: string;
@@ -96,9 +96,156 @@ export type EventListResponse = {
   }
 };
 
+export type RequestEventUpdate = {
+  token?: {jwt:String;}
+  input: {
+    eventId:string,
+    title: string,
+    description: string,
+    category: string,
+    location: string,
+    startDate: number,
+    durationMinutes: number,
+    maxAttendees: number,
+    minAttendees: number,
+    public: boolean,
+    coverImageUrl: string,
+  }
+}
+
+export type EventUpdateResponse = {
+  data:{message: string},
+}
+
+export type RequestEventCancel = {
+  token?: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type EventCancelResponse = {
+  data:{message: string},
+}
+
+export type RequestEventDelete = {
+  token?: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type EventDeleteResponse = {
+  data:{message: string},
+}
+
+export type RequestEventAttend = {
+  token?: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type EventAttendResponse = {
+  data:{message: string},
+}
+
+export type RequestEventUnattend = {
+  token?: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type EventUnattendResponse = {
+  data:{message: string},
+}
+
+export type RequestEventAttendees = {
+  token?: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type EventAttendeesResponse = {
+  data:{attendees: Attendee[],
+        count: number},
+}
+
+type Attendee = {
+  username: string, 
+  joinedAt: number,
+}
+
+export type RequestImageUpload = {
+  token?: {jwt:string;}
+  input: {eventId:string,
+    imageUrls: string[],
+  },
+}
+
+export type ImageUploadResponse = {
+  data:{
+    imageUrls: string[],
+    message: string
+  },
+}
+
+export type RequestImageDelete = {
+  token?: {jwt:string;}
+  input: {eventId:string,
+    imageUrls: string[],
+  },
+}
+
+export type ImageDeleteResponse = {
+  data:{message: string},
+}
+
 export type FilterProps = {
   filter: string;
 };
+
+//========== Forum ==========
+
+export type RequestPostMessage = {
+  token?: {jwt:string}
+  input: {eventId:string,
+    text: string,
+    parentPostId: string,
+  },
+}
+
+export type PostMessageResponse = {
+  postId: string,
+  eventId: string,
+  authorUsername: string,
+  text: string,
+  createdAt: number,
+  parentPostId?: string,
+}
+
+export type RequestListMessages = {
+  token?: {jwt:string},
+  eventId: string,
+  pageSize?: number,
+  cursor?: string,
+}
+
+export type ListMessagesResponse = {
+  posts: Post[],
+  count: number,
+  nextCursor?: string,
+}
+
+type Post = {
+  postId: string,
+  eventId: string,
+  authorUsername: string,
+  text: string,
+  createdAt: number,
+  parentPostId?: string,
+}
+
+export type RequestMessageDelete = {
+  token?: {jwt:string}
+  input: string,
+}
+
+export type MessageDeleteResponse = {
+  data:{message: string},
+}
 
 //========== SDO ==========
 
