@@ -22,7 +22,7 @@ function Ticket({ event }: EventProps) {
     .map((item) => item.icon);
 
   return (
-    <div className="card" style={{ maxWidth: "800px", height: "280px" }}>
+    <div className="card" style={{ minWidth: "1000px", height: "280px" }}>
       <div className="row">
         <div
           className="col-8"
@@ -72,7 +72,20 @@ function Ticket({ event }: EventProps) {
           </div>
         </div>
         <div className="col-4">
-          <div className="container py-3 px-3">right</div>
+          <div className="container py-3 px-3">
+            <p className="mb-1">
+              <strong style={{ color: "var(--color-green)" }}>Status: </strong>
+              <span
+                className="badge"
+                style={{
+                  background: "var(--color-bege)",
+                  color: "var(--color-green)",
+                }}
+              >
+                {event.status}
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

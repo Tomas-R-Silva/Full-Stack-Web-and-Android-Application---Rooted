@@ -8,6 +8,8 @@ import type {
   EventItem,
 } from "../../utils/types";
 import { getEvent } from "../../api/auth";
+import placeholder from "../../assets/images/photo1.png";
+import "./Event-Elements.css";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
@@ -35,26 +37,36 @@ function EventElements() {
   return (
     <>
       <NavBar />
-      <div className="container py-5">
+      <div className="hero-wrapper">
         <div className="top-image">
           {event && (
-            <img
-              src={event.coverImageUrl || "/placeholder-event.jpg"}
-              alt={event.title}
-              style={{
-                height: "180px",
-                objectFit: "cover",
-              }}
-            />
+            <img src={event.coverImageUrl || placeholder} alt={event.title} />
           )}
         </div>
 
+        {event && (
+          <div className="ticket-wrapper">
+            <Ticket event={event} />
+          </div>
+        )}
         <section className="content-area">
-          {event && <Ticket event={event} />}
-
           <div className="container pt-5">
-            <h2>Main Content</h2>
-            <p>Page content goes here...</p>
+            <div className="row">
+              <div className="col-8">
+                <h2 style={{ color: "var(--color-white)" }}>
+                  Event Descriprion
+                </h2>
+                <p className="mb-1" style={{ color: "var(--color-white)" }}>
+                  {event?.description}
+                </p>
+              </div>
+              <div className="col-4"></div>
+            </div>
+            <div className="row pt-5">
+              <h2 style={{ color: "var(--color-white)" }}>
+                Event photo collection:
+              </h2>
+            </div>
           </div>
         </section>
       </div>
