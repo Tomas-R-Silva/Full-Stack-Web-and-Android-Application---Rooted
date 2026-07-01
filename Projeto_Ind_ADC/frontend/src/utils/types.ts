@@ -47,6 +47,10 @@ export type EventItem = {
   imageUrls: string[];
 };
 
+export type EventProps = {
+  event: EventItem
+}
+
 export type RequestEventCreation = {
   token: { jwt: string },
   input:{
@@ -66,6 +70,15 @@ export type EventCreationResponse = {
   eventId: string,
   message: string,
 };
+
+export type RequestEventGetter = {
+  token?: {jwt:String;}
+  input: {eventId:String;}
+}
+
+export type EventGetterResponse = {
+  data:{event: EventItem}
+}
 
 export type RequestEventList = {
   token?: {jwt:String;}

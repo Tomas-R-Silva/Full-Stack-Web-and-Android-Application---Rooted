@@ -1,10 +1,6 @@
-import type { EventItem } from "../../utils/types";
+import type { EventProps } from "../../utils/types";
 
-type EventCardProps = {
-  event: EventItem;
-};
-
-function EventCard({ event }: EventCardProps) {
+function EventCard({ event }: EventProps) {
   const startDate = new Date(event.startDate * 1000);
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {

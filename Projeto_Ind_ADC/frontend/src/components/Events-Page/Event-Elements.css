@@ -1,0 +1,11 @@
+.top-image {
+    height: 400px;
+    background-image: url("your-image.jpg");
+    background-size: cover;
+    background-position: center;
+}
+
+.content-area {
+    position: relative;
+    min-height: 800px;
+}
