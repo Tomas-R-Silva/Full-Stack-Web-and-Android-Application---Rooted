@@ -8,7 +8,7 @@ import type {
   EventItem,
 } from "../../utils/types";
 import { getEvent } from "../../api/auth";
-import placeholder from "../../assets/images/photo1.png";
+import placeholder from "../../assets/images/placeholder.png";
 import "./Event-Elements.css";
 import { useAuth } from "../AuthContext";
 

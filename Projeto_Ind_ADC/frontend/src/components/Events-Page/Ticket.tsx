@@ -5,15 +5,26 @@ import editSquare from "../../assets/icons/edit_square.svg";
 import { useState } from "react";
 import EventUpdater from "./Event-Updater";
 import type { RequestEventUpdate } from "../../utils/types";
+import type {
+  RequestEventAttend,
+  EventAttendResponse,
+} from "../../utils/types";
+import type {
+  RequestEventUnattend,
+  EventUnattendResponse,
+} from "../../utils/types";
+import { attendEvent, unattendEvent } from "../../api/auth";
+import { useNavigate } from "react-router-dom";
 
 function Ticket({ event }: EventProps) {
-  console.log(event);
   const startDate = new Date(event.startDate * 1000);
   const Ids = [2, 6, 7, 8, 13];
   const { isAuthenticated, username } = useAuth();
   const [showModal, setShowModal] = useState(false);
   type UpdateField = keyof RequestEventUpdate["input"];
   const [field, setField] = useState<UpdateField>("title");
+
+  const navigate = useNavigate();
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {
     day: "2-digit",
@@ -39,6 +50,60 @@ function Ticket({ event }: EventProps) {
     onClose: () => setShowModal(false),
     event,
     field,
+  };
+
+  const handleAttend = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      const payload: RequestEventAttend = {
+        token: {
+          jwt: token,
+        },
+        input: {
+          eventId: event.eventId,
+        },
+      };
+      console.log(payload);
+      const response = await attendEvent(payload);
+      console.log(response);
+      navigate("/events/" + event.eventId);
+      //window.location.reload();
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
+  };
+
+  const handleUnattend = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      const payload: RequestEventUnattend = {
+        token: {
+          jwt: token,
+        },
+        input: {
+          eventId: event.eventId,
+        },
+      };
+      console.log(payload);
+      const response = await unattendEvent(payload);
+      console.log(response);
+      navigate("/events/" + event.eventId);
+      //window.location.reload();
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
   };
 
   return (
@@ -156,15 +221,47 @@ function Ticket({ event }: EventProps) {
                   Status:{" "}
                 </strong>
                 <span
-                  className="badge"
-                  style={{
-                    background: "var(--color-bege)",
-                    color: "var(--color-green)",
-                  }}
+                  className="badge "
+                  style={{ background: "var(--color-green)" }}
                 >
                   {event.status}
                 </span>
               </p>
+              <p className="mb-1">
+                <strong style={{ color: "var(--color-green)" }}>
+                  Category:{" "}
+                </strong>
+                <span
+                  className="badge "
+                  style={{ background: "var(--color-green)" }}
+                >
+                  {event.category}
+                </span>
+              </p>
+              {isAuthenticated && (
+                <p className="mb-1">
+                  <button
+                    className="btn rounded-pill mt-2"
+                    style={{
+                      background: "var(--color-green)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={handleAttend}
+                  >
+                    Attend
+                  </button>
+                  <button
+                    className="btn rounded-pill mt-2 ms-3"
+                    style={{
+                      background: "var(--color-green)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={handleUnattend}
+                  >
+                    Unattend
+                  </button>
+                </p>
+              )}
             </div>
           </div>
         </div>

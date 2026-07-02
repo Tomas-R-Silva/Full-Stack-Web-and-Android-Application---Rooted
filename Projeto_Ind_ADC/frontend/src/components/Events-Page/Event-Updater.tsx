@@ -73,7 +73,6 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
 
   //========== Submissão dos Campos ==========
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("submit");
     e.preventDefault();
 
     const newErrors = {
