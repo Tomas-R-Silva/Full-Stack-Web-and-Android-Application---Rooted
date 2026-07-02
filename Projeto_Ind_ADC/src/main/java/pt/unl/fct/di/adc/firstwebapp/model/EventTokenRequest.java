@@ -13,6 +13,10 @@ public class EventTokenRequest extends AbstractTokenInputRequest<EventInput>impl
 	
 	public EventTokenRequest() {}
 	
-
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<EventInput> Getinputclass() {
+		return EventInput.class;
+	}
 
 }

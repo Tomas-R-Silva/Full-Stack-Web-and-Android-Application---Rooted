@@ -31,6 +31,17 @@ public class ForumKeyTokenRequest extends AbstractTokenInputRequest<ForumKeyToke
     	public Map<String, Object> getformat() {
     		return Map.of("forumKey",ModelInterface.defaultstr);
     	}
+
+		@Override
+		public <E extends ModelInterface> Class<E> Getinputclass() {
+			return null;
+		}
     }
+    
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<ForumKeyTokenInput> Getinputclass() {
+		return ForumKeyTokenInput.class;
+	}
 
 }

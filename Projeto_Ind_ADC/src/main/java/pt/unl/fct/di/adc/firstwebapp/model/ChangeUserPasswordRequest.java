@@ -48,4 +48,10 @@ public class ChangeUserPasswordRequest extends AbstractTokenInputRequest<ChangeU
         return map;
         }
     }
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<PasswordInput> Getinputclass() {
+		return PasswordInput.class;
+	}
 }

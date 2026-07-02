@@ -7,7 +7,11 @@ function NavBar() {
   return (
     <nav
       className="navbar navbar-expand-lg"
-      style={{ background: "var(--color-green)", height: "85px" }}
+      style={{
+        background: "var(--color-green)",
+        height: "85px",
+        filter: "drop-shadow(0 0 8px black)",
+      }}
     >
       <div className="container-fluid h-100 d-flex align-items-center">
         <a className="navbar-brand d-flex align-items-center me-4" href="/">

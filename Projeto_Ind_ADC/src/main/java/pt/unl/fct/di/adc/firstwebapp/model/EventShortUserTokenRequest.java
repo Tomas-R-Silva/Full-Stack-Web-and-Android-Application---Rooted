@@ -34,6 +34,13 @@ public class EventShortUserTokenRequest extends AbstractTokenInputRequest<EventS
 			return map;
 		}
 	}
+
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<EventShortUser> Getinputclass() {
+		return EventShortUser.class;
+	}
 }
 
 

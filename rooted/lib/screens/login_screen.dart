@@ -32,11 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-
-
     try {
       final result = await ApiService.login(
-
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
@@ -51,11 +48,12 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (mounted) {
         setState(() => _isLoading = false);
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => const HomeScreen(),
           ),
+          (route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -96,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 80),
               _buildHeader(),
               const SizedBox(height: 40),
               _buildForm(),
@@ -120,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          Image.asset('assets/images/rooted.png', width: 160, height: 160),
+        Image.asset('assets/images/rooted.png', width: 160, height: 160),
         const SizedBox(height: 24),
         const Text(
           'Welcome back',

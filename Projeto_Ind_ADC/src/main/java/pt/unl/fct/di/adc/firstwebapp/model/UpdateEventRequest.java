@@ -23,4 +23,9 @@ public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsi
 	
 	public UpdateEventRequest() {};
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<EventAtributsid> Getinputclass() {
+		return EventAtributsid.class;
+	}
 }

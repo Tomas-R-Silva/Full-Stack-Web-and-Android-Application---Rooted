@@ -20,5 +20,11 @@ public class CreateEventRequest extends AbstractTokenInputRequest<EventAtributs>
 	 * }
 	 */
 	
-	public CreateEventRequest() {}		
+	public CreateEventRequest() {}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<EventAtributs> Getinputclass() {
+		return EventAtributs.class;
+	}
 }

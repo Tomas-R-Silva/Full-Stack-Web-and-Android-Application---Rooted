@@ -23,6 +23,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
   String _selectedFilter = 'For you';
   String _selectedCategory = 'Music';
 
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -37,18 +45,27 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
+                controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Search events...',
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {});
+                    },
+                  ),
                   filled: true,
-                  border: OutlineInputBorder(
+                  border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(16)),
                     borderSide: BorderSide.none,
                   ),
                 ),
+                onSubmitted: (_) => setState(() {}),
               ),
             ),
             const SizedBox(height: 16),
@@ -113,6 +130,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 child: EventsMaps(
                   server: '',
                   mapsApiKey: null,
+                  categoryFilter: _selectedFilter == 'Near you' ? _selectedCategory.toUpperCase() : null,
+                  searchQuery: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
                 ),
               ),
             ),

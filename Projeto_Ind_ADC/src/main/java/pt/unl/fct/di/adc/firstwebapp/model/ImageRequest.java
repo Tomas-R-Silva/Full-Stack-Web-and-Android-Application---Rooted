@@ -36,4 +36,10 @@ public class ImageRequest extends AbstractTokenInputRequest<ImageRequest.ImageRe
 	        return map;
 	        }
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<ImageRequestInput> Getinputclass() {
+		return ImageRequestInput.class;
+	}
 }

@@ -38,4 +38,11 @@ public class ListForumRequest extends AbstractTokenInputRequest<ListForumRequest
 	        return map;
 	        }
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<ListForumInput> Getinputclass() {
+		return ListForumInput.class;
+	}
+	
 }

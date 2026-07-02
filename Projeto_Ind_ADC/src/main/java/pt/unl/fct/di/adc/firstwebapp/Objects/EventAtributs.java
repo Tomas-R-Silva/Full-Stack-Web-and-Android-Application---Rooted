@@ -87,4 +87,9 @@ public class EventAtributs implements ModelInterface{
 		map.put("isAccessible",true);
 		return map;
 	}
+
+	@Override
+	public <E extends ModelInterface> Class<E> Getinputclass() {
+		return null;
+	}
 }

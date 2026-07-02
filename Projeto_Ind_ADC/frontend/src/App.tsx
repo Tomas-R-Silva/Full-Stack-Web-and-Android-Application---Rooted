@@ -1,11 +1,14 @@
 import NavBar from "./components/NavBar/NavBar";
-import SignInModal from "./components/SignIn-Page/SignIn-Modal";
+import Row1 from "./components/Main-Page/row1";
+import Row2 from "./components/Main-Page/row2";
+import patternGreen2 from "./assets/images/pattern_dark_green_2.svg";
 
 function App() {
   return (
     <>
       <NavBar />
-      <a>⚠️ Under Construction ⚠️</a>
+      <Row1 />
+      <Row2 />
     </>
   );
 }

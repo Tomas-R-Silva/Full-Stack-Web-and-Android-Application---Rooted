@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -6,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/location_autocomplete.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
+import 'home_screen.dart';
 
 
 class CreatePage extends StatefulWidget {
@@ -92,9 +94,11 @@ class _CreatePageState extends State<CreatePage> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedDate == null || _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please pick a date and time')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please pick a date and time')),
+        );
+      }
       return;
     }
 
@@ -112,6 +116,7 @@ class _CreatePageState extends State<CreatePage> {
     }
 
     try {
+      String eventId;
       if (_createdEventId == null) {
         final result = await ApiService.createEvent(
           jwt: jwt,
@@ -127,20 +132,18 @@ class _CreatePageState extends State<CreatePage> {
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
           public: _isPublic,
         );
-
+        eventId = (result['eventId'] ?? result['data']?['eventId'] ?? result['id'] ?? '').toString();
+        
         if (mounted) {
           setState(() {
-            _isSubmitting = false;
-            _createdEventId = result['eventId']?.toString();
+            _createdEventId = eventId.isEmpty ? null : eventId;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Event created successfully!')),
-          );
         }
       } else {
+        eventId = _createdEventId!;
         await ApiService.updateEvent(
           jwt: jwt,
-          eventId: _createdEventId!,
+          eventId: eventId,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),
@@ -153,13 +156,47 @@ class _CreatePageState extends State<CreatePage> {
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
           public: _isPublic,
         );
+      }
 
-        if (mounted) {
-          setState(() => _isSubmitting = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Event updated successfully!')),
+      // Handle Image Upload if an image was picked
+      if (_eventImage != null && eventId.isNotEmpty) {
+        try {
+          final bytes = await _eventImage!.readAsBytes();
+          
+          final base64String = base64Encode(bytes);
+          final extension = _eventImage!.path.split('.').last.toLowerCase();
+          final mimeType = extension == 'png' ? 'image/png' : 'image/jpeg';
+          
+          // Ensure exact spacing as requested by backend: "data:<mime>;base64,<data>"
+          final dataUri = 'data:$mimeType;base64,$base64String';
+
+          await ApiService.uploadEventImages(
+            jwt: jwt,
+            eventId: eventId,
+            base64Images: [dataUri],
           );
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Event saved, but image upload failed: $e'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
         }
+      }
+
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ApiService.notifyEventUpdate(eventId); // Refresh feeds
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_createdEventId == null 
+              ? 'Event created successfully!' 
+              : 'Event updated successfully!'),
+          ),
+        );
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -168,7 +205,7 @@ class _CreatePageState extends State<CreatePage> {
           SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
         );
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -191,7 +228,13 @@ class _CreatePageState extends State<CreatePage> {
         actions: [
           if (_createdEventId != null)
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomeScreen(initialIndex: 0)),
+                  (route) => false,
+                );
+              },
               child: const Text('Done', style: TextStyle(color: Colors.white)),
             ),
         ],

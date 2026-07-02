@@ -12,4 +12,10 @@ public class ShortUserTokenRequest extends AbstractTokenInputRequest<ShortUser>i
 	 */
 	
     public ShortUserTokenRequest(){}
+    
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<ShortUser> Getinputclass() {
+		return ShortUser.class;
+	}
 }

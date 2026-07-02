@@ -8,15 +8,17 @@ public interface ModelInterface {
 
 	public Map<String,Object> getformat();
 
+	public <E extends ModelInterface> Class<E> Getinputclass();
+	
 	public static final String defaultstr="\"...\"";
 	public static final int defaultint=0;
 	public static final boolean defaultbool=false;
 	public static final long defaultlong=0L;
 	public static final String defaultliststr="[\"...\",\"...\",\"...\"]";
 
-	@SuppressWarnings("deprecation")
+	//@SuppressWarnings("deprecation")
 	public static <E extends ModelInterface> String formate(Class<E> e) throws InstantiationException, IllegalAccessException {
-		return continuea(new StringBuilder(), e.newInstance().getformat()).toString();
+		return "";//continuea(new StringBuilder(), e.newInstance().getformat()).toString();
 	}
 
 	@SuppressWarnings("unchecked")

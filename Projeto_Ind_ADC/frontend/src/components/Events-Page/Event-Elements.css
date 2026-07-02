@@ -1,0 +1,54 @@
+.hero-wrapper {
+  position: relative;
+}
+
+.top-image {
+  height: 400px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.top-image img {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+}
+
+.edit-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 24px;
+  height: 24px;
+
+  cursor: pointer;
+  z-index: 10;
+}
+
+.ticket-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 400px;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.content-area {
+  padding-top: 140px;
+  min-height: 800px;
+}
+
+.photo-collection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.photo-collection img {
+  width: 380px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
