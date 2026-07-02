@@ -1,6 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class Event extends EventAtributsid {
 		public static Status valueof(String v) {
 			try{return Status.valueOf(v);}catch (Exception e) {return null;}}
 	}
-	
+
 	private String organizerUsername;
 	private Status status;
 	private long createdAt;  // epoch seconds
@@ -44,6 +45,8 @@ public class Event extends EventAtributsid {
 		this.setPublic(input.isPublic());
 		this.setStatus(Status.UPCOMING);
 		this.setCreatedAt(System.currentTimeMillis() / 1000L);
+		this.setSDG(input.getSDGint());
+		this.setAccessible(input.isAccessible());
 		isValid();
 	}
 
@@ -67,9 +70,16 @@ public class Event extends EventAtributsid {
 			list.add(Error.createmap(9917));
 		if(minAttendees<0||(maxAttendees!=0&&minAttendees>maxAttendees))
 			list.add(Error.createmap(9918));
+		boolean found=false;
+		Iterator<Integer> it=SDG.iterator();
+		while(!found && it.hasNext()) found=SDGcheck(it.next());
+		if(found)
+			list.add(Error.createmap(9933));
 		if(!list.isEmpty())
 			Error.invalid_input(list);
 	}
+	
+	private static final boolean SDGcheck(int n) {return n>17||n<1;}
 
 	public static boolean validVariable(String var){
 		return var != null && !var.isBlank();
