@@ -24,10 +24,9 @@ public class AuthHelper {
 
 	private AuthHelper() {}
 
-	@SuppressWarnings("unchecked")
 	public static <E extends ModelInterface> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
 		try {
-			return (E) obj;
+			return clas.cast(obj);
 		}catch (Exception e) {
 			try {
 				ErrorException.trow(9929,ModelInterface.formate(clas));
