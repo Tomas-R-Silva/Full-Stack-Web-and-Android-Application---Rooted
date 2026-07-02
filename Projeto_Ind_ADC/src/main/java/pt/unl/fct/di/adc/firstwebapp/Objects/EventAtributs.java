@@ -16,6 +16,7 @@ public class EventAtributs implements ModelInterface{
 	protected Integer maxAttendees;// 0 = unlimited
 	protected Integer minAttendees;
 	protected Boolean isPublic;
+	protected Boolean isAccessible;
 	protected String coverImageUrl;
 
 	public EventAtributs() {}
@@ -52,6 +53,10 @@ public class EventAtributs implements ModelInterface{
 	public boolean isPublic() { return zeroifnull(isPublic); }
 	public Boolean isPublicnull() { return isPublic; }
 	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
+	
+	public boolean isAccessible() { return zeroifnull(isAccessible); }
+	public Boolean isAccessiblenull() { return isAccessible; }
+	public void setAccessible(boolean isAccessible) { this.isAccessible = isAccessible; }
 
 	public String getCoverImageUrl() { return coverImageUrl; }
 	public void setCoverImageUrl(String coverImageUrl) { this.description = coverImageUrl; }
@@ -68,7 +73,8 @@ public class EventAtributs implements ModelInterface{
 
 	@Override
 	public Map<String, Object> getformat() {
-		return Map.of("title",ModelInterface.defaultstr,
+		Map<String, Object> map=
+				Map.of("title",ModelInterface.defaultstr,
 				"description",ModelInterface.defaultstr,
 				"category","MUSIC",
 				"location",ModelInterface.defaultstr,
@@ -77,6 +83,8 @@ public class EventAtributs implements ModelInterface{
 				"maxAttendees", 100,
 			   	"minAttendees", 10,
 			   	"coverImageUrl","https://...",
-			   	"isPublic", true );
+			   	"isPublic", true);
+		map.put("isAccessible",true);
+		return map;
 	}
 }
