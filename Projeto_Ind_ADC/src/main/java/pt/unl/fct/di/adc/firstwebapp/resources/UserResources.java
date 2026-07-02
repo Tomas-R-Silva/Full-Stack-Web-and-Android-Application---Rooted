@@ -24,7 +24,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
@@ -34,12 +33,18 @@ import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
-import pt.unl.fct.di.adc.firstwebapp.model.*;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest.PasswordInput;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
+import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
-import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
+import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
+import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
+import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
 
 
 @Path("/")
@@ -104,7 +109,7 @@ public class UserResources {
 
 			Log.info("Attempt to create userLogin: " + userToLog.getUsername());
 
-			Entity user = getUser(userToLog);
+			Entity user = AuthHelper.getUser(userToLog);
 
 			Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
 
@@ -180,7 +185,7 @@ public class UserResources {
 		try {
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
-			Entity user = getUser(request.getInput());
+			Entity user = AuthHelper.getUser(request.getInput());
 			Key userKeyToBeDeleted = user.getKey();	
 
 			if(!token.getUsername().equals(user.getString("user_name")))
@@ -203,7 +208,7 @@ public class UserResources {
 			ModAccountRequest request=AuthHelper.verifyInput(obj,ModAccountRequest.class);
 			ModAccountRequestInput input = request.getInput();
 			Attributes attributes = request.getInput().getAttributes();
-			Entity user = getUser(input);
+			Entity user = AuthHelper.getUser(input);
 			Token token = AuthHelper.verifyToken(request);
 
 			if (!token.getUsername().equals(user.getString("user_name"))) 
@@ -230,7 +235,7 @@ public class UserResources {
 		try{
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
-			Entity user = getUser(request.getInput());
+			Entity user = AuthHelper.getUser(request.getInput());
 			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
 					"username", user.getString("user_name"),
@@ -250,7 +255,7 @@ public class UserResources {
 		try{
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
-			Entity user = getUser(request.getInput());
+			Entity user = AuthHelper.getUser(request.getInput());
 
 			if(!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(token, new Role [] {Role.ADMIN});
@@ -270,7 +275,7 @@ public class UserResources {
 		try{
 			ChangeUserRole request=AuthHelper.verifyInput(obj,ChangeUserRole.class);
 			ChangeUserRoleInput input = request.getInput();
-			Entity user = getUser(input);
+			Entity user = AuthHelper.getUser(input);
 			Token token = AuthHelper.verifyToken(request);
 			Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			Role newRole = Role.valueof(input.getNewrole());
@@ -295,7 +300,7 @@ public class UserResources {
 		try{
 			ChangeUserPasswordRequest request=AuthHelper.verifyInput(obj,ChangeUserPasswordRequest.class);
 			PasswordInput input = request.getInput();
-			Entity user = getUser(input.getUsername());
+			Entity user = AuthHelper.getUser(input.getUsername());
 			Token token = AuthHelper.verifyToken(request);
 
 			if(!token.getUsername().equals(user.getString("user_name")))
@@ -325,7 +330,7 @@ public class UserResources {
 			ChangeUserPasswordRequest request=AuthHelper.verifyInput(obj,ChangeUserPasswordRequest.class);
 			PasswordInput input = request.getInput();
 
-			Entity user = getUser(input);
+			Entity user = AuthHelper.getUser(input);
 			Token token = AuthHelper.verifyToken(request);
 
 			if(!token.getUsername().equals(user.getString("user_name")))
@@ -370,7 +375,7 @@ public class UserResources {
 		try{
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
-			Entity user = getUser(request.getInput());
+			Entity user = AuthHelper.getUser(request.getInput());
 			Key friendKey = getFriendKey(token,user);
 			Entity existingfriend = txn.get(friendKey);
 			if (existingfriend == null) {
@@ -408,7 +413,7 @@ public class UserResources {
 	public Response unfriend(Object obj){
 		try {
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
-			Entity user = getUser(request.getInput());
+			Entity user = AuthHelper.getUser(request.getInput());
 			Token token = AuthHelper.verifyToken(request);
 			datastore.delete(getFriendKey(token,user));
 			return buildresponse(Map.of("message", "Friendship Ended"));
@@ -424,7 +429,7 @@ public class UserResources {
 	public Response showFriends(Object obj){
 		try{
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);;
-			String username=getUser(request.getInput()).getString("user_name");
+			String username=AuthHelper.getUser(request.getInput()).getString("user_name");
 			AuthHelper.verifyToken(request);
 			return buildresponse(Map.of("friends", showFriends(username,true)));
 		} catch (Exception e){
@@ -523,17 +528,6 @@ public class UserResources {
 
 	private static Response buildresponse(Map<String,Object> map) {
 		return ResponceBuilder.constructorsuccess(map);
-	}
-
-	private Entity getUser(ShortUser user) throws ErrorException{
-		return getUser(user.getUsername());
-	}
-
-	private Entity getUser(String username) throws ErrorException{
-		Key userKey = datastore.newKeyFactory().setKind("User").newKey(username);
-		Entity user = datastore.get(userKey);
-		Validator.userNotFound(new Entity[]{user});
-		return user;
 	}
 
 	private Key getFriendKey(Token token,Entity user) throws ErrorException{

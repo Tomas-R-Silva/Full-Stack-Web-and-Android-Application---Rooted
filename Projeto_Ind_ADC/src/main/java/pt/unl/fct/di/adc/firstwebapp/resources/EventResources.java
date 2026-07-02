@@ -40,12 +40,15 @@ import pt.unl.fct.di.adc.firstwebapp.Utilities.GCSUploader;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+import pt.unl.fct.di.adc.firstwebapp.error.Validator;
 import pt.unl.fct.di.adc.firstwebapp.model.CreateEventRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.EventShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.EventTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest.ImageRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest.ListEventsInput;
+import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UpdateEventRequest;
 
 @Path("/events")
@@ -425,10 +428,8 @@ public class EventResources {
 			Entity eventEntity = getEventEntity(req.getInput());
 			String organizer = eventEntity.getString("organizer_username");
 
-			if (!token.getUsername().equals(organizer) &&
-					token.getRole() != Role.ADMIN &&
-					token.getRole() != Role.BOFFICER)
-				ErrorException.trow(9905);
+			if (!token.getUsername().equals(organizer))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
 			Query<Entity> query = Query.newEntityQueryBuilder()
 					.setKind("Attendance")
@@ -447,6 +448,70 @@ public class EventResources {
 
 			return ok(Map.of("attendees", attendees, "count", attendees.size()));
 
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /rest/events/myattends
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/myattends")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyAttends(Object obj) {
+		try {
+			ShortUserTokenRequest req=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(req);
+			Entity user = AuthHelper.getUser(req.getInput());
+
+			if (!token.getUsername().equals(user.getString("user_name")))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+			
+			Query<Entity> query = Query.newEntityQueryBuilder()
+					.setKind("Attendance")
+					.setFilter(PropertyFilter.eq("username", user.getString("user_name")))
+					.build();
+
+			QueryResults<Entity> results = datastore.run(query);
+			List<Map<String, Object>> attendees = new ArrayList<>();
+
+			while (results.hasNext()) {
+				Entity a = results.next();
+				attendees.add(Map.of(
+						"event_id", a.getString("event_id"),
+						"joinedAt", a.getLong("joined_at")));
+			}
+
+			return ok(Map.of("myattends", attendees, "count", attendees.size()));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /rest/events/myattends
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/isattendee")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getIsAttendee(Object obj) {
+		try {
+			EventShortUserTokenRequest req=AuthHelper.verifyInput(obj,EventShortUserTokenRequest.class);
+			//Token token = 
+			AuthHelper.verifyToken(req);
+			Entity user = AuthHelper.getUser(req.getInput());
+
+			//if (!token.getUsername().equals(user.getString("user_name")))
+			//	Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+			
+			String attendanceId = req.getInput() + "_" + user.getString("user_name");
+			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
+			
+			return ok(Map.of("isattendee",datastore.get(attendanceKey) == null));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -526,8 +591,8 @@ public class EventResources {
 				ErrorException.trow(9906);
 			Entity eventEntity = getEventEntity(input);
 			String organizer = eventEntity.getString("organizer_username");
-			
-			
+
+
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
