@@ -35,7 +35,7 @@ public class AuthHelper {
 				if(e1 instanceof ErrorException)
 					throw (ErrorException)e1;
 				else
-					ErrorException.trow(9929);
+					ErrorException.trow(9929,e1.toString());
 				}
 		}
 		return null;
