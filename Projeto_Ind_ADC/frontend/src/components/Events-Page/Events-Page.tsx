@@ -37,16 +37,18 @@ function EventsPage() {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 style={{ color: "var(--color-white" }}>Events</h1>
 
-          <button
-            className="btn"
-            style={{
-              background: "var(--color-white)",
-              color: "var(--color-green)",
-            }}
-            onClick={authenticatedToModal}
-          >
-            Create Event
-          </button>
+          {isAuthenticated && (
+            <button
+              className="btn"
+              style={{
+                background: "var(--color-white)",
+                color: "var(--color-green)",
+              }}
+              onClick={authenticatedToModal}
+            >
+              Create Event
+            </button>
+          )}
         </div>
 
         <SDGslider />

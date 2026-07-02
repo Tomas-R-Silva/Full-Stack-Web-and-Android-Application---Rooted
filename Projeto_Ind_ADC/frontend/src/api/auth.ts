@@ -10,6 +10,9 @@ import type { RequestEventUnattend, EventUnattendResponse} from "../utils/types"
 import type { RequestEventAttendees, EventAttendeesResponse} from "../utils/types";
 import type { RequestImageUpload, ImageUploadResponse} from "../utils/types";
 import type { RequestImageDelete, ImageDeleteResponse} from "../utils/types";
+import type { RequestPostMessage, PostMessageResponse} from "../utils/types";
+import type { RequestMessageDelete, MessageDeleteResponse} from "../utils/types";
+import type { RequestListMessages, ListMessagesResponse} from "../utils/types";
 
 //========== USER ==========
 
@@ -286,5 +289,68 @@ export const deleteImage = async (
   }
 
   const json: ImageDeleteResponse = await res.json();
+  return json;
+};
+
+
+//========== Forum ==========
+
+
+export const PostMessage = async (
+  data: RequestPostMessage
+): Promise<PostMessageResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/forum/post`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to create a posts");
+  }
+
+  const json: PostMessageResponse = await res.json();
+  return json;
+};
+
+
+export const DeleteMessage = async (
+  data: RequestMessageDelete
+): Promise<MessageDeleteResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/forum/delete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to delete a post");
+  }
+
+  const json: MessageDeleteResponse = await res.json();
+  return json;
+};
+
+
+export const ListMessages = async (
+  data: RequestListMessages
+): Promise<ListMessagesResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/forum/list`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to list the posts");
+  }
+
+  const json: ListMessagesResponse = await res.json();
   return json;
 };

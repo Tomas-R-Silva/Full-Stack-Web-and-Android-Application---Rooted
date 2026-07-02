@@ -229,7 +229,7 @@ export type ListMessagesResponse = {
   nextCursor?: string,
 }
 
-type Post = {
+export type Post = {
   postId: string,
   eventId: string,
   authorUsername: string,
@@ -245,6 +245,16 @@ export type RequestMessageDelete = {
 
 export type MessageDeleteResponse = {
   data:{message: string},
+}
+
+export type MessageProps = {
+  text: string,
+  parentText?: string,
+}
+
+export type ChatProps = {
+  eventId: string,
+  cursor?: string,
 }
 
 //========== SDO ==========

@@ -27,7 +27,7 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
       category: event.category,
       location: event.location,
       startDate: event.startDate,
-      durationMinutes: -event.durationMinutes,
+      durationMinutes: event.durationMinutes,
       maxAttendees: event.maxAttendees,
       minAttendees: 0,
       public: event.isPublic,
@@ -71,6 +71,24 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
     }));
   };
 
+  const handleImage = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64 = reader.result as string;
+
+      setFormData((prev) => ({
+        ...prev,
+        input: {
+          ...prev.input,
+          coverImageUrl: base64,
+        },
+      }));
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   //========== Submissão dos Campos ==========
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +119,8 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
       case "description":
         if (!formData.input.description) {
           newErrors.description = "Description is required";
+        } else if (formData.input.title.length > 300) {
+          newErrors.title = "Must be less than 300 characters";
         }
         break;
 
@@ -153,12 +173,6 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
         break;
 
       case "coverImageUrl":
-        if (
-          formData.input.coverImageUrl &&
-          !/^https?:\/\/.+/.test(formData.input.coverImageUrl)
-        ) {
-          newErrors.coverImageUrl = "Please enter a valid URL";
-        }
         break;
 
       case "public":
@@ -185,7 +199,7 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
       console.log(payload);
       const response = await updateEvent(payload);
       console.log(response);
-      onClose;
+      onClose();
       navigate("/events/" + event.eventId);
       window.location.reload();
     } catch (err) {
@@ -245,14 +259,28 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
               />
             ) : (
               <>
-                <input
-                  type="text"
-                  name={field}
-                  className={`form-control ${errors[field] ? "is-invalid" : ""}`}
-                  value={formData.input[field]}
-                  onChange={handleChange}
-                  placeholder={"New " + field}
-                />
+                {field === "coverImageUrl" ? (
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className={`form-control ${errors.coverImageUrl ? "is-invalid" : ""}`}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleImage(file);
+                      }
+                    }}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    name={field}
+                    className={`form-control ${errors[field] ? "is-invalid" : ""}`}
+                    value={String(formData.input[field] ?? "")}
+                    onChange={handleChange}
+                    placeholder={"New " + field}
+                  />
+                )}
                 {errors[field] && (
                   <div className="invalid-feedback">{errors[field]}</div>
                 )}

@@ -73,7 +73,7 @@ function Ticket({ event }: EventProps) {
       const response = await attendEvent(payload);
       console.log(response);
       navigate("/events/" + event.eventId);
-      //window.location.reload();
+      window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -100,7 +100,7 @@ function Ticket({ event }: EventProps) {
       const response = await unattendEvent(payload);
       console.log(response);
       navigate("/events/" + event.eventId);
-      //window.location.reload();
+      window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
     }
