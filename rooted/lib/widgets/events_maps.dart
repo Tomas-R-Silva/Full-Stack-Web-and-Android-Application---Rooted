@@ -21,7 +21,7 @@ class EventsMaps extends StatefulWidget {
 
 class _EventsMapsState extends State<EventsMaps> {
   GoogleMapController? _mapController;
-  LatLng _center = const LatLng(0, 0);
+  LatLng _center = const LatLng(38.7169, -9.1399);
   bool _loading = true;
   final Set<Marker> _markers = {};
   List<Map<String, dynamic>> _events = [];
@@ -44,18 +44,6 @@ class _EventsMapsState extends State<EventsMaps> {
       final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       _center = LatLng(position.latitude, position.longitude);
     } catch (_) {
-      // fallback to IP-based lookup
-      try {
-        final res = await http.get(Uri.parse('https://ipapi.co/json/'));
-        if (res.statusCode == 200) {
-          final data = json.decode(res.body);
-          if (data['latitude'] != null && data['longitude'] != null) {
-            _center = LatLng((data['latitude'] as num).toDouble(), (data['longitude'] as num).toDouble());
-          }
-        }
-      } catch (_) {
-        // leave center at 0,0
-      }
     }
   }
 
@@ -68,18 +56,18 @@ class _EventsMapsState extends State<EventsMaps> {
         {
           'eventId': '1',
           'title': 'Rock Festival',
-          'location': 'City Stadium',
+          'location': 'Lisbon',
           'attendees': '1.3k attending',
-          'lat': _center.latitude + 0.01,
-          'lng': _center.longitude + 0.01,
+          'lat': 38.7169,
+          'lng': -9.1399,
         },
         {
           'eventId': '2',
           'title': 'Startup Networking',
-          'location': 'Innovation Hub',
+          'location': 'Porto',
           'attendees': '1.2k attending',
-          'lat': _center.latitude - 0.01,
-          'lng': _center.longitude - 0.01,
+          'lat': 41.1579,
+          'lng': -8.6291,
         },
       ];
     } else {
