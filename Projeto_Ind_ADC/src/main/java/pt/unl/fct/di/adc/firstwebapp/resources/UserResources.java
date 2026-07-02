@@ -466,7 +466,7 @@ public class UserResources {
 		return friends;
 	}
 
-	private List<Map<String, Object>> getAllSessions (){
+	private List<Map<String, Object>> getAllSessions(){
 		Query<Entity> query = Query.newEntityQueryBuilder()
 				.setKind("Session")
 				.build();

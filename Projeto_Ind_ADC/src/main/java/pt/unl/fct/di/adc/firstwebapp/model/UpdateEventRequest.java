@@ -16,6 +16,7 @@ public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsi
 	 *   	"startDate": 1234567890,
 	 *   	"durationMinutes": 120,
 	 *   	"maxAttendees": 100,
+	 *   	"coverImageUrl":"https://..."
 	 *   	"isPublic": true}
 	 * }
 	 */

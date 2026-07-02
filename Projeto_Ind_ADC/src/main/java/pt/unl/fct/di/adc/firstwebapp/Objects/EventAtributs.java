@@ -16,6 +16,7 @@ public class EventAtributs implements ModelInterface{
 	protected Integer maxAttendees;// 0 = unlimited
 	protected Integer minAttendees;
 	protected Boolean isPublic;
+	protected String coverImageUrl;
 
 	public EventAtributs() {}
 	
@@ -52,6 +53,9 @@ public class EventAtributs implements ModelInterface{
 	public Boolean isPublicnull() { return isPublic; }
 	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 
+	public String getCoverImageUrl() { return coverImageUrl; }
+	public void setCoverImageUrl(String coverImageUrl) { this.description = coverImageUrl; }
+	
 	private static int zeroifnull(Integer n) {
 		return(n==null)?0:n;
 	}
@@ -72,6 +76,7 @@ public class EventAtributs implements ModelInterface{
 				"durationMinutes", 120,
 				"maxAttendees", 100,
 			   	"minAttendees", 10,
+			   	"coverImageUrl","https://...",
 			   	"isPublic", true );
 	}
 }
