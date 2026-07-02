@@ -10,10 +10,12 @@ import type {
 import { getEvent } from "../../api/auth";
 import placeholder from "../../assets/images/photo1.png";
 import "./Event-Elements.css";
+import { useAuth } from "../AuthContext";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventItem | undefined>();
+  //const { isAuthenticated, username } = useAuth();
 
   const loadEvents = async (id: string) => {
     const request: RequestEventGetter = {

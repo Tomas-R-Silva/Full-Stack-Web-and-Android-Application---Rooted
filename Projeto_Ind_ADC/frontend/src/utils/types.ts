@@ -109,7 +109,7 @@ export type RequestEventUpdate = {
     maxAttendees: number,
     minAttendees: number,
     public: boolean,
-    coverImageUrl: string,
+    coverImageUrl?: string,
   }
 }
 
