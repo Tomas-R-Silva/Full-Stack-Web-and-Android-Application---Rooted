@@ -1,11 +1,9 @@
-import type { EventItem } from "../../utils/types";
+import type { EventProps } from "../../utils/types";
+import { sdgInfos } from "../../utils/sdgInfo";
 
-type EventCardProps = {
-  event: EventItem;
-};
-
-function EventCard({ event }: EventCardProps) {
+function EventCard({ event }: EventProps) {
   const startDate = new Date(event.startDate * 1000);
+  const Ids = [2, 6, 7, 8, 13];
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {
     day: "2-digit",
@@ -13,10 +11,9 @@ function EventCard({ event }: EventCardProps) {
     year: "numeric",
   });
 
-  const formattedTime = startDate.toLocaleTimeString("pt-PT", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const sdgIcons = sdgInfos
+    .filter((item) => Ids.includes(item.id))
+    .map((item) => item.icon);
 
   return (
     <div className="col">
@@ -56,8 +53,6 @@ function EventCard({ event }: EventCardProps) {
 
           <p className="card-text text-muted mb-2">{event.location}</p>
 
-          <p className="card-text">{event.description}</p>
-
           <div className="mt-auto">
             <p className="mb-1">
               <strong style={{ color: "var(--color-green)" }}>Data:</strong>{" "}
@@ -65,18 +60,23 @@ function EventCard({ event }: EventCardProps) {
             </p>
 
             <p className="mb-1">
-              <strong style={{ color: "var(--color-green)" }}>Hora:</strong>{" "}
-              {formattedTime}
-            </p>
-
-            <p className="mb-1">
-              <strong style={{ color: "var(--color-green)" }}>Duração:</strong>{" "}
-              {event.durationMinutes} min
+              <strong style={{ color: "var(--color-green)" }}>Vagas:</strong>{" "}
+              {event.attendeeCount}/{event.maxAttendees}
             </p>
 
             <p className="mb-3">
-              <strong style={{ color: "var(--color-green)" }}>Vagas:</strong>{" "}
-              {event.attendeeCount}/{event.maxAttendees}
+              {sdgIcons.map((icon, i) => (
+                <img
+                  key={i}
+                  src={icon}
+                  alt="SDG icon"
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "8px",
+                  }}
+                />
+              ))}
             </p>
 
             <a

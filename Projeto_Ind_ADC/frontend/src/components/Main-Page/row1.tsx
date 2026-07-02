@@ -1,6 +1,8 @@
-import SDOspinner from "../SDO-elements/SDO-Spinner";
+import SDGspinner from "../SDG-elements/SDG-Spinner";
+import { useNavigate } from "react-router-dom";
 
 function Row1() {
+  const navigate = useNavigate();
   return (
     <div className="row">
       <div className="d-flex" style={{ minHeight: "100vh" }}>
@@ -54,7 +56,7 @@ function Row1() {
                 alignItems: "center",
                 gap: "8px",
               }}
-              onClick={() => console.log("clicked")}
+              onClick={() => navigate("/sdg")}
             >
               Show me →
             </button>
@@ -66,7 +68,7 @@ function Row1() {
           style={{ background: "var(--color-green)" }}
         >
           <div className="spinner-wrapper">
-            <SDOspinner />
+            <SDGspinner />
           </div>
         </div>
       </div>

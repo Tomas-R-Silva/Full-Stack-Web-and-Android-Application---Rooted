@@ -1,4 +1,4 @@
-import type { SdoItem } from "./types";
+import type { SdgItem } from "./types";
 
 import image1 from "../assets/images/1.png";
 import image2 from "../assets/images/2.png";
@@ -18,7 +18,7 @@ import image15 from "../assets/images/15.png";
 import image16 from "../assets/images/16.png";
 import image17 from "../assets/images/17.png";
 
-export const sdoLinearItems: SdoItem[] = [
+export const sdgLinearItems: SdgItem[] = [
   {
     id: 1,
     title: "No Poverty",

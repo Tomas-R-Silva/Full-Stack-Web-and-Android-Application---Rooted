@@ -1,5 +1,3 @@
-import { useState } from "react";
-import type { SignInFormData } from "../../utils/types";
 import LogInStep1 from "./LogIn-Step1";
 
 function LogInForm() {
