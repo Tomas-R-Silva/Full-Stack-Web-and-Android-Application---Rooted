@@ -43,9 +43,11 @@ function Chat({ event }: EventProps) {
         token: {
           jwt: token,
         },
-        eventId: eventId,
-        pageSize: 50,
-        cursor: "",
+        input: {
+          eventId: eventId,
+          pageSize: 50,
+          cursor: "",
+        },
       });
 
       console.log(res);
@@ -66,6 +68,11 @@ function Chat({ event }: EventProps) {
     }
   };
 
+  const handleParentText = (parentPostId: string): string | undefined => {
+    const parent = messages.find((msg) => msg.postId === parentPostId);
+    return parent?.text;
+  };
+
   useEffect(() => {
     loadEventChat(event.eventId);
   }, [event.eventId]);
@@ -77,28 +84,30 @@ function Chat({ event }: EventProps) {
           if (isAuthenticated && username === msg.authorUsername) {
             return (
               <MessageRight
-                key={i}
+                key={msg.postId}
                 text={msg.text}
-                parentText=""
-                parentPostId={
+                parentText={
                   msg.parentPostId
-                    ? "Sabes que autocarro tenho de apanhar?"
+                    ? handleParentText(msg.parentPostId)
                     : undefined
                 }
+                authorUsername={msg.authorUsername}
+                createdAt={msg.createdAt}
               />
             );
           }
 
           return (
             <MessageLeft
-              key={i}
+              key={msg.postId}
               text={msg.text}
-              parentText=""
-              parentPostId={
+              parentText={
                 msg.parentPostId
-                  ? "Sabes que autocarro tenho de apanhar?"
+                  ? handleParentText(msg.parentPostId)
                   : undefined
               }
+              authorUsername={msg.authorUsername}
+              createdAt={msg.createdAt}
             />
           );
         })}

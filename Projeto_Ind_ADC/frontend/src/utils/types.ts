@@ -82,11 +82,11 @@ export type EventGetterResponse = {
 
 export type RequestEventList = {
   token?: {jwt:string;}
-  category?: string;
+  input:{category?: string;
   status?: string;
   organizerUsername?: string;
   pageSize: number;
-  cursor?: string;
+  cursor?: string;},
 };
 
 export type EventListResponse = {
@@ -218,9 +218,9 @@ export type PostMessageResponse = {
 
 export type RequestListMessages = {
   token?: {jwt:string},
-  eventId: string,
+  input:{eventId: string,
   pageSize?: number,
-  cursor?: string,
+  cursor?: string,}
 }
 
 export type ListMessagesResponse = {
@@ -250,7 +250,8 @@ export type MessageDeleteResponse = {
 export type MessageProps = {
   text: string,
   parentText?: string,
-  parentPostId?: string,
+  authorUsername: string,
+  createdAt: number,
 }
 
 export type ChatProps = {

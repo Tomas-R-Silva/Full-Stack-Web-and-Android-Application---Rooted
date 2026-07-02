@@ -60,7 +60,7 @@ function EventElements() {
       <div className="hero-wrapper">
         <div className="top-image">
           {event && (
-            <img src={event.coverImageUrl || placeholder} alt={event.title} />
+            <img src={event.imageUrls[0] || placeholder} alt={event.title} />
           )}
         </div>
         {isAuthenticated && event && event.organizerUsername === username && (

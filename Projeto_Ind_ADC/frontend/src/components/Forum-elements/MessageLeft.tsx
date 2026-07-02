@@ -1,14 +1,23 @@
 import type { MessageProps } from "../../utils/types";
 
 function MessageLeft(texts: MessageProps) {
+  const handleTime = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  };
+
   return (
     <>
       <div className="d-flex justify-content-start text-start mt-2">
-        {texts.parentPostId && (
+        {texts.parentText && (
           <div
             className="rounded-3 p-3"
             style={{
-              maxWidth: "15%",
+              maxWidth: "25%",
               width: "fit-content",
               background: "var(--color-green2)",
               color: "var(--color-white)",
@@ -16,7 +25,6 @@ function MessageLeft(texts: MessageProps) {
             }}
           >
             <p className="mb-1">{texts.parentText}</p>
-            <small>João • 14:25</small>
           </div>
         )}
       </div>
@@ -31,7 +39,9 @@ function MessageLeft(texts: MessageProps) {
           }}
         >
           <p className="mb-1">{texts.text}</p>
-          <small>João • 14:25</small>
+          <small>
+            {texts.authorUsername} • {handleTime(texts.createdAt)}
+          </small>
         </div>
       </div>
     </>
