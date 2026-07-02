@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'event_detail_screen.dart';
+import 'login_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,7 +27,20 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    ApiService.eventUpdateNotifier.addListener(_onEventUpdate);
     _init();
+  }
+
+  @override
+  void dispose() {
+    ApiService.eventUpdateNotifier.removeListener(_onEventUpdate);
+    super.dispose();
+  }
+
+  void _onEventUpdate() {
+    if (mounted) {
+      _loadEvents();
+    }
   }
 
   Future<void> _init() async {
@@ -47,6 +61,10 @@ class _HomePageState extends State<HomePage> {
       final events = (data['events'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
 
+      // Filter out events user is already attending so they don't show up in the feed
+      // But keep them if they were organized by the current user
+      events.removeWhere((e) => e['_attending'] == true && e['organizerUsername'] != _username);
+
       // Sort by startDate descending (most recent first)
       events.sort((a, b) {
         final aDate = (a['startDate'] as int?) ?? 0;
@@ -61,7 +79,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _toggleAttend(Map<String, dynamic> event) async {
-    if (_jwt == null) return;
+    if (_jwt == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please login to join events'),
+          action: SnackBarAction(
+            label: 'Login',
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
     final eventId = event['eventId'] as String;
     final isAttending = event['_attending'] == true;
 
@@ -78,6 +113,7 @@ class _HomePageState extends State<HomePage> {
         }
       } else {
         await ApiService.attendEvent(jwt: _jwt!, eventId: eventId);
+        ApiService.notifyEventUpdate(eventId);
         if (mounted) {
           setState(() {
             event['_attending'] = true;
@@ -190,7 +226,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${_greeting()}, ${_username ?? '…'} 👋',
+            '${_greeting()}, ${_username ?? 'Guest'} 👋',
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -199,9 +235,11 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Here\'s what\'s coming up around you.',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+          Text(
+            _jwt == null
+                ? 'Login to join events and connect with others.'
+                : 'Here\'s what\'s coming up around you.',
+            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           ),
         ],
       ),
@@ -221,6 +259,8 @@ class _HomePageState extends State<HomePage> {
     final isPending     = _pendingIds.contains(eventId);
     final isFull        = maxAttendees > 0 && attendeeCount >= maxAttendees;
     final isOwn         = event['organizerUsername'] == _username;
+    final imageUrls     = event['imageUrls'] as List<dynamic>?;
+    final firstImage    = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -235,7 +275,7 @@ class _HomePageState extends State<HomePage> {
           border: Border.all(color: AppTheme.inputBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -244,14 +284,29 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card header — category colour bar
-            Container(
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.7),
+            if (firstImage != null)
+              ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Image.network(
+                  firstImage,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 4,
+                    color: AppTheme.primary.withValues(alpha: 0.7),
+                  ),
+                ),
+              )
+            else
+              // Card header — category colour bar if no image
+              Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.7),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                ),
               ),
-            ),
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -262,7 +317,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _badge(
                         '${_categoryEmoji(category)} ${_toTitleCase(category ?? 'Other')}',
-                        AppTheme.primary.withOpacity(0.08),
+                        AppTheme.primary.withValues(alpha: 0.08),
                         AppTheme.primary,
                       ),
                       const SizedBox(width: 6),
@@ -391,6 +446,7 @@ class _HomePageState extends State<HomePage> {
         minimumSize: const Size.fromHeight(38),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -441,16 +497,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildEmpty() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.event_busy_rounded, size: 56, color: Colors.grey),
-          SizedBox(height: 12),
-          Text(
+          const Icon(Icons.event_busy_rounded, size: 56, color: Colors.grey),
+          const SizedBox(height: 12),
+          const Text(
             'No upcoming events yet.\nCheck back soon!',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadEvents,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Refresh'),
           ),
         ],
       ),

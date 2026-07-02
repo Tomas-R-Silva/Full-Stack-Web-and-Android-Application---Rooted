@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/auth_text_field.dart';
+import 'login_screen.dart';
 
 enum _Step { email, code, newPassword, done }
 
@@ -147,7 +148,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       case _Step.done:
         return _DoneStep(
           key: const ValueKey('done'),
-          onBackToLogin: () => Navigator.of(context).pop(),
+          onBackToLogin: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
+          },
         );
     }
   }

@@ -12,8 +12,16 @@ class EventsMaps extends StatefulWidget {
   final String server;
   /// Optional Google Maps API key used for geocoding when events don't include coords.
   final String? mapsApiKey;
+  final String? categoryFilter;
+  final String? searchQuery;
 
-  const EventsMaps({Key? key, this.server = '', this.mapsApiKey}) : super(key: key);
+  const EventsMaps({
+    Key? key,
+    this.server = '',
+    this.mapsApiKey,
+    this.categoryFilter,
+    this.searchQuery,
+  }) : super(key: key);
 
   @override
   State<EventsMaps> createState() => _EventsMapsState();
@@ -32,6 +40,15 @@ class _EventsMapsState extends State<EventsMaps> {
     _init();
   }
 
+  @override
+  void didUpdateWidget(EventsMaps oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.categoryFilter != oldWidget.categoryFilter ||
+        widget.searchQuery != oldWidget.searchQuery) {
+      _fetchAndShowEvents();
+    }
+  }
+
   Future<void> _init() async {
     await _determinePosition();
     await _fetchAndShowEvents();
@@ -48,28 +65,50 @@ class _EventsMapsState extends State<EventsMaps> {
   }
 
   Future<void> _fetchAndShowEvents() async {
+    setState(() {
+      _loading = true;
+      _markers.clear();
+    });
     List<Map<String, dynamic>> events = [];
 
     if (widget.server.isEmpty) {
-      // sample events when no server is configured
-      events = [
-        {
-          'eventId': '1',
-          'title': 'Rock Festival',
-          'location': 'Lisbon',
-          'attendees': '1.3k attending',
-          'lat': 38.7169,
-          'lng': -9.1399,
-        },
-        {
-          'eventId': '2',
-          'title': 'Startup Networking',
-          'location': 'Porto',
-          'attendees': '1.2k attending',
-          'lat': 41.1579,
-          'lng': -8.6291,
-        },
-      ];
+      // Use the live API instead of sample events
+      try {
+        final uri = Uri.parse('https://adc-final.ey.r.appspot.com/rest/events/list');
+        final res = await http.post(
+          uri, 
+          headers: {'Content-Type': 'application/json'}, 
+          body: json.encode({
+            'input': {
+              'status': 'UPCOMING', 
+              'pageSize': 50,
+              if (widget.categoryFilter != null) 'category': widget.categoryFilter,
+            }
+          })
+        );
+        if (res.statusCode == 200) {
+          final data = json.decode(res.body);
+          final eventsData = data['data']?['events'] as List? ?? data['events'] as List? ?? [];
+          for (final e in eventsData) {
+            if (e is Map) {
+              final evMap = Map<String, dynamic>.from(e);
+              // Client-side search filtering
+              if (widget.searchQuery == null) {
+                events.add(evMap);
+              } else {
+                final title = (evMap['title'] as String? ?? '').toLowerCase();
+                final desc = (evMap['description'] as String? ?? '').toLowerCase();
+                final query = widget.searchQuery!.toLowerCase();
+                if (title.contains(query) || desc.contains(query)) {
+                  events.add(evMap);
+                }
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // Handle silently
+      }
     } else {
       try {
         final uri = Uri.parse('${widget.server.replaceAll(RegExp(r'/+\$'), '')}/events/list');
@@ -107,7 +146,12 @@ class _EventsMapsState extends State<EventsMaps> {
       }
     }
 
-    setState(() => _events = events);
+    if (mounted) {
+      setState(() {
+        _events = events;
+        _loading = false;
+      });
+    }
   }
 
   Future<LatLng?> _geocode(String address) async {

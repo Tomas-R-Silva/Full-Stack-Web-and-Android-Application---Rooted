@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// Thrown when the backend returns a non-success response.
@@ -13,9 +14,13 @@ class ApiException implements Exception {
 class ApiService {
   // Your deployed Google Cloud backend.
   static const String baseUrl = 'https://adc-final.ey.r.appspot.com';
-  // NOTE: If you get 404s, your backend may be deployed under a sub-path.
-  // Try changing baseUrl to 'https://adc-final.ey.r.appspot.com/rest'
-  // (check your @ApplicationPath annotation or web.xml for the correct prefix).
+
+  /// Notifies listeners when an event is joined or left.
+  static final ValueNotifier<String?> eventUpdateNotifier = ValueNotifier(null);
+
+  static void notifyEventUpdate(String? eventId) {
+    eventUpdateNotifier.value = eventId;
+  }
 
   /// Calls POST /createaccount.
   ///
@@ -246,15 +251,15 @@ class ApiService {
       body: jsonEncode({
         'token': {'jwt': jwt},
         'eventId': eventId,
-        if (title != null) 'title': title,
-        if (description != null) 'description': description,
-        if (category != null) 'category': category,
-        if (location != null) 'location': location,
-        if (startDate != null) 'startDate': startDate,
-        if (durationMinutes != null) 'durationMinutes': durationMinutes,
-        if (maxAttendees != null) 'maxAttendees': maxAttendees,
-        if (public != null) 'public': public,
-      }),
+        'title': title,
+        'description': description,
+        'category': category?.toString(),
+        'location': location,
+        'start_date': startDate,
+        'duration_minutes': durationMinutes,
+        'max_attendees': maxAttendees,
+        'public': public,
+      }..removeWhere((k, v) => v == null)),
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -370,12 +375,12 @@ class ApiService {
       body: jsonEncode({
         if (jwt != null) 'token': {'jwt': jwt},
         'input': {
-          if (organizerUsername != null) 'organizerUsername': organizerUsername,
-          if (status != null) 'status': status,
-          if (category != null) 'category': category,
+          'organizerUsername': organizerUsername,
+          'status': status,
+          'category': category,
           'pageSize': pageSize,
-          if (cursor != null) 'cursor': cursor,
-        }
+          'cursor': cursor,
+        }..removeWhere((k, v) => v == null)
       }),
     );
     final body = _parseBody(response.body);
@@ -401,8 +406,8 @@ class ApiService {
         'input': {
           'eventId': eventId,
           'text': text,
-          if (parentPostId != null) 'parentPostId': parentPostId,
-        }
+          'parentPostId': parentPostId,
+        }..removeWhere((k, v) => v == null)
       }),
     );
 
@@ -433,8 +438,8 @@ class ApiService {
         'token': {'jwt': jwt},
           'eventId': eventId,
           'pageSize': pageSize,
-          if (cursor != null) 'cursor': cursor,
-      }),
+          'cursor': cursor,
+      }..removeWhere((k, v) => v == null)),
     );
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) return body;
@@ -465,7 +470,7 @@ class ApiService {
     required String jwt,
     required String eventId,
   }) async {
-    final uri = Uri.parse('\$baseUrl/rest/events/attend');
+    final uri = Uri.parse('$baseUrl/rest/events/attend');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -484,7 +489,7 @@ class ApiService {
     required String jwt,
     required String eventId,
   }) async {
-    final uri = Uri.parse('\$baseUrl/rest/events/unattend');
+    final uri = Uri.parse('$baseUrl/rest/events/unattend');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -496,5 +501,30 @@ class ApiService {
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) return body;
     throw ApiException(_errorMessage(body, 'Failed to leave event'));
+  }
+
+  /// Calls POST /rest/events/uploadimages.
+  static Future<void> uploadEventImages({
+    required String jwt,
+    required String eventId,
+    required List<String> base64Images,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/uploadimages');
+    
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'eventId': eventId,
+          'images': base64Images,
+        },
+      }),
+    );
+    
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to upload images (Status ${response.statusCode})'));
   }
 }
