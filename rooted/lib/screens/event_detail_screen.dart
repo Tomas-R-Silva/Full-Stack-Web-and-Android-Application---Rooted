@@ -37,9 +37,30 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Future<void> _init() async {
     _jwt = await SessionStorage.getJwt();
     _username = await SessionStorage.getUsername();
+    
+    // Refresh event data to ensure attendance status is current
+    await _refreshEventData();
+    
     await _loadMessages();
     // Poll for new messages every 5 seconds
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _pollMessages());
+  }
+
+  Future<void> _refreshEventData() async {
+    try {
+      final result = await ApiService.getEvent(
+        eventId: _event['eventId'] as String,
+        jwt: _jwt,
+      );
+      final eventData = result['data']?['event'] ?? result['event'] ?? result;
+      if (mounted) {
+        setState(() {
+          _event = Map<String, dynamic>.from(eventData);
+        });
+      }
+    } catch (e) {
+      // Silently fail if refresh fails
+    }
   }
 
   @override
@@ -274,79 +295,180 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildEventInfo() {
+    final imageUrls = _event['imageUrls'] as List<dynamic>?;
+    final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status badge
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _statusColor(_event['status'] as String?)
-                      .withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _event['status'] as String? ?? '',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _statusColor(_event['status'] as String?),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _event['category'] as String? ?? '',
-                  style: const TextStyle(
-                      fontSize: 11, color: AppTheme.textSecondary),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _event['title'] as String? ?? '',
-            style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary),
-          ),
-          const SizedBox(height: 10),
-          _infoRow(Icons.person_outline_rounded,
-              'Organised by ${_event['organizerUsername'] ?? ''}'),
-          _infoRow(Icons.calendar_today_outlined,
-              _formatDate(_event['startDate'])),
-          _infoRow(Icons.location_on_outlined,
-              _event['location'] as String? ?? ''),
-          _infoRow(Icons.timer_outlined,
-              '${_event['durationMinutes'] ?? 0} minutes'),
-          _infoRow(Icons.people_outline,
-              '${_event['attendeeCount'] ?? 0} / ${_event['maxAttendees'] ?? '∞'} attendees'),
-          if ((_event['description'] as String? ?? '').isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              _event['description'] as String,
-              style: const TextStyle(
-                  fontSize: 13, color: AppTheme.textSecondary, height: 1.5),
+          if (firstImage != null)
+            Image.network(
+              firstImage,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
             ),
-          ],
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Status badge
+                Row(
+                  children: [
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _statusColor(_event['status'] as String?)
+                            .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _event['status'] as String? ?? '',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _statusColor(_event['status'] as String?),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _event['category'] as String? ?? '',
+                        style: const TextStyle(
+                            fontSize: 11, color: AppTheme.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _event['title'] as String? ?? '',
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary),
+                ),
+                const SizedBox(height: 10),
+                _infoRow(Icons.person_outline_rounded,
+                    'Organised by ${_event['organizerUsername'] ?? ''}'),
+                _infoRow(Icons.calendar_today_outlined,
+                    _formatDate(_event['startDate'])),
+                _infoRow(Icons.location_on_outlined,
+                    _event['location'] as String? ?? ''),
+                _infoRow(Icons.timer_outlined,
+                    '${_event['durationMinutes'] ?? 0} minutes'),
+                _infoRow(Icons.people_outline,
+                    '${_event['attendeeCount'] ?? 0} / ${_event['maxAttendees'] ?? '∞'} attendees'),
+                if ((_event['description'] as String? ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _event['description'] as String,
+                    style: const TextStyle(
+                        fontSize: 13, color: AppTheme.textSecondary, height: 1.5),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                if (_event['organizerUsername'] != _username)
+                  SizedBox(
+                    width: double.infinity,
+                    child: _buildJoinButton(),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildJoinButton() {
+    final isAttending = _event['_attending'] == true;
+    final attendeeCount = _event['attendeeCount'] as int? ?? 0;
+    final maxAttendees = _event['maxAttendees'] as int? ?? 0;
+    final isFull = maxAttendees > 0 && attendeeCount >= maxAttendees;
+
+    if (isAttending) {
+      return OutlinedButton.icon(
+        onPressed: _toggleAttend,
+        icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+        label: const Text('Joined'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppTheme.primary,
+          side: const BorderSide(color: AppTheme.primary),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+      );
+    }
+
+    if (isFull) {
+      return OutlinedButton(
+        onPressed: null,
+        child: const Text('Event full'),
+      );
+    }
+
+    return ElevatedButton.icon(
+      onPressed: _toggleAttend,
+      icon: const Icon(Icons.add_rounded, size: 16),
+      label: const Text('Join Event'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        elevation: 0,
+      ),
+    );
+  }
+
+  Future<void> _toggleAttend() async {
+    if (_jwt == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to join events')),
+      );
+      return;
+    }
+
+    final eventId = _event['eventId'] as String;
+    final isAttending = _event['_attending'] == true;
+
+    try {
+      if (isAttending) {
+        await ApiService.unattendEvent(jwt: _jwt!, eventId: eventId);
+        setState(() {
+          _event['_attending'] = false;
+          final count = (_event['attendeeCount'] as int? ?? 1) - 1;
+          _event['attendeeCount'] = count < 0 ? 0 : count;
+        });
+      } else {
+        await ApiService.attendEvent(jwt: _jwt!, eventId: eventId);
+        ApiService.notifyEventUpdate(eventId);
+        setState(() {
+          _event['_attending'] = true;
+          _event['attendeeCount'] = (_event['attendeeCount'] as int? ?? 0) + 1;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e is ApiException ? e.message : 'An error occurred'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _infoRow(IconData icon, String text) {

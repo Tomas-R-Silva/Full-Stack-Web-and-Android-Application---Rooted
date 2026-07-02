@@ -58,7 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
-      print("REGISTER RESPONSE: $result");
+      print('DEBUG: Registration auto-login Response: $result');
       final token = (result['token'] as Map<String, dynamic>?) ?? {};
       await SessionStorage.save(
         jwt: token['jwt']?.toString() ?? '',
@@ -69,11 +69,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => const HomeScreen(),
           ),
+          (route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
