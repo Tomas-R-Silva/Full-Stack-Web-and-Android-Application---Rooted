@@ -1,9 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
-import java.util.Map;
-
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInput;
 
-public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageRequest.PostMessageinput>implements ModelInterface{
+public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageRequest.PostMessageinput>{
 
 	/**
 	 * {
@@ -17,7 +15,7 @@ public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageReq
 
 	public PostMessageRequest() {}
 
-	public class PostMessageinput extends EventInput implements ModelInterface{
+	public class PostMessageinput extends EventInput{
 
 		private String text;
 		private String parentPostId;
@@ -29,21 +27,5 @@ public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageReq
 
 		public String getParentPostId() { return parentPostId; }
 		public void setParentPostId(String parentPostId) { this.parentPostId = parentPostId; }
-		@Override
-		public Map<String, Object> getformat() {
-			Map<String, Object> map=super.getformat();
-			map.put("text", ModelInterface.defaultstr);
-			map.put("parentPostId", ModelInterface.defaultstr);
-			return map;
-		}
-
 	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<PostMessageinput> Getinputclass() {
-		return PostMessageinput.class;
-	}
-
-
 }

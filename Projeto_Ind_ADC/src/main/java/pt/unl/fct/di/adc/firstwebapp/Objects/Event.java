@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
-import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 
 public class Event extends EventAtributsid {
 
@@ -87,16 +86,4 @@ public class Event extends EventAtributsid {
 
 	public List<String> getImageUrls() { return imageUrls; }
 	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
-
-	
-	 @Override
- 	public Map<String, Object> getformat() {
-     Map<String, Object> map=super.getformat();
-     map.put("organizerUsername", ModelInterface.defaultstr);
-     map.put("status", "ONGOING");
-     map.put("createdAt", 1000000);
-     map.put("imageUrls", ModelInterface.defaultliststr);
-     return map;
-     }
-
 }

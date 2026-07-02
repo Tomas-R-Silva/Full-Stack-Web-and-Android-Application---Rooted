@@ -1,10 +1,8 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.Map;
-
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
-public class ChangeUserPasswordRequest extends AbstractTokenInputRequest<ChangeUserPasswordRequest.PasswordInput>implements ModelInterface{
+public class ChangeUserPasswordRequest extends AbstractTokenInputRequest<ChangeUserPasswordRequest.PasswordInput>{
 
 	/**
 	 * {
@@ -19,7 +17,7 @@ public class ChangeUserPasswordRequest extends AbstractTokenInputRequest<ChangeU
     public ChangeUserPasswordRequest() {}
 
     // Classe interna ou separada, mais limpa
-    public static class PasswordInput extends ShortUser implements ModelInterface{
+    public static class PasswordInput extends ShortUser{
         private String oldpassword;
         private String newpassword;
 
@@ -40,18 +38,6 @@ public class ChangeUserPasswordRequest extends AbstractTokenInputRequest<ChangeU
         public void setNewpassword(String newPassword) {
             this.newpassword = newPassword;
         }
-        @Override
-    	public Map<String, Object> getformat() {
-        Map<String, Object> map=super.getformat();
-        map.put("oldpassword", ModelInterface.defaultstr);
-        map.put("oldpassword", ModelInterface.defaultstr);
-        return map;
-        }
     }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<PasswordInput> Getinputclass() {
-		return PasswordInput.class;
-	}
 }

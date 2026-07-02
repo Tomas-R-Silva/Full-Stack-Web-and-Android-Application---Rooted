@@ -94,6 +94,7 @@ public class EventResources {
 					.set("status", event.getStatus().name())
 					.set("created_at", event.getCreatedAt())
 					.set("image_urls", new ArrayList<StringValue>())
+					.set("is_accessible",event.isAccessible())
 					.build();
 
 			datastore.put(entity);

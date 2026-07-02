@@ -1,11 +1,10 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-import java.util.Map;
+import java.util.List;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Category;
-import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 
-public class EventAtributs implements ModelInterface{
+public class EventAtributs{
 
 	protected String title;
 	protected String description;
@@ -18,6 +17,8 @@ public class EventAtributs implements ModelInterface{
 	protected Boolean isPublic;
 	protected Boolean isAccessible;
 	protected String coverImageUrl;
+	protected List<Integer> SDG;
+	
 
 	public EventAtributs() {}
 	
@@ -61,6 +62,9 @@ public class EventAtributs implements ModelInterface{
 	public String getCoverImageUrl() { return coverImageUrl; }
 	public void setCoverImageUrl(String coverImageUrl) { this.description = coverImageUrl; }
 	
+	public List<Integer> getSDG() { return SDG; }
+	public void setSDG(List<Integer> SDG) { this.SDG = SDG; }
+	
 	private static int zeroifnull(Integer n) {
 		return(n==null)?0:n;
 	}
@@ -71,25 +75,4 @@ public class EventAtributs implements ModelInterface{
 		return(n==null)?false:n;
 	}
 
-	@Override
-	public Map<String, Object> getformat() {
-		Map<String, Object> map=
-				Map.of("title",ModelInterface.defaultstr,
-				"description",ModelInterface.defaultstr,
-				"category","MUSIC",
-				"location",ModelInterface.defaultstr,
-				"startDate",1234567890,
-				"durationMinutes", 120,
-				"maxAttendees", 100,
-			   	"minAttendees", 10,
-			   	"coverImageUrl","https://...",
-			   	"isPublic", true);
-		map.put("isAccessible",true);
-		return map;
-	}
-
-	@Override
-	public <E extends ModelInterface> Class<E> Getinputclass() {
-		return null;
-	}
 }

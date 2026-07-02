@@ -1,14 +1,12 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.Map;
-
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
-public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountRequest.ModAccountRequestInput>implements ModelInterface{
+public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountRequest.ModAccountRequestInput>{
 
     public ModAccountRequest() {}
 
-    public static class ModAccountRequestInput extends ShortUser implements ModelInterface{
+    public static class ModAccountRequestInput extends ShortUser{
         private Attributes attributes;
 
         public ModAccountRequestInput() {}
@@ -20,15 +18,9 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
         public void setAttributes(Attributes attributes) {
             this.attributes = attributes;
         }
-        @Override
-    	public Map<String, Object> getformat() {
-        Map<String, Object> map=super.getformat();
-        map.put("attributes", attributes.getformat());
-        return map;
-        }
     }
 
-    public static class Attributes implements ModelInterface {
+    public static class Attributes{
         private String phone;
         private String address;
 
@@ -48,22 +40,6 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
 
         public void setAddress(String address) {
             this.address = address;
-        }
-        @Override
-    	public Map<String, Object> getformat() {
-        return Map.of("phone",ModelInterface.defaultstr
-        		,"address",ModelInterface.defaultstr);
-        }
-
-		@Override
-		public <E extends ModelInterface> Class<E> Getinputclass() {
-			return null;
-		}        
+        }    
     }
-    
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<Attributes> Getinputclass() {
-		return Attributes.class;
-	}
 }

@@ -2,7 +2,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInput;
 
-public class EventTokenRequest extends AbstractTokenInputRequest<EventInput>implements ModelInterface{
+public class EventTokenRequest extends AbstractTokenInputRequest<EventInput>{
 
 	/**
 	 * {
@@ -12,11 +12,5 @@ public class EventTokenRequest extends AbstractTokenInputRequest<EventInput>impl
 	 */
 	
 	public EventTokenRequest() {}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<EventInput> Getinputclass() {
-		return EventInput.class;
-	}
 
 }

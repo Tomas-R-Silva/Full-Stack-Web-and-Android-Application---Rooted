@@ -12,7 +12,6 @@ import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
-import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequestInterface;
 
 public class AuthHelper {
@@ -24,20 +23,13 @@ public class AuthHelper {
 
 	private AuthHelper() {}
 
-	public static <E extends ModelInterface> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
+	public static <E> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
 		try {
 			return clas.cast(obj);
 		}catch (Exception e) {
-			try {
-				ErrorException.trow(9929,ModelInterface.formate(clas));
-			}catch (Exception e1) {
-				if(e1 instanceof ErrorException)
-					throw (ErrorException)e1;
-				else
-					ErrorException.trow(9929,e1.toString());
-				}
+			ErrorException.trow(9929);
+			return null;
 		}
-		return null;
 	}
 
 	public static Token verifyToken(TokenRequestInterface token) throws ErrorException {
@@ -77,7 +69,7 @@ public class AuthHelper {
 			return null;
 		}
 	}
-	
+
 	public static Entity getUser(ShortUser user) throws ErrorException{
 		return getUser(user.getUsername());
 	}

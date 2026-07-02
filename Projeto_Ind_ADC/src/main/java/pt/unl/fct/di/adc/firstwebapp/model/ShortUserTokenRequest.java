@@ -2,7 +2,7 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
-public class ShortUserTokenRequest extends AbstractTokenInputRequest<ShortUser>implements ModelInterface,TokenRequestInterface{
+public class ShortUserTokenRequest extends AbstractTokenInputRequest<ShortUser> implements TokenRequestInterface{
 	
 	/**
 	 * {
@@ -12,10 +12,5 @@ public class ShortUserTokenRequest extends AbstractTokenInputRequest<ShortUser>i
 	 */
 	
     public ShortUserTokenRequest(){}
-    
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<ShortUser> Getinputclass() {
-		return ShortUser.class;
-	}
+
 }
