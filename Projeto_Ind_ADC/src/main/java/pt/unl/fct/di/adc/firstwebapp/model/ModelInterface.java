@@ -16,9 +16,9 @@ public interface ModelInterface {
 	public static final long defaultlong=0L;
 	public static final String defaultliststr="[\"...\",\"...\",\"...\"]";
 
-	@SuppressWarnings("deprecation")
+	//@SuppressWarnings("deprecation")
 	public static <E extends ModelInterface> String formate(Class<E> e) throws InstantiationException, IllegalAccessException {
-		return continuea(new StringBuilder(), e.newInstance().getformat()).toString();
+		return "";//continuea(new StringBuilder(), e.newInstance().getformat()).toString();
 	}
 
 	@SuppressWarnings("unchecked")
