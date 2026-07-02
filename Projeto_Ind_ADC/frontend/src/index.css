@@ -1,10 +1,12 @@
 :root {
   --color-green: #012001;
+  --color-green2: #016000;
   --color-bege: #ECEAE0;
   --color-white: #FFFFFF;
+  --color-gold: #d4a72c;
 }
 
 body {
   margin: 0;
-  background-color: var(--color-bege);
+  background-color: var(--color-green);
 }
