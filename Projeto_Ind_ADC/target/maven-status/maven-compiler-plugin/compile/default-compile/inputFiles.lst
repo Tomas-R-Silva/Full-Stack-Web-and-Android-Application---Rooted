@@ -6,10 +6,13 @@
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/ShortUser.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/Token.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ListForumRequest.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/EventShortUserTokenRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ListEventsRequest.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/TokenRequestInterface.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/ForumPost.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/AuthHelper.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ModelInterface.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/JWTToken.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/UpdateEventRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/TokenRequest.java

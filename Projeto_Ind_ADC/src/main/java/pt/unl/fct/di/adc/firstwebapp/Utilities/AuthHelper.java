@@ -2,6 +2,8 @@ package pt.unl.fct.di.adc.firstwebapp.Utilities;
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
@@ -22,12 +24,17 @@ public class AuthHelper {
 			.build()
 			.getService();
 
+	private static final ObjectMapper mapper = new ObjectMapper()
+			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
 	private AuthHelper() {}
 
-	@SuppressWarnings("unchecked")
 	public static <E extends ModelInterface> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
 		try {
-			return (E) obj;
+			// The endpoints receive the body as Object, so Jackson gives us a
+			// LinkedHashMap. A raw (E) cast can't turn that Map into the request
+			// POJO (it throws ClassCastException); convertValue actually maps it.
+			return mapper.convertValue(obj, clas);
 		}catch (Exception e) {
 			try {
 				ErrorException.trow(9929,ModelInterface.formate(clas));

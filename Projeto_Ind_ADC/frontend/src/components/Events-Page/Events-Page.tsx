@@ -9,7 +9,7 @@ import type {
 import EventCard from "./Event-Card";
 import EventModal from "./Event-Modal";
 import { useAuth } from "../AuthContext";
-import SDGslider from "../SDG-elements/SDG-Slider";
+import SDGslider from "../SDG-elements/SDG-slider";
 import EventsList from "./Events-List";
 
 function EventsPage() {
