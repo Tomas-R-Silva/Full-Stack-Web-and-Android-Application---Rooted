@@ -14,6 +14,7 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StringValue;
@@ -94,9 +95,9 @@ public class EventResources {
 					.set("status", event.getStatus().name())
 					.set("created_at", event.getCreatedAt())
 					.set("image_urls", new ArrayList<StringValue>())
-					.set("is_accessible",event.isAccessible())
+					.set("is_accessible", event.isAccessible())
+					.set("SDG", event.getSDG())
 					.build();
-
 			datastore.put(entity);
 			Log.info("Event created: " + event.getEventId() + " by " + tokenObj.getUsername());
 			return ok(Map.of("eventId", event.getEventId(), "message", "Event created successfully"));
@@ -174,6 +175,9 @@ public class EventResources {
 				// Regular users see public events and their own private events
 				filters.add(PropertyFilter.eq("is_public", true));
 			}
+			
+			if (input.isAccessible() != null && input.isAccessible())
+				filters.add(PropertyFilter.eq("is_accessible", input.isAccessible()));
 
 			if (input.getCategory() != null)
 				filters.add(PropertyFilter.eq("category", input.getCategory()));
@@ -202,8 +206,24 @@ public class EventResources {
 			QueryResults<Entity> results = datastore.run(queryBuilder.build());
 
 			List<Map<String, Object>> events = new ArrayList<>();
-			while (results.hasNext())
-				events.add(entityToMap(results.next()));
+
+			List<Integer> sdg = input.getSDG();
+			List<LongValue> sdglist = new ArrayList<>(sdg.size());
+			for(Integer n:sdg) sdglist.add(LongValue.of(n));
+			
+			while (results.hasNext()) {
+				Entity current = results.next();
+				if(sdg!=null) {
+					boolean b=false;
+					List<Value<?>> list = current.getList("SDG");
+					for(LongValue n:sdglist) 
+						b|=list.contains(n);
+					if(b)
+						events.add(entityToMap(current));
+				}
+				else
+					events.add(entityToMap(current));
+			}
 
 			Map<String, Object> response = new HashMap<>();
 			response.put("events", events);
@@ -259,6 +279,12 @@ public class EventResources {
 				builder.set("min_attendees", input.getMinAttendees());
 			if (input.isPublicnull() != null)
 				builder.set("is_public", input.isPublic());
+			if (input.isAccessiblenull() != null)
+				builder.set("is_accessible", input.isAccessible());
+			if (input.isAccessiblenull() != null)
+				builder.set("is_accessible", input.isAccessible());
+			if(input.getSDGint()!= null)
+				builder.set("SDG", input.getSDG());
 
 			datastore.put(builder.build());
 			return ok(Map.of("message", "Event updated successfully"));
@@ -469,7 +495,7 @@ public class EventResources {
 
 			if (!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
-			
+
 			Query<Entity> query = Query.newEntityQueryBuilder()
 					.setKind("Attendance")
 					.setFilter(PropertyFilter.eq("username", user.getString("user_name")))
@@ -508,10 +534,10 @@ public class EventResources {
 
 			//if (!token.getUsername().equals(user.getString("user_name")))
 			//	Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
-			
+
 			String attendanceId = req.getInput() + "_" + user.getString("user_name");
 			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
-			
+
 			return ok(Map.of("isattendee",datastore.get(attendanceKey) == null));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -666,6 +692,10 @@ public class EventResources {
 		map.put("isPublic", e.getBoolean("is_public"));
 		map.put("status", e.getString("status"));
 		map.put("createdAt", e.getLong("created_at"));
+		map.put("isAccessible", e.getBoolean("is_accessible"));
+		map.put("SDG", e.getList("SDG"));
+
+
 		List<String> imageUrls = e.contains("image_urls")
 				? e.<Value<?>>getList("image_urls").stream()
 						.map(v -> (String) v.get())

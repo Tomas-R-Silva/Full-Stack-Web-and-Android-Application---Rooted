@@ -1,6 +1,9 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.google.cloud.datastore.LongValue;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Category;
 
@@ -62,7 +65,13 @@ public class EventAtributs{
 	public String getCoverImageUrl() { return coverImageUrl; }
 	public void setCoverImageUrl(String coverImageUrl) { this.description = coverImageUrl; }
 	
-	public List<Integer> getSDG() { return SDG; }
+	public List<LongValue> getSDG() {
+		List<LongValue> list = new ArrayList<>(SDG.size());
+		for(Integer n:SDG) 
+			list.add(LongValue.of(n));
+		return list;
+	}
+	public List<Integer> getSDGint() { return SDG; }
 	public void setSDG(List<Integer> SDG) { this.SDG = SDG; }
 	
 	private static int zeroifnull(Integer n) {
