@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { RequestEventCreation } from "../../utils/types";
 import { createEvent } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
+import { usePlacesAutocomplete } from "../../api/places";
 
 function EventForm() {
   //========== Hook ==========
@@ -163,6 +164,47 @@ function EventForm() {
     }
   };
 
+  const mapsApiKey = import.meta.env.VITE_API_KEY;
+
+  const {
+    inputValue: locationInputValue,
+    predictions: locationPredictions,
+    loading: locationLoading,
+    handleInputChange: handleLocationInputChange,
+    handleSelect: handleLocationSelect,
+  } = usePlacesAutocomplete({
+    apiKey: mapsApiKey,
+    value: formData.input.location,
+    onChange: (value) => {
+      setFormData((prev) => ({
+        ...prev,
+        input: {
+          ...prev.input,
+          location: value,
+        },
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        location: "",
+      }));
+    },
+    onSelect: (prediction) => {
+      setFormData((prev) => ({
+        ...prev,
+        input: {
+          ...prev.input,
+          location: prediction.description,
+        },
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        location: "",
+      }));
+    },
+  });
+
   return (
     <>
       <form onSubmit={handleSubmit}>
@@ -196,17 +238,46 @@ function EventForm() {
         </div>
         <div className="mb-3">
           <label className="form-label">Location:</label>
-          <input
-            type="text"
-            name="location"
-            className={`form-control  ${errors.location ? "is-invalid" : ""}`}
-            value={formData.input.location}
-            onChange={handleChange}
-            placeholder="Enter the event location..."
-          />
-          {errors.location && (
-            <div className="invalid-feedback">{errors.location}</div>
-          )}
+
+          <div className="position-relative">
+            <input
+              type="text"
+              name="location"
+              className={`form-control ${errors.location ? "is-invalid" : ""}`}
+              value={locationInputValue}
+              onChange={handleLocationInputChange}
+              placeholder="Enter the event location..."
+              autoComplete="off"
+            />
+
+            {locationLoading && <div className="form-text mt-1">Searching...</div>}
+
+            {errors.location && (
+              <div className="invalid-feedback d-block">{errors.location}</div>
+            )}
+
+            {locationPredictions.length > 0 && (
+              <ul
+                className="list-group position-absolute w-100 mt-1 shadow-sm"
+                style={{ zIndex: 1050 }}
+              >
+                {locationPredictions.map((prediction) => (
+                  <li
+                    key={prediction.placeId}
+                    className="list-group-item list-group-item-action"
+                  >
+                    <button
+                      type="button"
+                      className="btn p-0 text-start w-100"
+                      onClick={() => handleLocationSelect(prediction)}
+                    >
+                      {prediction.description}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
         <div className="mb-3">
           <label className="form-label">Category:</label>
