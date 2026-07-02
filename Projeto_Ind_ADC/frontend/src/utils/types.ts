@@ -224,9 +224,9 @@ export type RequestListMessages = {
 }
 
 export type ListMessagesResponse = {
-  posts: Post[],
+  data:{posts: Post[],
   count: number,
-  nextCursor?: string,
+  nextCursor?: string,},
 }
 
 export type Post = {
@@ -250,6 +250,7 @@ export type MessageDeleteResponse = {
 export type MessageProps = {
   text: string,
   parentText?: string,
+  parentPostId?: string,
 }
 
 export type ChatProps = {

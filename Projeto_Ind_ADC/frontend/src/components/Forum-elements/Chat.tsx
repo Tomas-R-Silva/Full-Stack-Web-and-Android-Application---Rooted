@@ -44,19 +44,19 @@ function Chat({ event }: EventProps) {
           jwt: token,
         },
         eventId: eventId,
-        pageSize: 10,
+        pageSize: 50,
         cursor: "",
       });
 
       console.log(res);
 
       if (cursor) {
-        setMessages((prev) => [...prev, ...res.posts]); //carregar mais => anteriores mais todos os restantes
+        setMessages((prev) => [...prev, ...res.data.posts]); //carregar mais => anteriores mais todos os restantes
       } else {
-        setMessages(res.posts);
+        setMessages(res.data.posts);
       }
 
-      setNextCursor(res.nextCursor);
+      setNextCursor(res.data.nextCursor);
     } catch (err) {
       console.error(err);
       setError("Could not load the events.");
@@ -73,18 +73,35 @@ function Chat({ event }: EventProps) {
   return (
     <>
       <div className="container">
-        {isAuthenticated && username && (
-          <MessageRight
-            text="Tens de apanhar o 706 até Santa Apolónia e depois sobes a rua."
-            parentText="Sabes que autocarro tenho de apanhar?"
-          />
-        )}
-        {isAuthenticated && (
-          <MessageLeft
-            text="Tens de apanhar o 706 até Santa Apolónia e depois sobes a rua."
-            parentText="Sabes que autocarro tenho de apanhar?"
-          />
-        )}
+        {messages.map((msg, i) => {
+          if (isAuthenticated && username === msg.authorUsername) {
+            return (
+              <MessageRight
+                key={i}
+                text={msg.text}
+                parentText=""
+                parentPostId={
+                  msg.parentPostId
+                    ? "Sabes que autocarro tenho de apanhar?"
+                    : undefined
+                }
+              />
+            );
+          }
+
+          return (
+            <MessageLeft
+              key={i}
+              text={msg.text}
+              parentText=""
+              parentPostId={
+                msg.parentPostId
+                  ? "Sabes que autocarro tenho de apanhar?"
+                  : undefined
+              }
+            />
+          );
+        })}
       </div>
     </>
   );
