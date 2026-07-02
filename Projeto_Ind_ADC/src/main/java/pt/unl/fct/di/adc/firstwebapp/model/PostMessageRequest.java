@@ -39,7 +39,11 @@ public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageReq
 
 	}
 
-
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<PostMessageinput> Getinputclass() {
+		return PostMessageinput.class;
+	}
 
 
 }

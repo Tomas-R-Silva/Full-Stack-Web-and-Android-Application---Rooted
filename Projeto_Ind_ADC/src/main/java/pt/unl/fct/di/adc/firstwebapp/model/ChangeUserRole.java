@@ -34,4 +34,9 @@ public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.Cha
         return map;
         }
     }
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<ChangeUserRoleInput> Getinputclass() {
+		return ChangeUserRoleInput.class;
+	}
 }

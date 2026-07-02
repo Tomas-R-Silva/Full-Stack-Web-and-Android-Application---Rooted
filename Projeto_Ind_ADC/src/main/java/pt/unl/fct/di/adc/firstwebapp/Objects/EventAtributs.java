@@ -79,4 +79,9 @@ public class EventAtributs implements ModelInterface{
 			   	"coverImageUrl","https://...",
 			   	"isPublic", true );
 	}
+
+	@Override
+	public <E extends ModelInterface> Class<E> Getinputclass() {
+		return null;
+	}
 }

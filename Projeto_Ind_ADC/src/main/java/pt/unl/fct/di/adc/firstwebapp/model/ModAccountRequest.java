@@ -54,7 +54,16 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
         return Map.of("phone",ModelInterface.defaultstr
         		,"address",ModelInterface.defaultstr);
         }
-        
-        
+
+		@Override
+		public <E extends ModelInterface> Class<E> Getinputclass() {
+			return null;
+		}        
     }
+    
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<Attributes> Getinputclass() {
+		return Attributes.class;
+	}
 }

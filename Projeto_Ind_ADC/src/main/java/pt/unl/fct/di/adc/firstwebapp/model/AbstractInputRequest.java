@@ -21,12 +21,11 @@ public abstract class AbstractInputRequest<E extends ModelInterface> implements 
 		this.input = input;
 	}
 	
-	@SuppressWarnings({ "null", "deprecation" })
+	@SuppressWarnings("deprecation")
 	@Override
 	public Map<String, Object> getformat() {
-		Class<E> e = null;
 		try {
-			return Map.of("input",e.newInstance().getformat());
+			return Map.of("input",Getinputclass().newInstance().getformat());
 		} catch (InstantiationException | IllegalAccessException e1) {
 			return Map.of();
 		}

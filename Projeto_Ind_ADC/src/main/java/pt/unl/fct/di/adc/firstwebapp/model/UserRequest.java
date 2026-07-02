@@ -16,4 +16,10 @@ public class UserRequest extends AbstractInputRequest<User>implements ModelInter
 	 */
 	
 	public UserRequest() {}	
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<User> Getinputclass() {
+		return User.class;
+	}
 }

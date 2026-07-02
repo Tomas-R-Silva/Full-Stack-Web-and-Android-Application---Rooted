@@ -17,4 +17,9 @@ public class EventInput implements EventInputInterface, ModelInterface{
 		return Map.of("eventId",ModelInterface.defaultstr);
 	}
 
+	@Override
+	public <E extends ModelInterface> Class<E> Getinputclass() {
+		return null;
+	}
+
 }

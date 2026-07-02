@@ -8,6 +8,8 @@ public interface ModelInterface {
 
 	public Map<String,Object> getformat();
 
+	public <E extends ModelInterface> Class<E> Getinputclass();
+	
 	public static final String defaultstr="\"...\"";
 	public static final int defaultint=0;
 	public static final boolean defaultbool=false;

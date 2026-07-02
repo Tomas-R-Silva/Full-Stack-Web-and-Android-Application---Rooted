@@ -28,4 +28,9 @@ public class TokenRequest implements ModelInterface, TokenRequestInterface{
 		return Map.of("token","\"<jwt>\"");
 	}
 
+	@Override
+	public <E extends ModelInterface> Class<E> Getinputclass() {
+		return null;
+	}
+
 }

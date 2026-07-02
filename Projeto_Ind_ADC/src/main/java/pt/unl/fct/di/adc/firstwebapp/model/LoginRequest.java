@@ -37,4 +37,10 @@ public class LoginRequest extends AbstractTokenInputRequest<LoginRequest.LoginRe
         }
 
     }
+    
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<LoginRequestInput> Getinputclass() {
+		return LoginRequestInput.class;
+	}
 }

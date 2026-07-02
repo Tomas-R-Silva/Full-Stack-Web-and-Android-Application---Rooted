@@ -27,4 +27,9 @@ public class ShortUser implements ModelInterface{
 		return Map.of("username",ModelInterface.defaultstr);
 	}
 
+	@Override
+	public <E extends ModelInterface> Class<E> Getinputclass() {
+		return null;
+	}
+
 }

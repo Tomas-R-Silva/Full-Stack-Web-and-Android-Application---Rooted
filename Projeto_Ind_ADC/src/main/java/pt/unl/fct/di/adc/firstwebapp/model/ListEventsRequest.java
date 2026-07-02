@@ -53,6 +53,17 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 					"pageSize", 20, 
 					"cursor", ModelInterface.defaultstr);
 		}
+
+		@Override
+		public <E extends ModelInterface> Class<E> Getinputclass() {
+			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<ListEventsInput> Getinputclass() {
+		return ListEventsInput.class;
 	}
     
 }
