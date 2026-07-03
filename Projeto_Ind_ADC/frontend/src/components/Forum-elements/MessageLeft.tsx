@@ -1,14 +1,32 @@
 import type { MessageProps } from "../../utils/types";
+import replyAll from "../../assets/icons/reply_all.svg";
 
 function MessageLeft(texts: MessageProps) {
+  const handleTime = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
+    return `${day}/${month} ${hours}:${minutes}`;
+  };
+
+  const handleSetParent = (parentText: string | undefined) => {
+    if (parentText) texts.setParentText(parentText);
+    if (texts.postId) texts.setParentId(texts.postId);
+  };
+
   return (
     <>
       <div className="d-flex justify-content-start text-start mt-2">
-        {texts.parentPostId && (
+        {texts.parentText && (
           <div
             className="rounded-3 p-3"
             style={{
-              maxWidth: "15%",
+              maxWidth: "25%",
               width: "fit-content",
               background: "var(--color-green2)",
               color: "var(--color-white)",
@@ -16,7 +34,6 @@ function MessageLeft(texts: MessageProps) {
             }}
           >
             <p className="mb-1">{texts.parentText}</p>
-            <small>João • 14:25</small>
           </div>
         )}
       </div>
@@ -26,12 +43,26 @@ function MessageLeft(texts: MessageProps) {
           style={{
             maxWidth: "75%",
             width: "fit-content",
-            background: "var(--color-white)",
-            color: "var(--color-green2)",
+            background:
+              texts.eventOrganizer === texts.authorUsername
+                ? "var(--color-gold)"
+                : "var(--color-white)",
+            color:
+              texts.eventOrganizer === texts.authorUsername
+                ? "var(--color-white)"
+                : "var(--color-green2)",
           }}
         >
           <p className="mb-1">{texts.text}</p>
-          <small>João • 14:25</small>
+          <small>
+            {texts.authorUsername} • {handleTime(texts.createdAt)}
+          </small>
+          <img
+            className=""
+            src={replyAll}
+            onClick={() => handleSetParent(texts.text)}
+            style={{ cursor: "pointer" }}
+          />
         </div>
       </div>
     </>

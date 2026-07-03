@@ -39,7 +39,7 @@ function EventsPage() {
 
           {isAuthenticated && (
             <button
-              className="btn"
+              className="btn fw-bold"
               style={{
                 background: "var(--color-white)",
                 color: "var(--color-green)",

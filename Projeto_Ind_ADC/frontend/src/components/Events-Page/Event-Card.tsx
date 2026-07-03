@@ -1,5 +1,6 @@
 import type { EventProps } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
+import placeholder from "../../assets/images/placeholder.png";
 
 function EventCard({ event }: EventProps) {
   const startDate = new Date(event.startDate * 1000);
@@ -19,7 +20,7 @@ function EventCard({ event }: EventProps) {
     <div className="col">
       <div className="card h-100 shadow-sm">
         <img
-          src={event.coverImageUrl || "/placeholder-event.jpg"}
+          src={event.imageUrls[0] || placeholder}
           className="card-img-top"
           alt={event.title}
           style={{
@@ -55,12 +56,14 @@ function EventCard({ event }: EventProps) {
 
           <div className="mt-auto">
             <p className="mb-1">
-              <strong style={{ color: "var(--color-green)" }}>Data:</strong>{" "}
+              <strong style={{ color: "var(--color-green)" }}>Date:</strong>{" "}
               {formattedDate}
             </p>
 
             <p className="mb-1">
-              <strong style={{ color: "var(--color-green)" }}>Vagas:</strong>{" "}
+              <strong style={{ color: "var(--color-green)" }}>
+                Vacancies:
+              </strong>{" "}
               {event.attendeeCount}/{event.maxAttendees}
             </p>
 
@@ -87,7 +90,7 @@ function EventCard({ event }: EventProps) {
                 color: "var(--color-white)",
               }}
             >
-              Ver evento
+              Check Event
             </a>
           </div>
         </div>

@@ -2,7 +2,7 @@ import type { EventProps } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useAuth } from "../AuthContext";
 import editSquare from "../../assets/icons/edit_square.svg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EventUpdater from "./Event-Updater";
 import type { RequestEventUpdate } from "../../utils/types";
 import type {
@@ -13,7 +13,8 @@ import type {
   RequestEventUnattend,
   EventUnattendResponse,
 } from "../../utils/types";
-import { attendEvent, unattendEvent } from "../../api/auth";
+import type { RequestIsAttendee, IsAttendeeResponse } from "../../utils/types";
+import { attendEvent, unattendEvent, isAttendee } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 
 function Ticket({ event }: EventProps) {
@@ -23,6 +24,7 @@ function Ticket({ event }: EventProps) {
   const [showModal, setShowModal] = useState(false);
   type UpdateField = keyof RequestEventUpdate["input"];
   const [field, setField] = useState<UpdateField>("title");
+  const [IsAttendee, setIsAttendee] = useState(false);
 
   const navigate = useNavigate();
 
@@ -106,6 +108,37 @@ function Ticket({ event }: EventProps) {
     }
   };
 
+  const handleIsAttendee = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token || !username) {
+        console.log("User is not authenticated");
+        return;
+      }
+      const payload: RequestIsAttendee = {
+        token: {
+          jwt: token,
+        },
+        input: {
+          username: username,
+          eventId: event.eventId,
+        },
+      };
+      console.log(payload);
+      const response = await isAttendee(payload);
+      setIsAttendee(response.data.eventId);
+      console.log(response);
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      handleIsAttendee();
+    }
+  }, [event.eventId, isAuthenticated]);
+
   return (
     <>
       <div
@@ -145,7 +178,7 @@ function Ticket({ event }: EventProps) {
               </p>
               <div className="mt-auto">
                 <p className="mb-1">
-                  <strong style={{ color: "var(--color-green)" }}>Data:</strong>{" "}
+                  <strong style={{ color: "var(--color-green)" }}>Date:</strong>{" "}
                   {formattedDate}{" "}
                   {isAuthenticated && event.organizerUsername === username && (
                     <img
@@ -157,13 +190,13 @@ function Ticket({ event }: EventProps) {
                 </p>
 
                 <p className="mb-1">
-                  <strong style={{ color: "var(--color-green)" }}>Hora:</strong>{" "}
+                  <strong style={{ color: "var(--color-green)" }}>Time:</strong>{" "}
                   {formattedTime}
                 </p>
 
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>
-                    Duração:
+                    Duration:
                   </strong>{" "}
                   {event.durationMinutes} min{" "}
                   {isAuthenticated && event.organizerUsername === username && (
@@ -177,7 +210,7 @@ function Ticket({ event }: EventProps) {
 
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>
-                    Vagas:
+                    Vacancies:
                   </strong>{" "}
                   {event.attendeeCount}{" "}
                   {isAuthenticated && event.organizerUsername === username && (
@@ -240,26 +273,30 @@ function Ticket({ event }: EventProps) {
               </p>
               {isAuthenticated && (
                 <p className="mb-1">
-                  <button
-                    className="btn rounded-pill mt-2"
-                    style={{
-                      background: "var(--color-green)",
-                      color: "var(--color-white)",
-                    }}
-                    onClick={handleAttend}
-                  >
-                    Attend
-                  </button>
-                  <button
-                    className="btn rounded-pill mt-2 ms-3"
-                    style={{
-                      background: "var(--color-green)",
-                      color: "var(--color-white)",
-                    }}
-                    onClick={handleUnattend}
-                  >
-                    Unattend
-                  </button>
+                  {!IsAttendee && (
+                    <button
+                      className="btn rounded-pill mt-2"
+                      style={{
+                        background: "var(--color-green)",
+                        color: "var(--color-white)",
+                      }}
+                      onClick={handleAttend}
+                    >
+                      Attend
+                    </button>
+                  )}
+                  {IsAttendee && (
+                    <button
+                      className="btn rounded-pill mt-2 ms-3"
+                      style={{
+                        background: "var(--color-green)",
+                        color: "var(--color-white)",
+                      }}
+                      onClick={handleUnattend}
+                    >
+                      Unattend
+                    </button>
+                  )}
                 </p>
               )}
             </div>

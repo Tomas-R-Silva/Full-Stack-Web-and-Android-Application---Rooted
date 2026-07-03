@@ -41,7 +41,7 @@ function NavBar() {
             style={{ color: "var(--color-bege)" }}
             href="/maps"
           >
-            Maps
+            Map
           </a>
 
           <a
@@ -50,14 +50,6 @@ function NavBar() {
             href="/faq"
           >
             FAQ
-          </a>
-
-          <a
-            className="navbar-brand fw-bold m-0"
-            style={{ color: "var(--color-bege)" }}
-            href="/aboutus"
-          >
-            About Us
           </a>
         </div>
 

@@ -82,7 +82,7 @@ function EventForm() {
   };
 
   const dateToLong = (dateString: string): number => {
-    const [year, month, day] = dateString.split("-").map(Number);
+    const [day, month, year] = dateString.split("-").map(Number);
 
     return new Date(year, month - 1, day).getTime();
   };
@@ -250,7 +250,9 @@ function EventForm() {
               autoComplete="off"
             />
 
-            {locationLoading && <div className="form-text mt-1">Searching...</div>}
+            {locationLoading && (
+              <div className="form-text mt-1">Searching...</div>
+            )}
 
             {errors.location && (
               <div className="invalid-feedback d-block">{errors.location}</div>

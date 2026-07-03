@@ -52,6 +52,12 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
   //========== Receber Input e Limpar erros ==========
   const navigate = useNavigate();
 
+  const dateToLong = (dateString: string): number => {
+    const [day, month, year] = dateString.split("-").map(Number);
+
+    return new Date(year, month - 1, day).getTime();
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
