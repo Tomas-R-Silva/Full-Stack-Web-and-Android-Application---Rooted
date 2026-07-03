@@ -72,7 +72,6 @@
   The real result is inside the JSON body, wrapped as <code>{ "status": ..., "data": ... }</code>:
   <pre style="margin-top:8px;"><span class="comment">// success</span>           { <span class="key-str">"status"</span>: <span class="val-num">200</span>,  <span class="key-str">"data"</span>: { ... } }
 <span class="comment">// validation error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9906</span>, <span class="key-str">"data"</span>: [ { <span class="key-str">"status"</span>: <span class="val-num">9930</span>, <span class="key-str">"data"</span>: <span class="val-str">"INVALID_MESSAGE_TEXT"</span> } ] }
-<span class="comment">// json format error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9929</span>, <span class="key-str">"data"</span>: "{ <span class="key-str">"token"</span>: { <span class="key-str">"tokenId"</span>: <span class="val-str">"&ltjwt&gt"</span> } }"}
 <span class="comment">// generic error</span>     { <span class="key-str">"status"</span>: <span class="val-num">9907</span>, <span class="key-str">"data"</span>: <span class="val-str">"FORBIDDEN"</span> }</pre>
   Always check the <code>status</code> field — <code>200</code> = ok, any <code>99xx</code> = error.
   In the examples below, the <span style="color:#2e7d32;font-weight:600;">Response</span> shows only the
@@ -184,10 +183,7 @@
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
     <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
-    <span class="key-str">"attributes"</span>: {
-      <span class="key-str">"address"</span>: <span class="val-str">"Porto"</span>,
-      <span class="key-str">"phone"</span>:   <span class="val-str">"987654321"</span>
-    }
+    <span class="key-str">"email"</span>:   <span class="val-str">"alice@mail.com"</span>
   }
 }</pre>
   <div class="label out">Response</div>

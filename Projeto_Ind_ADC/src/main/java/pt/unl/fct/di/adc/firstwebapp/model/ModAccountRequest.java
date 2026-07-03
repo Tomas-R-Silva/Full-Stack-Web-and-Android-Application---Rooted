@@ -7,39 +7,16 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
     public ModAccountRequest() {}
 
     public static class ModAccountRequestInput extends ShortUser{
-        private Attributes attributes;
+        private String email;
 
-        public ModAccountRequestInput() {}
 
-        public Attributes getAttributes() {
-            return attributes;
+        public String getEmail() {
+            return email;
         }
 
-        public void setAttributes(Attributes attributes) {
-            this.attributes = attributes;
-        }
+        public void setEmail(String email) {
+            this.email = email;
+        }  
     }
 
-    public static class Attributes{
-        private String phone;
-        private String address;
-
-        public Attributes() {}
-
-        public String getPhone() {
-            return phone;
-        }
-
-        public void setPhone(String phone) {
-            this.phone = phone;
-        }
-
-        public String getAddress() {
-            return address;
-        }
-
-        public void setAddress(String address) {
-            this.address = address;
-        }    
-    }
 }

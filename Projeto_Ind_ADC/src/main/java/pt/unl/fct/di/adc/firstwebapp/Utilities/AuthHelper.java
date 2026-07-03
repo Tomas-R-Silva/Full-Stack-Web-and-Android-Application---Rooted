@@ -24,12 +24,12 @@ public class AuthHelper {
 	private AuthHelper() {}
 
 	public static <E> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
-		try {
-			return clas.cast(obj);
-		}catch (Exception e) {
+		if(!clas.isInstance(obj))
 			ErrorException.trow(9929);
-			return null;
-		}
+
+		return clas.cast(obj);
+
+
 	}
 
 	public static Token verifyToken(TokenRequestInterface token) throws ErrorException {

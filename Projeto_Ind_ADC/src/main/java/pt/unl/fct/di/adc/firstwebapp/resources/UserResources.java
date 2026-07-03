@@ -12,6 +12,7 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
@@ -40,7 +41,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
+import com.google.cloud.datastore.StringValue;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
@@ -121,11 +122,14 @@ public class UserResources {
 			String jti = decoded.getId();
 			long issuedAt = decoded.getIssuedAt().getTime() / 1000L;
 			long expiresAt = decoded.getExpiresAt().getTime() / 1000L;
-
+			List<StringValue> list = new ArrayList<>(1);
+			list.add(StringValue.of(userName));
 			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jti);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
 					.set("jti", jti)
 					.set("user_name", userName)
+					.set("user_display", userName)
+					.set("old_display", list)
 					.set("role", role.name())
 					.set("issued_at", issuedAt)
 					.set("expires_at", expiresAt)
@@ -135,6 +139,7 @@ public class UserResources {
 			return buildresponse(Map.of("token", Map.of(
 					"jwt", jwtString,
 					"username", userName,
+					"display", userName,
 					"email", user.contains("user_email") ? user.getString("user_email") : "",
 							"role", role.toString(),
 							"issuedAt", issuedAt,
@@ -152,7 +157,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showUsers(Object obj) {
 		try {
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			TokenRequest request=AuthHelper.verifyInput(obj,TokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 
 			Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
@@ -176,7 +181,7 @@ public class UserResources {
 			return Error.fromexception(e);
 		}
 	}
-
+	
 	@POST
 	@Path("/deleteaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -204,24 +209,61 @@ public class UserResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response modifyAccount(Object obj) {
-		try {//TODO
+		try {
 			ModAccountRequest request=AuthHelper.verifyInput(obj,ModAccountRequest.class);
 			ModAccountRequestInput input = request.getInput();
-			Attributes attributes = request.getInput().getAttributes();
-			Entity user = AuthHelper.getUser(input);
 			Token token = AuthHelper.verifyToken(request);
-
-			if (!token.getUsername().equals(user.getString("user_name"))) 
-				Validator.unauthorized(token, new Role[]{Role.BOFFICER,Role.ADMIN});
-			/*
-			Entity updatedUser = Entity.newBuilder(user)
-					.set("user_address", attributes.getAddress())
-					.set("user_phone", attributes.getPhone())
-					.build();
-			 datastore.put(updatedUser);
-			 */
+			Entity user = AuthHelper.getUser(token);
+			Builder updatedUser = Entity.newBuilder(user);
+			if(input.getUsername()!=null&&!user.getString("user_display").equals(input.getUsername())) {
+				updatedUser.set("user_display", input.getUsername());
+				List<StringValue> list = user.getList("old_display");
+				StringValue news=StringValue.of(input.getUsername());
+				if(!list.contains(news)) {
+					list.add(news);
+					updatedUser.set("old_display", list);
+				}
+			}
+			if(input.getEmail()!=null&&!user.getString("user_email").equals(input.getEmail()))
+				updatedUser.set("user_email", input.getEmail());	
+			 datastore.put(updatedUser.build());
+			 
 
 			return buildresponse(Map.of("message", "Updated successfully"));
+		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/user")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAccount(Object obj) {
+		try {
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = AuthHelper.getUser(request.getInput());
+			//TODO
+			
+			return null;
+		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+	
+	@POST
+	@Path("/find")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response findAccount(Object obj) {
+		try {
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = AuthHelper.getUser(request.getInput());
+			//TODO
+			
+			return null;
 		}catch(Exception e) {
 			return Error.fromexception(e);
 		}
