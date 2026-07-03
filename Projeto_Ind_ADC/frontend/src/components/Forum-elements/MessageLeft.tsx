@@ -1,4 +1,5 @@
 import type { MessageProps } from "../../utils/types";
+import replyAll from "../../assets/icons/reply_all.svg";
 
 function MessageLeft(texts: MessageProps) {
   const handleTime = (timestamp: number): string => {
@@ -8,6 +9,11 @@ function MessageLeft(texts: MessageProps) {
     const minutes = date.getMinutes().toString().padStart(2, "0");
 
     return `${hours}:${minutes}`;
+  };
+
+  const handleSetParent = (parentText: string | undefined) => {
+    if (parentText) texts.setParentText(parentText);
+    if (texts.postId) texts.setParentId(texts.postId);
   };
 
   return (
@@ -42,6 +48,12 @@ function MessageLeft(texts: MessageProps) {
           <small>
             {texts.authorUsername} • {handleTime(texts.createdAt)}
           </small>
+          <img
+            className=""
+            src={replyAll}
+            onClick={() => handleSetParent(texts.text)}
+            style={{ cursor: "pointer" }}
+          />
         </div>
       </div>
     </>

@@ -274,8 +274,11 @@ export type MessageDeleteResponse = {
 export type MessageProps = {
   text: string,
   parentText?: string,
+  postId?: string,
   authorUsername: string,
   createdAt: number,
+  setParentId: React.Dispatch<React.SetStateAction<string>>;
+  setParentText: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export type ChatProps = {
