@@ -27,6 +27,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
@@ -45,6 +46,7 @@ import com.google.cloud.datastore.StringValue;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.TwoNameTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
 
 
@@ -75,12 +77,17 @@ public class UserResources {
 			Entity existingUser = txn.get(userKey);
 
 			if (existingUser != null) ErrorException.trow(9901);
+
+			List<StringValue> list = new ArrayList<>(1);
+			list.add(StringValue.of(user.getUsername()));
 			user.userValidation();
 			Entity newUser = Entity.newBuilder(userKey)
 					.set("user_name", user.getUsername())
 					.set("user_email", user.getEmail())
 					.set("user_pwd", DigestUtils.sha512Hex(user.getPassword()))
 					.set("user_role", user.getRole().name())
+					.set("user_display", user.getUsername())
+					.set("old_display", list)
 					.set("user_creation_time", Timestamp.now())
 					.build();
 
@@ -122,19 +129,14 @@ public class UserResources {
 			String jti = decoded.getId();
 			long issuedAt = decoded.getIssuedAt().getTime() / 1000L;
 			long expiresAt = decoded.getExpiresAt().getTime() / 1000L;
-			List<StringValue> list = new ArrayList<>(1);
-			list.add(StringValue.of(userName));
 			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jti);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
 					.set("jti", jti)
 					.set("user_name", userName)
-					.set("user_display", userName)
-					.set("old_display", list)
 					.set("role", role.name())
 					.set("issued_at", issuedAt)
 					.set("expires_at", expiresAt)
 					.build();
-
 			datastore.put(sessionEntity);
 			return buildresponse(Map.of("token", Map.of(
 					"jwt", jwtString,
@@ -181,7 +183,7 @@ public class UserResources {
 			return Error.fromexception(e);
 		}
 	}
-	
+
 	@POST
 	@Path("/deleteaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -226,8 +228,8 @@ public class UserResources {
 			}
 			if(input.getEmail()!=null&&!user.getString("user_email").equals(input.getEmail()))
 				updatedUser.set("user_email", input.getEmail());	
-			 datastore.put(updatedUser.build());
-			 
+			datastore.put(updatedUser.build());
+
 
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {
@@ -244,14 +246,38 @@ public class UserResources {
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
-			//TODO
-			
-			return null;
+			Entity friend=datastore.get(getFriendKey(token,user));
+			Friendstatus friendshipstatus=Friendstatus.NOT_FRIENDS;
+			if(friend!=null) {
+				if(friend.getBoolean("accepted"))
+					friendshipstatus=Friendstatus.FRIENDS;
+				else if(friend.getString("username_1").equals(token.getUsername()))
+					friendshipstatus=Friendstatus.REQUEST_SENT;
+				else
+					friendshipstatus=Friendstatus.REQUEST_RECIVED;
+			}
+			String displayname=user.getString("user_display");
+			if(friendshipstatus==Friendstatus.FRIENDS) {
+				String temp=friend.getString((friend.getString("username_1").equals(token.getUsername()))?"nickname_1":"nickname_2");
+				if(temp!=null)
+					displayname=temp;
+			}
+			List<StringValue> list = user.getList("old_display");
+			List<String> newlist=new ArrayList<>(list.size());
+			for(StringValue v:list) newlist.add(v.get());
+			return buildresponse(
+					Map.of("username", user.getString("user_name"),
+							"email", user.getString("user_email"),
+							"role", user.getString("user_role"),
+							"creation_time",user.getLong("user_creation_time"),
+							"display",displayname,
+							"oldnames",newlist
+							));
 		}catch(Exception e) {
 			return Error.fromexception(e);
 		}
 	}
-	
+
 	@POST
 	@Path("/find")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -262,7 +288,7 @@ public class UserResources {
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			//TODO
-			
+
 			return null;
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -447,6 +473,27 @@ public class UserResources {
 			return Error.fromexception(e);
 		}
 	}
+
+	@POST
+	@Path("/addnickname")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addnickname(Object obj) throws ErrorException{
+		try{
+			TwoNameTokenRequest request=AuthHelper.verifyInput(obj,TwoNameTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = AuthHelper.getUser(request.getInput());
+			Entity existingfriend = datastore.get(getFriendKey(token,user));
+			if(existingfriend == null || !existingfriend.getBoolean("accepted"))
+				ErrorException.trow(9934);
+			String friend=existingfriend.getString("username_1").equals(token.getUsername())?"nickname_1":"nickname_2";
+			datastore.put(Entity.newBuilder(existingfriend).set(friend,request.getInput().getNewName()).build());
+			return buildresponse(Map.of("message", "Friend Nickname Set"));
+		} catch (Exception e){
+			return Error.fromexception(e);
+		}
+	}
+
 
 	@POST
 	@Path("/unfriend")

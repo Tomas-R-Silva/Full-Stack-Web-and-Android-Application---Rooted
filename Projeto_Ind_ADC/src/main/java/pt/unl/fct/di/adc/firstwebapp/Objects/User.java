@@ -31,6 +31,16 @@ public class User extends ShortUser{
 			try{return Role.valueOf(v);}catch (Exception e) {return null;}
 		}
 	}
+	
+	public enum Friendstatus {
+		NOT_FRIENDS,
+		FRIENDS,
+		REQUEST_SENT,
+		REQUEST_RECIVED;
+		public static Friendstatus valueof(String v) {
+			try{return Friendstatus.valueOf(v);}catch (Exception e) {return null;}
+		}
+	}
 
 	private String password;
 	private String confirmation;
