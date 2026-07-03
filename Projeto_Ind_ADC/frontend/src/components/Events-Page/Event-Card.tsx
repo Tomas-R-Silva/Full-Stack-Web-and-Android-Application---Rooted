@@ -56,12 +56,14 @@ function EventCard({ event }: EventProps) {
 
           <div className="mt-auto">
             <p className="mb-1">
-              <strong style={{ color: "var(--color-green)" }}>Data:</strong>{" "}
+              <strong style={{ color: "var(--color-green)" }}>Date:</strong>{" "}
               {formattedDate}
             </p>
 
             <p className="mb-1">
-              <strong style={{ color: "var(--color-green)" }}>Vagas:</strong>{" "}
+              <strong style={{ color: "var(--color-green)" }}>
+                Vacancies:
+              </strong>{" "}
               {event.attendeeCount}/{event.maxAttendees}
             </p>
 
@@ -88,7 +90,7 @@ function EventCard({ event }: EventProps) {
                 color: "var(--color-white)",
               }}
             >
-              Ver evento
+              Check Event
             </a>
           </div>
         </div>

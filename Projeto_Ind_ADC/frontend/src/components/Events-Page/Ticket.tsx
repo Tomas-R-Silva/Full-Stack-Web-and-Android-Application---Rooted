@@ -178,7 +178,7 @@ function Ticket({ event }: EventProps) {
               </p>
               <div className="mt-auto">
                 <p className="mb-1">
-                  <strong style={{ color: "var(--color-green)" }}>Data:</strong>{" "}
+                  <strong style={{ color: "var(--color-green)" }}>Date:</strong>{" "}
                   {formattedDate}{" "}
                   {isAuthenticated && event.organizerUsername === username && (
                     <img
@@ -190,13 +190,13 @@ function Ticket({ event }: EventProps) {
                 </p>
 
                 <p className="mb-1">
-                  <strong style={{ color: "var(--color-green)" }}>Hora:</strong>{" "}
+                  <strong style={{ color: "var(--color-green)" }}>Time:</strong>{" "}
                   {formattedTime}
                 </p>
 
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>
-                    Duração:
+                    Duration:
                   </strong>{" "}
                   {event.durationMinutes} min{" "}
                   {isAuthenticated && event.organizerUsername === username && (
@@ -210,7 +210,7 @@ function Ticket({ event }: EventProps) {
 
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>
-                    Vagas:
+                    Vacancies:
                   </strong>{" "}
                   {event.attendeeCount}{" "}
                   {isAuthenticated && event.organizerUsername === username && (

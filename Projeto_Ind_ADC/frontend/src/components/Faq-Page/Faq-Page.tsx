@@ -12,7 +12,7 @@ function FaqPage() {
     {
       question: "Q: What is ROOTED?",
       answer:
-        "A: This service helps users find clear answers to common questions quickly and easily.",
+        "A: It is an app where you can find community activities related to SDG (Sustainable Development Goals).",
     },
     {
       question: "Q: How do I create an account?",
@@ -22,17 +22,16 @@ function FaqPage() {
     {
       question: "Q: Can I change my password?",
       answer:
-        "A: Yes. Go to your account settings and choose the option to change your password.",
+        "A: Yes. Go to your profile page -> Personal information -> and change your password.",
     },
     {
       question: "Q: How can I create an event?",
       answer:
-        "A: We take data protection seriously and use standard security practices to help keep your information safe.",
+        "A: You need to be logged in and go to the events tab, on the top right side you can see a button called Create Event .",
     },
     {
       question: "Q: How much ODS must be associated with an event?",
-      answer:
-        "A: You can contact support through the contact form or by sending us an email.",
+      answer: "A: At least one.",
     },
   ];
 
@@ -69,9 +68,14 @@ function FaqPage() {
               margin: "0 auto",
             }}
           >
-            <h1 className="mb-3">Frequently Asked Questions</h1>
+            <h1 className="mb-3" style={{ color: "var(--color-green)" }}>
+              Frequently Asked Questions
+            </h1>
 
-            <p className="faq-intro mb-5">
+            <p
+              className="faq-intro mb-5"
+              style={{ color: "var(--color-green)" }}
+            >
               Here you can find answers to the most common questions. Click on a
               question to reveal more information.
             </p>

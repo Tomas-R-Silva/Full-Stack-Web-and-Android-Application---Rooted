@@ -43,8 +43,14 @@ function MessageLeft(texts: MessageProps) {
           style={{
             maxWidth: "75%",
             width: "fit-content",
-            background: "var(--color-white)",
-            color: "var(--color-green2)",
+            background:
+              texts.eventOrganizer === texts.authorUsername
+                ? "var(--color-gold)"
+                : "var(--color-white)",
+            color:
+              texts.eventOrganizer === texts.authorUsername
+                ? "var(--color-white)"
+                : "var(--color-green2)",
           }}
         >
           <p className="mb-1">{texts.text}</p>

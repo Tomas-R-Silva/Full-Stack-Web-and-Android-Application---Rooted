@@ -122,10 +122,36 @@ function Chat({ event }: EventProps) {
   return (
     <>
       <div className="container">
-        {messages.map((msg, i) => {
-          if (isAuthenticated && username === msg.authorUsername) {
+        <div
+          className="container border rounded p-3"
+          style={{
+            maxHeight: "500px",
+            overflowY: "auto",
+          }}
+        >
+          {messages.map((msg) => {
+            if (isAuthenticated && username === msg.authorUsername) {
+              return (
+                <MessageRight
+                  key={msg.postId}
+                  text={msg.text}
+                  parentText={
+                    msg.parentPostId
+                      ? handleParentText(msg.parentPostId)
+                      : undefined
+                  }
+                  postId={msg.postId}
+                  authorUsername={msg.authorUsername}
+                  eventOrganizer={event.organizerUsername}
+                  createdAt={msg.createdAt}
+                  setParentId={setParentId}
+                  setParentText={setParentText}
+                />
+              );
+            }
+
             return (
-              <MessageRight
+              <MessageLeft
                 key={msg.postId}
                 text={msg.text}
                 parentText={
@@ -135,30 +161,14 @@ function Chat({ event }: EventProps) {
                 }
                 postId={msg.postId}
                 authorUsername={msg.authorUsername}
+                eventOrganizer={event.organizerUsername}
                 createdAt={msg.createdAt}
                 setParentId={setParentId}
                 setParentText={setParentText}
               />
             );
-          }
-
-          return (
-            <MessageLeft
-              key={msg.postId}
-              text={msg.text}
-              parentText={
-                msg.parentPostId
-                  ? handleParentText(msg.parentPostId)
-                  : undefined
-              }
-              postId={msg.postId}
-              authorUsername={msg.authorUsername}
-              createdAt={msg.createdAt}
-              setParentId={setParentId}
-              setParentText={setParentText}
-            />
-          );
-        })}
+          })}
+        </div>
         {parentText !== "" && (
           <div className="d-flex justify-content-end text-end mt-2">
             <div

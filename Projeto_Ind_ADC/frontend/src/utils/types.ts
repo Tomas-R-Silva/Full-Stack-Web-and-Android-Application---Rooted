@@ -276,6 +276,7 @@ export type MessageProps = {
   parentText?: string,
   postId?: string,
   authorUsername: string,
+  eventOrganizer: string,
   createdAt: number,
   setParentId: React.Dispatch<React.SetStateAction<string>>;
   setParentText: React.Dispatch<React.SetStateAction<string>>;
