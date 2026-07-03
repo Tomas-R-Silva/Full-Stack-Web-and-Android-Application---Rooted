@@ -77,6 +77,7 @@ export type RequestEventGetter = {
 }
 
 export type EventGetterResponse = {
+  status: number,
   data:{event: EventItem}
 }
 
@@ -90,6 +91,7 @@ export type RequestEventList = {
 };
 
 export type EventListResponse = {
+  status: number,
   data:{events: EventItem[];
   count: number;
   nextCursor?: string;
@@ -114,6 +116,7 @@ export type RequestEventUpdate = {
 }
 
 export type EventUpdateResponse = {
+  status: number,
   data:{message: string},
 }
 
@@ -123,6 +126,7 @@ export type RequestEventCancel = {
 }
 
 export type EventCancelResponse = {
+  status: number,
   data:{message: string},
 }
 
@@ -132,6 +136,7 @@ export type RequestEventDelete = {
 }
 
 export type EventDeleteResponse = {
+  status: number,
   data:{message: string},
 }
 
@@ -141,6 +146,7 @@ export type RequestEventAttend = {
 }
 
 export type EventAttendResponse = {
+  status: number,
   data:{message: string},
 }
 
@@ -150,6 +156,7 @@ export type RequestEventUnattend = {
 }
 
 export type EventUnattendResponse = {
+  status: number,
   data:{message: string},
 }
 
@@ -159,6 +166,7 @@ export type RequestEventAttendees = {
 }
 
 export type EventAttendeesResponse = {
+  status: number,
   data:{attendees: Attendee[],
         count: number},
 }
@@ -166,6 +174,20 @@ export type EventAttendeesResponse = {
 type Attendee = {
   username: string, 
   joinedAt: number,
+}
+
+export type RequestIsAttendee = {
+  token?: {jwt:string;}
+  input: {username:string,
+    eventId: string,
+  },
+}
+
+export type IsAttendeeResponse = {
+  status: number,
+  data:{
+    eventId: boolean,
+  }
 }
 
 export type RequestImageUpload = {
@@ -176,6 +198,7 @@ export type RequestImageUpload = {
 }
 
 export type ImageUploadResponse = {
+  status: number,
   data:{
     imageUrls: string[],
     message: string
@@ -190,6 +213,7 @@ export type RequestImageDelete = {
 }
 
 export type ImageDeleteResponse = {
+  status: number,
   data:{message: string},
 }
 
@@ -259,7 +283,7 @@ export type ChatProps = {
   cursor?: string,
 }
 
-//========== SDO ==========
+//========== SDG ==========
 
 export type SdgItem = {
   id: number;

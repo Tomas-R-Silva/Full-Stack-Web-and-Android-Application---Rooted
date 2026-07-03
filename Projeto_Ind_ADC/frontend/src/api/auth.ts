@@ -8,6 +8,7 @@ import type { RequestEventDelete, EventDeleteResponse} from "../utils/types";
 import type { RequestEventAttend, EventAttendResponse} from "../utils/types";
 import type { RequestEventUnattend, EventUnattendResponse} from "../utils/types";
 import type { RequestEventAttendees, EventAttendeesResponse} from "../utils/types";
+import type { RequestIsAttendee, IsAttendeeResponse} from "../utils/types";
 import type { RequestImageUpload, ImageUploadResponse} from "../utils/types";
 import type { RequestImageDelete, ImageDeleteResponse} from "../utils/types";
 import type { RequestPostMessage, PostMessageResponse} from "../utils/types";
@@ -249,6 +250,26 @@ export const attendeesEvent = async (
   }
 
   const json: EventAttendeesResponse = await res.json();
+  return json;
+};
+
+
+export const isAttendee = async (
+  data: RequestIsAttendee
+): Promise<IsAttendeeResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/isattendee`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to check if it is attendee of an event");
+  }
+
+  const json: IsAttendeeResponse = await res.json();
   return json;
 };
 
