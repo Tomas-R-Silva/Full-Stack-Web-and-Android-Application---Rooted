@@ -7,6 +7,7 @@ import FriendsList from "./Friends-List";
 import FriendsRequests from "./Friends-Requests";
 import { useAuth } from "../AuthContext";
 import AccountEvents from "./Account-Events";
+import { useNavigate } from "react-router-dom";
 
 function AccountSettings() {
   const profileItems = [
@@ -22,6 +23,7 @@ function AccountSettings() {
   const personalizationItems = ["Preferred SDG", "Preferred Themes"];
   const [selected, setSelected] = useState(profileItems[0]);
   const { username, role } = useAuth();
+  const navigate = useNavigate();
 
   const handleSelect = (selection: string) => {
     setSelected(selection);
@@ -107,6 +109,54 @@ function AccountSettings() {
             {selected === profileItems[1] && <FriendsList />}
             {selected === profileItems[2] && <FriendsRequests />}
             {selected === profileItems[3] && username && <AccountEvents />}
+            {selected === profileItems[4] && (
+              <div className="container">
+                <div className="row w-100 justify-content-center">
+                  <div className="col-12 col-lg-8">
+                    <h1 className="fw-bold text-white mb-3">Admin Dashboard</h1>
+                    <p className="text-white mb-4">
+                      Click in the button to be redirect to the Admin Dashboard.
+                    </p>
+                    <button
+                      className="btn fw-bold"
+                      style={{
+                        background: "var(--color-white)",
+                        color: "var(--color-green)",
+                      }}
+                      onClick={() => navigate("/dashboard/admin")}
+                    >
+                      Dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {selected === profileItems[5] && (
+              <div className="container">
+                <div className="row w-100 justify-content-center">
+                  <div className="col-12 col-lg-8">
+                    <h1 className="fw-bold text-white mb-3">
+                      Backofficer Dashboard
+                    </h1>
+                    <p className="text-white mb-4">
+                      Click in the button to be redirect to the Backofficer
+                      Dashboard.
+                    </p>
+
+                    <button
+                      className="btn fw-bold"
+                      style={{
+                        background: "var(--color-white)",
+                        color: "var(--color-green)",
+                      }}
+                      onClick={() => navigate("/dashboard/backofficer")}
+                    >
+                      Dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

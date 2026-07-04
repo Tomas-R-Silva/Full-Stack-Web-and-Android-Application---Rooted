@@ -66,33 +66,31 @@ function FriendsList() {
               </div>
             )}
             {friends.length !== 0 && (
-              <div className="d-flex justify-content-center">
-                <div
-                  className="d-flex justify-content-between align-items-center p-4 rounded"
-                  style={{
-                    maxWidth: "500px",
-                    width: "100%",
-                    backgroundColor: "var(--color-green2)",
-                    color: "var(--color-white)",
-                  }}
-                >
-                  <span className="fw-semibold">Ti zé Taxista</span>
+              <div
+                className="d-flex justify-content-between align-items-center p-4 rounded"
+                style={{
+                  maxWidth: "500px",
+                  width: "100%",
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+              >
+                <span className="fw-semibold">Ti zé Taxista</span>
 
-                  <div className="d-flex gap-3">
-                    <img
-                      src={personPin_w}
-                      alt="Add friend"
-                      onClick={handleFriendProfile}
-                      style={{ cursor: "pointer" }}
-                    />
+                <div className="d-flex gap-3">
+                  <img
+                    src={personPin_w}
+                    alt="Add friend"
+                    onClick={handleFriendProfile}
+                    style={{ cursor: "pointer" }}
+                  />
 
-                    <img
-                      src={personRemove_w}
-                      alt="Remove friend"
-                      onClick={handleUnfriend}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </div>
+                  <img
+                    src={personRemove_w}
+                    alt="Remove friend"
+                    onClick={handleUnfriend}
+                    style={{ cursor: "pointer" }}
+                  />
                 </div>
               </div>
             )}

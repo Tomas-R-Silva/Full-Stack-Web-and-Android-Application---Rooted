@@ -56,6 +56,7 @@ function AccountInformation() {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
+                placeholder="••••••••••••"
               />
             </div>
 

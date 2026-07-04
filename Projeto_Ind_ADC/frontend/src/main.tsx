@@ -16,6 +16,8 @@ import FaqPage from "./components/Faq-Page/Faq-Page.tsx";
 import SDGelements from "./components/SDG-elements/SDG-elements.tsx";
 import SDGoverall from "./components/SDG-elements/SDG-overall.tsx";
 import AccountSettings from "./components/Account-Page/Account-Settings.tsx";
+import DashboardADM from "./components/Dashboard-Page/Dashboard-Admin.tsx";
+import DashboardBO from "./components/Dashboard-Page/Dashboard-Backoffice.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -41,6 +43,8 @@ createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
+          <Route path="/dashboard/admin" element={<DashboardADM />} />
+          <Route path="/dashboard/backofficer" element={<DashboardBO />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventElements />} />
           <Route path="/maps" element={<MapsPage />} />

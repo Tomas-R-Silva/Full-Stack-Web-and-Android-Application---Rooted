@@ -53,6 +53,48 @@ export interface StepProps{
   onBack?: () => void;
 };
 
+export type RequestModAccount = {
+  token: {jwt:string;}
+  input: {username:string;
+    attributes:{
+      country: string,
+      birth: number,
+    }
+  }
+}
+
+export type ModAccountResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestChangePassword = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    oldpassword: string,
+    newpassword: string,
+  }
+}
+
+export type ChangePasswordResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestChangeRole = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    newrole: string,
+  }
+}
+
+export type ChangeRoleResponse = {
+  status: number,
+  data: {message:string;}
+}
+
 export type RequestAddFriend = {
   token: {jwt:string;}
   input: {username:string;}
@@ -95,6 +137,22 @@ export type RequestFriendsRequests = {
 export type FriendsRequestsResponse = {
   status: number,
   data: {friends:Friend[];}
+}
+
+export type RequestAuthSessions = {
+  token: {jwt:string;}
+}
+
+export type AuthSessionsResponse = {
+  status: number,
+  data: {tokens:TokenType[];}
+}
+
+export type TokenType = {
+  tokenID: string,
+  username: string,
+  role: string,
+  expiresAt: number,
 }
 
 //========== EVENT ==========
