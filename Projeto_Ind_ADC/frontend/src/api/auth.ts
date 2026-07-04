@@ -1,4 +1,8 @@
 import type { SignInData, LogInData } from "../utils/types";
+import type {RequestAddFriend, AddFriendResponse} from "../utils/types";
+import type {RequestUnfriend, UnfriendResponse} from "../utils/types";
+import type {RequestFriendsList, FriendsListResponse} from "../utils/types";
+import type {RequestFriendsRequests, FriendsRequestsResponse} from "../utils/types";
 import type { RequestEventCreation, EventCreationResponse } from "../utils/types";
 import type { RequestEventGetter, EventGetterResponse } from "../utils/types";
 import type { RequestEventList, EventListResponse} from "../utils/types";
@@ -68,6 +72,86 @@ export const getProfile = async () => {
   });
 
   return res.json();
+};
+
+
+export const addFriend = async (
+  data: RequestAddFriend
+): Promise<AddFriendResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/addfriend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to add friend");
+  }
+
+  const json: AddFriendResponse = await res.json();
+  return json;
+};
+
+
+export const Unfriend = async (
+  data: RequestUnfriend
+): Promise<UnfriendResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/unfriend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to unfriend");
+  }
+
+  const json: UnfriendResponse = await res.json();
+  return json;
+};
+
+
+export const getFriendsList = async (
+  data: RequestFriendsList
+): Promise<FriendsListResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/showfriends`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to list friends");
+  }
+
+  const json: FriendsListResponse = await res.json();
+  return json;
+};
+
+
+export const getFriendsRequests = async (
+  data: RequestFriendsRequests
+): Promise<FriendsRequestsResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/showfriendrequests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to friends requests");
+  }
+
+  const json: FriendsRequestsResponse = await res.json();
+  return json;
 };
 
 //========== EVENT ==========

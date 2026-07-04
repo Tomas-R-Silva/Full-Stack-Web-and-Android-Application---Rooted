@@ -15,6 +15,7 @@ import EventElements from "./components/Events-Page/Event-Elements.tsx";
 import FaqPage from "./components/Faq-Page/Faq-Page.tsx";
 import SDGelements from "./components/SDG-elements/SDG-elements.tsx";
 import SDGoverall from "./components/SDG-elements/SDG-overall.tsx";
+import AccountSettings from "./components/Account-Page/Account-Settings.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -32,6 +33,7 @@ createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
+          <Route path="/account/settings" element={<AccountSettings />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventElements />} />
           <Route path="/maps" element={<MapsPage />} />

@@ -27,6 +27,50 @@ export interface StepProps{
   onBack?: () => void;
 };
 
+export type RequestAddFriend = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type AddFriendResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestUnfriend = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type UnfriendResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestFriendsList = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type FriendsListResponse = {
+  status: number,
+  data: {friends:Friend[];}
+}
+
+export type Friend = {
+  Friend: string,
+  Start: number,
+}
+
+export type RequestFriendsRequests = {
+  token: {jwt:string;}
+}
+
+export type FriendsRequestsResponse = {
+  status: number,
+  data: {friends:Friend[];}
+}
+
 //========== EVENT ==========
 
 export type EventItem = {
@@ -99,7 +143,7 @@ export type EventListResponse = {
 };
 
 export type RequestEventUpdate = {
-  token?: {jwt:String;}
+  token?: {jwt:string;}
   input: {
     eventId:string,
     title: string,

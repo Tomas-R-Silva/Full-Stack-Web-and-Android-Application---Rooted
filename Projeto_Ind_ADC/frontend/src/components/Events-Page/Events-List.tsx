@@ -71,7 +71,7 @@ function EventsList({ filter }: FilterProps) {
       )}
 
       {!loading && !error && events.length === 0 && (
-        <div className="alert alert-info" role="alert">
+        <div className="alert alert-ligth" role="alert">
           There is no events availables.
         </div>
       )}
