@@ -1,16 +1,42 @@
 //========== USER ==========
 
-export type SignInData = {
-  username: string;
-  password: string;
-  email: string;
-  confirmation: string;
-  role: string;
+export type RequestSignIn = {
+  input:{
+    username: string;
+    password: string;
+    email: string;
+    confirmation: string;
+    role: string;
+  }
 };
 
-export type LogInData = {
-  username: string;
-  password: string;
+export type SignInResponse = {
+  status: number,
+  data: {
+    username: string,
+    role: string,
+  }
+};
+
+export type RequestLogIn = {
+  input:{
+    username: string,
+    password: string,
+  }
+}
+
+export type LogInResponse = {
+  status: number,
+  data: {
+    token:{
+      jwt:string,
+      username: string,
+      email: string,
+      role: string,
+      issuedAt: number,
+      expiresAt: number,
+    }
+  }
 };
 
 export interface AccountProps {
@@ -21,8 +47,8 @@ export interface AccountProps {
 };
 
 export interface StepProps{
-  formData: SignInData;
-  setFormData: React.Dispatch<React.SetStateAction<SignInData>>;
+  formData: RequestSignIn;
+  setFormData: React.Dispatch<React.SetStateAction<RequestSignIn>>;
   onNext?: () => void; //? retira a obrgatoriedade de fazer parte
   onBack?: () => void;
 };

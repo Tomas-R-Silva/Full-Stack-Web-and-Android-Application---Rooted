@@ -1,14 +1,16 @@
 import { useState } from "react";
-import type { LogInData } from "../../utils/types";
+import type { RequestLogIn } from "../../utils/types";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../api/auth";
 import { useAuth } from "../AuthContext";
 
 function LogInStep1() {
   //========== Hook ==========
-  const [formData, setFormData] = useState<LogInData>({
-    username: "",
-    password: "",
+  const [formData, setFormData] = useState<RequestLogIn>({
+    input: {
+      username: "",
+      password: "",
+    },
   });
 
   const [errors, setErrors] = useState({
@@ -20,10 +22,21 @@ function LogInStep1() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        [name]: value,
+      },
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
   //========== Submissão dos Campos ==========
@@ -32,10 +45,10 @@ function LogInStep1() {
 
     const newErrors = { username: "", password: "", confirmation: "" };
 
-    if (!formData.username) {
+    if (!formData.input.username) {
       newErrors.username = "username is required";
     }
-    if (!formData.password) newErrors.password = "Password is required";
+    if (!formData.input.password) newErrors.password = "Password is required";
 
     setErrors(newErrors);
 
@@ -46,8 +59,10 @@ function LogInStep1() {
       const response = await loginUser(formData);
       const token = response.data.token.jwt;
       const username = response.data.token.username;
-      login(token, username);
-      navigate("/profile");
+      const role = response.data.token.role;
+      const email = response.data.token.email;
+      login(token, username, role, email);
+      navigate("/#");
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -62,7 +77,7 @@ function LogInStep1() {
             type="text"
             name="username"
             className={`form-control  ${errors.username ? "is-invalid" : ""}`}
-            value={formData.username}
+            value={formData.input.username}
             onChange={handleChange}
             placeholder="Your username"
           />
@@ -76,7 +91,7 @@ function LogInStep1() {
             type="password"
             name="password"
             className={`form-control  ${errors.password ? "is-invalid" : ""}`}
-            value={formData.password}
+            value={formData.input.password}
             onChange={handleChange}
             placeholder="Use a strong password"
           />

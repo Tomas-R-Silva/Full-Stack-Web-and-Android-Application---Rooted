@@ -28,7 +28,7 @@ function EventsList({ filter }: FilterProps) {
 
       //TODO change in order to have filters
       const res: EventListResponse = await getEventList({
-        input: { pageSize: 10, cursor: cursor ?? "" },
+        input: { pageSize: 12, cursor: cursor ?? "" },
       });
 
       console.log(res.data.events);

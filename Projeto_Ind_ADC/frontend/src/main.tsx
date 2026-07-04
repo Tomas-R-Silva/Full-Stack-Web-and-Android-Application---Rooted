@@ -33,7 +33,14 @@ createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
-          <Route path="/account/settings" element={<AccountSettings />} />
+          <Route
+            path="/account/settings"
+            element={
+              <ProtectedRoute>
+                <AccountSettings />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventElements />} />
           <Route path="/maps" element={<MapsPage />} />

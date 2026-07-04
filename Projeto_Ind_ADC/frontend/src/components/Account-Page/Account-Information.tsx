@@ -1,4 +1,8 @@
+import { useAuth } from "../AuthContext";
+
 function AccountInformation() {
+  const { username, role, email } = useAuth();
+
   return (
     <>
       <div className="container">
@@ -22,6 +26,7 @@ function AccountInformation() {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
+                placeholder={username ? username : "No username"}
               />
             </div>
 
@@ -36,6 +41,7 @@ function AccountInformation() {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
+                placeholder={email ? email : "No email"}
               />
             </div>
 
@@ -90,6 +96,7 @@ function AccountInformation() {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
+                placeholder={role ? role : "No role"}
               />
             </div>
 

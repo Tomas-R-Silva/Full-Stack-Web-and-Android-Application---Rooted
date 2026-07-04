@@ -4,6 +4,9 @@ import arrowRight_w from "../../assets/icons/arrow_right_w.svg";
 import arrowRight from "../../assets/icons/arrow_right.svg";
 import AccountInformation from "./Account-Information";
 import FriendsList from "./Friends-List";
+import FriendsRequests from "./Friends-Requests";
+import { useAuth } from "../AuthContext";
+import AccountEvents from "./Account-Events";
 
 function AccountSettings() {
   const profileItems = [
@@ -11,12 +14,14 @@ function AccountSettings() {
     "Friends List",
     "Friends Requests",
     "My Events",
-    "Admin/Back Office Dashboard",
+    "Admin Dashboard",
+    "Backofficer Dashboard",
     "Claimed Rewards",
     "Recent Points",
   ];
   const personalizationItems = ["Preferred SDG", "Preferred Themes"];
   const [selected, setSelected] = useState(profileItems[0]);
+  const { username, role } = useAuth();
 
   const handleSelect = (selection: string) => {
     setSelected(selection);
@@ -32,31 +37,37 @@ function AccountSettings() {
               Profile
             </h5>
 
-            {profileItems.map((item, i) => (
-              <div
-                key={item}
-                className="d-flex justify-content-between align-items-center py-3 border-bottom"
-                style={{ cursor: "pointer" }}
-              >
-                <span
-                  className="fw-semibold"
-                  style={{
-                    color:
-                      selected === item
-                        ? "var(--color-green2)"
-                        : "var(--color-white)",
-                  }}
-                  onClick={() => handleSelect(profileItems[i])}
+            {profileItems.map((item, i) => {
+              if (i === 5 && role !== "ADMIN") return null;
+              if (i === 6 && role !== "BACKOFFICER") return null;
+
+              return (
+                <div
+                  key={item}
+                  className="d-flex justify-content-between align-items-center py-3 border-bottom"
+                  style={{ cursor: "pointer" }}
                 >
-                  {item}
-                </span>
-                <img
-                  src={selected === item ? arrowRight : arrowRight_w}
-                  alt="Arrow"
-                  onClick={() => handleSelect(profileItems[i])}
-                />
-              </div>
-            ))}
+                  <span
+                    className="fw-semibold"
+                    style={{
+                      color:
+                        selected === item
+                          ? "var(--color-green2)"
+                          : "var(--color-white)",
+                    }}
+                    onClick={() => handleSelect(item)}
+                  >
+                    {item}
+                  </span>
+
+                  <img
+                    src={selected === item ? arrowRight : arrowRight_w}
+                    alt="Arrow"
+                    onClick={() => handleSelect(item)}
+                  />
+                </div>
+              );
+            })}
 
             <h5
               className="fw-bold mt-5"
@@ -94,6 +105,8 @@ function AccountSettings() {
           <div className="col-lg-8">
             {selected === profileItems[0] && <AccountInformation />}
             {selected === profileItems[1] && <FriendsList />}
+            {selected === profileItems[2] && <FriendsRequests />}
+            {selected === profileItems[3] && username && <AccountEvents />}
           </div>
         </div>
       </div>
