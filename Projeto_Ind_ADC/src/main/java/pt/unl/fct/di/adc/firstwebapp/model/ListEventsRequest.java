@@ -12,7 +12,7 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	 *   	"status": "UPCOMING",             (optional filter, defaults to UPCOMING)
 	 *   	"organizerUsername": "...",       (optional filter)
 	 *   	"pageSize": 20,                   (optional, default 20)
-	 *   	"SDG": "...",                  (optional, for pagination)
+	 *   	"cursor": "...",                  (optional, for pagination)
 	 *   	"isAccessible": true,
 	 *   	"SDG": [1,14,3]  
 	 *   }

@@ -1,6 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ModelToken;
 
 public class TokenRequest implements TokenRequestInterface{
 	
@@ -9,15 +9,15 @@ public class TokenRequest implements TokenRequestInterface{
 	 *   "token": { "tokenId": "<jwt>" }
 	 * }
 	 */
-	public Token token;
+	public ModelToken token;
 	
 	public TokenRequest() {}
 	
-	public Token getToken() {
+	public ModelToken getToken() {
         return token;
     }
 	
-	public void setToken(Token token) {
+	public void setToken(ModelToken token) {
         this.token = token;
     }
 

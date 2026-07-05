@@ -36,7 +36,8 @@ public class User extends ShortUser{
 		NOT_FRIENDS,
 		FRIENDS,
 		REQUEST_SENT,
-		REQUEST_RECIVED;
+		REQUEST_RECIVED,
+		SELF;
 		public static Friendstatus valueof(String v) {
 			try{return Friendstatus.valueOf(v);}catch (Exception e) {return null;}
 		}

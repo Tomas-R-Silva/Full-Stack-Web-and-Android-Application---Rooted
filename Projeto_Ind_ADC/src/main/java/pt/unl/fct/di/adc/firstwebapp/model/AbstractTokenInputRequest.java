@@ -1,6 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ModelToken;
 
 public abstract class AbstractTokenInputRequest<E> extends AbstractInputRequest<E> implements TokenRequestInterface{
 	
@@ -10,15 +10,15 @@ public abstract class AbstractTokenInputRequest<E> extends AbstractInputRequest<
 	 *   "input": E
 	 * }
 	 */
-	public Token token;
+	public ModelToken token;
 	
 	public AbstractTokenInputRequest() {}
 	
-	public Token getToken() {
+	public ModelToken getToken() {
         return token;
     }
 	
-	public void setToken(Token token) {
+	public void setToken(ModelToken token) {
         this.token = token;
     }
 }
