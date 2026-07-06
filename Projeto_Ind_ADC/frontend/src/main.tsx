@@ -18,6 +18,7 @@ import SDGoverall from "./components/SDG-elements/SDG-overall.tsx";
 import AccountSettings from "./components/Account-Page/Account-Settings.tsx";
 import DashboardADM from "./components/Dashboard-Page/Dashboard-Admin.tsx";
 import DashboardBO from "./components/Dashboard-Page/Dashboard-Backoffice.tsx";
+import PublicPage from "./components/Account-Page/Public-Page.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -32,6 +33,14 @@ createRoot(document.getElementById("root")!).render(
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:username"
+            element={
+              <ProtectedRoute>
+                <PublicPage />
               </ProtectedRoute>
             }
           />

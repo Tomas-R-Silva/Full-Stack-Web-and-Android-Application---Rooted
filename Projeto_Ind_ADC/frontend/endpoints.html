@@ -72,7 +72,6 @@
   The real result is inside the JSON body, wrapped as <code>{ "status": ..., "data": ... }</code>:
   <pre style="margin-top:8px;"><span class="comment">// success</span>           { <span class="key-str">"status"</span>: <span class="val-num">200</span>,  <span class="key-str">"data"</span>: { ... } }
 <span class="comment">// validation error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9906</span>, <span class="key-str">"data"</span>: [ { <span class="key-str">"status"</span>: <span class="val-num">9930</span>, <span class="key-str">"data"</span>: <span class="val-str">"INVALID_MESSAGE_TEXT"</span> } ] }
-<span class="comment">// json format error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9929</span>, <span class="key-str">"data"</span>: "{ <span class="key-str">"token"</span>: { <span class="key-str">"tokenId"</span>: <span class="val-str">"&ltjwt&gt"</span> } }"}
 <span class="comment">// generic error</span>     { <span class="key-str">"status"</span>: <span class="val-num">9907</span>, <span class="key-str">"data"</span>: <span class="val-str">"FORBIDDEN"</span> }</pre>
   Always check the <code>status</code> field — <code>200</code> = ok, any <code>99xx</code> = error.
   In the examples below, the <span style="color:#2e7d32;font-weight:600;">Response</span> shows only the
@@ -184,10 +183,7 @@
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
     <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
-    <span class="key-str">"attributes"</span>: {
-      <span class="key-str">"address"</span>: <span class="val-str">"Porto"</span>,
-      <span class="key-str">"phone"</span>:   <span class="val-str">"987654321"</span>
-    }
+    <span class="key-str">"email"</span>:   <span class="val-str">"alice@mail.com"</span>
   }
 }</pre>
   <div class="label out">Response</div>
@@ -352,7 +348,9 @@
     <span class="key-str">"durationMinutes"</span>: <span class="val-num">120</span>,
     <span class="key-str">"maxAttendees"</span>:    <span class="val-num">50</span>,            <span class="comment">// 0 = unlimited</span>
     <span class="key-str">"minAttendees"</span>:    <span class="val-num">0</span>,
-    <span class="key-str">"isPublic"</span>:        <span class="val-bool">true</span>
+    <span class="key-str">"isPublic"</span>:        <span class="val-bool">true</span>,
+    <span class="key-str">"isAccessible"</span>:    <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
@@ -390,7 +388,9 @@
     <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,
     <span class="key-str">"createdAt"</span>:         <span class="val-num">1759000000</span>,
     <span class="key-str">"coverImageUrl"</span>:     <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid"</span>,
-    <span class="key-str">"imageUrls"</span>:         [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> ]
+    <span class="key-str">"imageUrls"</span>:         [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> ],
+    <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }}</pre>
 </div>
@@ -406,11 +406,13 @@
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
-    <span class="key-str">"category"</span>:        <span class="val-str">"MUSIC"</span>,        <span class="comment">// optional</span>
-    <span class="key-str">"status"</span>:          <span class="val-str">"UPCOMING"</span>,     <span class="comment">// optional</span>
+    <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,        <span class="comment">// optional</span>
+    <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,     <span class="comment">// optional</span>
     <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,        <span class="comment">// optional</span>
     <span class="key-str">"pageSize"</span>:          <span class="val-num">10</span>,
-    <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>            <span class="comment">// use nextCursor from a previous </span>
+    <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>,            <span class="comment">// use nextCursor from a previous </span>
+    <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
@@ -442,7 +444,9 @@
     <span class="key-str">"durationMinutes"</span>: <span class="val-num">90</span>,
     <span class="key-str">"maxAttendees"</span>:    <span class="val-num">80</span>,
     <span class="key-str">"isPublic"</span>:        <span class="val-bool">false</span>,
-    <span class="key-str">"coverImageUrl"</span>:   <span class="val-str">"https://..."</span>
+    <span class="key-str">"coverImageUrl"</span>:   <span class="val-str">"https://..."</span>,
+    <span class="key-str">"isAccessible"</span>:    <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
@@ -739,6 +743,7 @@
     <tr><td>9930</td><td>Invalid message text (empty or &gt; 1000 chars)</td></tr>
     <tr><td>9931</td><td>Event not open for forum (cancelled/completed)</td></tr>
     <tr><td>9932</td><td>Forum post not found</td></tr>
+    <tr><td>9933</td><td>SDG does not exist(n>17 || n<1)</td></tr>
   </table>
 </div>
 

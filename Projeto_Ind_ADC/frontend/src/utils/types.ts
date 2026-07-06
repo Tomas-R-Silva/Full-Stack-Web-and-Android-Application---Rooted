@@ -53,6 +53,25 @@ export interface StepProps{
   onBack?: () => void;
 };
 
+export type RequestShowUsers = {
+   token: {jwt:string;}
+}
+
+export type ShowUsersResponse = {
+  status: number,
+  data: {users:User[]}
+}
+
+export type User = {
+  username: string,
+  email: string,
+  role: string,
+}
+
+export interface UserProps {
+ user: User;
+}
+
 export type RequestModAccount = {
   token: {jwt:string;}
   input: {username:string;

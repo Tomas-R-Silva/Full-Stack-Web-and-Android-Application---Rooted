@@ -4,7 +4,7 @@ import type { AuthSessionsResponse, TokenType } from "../../utils/types";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
 import { useNavigate } from "react-router-dom";
 
-function Moderation() {
+function ModerationEvents() {
   const [authSessions, setAuthSession] = useState<TokenType[]>([]);
   const navigate = useNavigate();
 
@@ -45,7 +45,7 @@ function Moderation() {
     <>
       <div className="container py-3">
         <div className="row">
-          <div className="col">
+          <div className="col-4">
             <h4>Auth Sessions:</h4>
             <div
               className="container border rounded p-3"
@@ -114,12 +114,12 @@ function Moderation() {
                 ))}
             </div>
           </div>
-          <div className="col"></div>
-          <div className="col"></div>
+
+          <div className="col-8"></div>
         </div>
       </div>
     </>
   );
 }
 
-export default Moderation;
+export default ModerationEvents;

@@ -3,10 +3,19 @@ import { useState } from "react";
 import Activity from "./Activity";
 import Community from "./Community";
 import SDGs from "./SDGs";
-import Moderation from "./Moderation";
+import ModerationUsers from "./Moderation-Users";
+import ModerationPartners from "./Moderation-Partners";
+import ModerationEvents from "./Moderation-Events";
 
 function DashboardADM() {
-  const dashboardItems = ["Activity", "Comunity", "SDGs", "Moderation"];
+  const dashboardItems = [
+    "Activity",
+    "Comunity",
+    "SDGs",
+    "Moderation (Users)",
+    "Moderation (Events)",
+    "Moderation (Partners)",
+  ];
   const [selected, setSelected] = useState(dashboardItems[0]);
 
   const handleSelect = (selection: string) => {
@@ -55,12 +64,14 @@ function DashboardADM() {
               style={{ background: "var(--color-white)", minHeight: "500px" }}
             >
               <h2 className="" style={{ color: "var(--color-green)" }}>
-                Dashboard
+                Dashboard: {selected}
               </h2>
               {selected === dashboardItems[0] && <Activity />}
               {selected === dashboardItems[1] && <Community />}
               {selected === dashboardItems[2] && <SDGs />}
-              {selected === dashboardItems[3] && <Moderation />}
+              {selected === dashboardItems[3] && <ModerationUsers />}
+              {selected === dashboardItems[4] && <ModerationEvents />}
+              {selected === dashboardItems[5] && <ModerationPartners />}
             </div>
           </div>
         </div>
