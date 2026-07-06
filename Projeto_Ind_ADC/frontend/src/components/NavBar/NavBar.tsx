@@ -59,7 +59,7 @@ function NavBar() {
               <a
                 className="navbar-brand fw-bold m-0"
                 style={{ color: "var(--color-bege)" }}
-                href="/profile"
+                href={"/profile/" + username}
               >
                 Profile
               </a>

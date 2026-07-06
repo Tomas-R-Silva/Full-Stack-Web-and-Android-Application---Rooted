@@ -28,7 +28,7 @@ function EventsList({ filter }: FilterProps) {
 
       //TODO change in order to have filters
       const res: EventListResponse = await getEventList({
-        input: { pageSize: 10, cursor: cursor ?? "" },
+        input: { pageSize: 12, cursor: cursor ?? "" },
       });
 
       console.log(res.data.events);
@@ -71,7 +71,7 @@ function EventsList({ filter }: FilterProps) {
       )}
 
       {!loading && !error && events.length === 0 && (
-        <div className="alert alert-info" role="alert">
+        <div className="alert alert-ligth" role="alert">
           There is no events availables.
         </div>
       )}

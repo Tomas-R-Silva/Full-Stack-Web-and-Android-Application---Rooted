@@ -1,16 +1,42 @@
 //========== USER ==========
 
-export type SignInData = {
-  username: string;
-  password: string;
-  email: string;
-  confirmation: string;
-  role: string;
+export type RequestSignIn = {
+  input:{
+    username: string;
+    password: string;
+    email: string;
+    confirmation: string;
+    role: string;
+  }
 };
 
-export type LogInData = {
-  username: string;
-  password: string;
+export type SignInResponse = {
+  status: number,
+  data: {
+    username: string,
+    role: string,
+  }
+};
+
+export type RequestLogIn = {
+  input:{
+    username: string,
+    password: string,
+  }
+}
+
+export type LogInResponse = {
+  status: number,
+  data: {
+    token:{
+      jwt:string,
+      username: string,
+      email: string,
+      role: string,
+      issuedAt: number,
+      expiresAt: number,
+    }
+  }
 };
 
 export interface AccountProps {
@@ -21,11 +47,144 @@ export interface AccountProps {
 };
 
 export interface StepProps{
-  formData: SignInData;
-  setFormData: React.Dispatch<React.SetStateAction<SignInData>>;
+  formData: RequestSignIn;
+  setFormData: React.Dispatch<React.SetStateAction<RequestSignIn>>;
   onNext?: () => void; //? retira a obrgatoriedade de fazer parte
   onBack?: () => void;
 };
+
+export type RequestShowUsers = {
+   token: {jwt:string;}
+}
+
+export type ShowUsersResponse = {
+  status: number,
+  data: {users:User[]}
+}
+
+export type User = {
+  username: string,
+  email: string,
+  role: string,
+}
+
+export interface UserProps {
+ user: User;
+}
+
+export type RequestModAccount = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    email:string,
+    country?: string,
+    birth?: number,
+  }
+}
+
+export type ModAccountResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestChangePassword = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    oldpassword: string,
+    newpassword: string,
+  }
+}
+
+export type ChangePasswordResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestChangeRole = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    newrole: string,
+  }
+}
+
+export type ChangeRoleResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestDeleteAccount = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type DeleteAccountResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestAddFriend = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type AddFriendResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestUnfriend = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type UnfriendResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestFriendsList = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type FriendsListResponse = {
+  status: number,
+  data: {friends:Friend[];}
+}
+
+export type Friend = {
+  Friend: string,
+  Start: number,
+}
+
+export type RequestFriendsRequests = {
+  token: {jwt:string;}
+}
+
+export type FriendsRequestsResponse = {
+  status: number,
+  data: {friends:Friend[];}
+}
+
+export type RequestAuthSessions = {
+  token: {jwt:string;}
+}
+
+export type AuthSessionsResponse = {
+  status: number,
+  data: {tokens:TokenType[];}
+}
+
+export type TokenType = {
+  tokenID: string,
+  username: string,
+  role: string,
+  expiresAt: number,
+}
 
 //========== EVENT ==========
 
@@ -99,7 +258,7 @@ export type EventListResponse = {
 };
 
 export type RequestEventUpdate = {
-  token?: {jwt:String;}
+  token?: {jwt:string;}
   input: {
     eventId:string,
     title: string,

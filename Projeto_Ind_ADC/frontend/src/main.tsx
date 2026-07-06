@@ -15,6 +15,10 @@ import EventElements from "./components/Events-Page/Event-Elements.tsx";
 import FaqPage from "./components/Faq-Page/Faq-Page.tsx";
 import SDGelements from "./components/SDG-elements/SDG-elements.tsx";
 import SDGoverall from "./components/SDG-elements/SDG-overall.tsx";
+import AccountSettings from "./components/Account-Page/Account-Settings.tsx";
+import DashboardADM from "./components/Dashboard-Page/Dashboard-Admin.tsx";
+import DashboardBO from "./components/Dashboard-Page/Dashboard-Backoffice.tsx";
+import PublicPage from "./components/Account-Page/Public-Page.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -32,6 +36,24 @@ createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/profile/:username"
+            element={
+              <ProtectedRoute>
+                <PublicPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account/settings"
+            element={
+              <ProtectedRoute>
+                <AccountSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/dashboard/admin" element={<DashboardADM />} />
+          <Route path="/dashboard/backofficer" element={<DashboardBO />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventElements />} />
           <Route path="/maps" element={<MapsPage />} />

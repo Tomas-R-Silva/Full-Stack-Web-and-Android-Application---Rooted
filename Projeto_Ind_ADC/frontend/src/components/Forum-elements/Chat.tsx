@@ -129,6 +129,9 @@ function Chat({ event }: EventProps) {
             overflowY: "auto",
           }}
         >
+          {messages.length === 0 && (
+            <span className="text-white">Be the first one chatting...</span>
+          )}
           {messages.map((msg) => {
             if (isAuthenticated && username === msg.authorUsername) {
               return (

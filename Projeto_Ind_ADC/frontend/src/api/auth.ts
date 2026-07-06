@@ -1,4 +1,15 @@
-import type { SignInData, LogInData } from "../utils/types";
+import type {RequestSignIn, SignInResponse} from "../utils/types";
+import type {RequestLogIn, LogInResponse} from "../utils/types";
+import type {RequestShowUsers, ShowUsersResponse} from "../utils/types";
+import type {RequestModAccount, ModAccountResponse} from "../utils/types";
+import type {RequestChangePassword, ChangePasswordResponse} from "../utils/types";
+import type {RequestChangeRole, ChangeRoleResponse} from "../utils/types";
+import type {RequestDeleteAccount, DeleteAccountResponse} from "../utils/types";
+import type {RequestAddFriend, AddFriendResponse} from "../utils/types";
+import type {RequestUnfriend, UnfriendResponse} from "../utils/types";
+import type {RequestFriendsList, FriendsListResponse} from "../utils/types";
+import type {RequestFriendsRequests, FriendsRequestsResponse} from "../utils/types";
+import type {RequestAuthSessions, AuthSessionsResponse} from "../utils/types";
 import type { RequestEventCreation, EventCreationResponse } from "../utils/types";
 import type { RequestEventGetter, EventGetterResponse } from "../utils/types";
 import type { RequestEventList, EventListResponse} from "../utils/types";
@@ -17,60 +28,244 @@ import type { RequestListMessages, ListMessagesResponse} from "../utils/types";
 
 //========== USER ==========
 
-export const registerUser = async (data: SignInData) => {
+export const registerUser = async (
+  data: RequestSignIn
+): Promise<SignInResponse> => {
   const res = await fetch(`${import.meta.env.VITE_API_URL}/createaccount`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ input: data }),
   });
 
-  if (!res.ok) throw new Error((await res.json()).message);
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
 
-  return res.json();
+  const json: SignInResponse = await res.json();
+
+  return json;
 };
 
-export const loginUser = async (data: LogInData) => {
+
+export const loginUser = async (
+  data: RequestLogIn
+): Promise<LogInResponse> => {
   const res = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: data }),
+    body: JSON.stringify(data),
   });
 
-  if (!res.ok) throw new Error((await res.json()).message);
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
 
-  return res.json();
+  const json: LogInResponse = await res.json();
+
+  return json;
 };
+
 
 export const saveToken = (token: string) => {
   sessionStorage.setItem("token", token);
 };
 
+
 export const getToken = () => {
   return sessionStorage.getItem("token");
 };
+
 
 export const removeToken = () => {
   sessionStorage.removeItem("token");
 };
 
+
 export const isAuthenticated = () => {
   return !!sessionStorage.getItem("token");
 };
 
-//TODO
-export const getProfile = async () => {
-  const token = sessionStorage.getItem("token");
-
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+export const getUsers = async (
+  data: RequestShowUsers
+): Promise<ShowUsersResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/showusers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
   });
 
-  return res.json();
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json: ShowUsersResponse = await res.json();
+
+  return json;
+};
+
+
+export const modAccount = async (
+  data: RequestModAccount
+): Promise<ModAccountResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/modaccount`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json: ModAccountResponse = await res.json();
+
+  return json;
+};
+
+
+export const changePassword = async (
+  data: RequestChangePassword
+): Promise<ChangePasswordResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/changeuserpwd`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json: ChangePasswordResponse = await res.json();
+
+  return json;
+};
+
+
+export const changeRole = async (
+  data: RequestChangeRole
+): Promise<ChangeRoleResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/changeuserrole`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json: ChangeRoleResponse = await res.json();
+
+  return json;
+};
+
+export const deleteAccount = async (
+  data: RequestDeleteAccount
+): Promise<DeleteAccountResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/deleteaccount`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json: DeleteAccountResponse = await res.json();
+
+  return json;
+};
+
+
+export const addFriend = async (
+  data: RequestAddFriend
+): Promise<AddFriendResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/addfriend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok && res.status === 200) {
+    throw new Error("Failed to add friend");
+  }
+
+  const json: AddFriendResponse = await res.json();
+  return json;
+};
+
+
+export const unfriend = async (
+  data: RequestUnfriend
+): Promise<UnfriendResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/unfriend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok && res.status === 200) {
+    throw new Error("Failed to unfriend");
+  }
+
+  const json: UnfriendResponse = await res.json();
+  return json;
+};
+
+
+export const getFriendsList = async (
+  data: RequestFriendsList
+): Promise<FriendsListResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/showfriends`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok && res.status === 200) {
+    throw new Error("Failed to list friends");
+  }
+
+  const json: FriendsListResponse = await res.json();
+  return json;
+};
+
+
+export const getFriendsRequests = async (
+  data: RequestFriendsRequests
+): Promise<FriendsRequestsResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/showfriendrequests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok && res.status === 200) {
+    throw new Error("Failed to friends requests");
+  }
+
+  const json: FriendsRequestsResponse = await res.json();
+  return json;
+};
+
+
+export const getAuthSessions = async (
+  data: RequestAuthSessions
+): Promise<AuthSessionsResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/showauthsessions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok && res.status === 200) {
+    throw new Error("Failed to show auth sessions.");
+  }
+
+  const json: AuthSessionsResponse = await res.json();
+  return json;
 };
 
 //========== EVENT ==========
+
 
 export const createEvent = async (
   data: RequestEventCreation
@@ -80,10 +275,10 @@ export const createEvent = async (
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify( data ),
+    body: JSON.stringify(data),
   });
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to create an event");
   }
 
@@ -104,7 +299,7 @@ export const getEvent = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to get an event");
   }
 
@@ -121,10 +316,10 @@ export const getEventList = async (
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ input: data }),
+    body: JSON.stringify(data),
   });
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to fetch event list");
   }
 
@@ -145,7 +340,7 @@ export const updateEvent = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to update an event");
   }
 
@@ -165,7 +360,7 @@ export const cancelEvent = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to cancel an event");
   }
 
@@ -185,7 +380,7 @@ export const deleteEvent = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to delete an event");
   }
 
@@ -205,7 +400,7 @@ export const attendEvent = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to attend an event");
   }
 
@@ -225,7 +420,7 @@ export const unattendEvent = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to unattend an event");
   }
 
@@ -245,7 +440,7 @@ export const attendeesEvent = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to list attendees an event");
   }
 
@@ -265,7 +460,7 @@ export const isAttendee = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to check if it is attendee of an event");
   }
 
@@ -285,7 +480,7 @@ export const uploadImage = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to upload an image");
   }
 
@@ -305,7 +500,7 @@ export const deleteImage = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to delete an image");
   }
 
@@ -328,7 +523,7 @@ export const PostMessage = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to create a posts");
   }
 
@@ -348,7 +543,7 @@ export const DeleteMessage = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to delete a post");
   }
 
@@ -368,7 +563,7 @@ export const ListMessages = async (
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
+  if (!res.ok && res.status === 200) {
     throw new Error("Failed to list the posts");
   }
 
