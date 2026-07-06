@@ -19,7 +19,6 @@ public class EventAtributs{
 	protected Integer minAttendees;
 	protected Boolean isPublic;
 	protected Boolean isAccessible;
-	protected String coverImageUrl;
 	protected List<Integer> SDG;
 	
 
@@ -61,9 +60,6 @@ public class EventAtributs{
 	public boolean isAccessible() { return zeroifnull(isAccessible); }
 	public Boolean isAccessiblenull() { return isAccessible; }
 	public void setAccessible(boolean isAccessible) { this.isAccessible = isAccessible; }
-
-	public String getCoverImageUrl() { return coverImageUrl; }
-	public void setCoverImageUrl(String coverImageUrl) { this.description = coverImageUrl; }
 	
 	public List<LongValue> getSDG() {
 		List<LongValue> list = new ArrayList<>(SDG.size());
