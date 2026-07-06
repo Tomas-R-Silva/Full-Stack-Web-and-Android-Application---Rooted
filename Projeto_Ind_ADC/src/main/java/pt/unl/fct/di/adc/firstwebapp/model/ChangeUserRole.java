@@ -1,14 +1,12 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.Map;
-
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
-public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.ChangeUserRoleInput>implements ModelInterface{
+public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.ChangeUserRoleInput>{
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": {
 	 *   	"username": "...",
 	 *   	"newrole": "..." }
@@ -17,7 +15,7 @@ public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.Cha
 	
     public ChangeUserRole(){}
  
-    public static class ChangeUserRoleInput extends ShortUser implements ModelInterface{
+    public static class ChangeUserRoleInput extends ShortUser{
         public String newrole;
 
         public String getNewrole(){
@@ -27,16 +25,6 @@ public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.Cha
         public void setNewrole(String newrole){
             this.newrole = newrole;
         }
-        @Override
-    	public Map<String, Object> getformat() {
-        Map<String, Object> map=super.getformat();
-        map.put("newrole", ModelInterface.defaultstr);
-        return map;
-        }
+
     }
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<ChangeUserRoleInput> Getinputclass() {
-		return ChangeUserRoleInput.class;
-	}
 }

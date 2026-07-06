@@ -72,7 +72,6 @@
   The real result is inside the JSON body, wrapped as <code>{ "status": ..., "data": ... }</code>:
   <pre style="margin-top:8px;"><span class="comment">// success</span>           { <span class="key-str">"status"</span>: <span class="val-num">200</span>,  <span class="key-str">"data"</span>: { ... } }
 <span class="comment">// validation error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9906</span>, <span class="key-str">"data"</span>: [ { <span class="key-str">"status"</span>: <span class="val-num">9930</span>, <span class="key-str">"data"</span>: <span class="val-str">"INVALID_MESSAGE_TEXT"</span> } ] }
-<span class="comment">// json format error</span>  { <span class="key-str">"status"</span>: <span class="val-num">9929</span>, <span class="key-str">"data"</span>: "{ <span class="key-str">"token"</span>: { <span class="key-str">"tokenId"</span>: <span class="val-str">"&ltjwt&gt"</span> } }"}
 <span class="comment">// generic error</span>     { <span class="key-str">"status"</span>: <span class="val-num">9907</span>, <span class="key-str">"data"</span>: <span class="val-str">"FORBIDDEN"</span> }</pre>
   Always check the <code>status</code> field — <code>200</code> = ok, any <code>99xx</code> = error.
   In the examples below, the <span style="color:#2e7d32;font-weight:600;">Response</span> shows only the
@@ -102,7 +101,7 @@
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> } }</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> } }</pre>
 </div>
 
 <div class="endpoint">
@@ -115,11 +114,10 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"password"</span>: <span class="val-str">"Password123!"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"token"</span>: {
     <span class="key-str">"jwt"</span>:       <span class="val-str">"eyJhbGciOiJIUzI1NiJ9.eyJ..."</span>,
     <span class="key-str">"username"</span>:  <span class="val-str">"alice"</span>,
-    <span class="key-str">"email"</span>:     <span class="val-str">"alice@mail.com"</span>,
     <span class="key-str">"role"</span>:      <span class="val-str">"USER"</span>,
     <span class="key-str">"issuedAt"</span>:  <span class="val-num">1750000000</span>,
     <span class="key-str">"expiresAt"</span>: <span class="val-num">1750007200</span>
@@ -137,7 +135,7 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },<span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>}}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Logout successful"</span> } }</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Logout successful"</span> } }</pre>
 </div>
 
 <div class="endpoint">
@@ -151,9 +149,9 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"users"</span>: [
-    { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> },
-    { <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>,   <span class="key-str">"email"</span>: <span class="val-str">"bob@mail.com"</span>,   <span class="key-str">"role"</span>: <span class="val-str">"ADMIN"</span> }
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"users"</span>: [
+    { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"display"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> },
+    { <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>,   <span class="key-str">"display"</span>: <span class="val-str">"bob"</span>,   <span class="key-str">"email"</span>: <span class="val-str">"bob@mail.com"</span>,   <span class="key-str">"role"</span>: <span class="val-str">"ADMIN"</span> }
   ]
 }}</pre>
 </div>
@@ -169,7 +167,8 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"display"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -179,19 +178,54 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Owner or ADMIN/BOFFICER</span>
   </div>
-  <p class="desc">Updates the user's address and phone attributes.</p>
+  <p class="desc">Updates the user's email and display name.</p>
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
     <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
-    <span class="key-str">"attributes"</span>: {
-      <span class="key-str">"address"</span>: <span class="val-str">"Porto"</span>,
-      <span class="key-str">"phone"</span>:   <span class="val-str">"987654321"</span>
-    }
+    <span class="key-str">"email"</span>:   <span class="val-str">"alice@mail.com"</span>
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"message"</span>: <span class="val-str">"Updated successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"message"</span>: <span class="val-str">"Updated successfully"</span> }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/user</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">USER</span>
+  </div>
+  <p class="desc">Gets user information.</p>
+  <div class="label">Request</div>
+ <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>:    <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
+    <span class="key-str">"username"</span>:      <span class="val-str">"alice"</span>,
+    <span class="key-str">"email"</span>:         <span class="val-str">"alice@mail.com"</span>,
+    <span class="key-str">"role"</span>:          <span class="val-str">"USER"</span>,   <span class="comment">// USER | BOFFICER | ADMIN</span>
+    <span class="key-str">"creation_time"</span>: <span class="val-num">123841841</span>,
+    <span class="key-str">"display"</span>:       <span class="val-str">"myfriendalice"</span>,
+    <span class="key-str">"oldnames"</span>:      [<span class="key-str">"@l1c3"</span>, <span class="key-str">"Newalice"</span>],
+    <span class="key-str">"friendship"</span>:    <span class="val-str">"FRIENDS"</span> 
+      <span class="comment">// NOT_FRIENDS | FRIENDS | REQUEST_SENT | REQUEST_RECIVED | SELF</span>
+  
+  }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/find</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">USER</span>
+  </div>
+  <p class="desc">Finds a user by username or display name.(not implemented)</p>
+  <div class="label">Request</div>
+ <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"found"</span>: [<span class="val-str">"alice"</span>, <span class="val-str">"alice42"</span> ]}}</pre>
 </div>
 
 <div class="endpoint">
@@ -211,7 +245,27 @@
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Password changed successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Password changed successfully"</span> }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/forgotuserpwd</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Owner</span>
+  </div>
+  <p class="desc">Changes the password. "NOT IMPLEMENTED"</p>
+  <div class="label">Request</div>
+  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"username"</span>:    <span class="val-str">"alice"</span>,
+    <span class="key-str">"oldpassword"</span>: <span class="val-str">"Password123!"</span>,
+    <span class="key-str">"newpassword"</span>: <span class="val-str">"NewPass456!"</span>
+  }
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Password changed successfully"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -230,7 +284,7 @@
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Role updated successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Role updated successfully"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -243,7 +297,7 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Account deleted successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Account deleted successfully"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -256,9 +310,23 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Friend Request Sent"</span> }}</pre>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Friend Request Accepted"</span> }}
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Friend Request Sent"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Friend Request Accepted"</span> }}
   <span class="comment">//if already had a friend request from alice(other user)</span></pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/addnickname</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Add a nickname for the user. (must be friends)</p>
+  <div class="label">Request</div>
+  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="key-str">"input"</span>: {
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"newname"</span>: <span class="val-str">"NEWalice"</span> }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Friend Nickname Set"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -271,7 +339,7 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Friendship Ended"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Friendship Ended"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -285,7 +353,7 @@
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
 
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"friends"</span>: [
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"friends"</span>: [
     { <span class="key-str">"Friend"</span>: <span class="val-str">"bob"</span>, <span class="key-str">"Start"</span>: <span class="val-num">1761500000</span> },
     { <span class="key-str">"Friend"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"Start"</span>: <span class="val-num">1351510000</span> }
   ]}}</pre>
@@ -301,7 +369,7 @@
   <div class="label">Request</div>
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }} <span class="comment">//check your friends</span></pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"friends"</span>: [
     { <span class="key-str">"From"</span>: <span class="val-str">"gabriel"</span>, <span class="key-str">"Sent at"</span>: <span class="val-num">1125500000</span> },
     { <span class="key-str">"From"</span>: <span class="val-str">"ada"</span>, <span class="key-str">"Sent at"</span>: <span class="val-num">1531510000</span> }
@@ -318,12 +386,13 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"tokens"</span>: [
     {
-      <span class="key-str">"tokenID"</span>:   <span class="val-str">"a1b2c3-jti"</span>,
+      <span class="key-str">"jwt"</span>:       <span class="val-str">"a1b2c3-jti"</span>,
       <span class="key-str">"username"</span>:  <span class="val-str">"alice"</span>,
       <span class="key-str">"role"</span>:      <span class="val-str">"USER"</span>,
+      <span class="key-str">"issuedAt"</span>:  <span class="val-num">1750006200</span>,
       <span class="key-str">"expiresAt"</span>: <span class="val-num">1750007200</span>
     }
   ]
@@ -352,11 +421,13 @@
     <span class="key-str">"durationMinutes"</span>: <span class="val-num">120</span>,
     <span class="key-str">"maxAttendees"</span>:    <span class="val-num">50</span>,            <span class="comment">// 0 = unlimited</span>
     <span class="key-str">"minAttendees"</span>:    <span class="val-num">0</span>,
-    <span class="key-str">"isPublic"</span>:        <span class="val-bool">true</span>
+    <span class="key-str">"isPublic"</span>:        <span class="val-bool">true</span>,
+    <span class="key-str">"isAccessible"</span>:    <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
     <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-...-446655440000"</span>, <span class="key-str">"message"</span>: <span class="val-str">"Event created successfully"</span> 
   }}</pre>
 </div>
@@ -374,7 +445,7 @@
   <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-...-446655440000"</span> }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"event"</span>: {
     <span class="key-str">"eventId"</span>:           <span class="val-str">"550e8400-..."</span>,
     <span class="key-str">"title"</span>:             <span class="val-str">"Concerto de Jazz"</span>,
@@ -389,8 +460,9 @@
     <span class="key-str">"isPublic"</span>:          <span class="val-bool">true</span>,
     <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,
     <span class="key-str">"createdAt"</span>:         <span class="val-num">1759000000</span>,
-    <span class="key-str">"coverImageUrl"</span>:     <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid"</span>,
-    <span class="key-str">"imageUrls"</span>:         [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> ]
+    <span class="key-str">"imageUrls"</span>:         [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> ],
+    <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }}</pre>
 </div>
@@ -406,15 +478,17 @@
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
-    <span class="key-str">"category"</span>:        <span class="val-str">"MUSIC"</span>,        <span class="comment">// optional</span>
-    <span class="key-str">"status"</span>:          <span class="val-str">"UPCOMING"</span>,     <span class="comment">// optional</span>
+    <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,        <span class="comment">// optional</span>
+    <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,     <span class="comment">// optional</span>
     <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,        <span class="comment">// optional</span>
     <span class="key-str">"pageSize"</span>:          <span class="val-num">10</span>,
-    <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>            <span class="comment">// use nextCursor from a previous </span>
+    <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>,            <span class="comment">// use nextCursor from a previous </span>
+    <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"events"</span>:     [ { <span class="comment">/* same shape as /events/get */</span> } ],
   <span class="key-str">"count"</span>:      <span class="val-num">10</span>,
   <span class="key-str">"nextCursor"</span>: <span class="val-str">"Cj0KFR...urlsafe"</span>   <span class="comment">// absent when there are no more pages</span>
@@ -442,11 +516,12 @@
     <span class="key-str">"durationMinutes"</span>: <span class="val-num">90</span>,
     <span class="key-str">"maxAttendees"</span>:    <span class="val-num">80</span>,
     <span class="key-str">"isPublic"</span>:        <span class="val-bool">false</span>,
-    <span class="key-str">"coverImageUrl"</span>:   <span class="val-str">"https://..."</span>
+    <span class="key-str">"isAccessible"</span>:    <span class="val-bool">true</span>,
+    <span class="key-str">"SDQ"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event updated successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event updated successfully"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -460,7 +535,7 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event cancelled successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event cancelled successfully"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -474,7 +549,7 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event deleted successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event deleted successfully"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -487,7 +562,7 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Successfully registered for the event"</span> }}
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Successfully registered for the event"</span> }}
 <span class="comment">// or "Already attending this event" / "Event is full"</span></pre>
 </div>
 
@@ -501,7 +576,7 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Successfully unregistered from the event"</span> }}
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Successfully unregistered from the event"</span> }}
 <span class="comment">// or "Not attending this event"</span></pre>
 </div>
 
@@ -516,7 +591,7 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"attendees"</span>: [
     { <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>, <span class="key-str">"joinedAt"</span>: <span class="val-num">1759500000</span> }
   ],
@@ -535,7 +610,7 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"myattends"</span>: [
     { <span class="key-str">"event_id"</span>: <span class="val-str">"uuid"</span>, <span class="key-str">"joinedAt"</span>: <span class="val-num">1759500000</span> }
   ],
@@ -557,7 +632,7 @@
     <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
   }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"event_id"</span>: <span class="val-str">true</span>} }</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"event_id"</span>: <span class="val-str">true</span>} }</pre>
 </div>
 
 <div class="endpoint">
@@ -580,7 +655,7 @@
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"imageUrls"</span>: [
     <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid1"</span>,
     <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span>
@@ -607,7 +682,7 @@
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Image deleted successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Image deleted successfully"</span> }}</pre>
 </div>
 
 <!-- ===================== FORUM ===================== -->
@@ -631,7 +706,7 @@
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"postId"</span>:         <span class="val-str">"9c2b-...-uuid"</span>,
   <span class="key-str">"eventId"</span>:        <span class="val-str">"uuid"</span>,
   <span class="key-str">"authorUsername"</span>: <span class="val-str">"alice"</span>,
@@ -658,7 +733,7 @@
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"posts"</span>: [
     {
       <span class="key-str">"postId"</span>:       <span class="val-str">"9c2b-..."</span>,
@@ -685,7 +760,7 @@
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: <span class="val-str">"9c2b-...-uuid"</span> }   <span class="comment">// input = the postId to delete</span></pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Post deleted successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Post deleted successfully"</span> }}</pre>
 </div>
 
 <div class="endpoint">
@@ -696,7 +771,7 @@
   </div>
   <p class="desc">Called automatically by App Engine cron (every 10 min). Marks ended events as COMPLETED and deletes the forums of completed/cancelled events. Rejected (FORBIDDEN) unless the request carries the <code>X-AppEngine-Cron</code> header.</p>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-str">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"eventsClosed"</span>: <span class="val-num">2</span>, <span class="key-str">"postsDeleted"</span>: <span class="val-num">17</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"eventsClosed"</span>: <span class="val-num">2</span>, <span class="key-str">"postsDeleted"</span>: <span class="val-num">17</span> }}</pre>
 </div>
 
 <!-- ===================== FLOW ===================== -->
@@ -739,6 +814,8 @@
     <tr><td>9930</td><td>Invalid message text (empty or &gt; 1000 chars)</td></tr>
     <tr><td>9931</td><td>Event not open for forum (cancelled/completed)</td></tr>
     <tr><td>9932</td><td>Forum post not found</td></tr>
+    <tr><td>9933</td><td>SDG does not exist(n>17 || n<1)</td></tr>
+    <tr><td>9934</td><td>You are not friends with this user</td></tr>
   </table>
 </div>
 

@@ -1,10 +1,10 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ModelToken;
 
 public interface TokenRequestInterface {
 
-	Token getToken();
+	ModelToken getToken();
 	
-	void setToken(Token token);
+	void setToken(ModelToken token);
 }

@@ -2,11 +2,11 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 
-public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsid>implements ModelInterface{
+public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsid>{
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": {
 	 *   	"eventId": "...",
 	 *   	"title": "...",           (optional — only fields present are updated)
@@ -16,16 +16,12 @@ public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsi
 	 *   	"startDate": 1234567890,
 	 *   	"durationMinutes": 120,
 	 *   	"maxAttendees": 100,
-	 *   	"coverImageUrl":"https://..."
-	 *   	"isPublic": true}
+	 *   	"isPublic": true,
+	 *   	"isAccessible": true,
+	 *   	"SDG": [1,14,3]}
 	 * }
 	 */
 	
 	public UpdateEventRequest() {};
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<EventAtributsid> Getinputclass() {
-		return EventAtributsid.class;
-	}
 }

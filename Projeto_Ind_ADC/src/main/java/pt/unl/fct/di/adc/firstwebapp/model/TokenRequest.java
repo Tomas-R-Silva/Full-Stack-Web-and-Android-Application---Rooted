@@ -1,36 +1,24 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.Map;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ModelToken;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
-
-public class TokenRequest implements ModelInterface, TokenRequestInterface{
+public class TokenRequest implements TokenRequestInterface{
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" }
+	 *   "token": { "jwt": "<jwt>" }
 	 * }
 	 */
-	public Token token;
+	public ModelToken token;
 	
 	public TokenRequest() {}
 	
-	public Token getToken() {
+	public ModelToken getToken() {
         return token;
     }
 	
-	public void setToken(Token token) {
+	public void setToken(ModelToken token) {
         this.token = token;
     }
-
-	@Override
-	public Map<String, Object> getformat() {
-		return Map.of("token","\"<jwt>\"");
-	}
-
-	@Override
-	public <E extends ModelInterface> Class<E> Getinputclass() {
-		return null;
-	}
 
 }

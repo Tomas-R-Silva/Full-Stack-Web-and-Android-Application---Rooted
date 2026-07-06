@@ -38,7 +38,9 @@ public class Error {
 			FRIEND_SELF="FRIEND_SELF",
 			ALREADY_FRIEND="ALREADY_FRIEND",
 			FRIEND_REQUEST_ALREADY_SENT="FRIEND_REQUEST_ALREADY_SENT",
-			WRONG_JSON_STRUCTURE="WRONG_JSON_STRUCTURE";
+			WRONG_JSON_STRUCTURE="WRONG_JSON_STRUCTURE",
+			SDG_DOESNT_EXIST="SDG_DOESNT_EXIST",
+			NOT_FRIEND="NOT_FRIEND";
 
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
@@ -120,6 +122,8 @@ public class Error {
 		case 9930->data=INVALID_MESSAGE_TEXT;
 		case 9931->data=EVENT_NOT_OPEN_FOR_FORUM;
 		case 9932->data=POST_NOT_FOUND;
+		case 9933->data=SDG_DOESNT_EXIST;
+		case 9934->data=NOT_FRIEND;
 		default->data="";
 		}
 		return data;

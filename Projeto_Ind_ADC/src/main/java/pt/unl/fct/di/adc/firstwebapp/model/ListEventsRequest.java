@@ -1,18 +1,20 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.Map;
+import java.util.List;
 
-public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsRequest.ListEventsInput>implements ModelInterface{
+public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsRequest.ListEventsInput>{
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },  (optional — required only to see private events)
+	 *   "token": { "jwt": "<jwt>" },  (optional — required only to see private events)
 	 *   "input": {
 	 *   	"category": "MUSIC",              (optional filter)
 	 *   	"status": "UPCOMING",             (optional filter, defaults to UPCOMING)
-	 *   	"organizerUsername": "...",        (optional filter)
+	 *   	"organizerUsername": "...",       (optional filter)
 	 *   	"pageSize": 20,                   (optional, default 20)
-	 *   	"cursor": "..."                   (optional, for pagination)
+	 *   	"cursor": "...",                  (optional, for pagination)
+	 *   	"isAccessible": true,
+	 *   	"SDG": [1,14,3]  
 	 *   }
 
 	 * }
@@ -20,12 +22,14 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	
 	public ListEventsRequest() {}
 	
-	public class ListEventsInput implements ModelInterface{
+	public class ListEventsInput{
 		private String category;
 	    private String status;
 	    private String organizerUsername;
 	    private Integer pageSize;
 	    private String cursor;
+	    private List<Integer> SDG;
+	    private Boolean isAccessible;
 
 	    public ListEventsInput() {}
 
@@ -37,33 +41,18 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 
 	    public String getOrganizerUsername() { return organizerUsername; }
 	    public void setOrganizerUsername(String organizerUsername) { this.organizerUsername = organizerUsername; }
-
 	    
 	    public int getPageSize() { return (pageSize==null||pageSize <= 0) ? 20 : pageSize; }
 	    public void setPageSize(int pageSize) { this.pageSize = pageSize; }
 
 	    public String getCursor() { return cursor; }
 	    public void setCursor(String cursor) { this.cursor = cursor; }
-
-		@Override
-		public Map<String, Object> getformat() {
-			return Map.of("category", ModelInterface.defaultstr, 
-					"status", ModelInterface.defaultstr, 
-					"organizerUsername", ModelInterface.defaultstr, 
-					"pageSize", 20, 
-					"cursor", ModelInterface.defaultstr);
-		}
-
-		@Override
-		public <E extends ModelInterface> Class<E> Getinputclass() {
-			return null;
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<ListEventsInput> Getinputclass() {
-		return ListEventsInput.class;
+	    
+	    public List<Integer> getSDG() { return SDG; }
+	    public void setSDG(List<Integer> SDG) { this.SDG = SDG; }
+	    
+	    public Boolean isAccessible() { return isAccessible; }
+	    public void setisAccessible(Boolean isAccessible) { this.isAccessible = isAccessible; }
 	}
     
 }

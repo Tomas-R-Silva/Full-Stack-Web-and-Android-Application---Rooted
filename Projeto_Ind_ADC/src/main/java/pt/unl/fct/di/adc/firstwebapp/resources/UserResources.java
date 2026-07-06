@@ -1,6 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -12,6 +13,9 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.EntityQuery;
+import com.google.cloud.datastore.Entity.Builder;
+import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
@@ -26,6 +30,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
@@ -40,16 +45,17 @@ import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
+import com.google.cloud.datastore.StringValue;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.TwoNameTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
 
 
 @Path("/")
 public class UserResources {
-
+	private static final long TIME_DIVIDER = 1000L;
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
 			.setProjectId("adc-final")
 			.build()
@@ -74,13 +80,24 @@ public class UserResources {
 			Entity existingUser = txn.get(userKey);
 
 			if (existingUser != null) ErrorException.trow(9901);
+
+			List<StringValue> listnames = new ArrayList<>(1),
+					listtokens = new ArrayList<>(0),
+					listcategories = new ArrayList<>(0);
+			listnames.add(StringValue.of(user.getUsername()));
+
+
 			user.userValidation();
 			Entity newUser = Entity.newBuilder(userKey)
 					.set("user_name", user.getUsername())
 					.set("user_email", user.getEmail())
 					.set("user_pwd", DigestUtils.sha512Hex(user.getPassword()))
 					.set("user_role", user.getRole().name())
+					.set("user_display", user.getUsername())
+					.set("old_display", listnames)
 					.set("user_creation_time", Timestamp.now())
+					.set("tokens", listtokens)
+					.set("categoris", listcategories)
 					.build();
 
 			txn.put(newUser);
@@ -113,33 +130,20 @@ public class UserResources {
 
 			Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
 
-			String userName = user.getKey().getName();
-			Role role = Role.valueof(user.getString("user_role"));
-
-			String jwtString = JWTToken.createJWT(userName, Map.of("role", role.name()));
+			String jwtString = JWTToken.createJWT(user.getString("user_name"), Map.of("role", Role.valueof(user.getString("user_role")).name()));
 			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
-			String jti = decoded.getId();
-			long issuedAt = decoded.getIssuedAt().getTime() / 1000L;
-			long expiresAt = decoded.getExpiresAt().getTime() / 1000L;
-
-			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jti);
+			
+			Token token =JWTToken.filltoken(jwtString,decoded);
+			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jwtString);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
-					.set("jti", jti)
-					.set("user_name", userName)
-					.set("role", role.name())
-					.set("issued_at", issuedAt)
-					.set("expires_at", expiresAt)
+					.set("jwt", jwtString)
+					.set("user_name", token.getUsername())
+					.set("role", token.getRoleString())
+					.set("issued_at", token.getIssuedAt()/TIME_DIVIDER)
+					.set("expires_at", token.getExpiresAt()/TIME_DIVIDER)
 					.build();
-
 			datastore.put(sessionEntity);
-			return buildresponse(Map.of("token", Map.of(
-					"jwt", jwtString,
-					"username", userName,
-					"email", user.contains("user_email") ? user.getString("user_email") : "",
-							"role", role.toString(),
-							"issuedAt", issuedAt,
-							"expiresAt", expiresAt
-					)));
+			return buildresponse(Map.of("token", Token.getfromcloud(sessionEntity).tomap()));
 		}catch(Exception e) {
 			return Error.fromexception(e);
 		}
@@ -152,7 +156,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showUsers(Object obj) {
 		try {
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			TokenRequest request=AuthHelper.verifyInput(obj,TokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 
 			Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
@@ -167,6 +171,7 @@ public class UserResources {
 				Entity e = results.next();
 				users.add(Map.of(
 						"username", e.getString("user_name"),
+						"display", e.getString("user_display"),
 						"email", e.contains("user_email") ? e.getString("user_email") : "",
 								"role", e.getString("user_role")
 						));
@@ -204,24 +209,94 @@ public class UserResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response modifyAccount(Object obj) {
-		try {//TODO
+		try {
 			ModAccountRequest request=AuthHelper.verifyInput(obj,ModAccountRequest.class);
 			ModAccountRequestInput input = request.getInput();
-			Attributes attributes = request.getInput().getAttributes();
-			Entity user = AuthHelper.getUser(input);
 			Token token = AuthHelper.verifyToken(request);
+			Entity user = AuthHelper.getUser(token);
+			Builder updatedUser = Entity.newBuilder(user);
+			if(input.getUsername()!=null&&!user.getString("user_display").equals(input.getUsername())) {
+				updatedUser.set("user_display", input.getUsername());
+				List<StringValue> list = user.getList("old_display");
+				StringValue news=StringValue.of(input.getUsername());
+				if(!list.contains(news)) {
+					list.add(news);
+					updatedUser.set("old_display", list);
+				}
+			}
+			if(input.getEmail()!=null&&!user.getString("user_email").equals(input.getEmail()))
+				updatedUser.set("user_email", input.getEmail());	
+			datastore.put(updatedUser.build());
 
-			if (!token.getUsername().equals(user.getString("user_name"))) 
-				Validator.unauthorized(token, new Role[]{Role.BOFFICER,Role.ADMIN});
-			/*
-			Entity updatedUser = Entity.newBuilder(user)
-					.set("user_address", attributes.getAddress())
-					.set("user_phone", attributes.getPhone())
-					.build();
-			 datastore.put(updatedUser);
-			 */
 
 			return buildresponse(Map.of("message", "Updated successfully"));
+		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/user")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAccount(Object obj) {
+		try {
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = AuthHelper.getUser(request.getInput());
+			Entity friend=datastore.get(getFriendKey(token,user));
+			Friendstatus friendshipstatus;
+			if(user.getString("user_name").equals(token.getUsername())) 
+				friendshipstatus=Friendstatus.SELF;
+			else if(friend!=null) 
+				if(friend.getBoolean("accepted"))
+					friendshipstatus=Friendstatus.FRIENDS;
+				else if(friend.getString("username_1").equals(token.getUsername()))
+					friendshipstatus=Friendstatus.REQUEST_SENT;
+				else
+					friendshipstatus=Friendstatus.REQUEST_RECIVED;
+			else
+				friendshipstatus=Friendstatus.NOT_FRIENDS;
+			String displayname=user.getString("user_display");
+			if(friendshipstatus==Friendstatus.FRIENDS) {
+				String temp=friend.getString((friend.getString("username_1").equals(token.getUsername()))?"nickname_1":"nickname_2");
+				if(temp!=null)
+					displayname=temp;
+			}
+			List<StringValue> list = user.getList("old_display");
+			List<String> newlist=new ArrayList<>(list.size());
+			for(StringValue v:list) newlist.add(v.get());
+			return buildresponse(
+					Map.of("username", user.getString("user_name"),
+							"email", user.getString("user_email"),
+							"role", user.getString("user_role"),
+							"creation_time",user.getLong("user_creation_time"),
+							"display",displayname,
+							"oldnames",newlist,
+							"friendship",friendshipstatus.toString()
+							));
+		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/find")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response findAccount(Object obj) {
+		try {
+			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			//Entity user = AuthHelper.getUser(request.getInput());
+			//TODO
+
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
+			queryBuilder.setFilter(PropertyFilter.eq("user_display", request.getInput().getUsername()));
+			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
+
+
+			return null;
 		}catch(Exception e) {
 			return Error.fromexception(e);
 		}
@@ -239,6 +314,7 @@ public class UserResources {
 			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
 					"username", user.getString("user_name"),
+					"display", user.getString("user_display"),
 					"email", user.contains("user_email") ? user.getString("user_email") : "",
 							"role", user.getString("user_role")
 					));
@@ -407,6 +483,26 @@ public class UserResources {
 	}
 
 	@POST
+	@Path("/addnickname")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addnickname(Object obj) throws ErrorException{
+		try{
+			TwoNameTokenRequest request=AuthHelper.verifyInput(obj,TwoNameTokenRequest.class);
+			Token token = AuthHelper.verifyToken(request);
+			Entity user = AuthHelper.getUser(request.getInput());
+			Entity existingfriend = datastore.get(getFriendKey(token,user));
+			if(existingfriend == null || !existingfriend.getBoolean("accepted"))
+				ErrorException.trow(9934);
+			String friend=existingfriend.getString("username_1").equals(token.getUsername())?"nickname_1":"nickname_2";
+			datastore.put(Entity.newBuilder(existingfriend).set(friend,request.getInput().getNewName()).build());
+			return buildresponse(Map.of("message", "Friend Nickname Set"));
+		} catch (Exception e){
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
 	@Path("/unfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -427,11 +523,27 @@ public class UserResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showFriends(Object obj){
+		final String friend="Friend",start="Start";	
 		try{
 			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);;
 			String username=AuthHelper.getUser(request.getInput()).getString("user_name");
 			AuthHelper.verifyToken(request);
-			return buildresponse(Map.of("friends", showFriends(username,true)));
+			List<Map<String, Object>> friends = new LinkedList<>();
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
+			List<StructuredQuery.Filter> filters = new ArrayList<>(1);
+			filters.add(PropertyFilter.eq("accepted", true));
+
+			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
+			while(sessions.hasNext()){
+				Entity session = sessions.next();
+				String friend1=session.getString("username_1"),
+						friend2=session.getString("username_2");
+				if(friend1.equals(username))
+					friends.add(Map.of(friend, friend2,start, session.getLong("issued_at")));
+				else if(friend2.equals(username))
+					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")));
+			}
+			return buildresponse(Map.of("friends", friends));
 		} catch (Exception e){
 			return Error.fromexception(e);
 		}
@@ -444,31 +556,21 @@ public class UserResources {
 	public Response showFriendRequests(Object obj){
 		try{
 			Token token = AuthHelper.verifyToken(AuthHelper.verifyInput(obj,TokenRequest.class));
-			return buildresponse(Map.of("friends", showFriends(token.getUsername(),true)));
+
+			List<Map<String, Object>> friends = new LinkedList<>();
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
+			List<StructuredQuery.Filter> filters = new ArrayList<>(2);
+			filters.add(PropertyFilter.eq("accepted", false));
+			filters.add(PropertyFilter.eq("username_2", token.getUsername()));
+			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
+			while(sessions.hasNext()) {
+				Entity session = sessions.next();
+				friends.add(Map.of("From", session.getString("username_1"),"Sent at", session.getLong("issued_at")));
+			}
+			return buildresponse(Map.of("friends", friends));
 		} catch (Exception e){
 			return Error.fromexception(e);
 		}
-	}
-
-	private List<Map<String,Object>> showFriends(String username,boolean accepted) {
-		final String friend="Friend",start="Start";
-		Query<Entity> query = Query.newEntityQueryBuilder().setKind(friend).build();
-		QueryResults<Entity> sessions = datastore.run(query);
-		List<Map<String, Object>> friends = new ArrayList<>();
-		while(sessions.hasNext()){
-			Entity session = sessions.next();
-			String friend1=session.getString("username_1"),
-					friend2=session.getString("username_2");
-			if(accepted&&session.getBoolean("accepted")) {
-				if(friend1.equals(username))
-					friends.add(Map.of(friend, friend2,start, session.getLong("issued_at")));
-				else if(friend2.equals(username))
-					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")));
-			}
-			else if(!accepted&&!session.getBoolean("accepted")&&friend2.equals(username))
-				friends.add(Map.of("From", friend1,"Sent at", session.getLong("issued_at")));
-		}
-		return friends;
 	}
 
 	private List<Map<String, Object>> getAllSessions(){
@@ -477,18 +579,16 @@ public class UserResources {
 				.build();
 
 		QueryResults<Entity> sessions = datastore.run(query);
-		List<Map<String, Object>> tokensOutput = new ArrayList<>();
+		List<Map<String, Object>> tokensOutput = new LinkedList<>();
 
-		while(sessions.hasNext()){
-			Entity session = sessions.next();
-			tokensOutput.add(Map.of(
-					"tokenID", session.getString("jti"),
-					"username", session.getString("user_name"),
-					"role", session.getString("role"),
-					"expiresAt", session.getLong("expires_at")
-					));
+		while(sessions.hasNext()) {
+			Entity session=sessions.next();
+			Token token=Token.getfromcloud(session);
+			if(token.isexpierd())
+				datastore.delete(session.getKey());
+			else
+				tokensOutput.add(token.tomap());
 		}
-
 		return tokensOutput;
 
 	}

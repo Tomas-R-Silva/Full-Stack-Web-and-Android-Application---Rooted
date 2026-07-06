@@ -1,8 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.Map;
-
-public abstract class AbstractInputRequest<E extends ModelInterface> implements ModelInterface{
+public abstract class AbstractInputRequest<E>{
 	/**
 	 * {
 	 *   "input": E
@@ -20,15 +18,4 @@ public abstract class AbstractInputRequest<E extends ModelInterface> implements 
 	public void setInput(E input) {
 		this.input = input;
 	}
-	
-	@SuppressWarnings("deprecation")
-	@Override
-	public Map<String, Object> getformat() {
-		try {
-			return Map.of("input",Getinputclass().newInstance().getformat());
-		} catch (InstantiationException | IllegalAccessException e1) {
-			return Map.of();
-		}
-	}
-
 }

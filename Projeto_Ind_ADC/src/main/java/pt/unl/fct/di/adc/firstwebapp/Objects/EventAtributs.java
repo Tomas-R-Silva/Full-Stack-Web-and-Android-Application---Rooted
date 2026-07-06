@@ -1,11 +1,13 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.cloud.datastore.LongValue;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Category;
-import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 
-public class EventAtributs implements ModelInterface{
+public class EventAtributs{
 
 	protected String title;
 	protected String description;
@@ -16,7 +18,9 @@ public class EventAtributs implements ModelInterface{
 	protected Integer maxAttendees;// 0 = unlimited
 	protected Integer minAttendees;
 	protected Boolean isPublic;
-	protected String coverImageUrl;
+	protected Boolean isAccessible;
+	protected List<Integer> SDG;
+	
 
 	public EventAtributs() {}
 	
@@ -52,9 +56,19 @@ public class EventAtributs implements ModelInterface{
 	public boolean isPublic() { return zeroifnull(isPublic); }
 	public Boolean isPublicnull() { return isPublic; }
 	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
-
-	public String getCoverImageUrl() { return coverImageUrl; }
-	public void setCoverImageUrl(String coverImageUrl) { this.description = coverImageUrl; }
+	
+	public boolean isAccessible() { return zeroifnull(isAccessible); }
+	public Boolean isAccessiblenull() { return isAccessible; }
+	public void setAccessible(boolean isAccessible) { this.isAccessible = isAccessible; }
+	
+	public List<LongValue> getSDG() {
+		List<LongValue> list = new ArrayList<>(SDG.size());
+		for(Integer n:SDG) 
+			list.add(LongValue.of(n));
+		return list;
+	}
+	public List<Integer> getSDGint() { return SDG; }
+	public void setSDG(List<Integer> SDG) { this.SDG = SDG; }
 	
 	private static int zeroifnull(Integer n) {
 		return(n==null)?0:n;
@@ -66,22 +80,4 @@ public class EventAtributs implements ModelInterface{
 		return(n==null)?false:n;
 	}
 
-	@Override
-	public Map<String, Object> getformat() {
-		return Map.of("title",ModelInterface.defaultstr,
-				"description",ModelInterface.defaultstr,
-				"category","MUSIC",
-				"location",ModelInterface.defaultstr,
-				"startDate",1234567890,
-				"durationMinutes", 120,
-				"maxAttendees", 100,
-			   	"minAttendees", 10,
-			   	"coverImageUrl","https://...",
-			   	"isPublic", true );
-	}
-
-	@Override
-	public <E extends ModelInterface> Class<E> Getinputclass() {
-		return null;
-	}
 }

@@ -6,13 +6,12 @@ import java.util.Map;
 
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
-import pt.unl.fct.di.adc.firstwebapp.model.ModelInterface;
 
 /**
  * Represents a user in the system.
  * The create account creates an user
  */
-public class User extends ShortUser implements ModelInterface{
+public class User extends ShortUser{
 	
 	/**
 	 * {
@@ -30,6 +29,17 @@ public class User extends ShortUser implements ModelInterface{
 		ADMIN;
 		public static Role valueof(String v) {
 			try{return Role.valueOf(v);}catch (Exception e) {return null;}
+		}
+	}
+	
+	public enum Friendstatus {
+		NOT_FRIENDS,
+		FRIENDS,
+		REQUEST_SENT,
+		REQUEST_RECIVED,
+		SELF;
+		public static Friendstatus valueof(String v) {
+			try{return Friendstatus.valueOf(v);}catch (Exception e) {return null;}
 		}
 	}
 

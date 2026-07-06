@@ -2,11 +2,11 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributs;
 
-public class CreateEventRequest extends AbstractTokenInputRequest<EventAtributs>implements ModelInterface{
+public class CreateEventRequest extends AbstractTokenInputRequest<EventAtributs>{
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input":{
 	 *   	"title": "...",
 	 *   	"description": "...",
@@ -16,15 +16,13 @@ public class CreateEventRequest extends AbstractTokenInputRequest<EventAtributs>
 	 *   	"durationMinutes": 120,
 	 *   	"maxAttendees": 100,
 	 *   	"minAttendees": 10,
-	 *   	"isPublic": true }
+	 *   	"isPublic": true,
+	 *   	"isAccessible": true,
+	 *   	"SDG": [1,14,3]
+	 *    }
 	 * }
 	 */
 	
 	public CreateEventRequest() {}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<EventAtributs> Getinputclass() {
-		return EventAtributs.class;
-	}
 }

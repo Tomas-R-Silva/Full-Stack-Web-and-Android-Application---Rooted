@@ -1,22 +1,20 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import java.util.Map;
-
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
-public class LoginRequest extends AbstractTokenInputRequest<LoginRequest.LoginRequestInput>implements ModelInterface{
+public class LoginRequest extends AbstractTokenInputRequest<LoginRequest.LoginRequestInput>{
     public LoginRequest() {}
     
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input":{ 
 	 *   	"username": "...",
 	 *   	"password": "..." }
 	 * }
 	 */    
     
-    public static class LoginRequestInput extends ShortUser implements ModelInterface{
+    public static class LoginRequestInput extends ShortUser{
 
     	private String password;
     	
@@ -29,18 +27,5 @@ public class LoginRequest extends AbstractTokenInputRequest<LoginRequest.LoginRe
         public void setPassword(String password) {
             this.password = password;
         }
-        @Override
-    	public Map<String, Object> getformat() {
-        Map<String, Object> map=super.getformat();
-        map.put("password", ModelInterface.defaultstr);
-        return map;
-        }
-
     }
-    
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<LoginRequestInput> Getinputclass() {
-		return LoginRequestInput.class;
-	}
 }

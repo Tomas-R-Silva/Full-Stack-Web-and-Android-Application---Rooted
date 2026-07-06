@@ -1,11 +1,11 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User;
 
-public class UserRequest extends AbstractInputRequest<User>implements ModelInterface{
+public class UserRequest extends AbstractInputRequest<User>{
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": {
 	 *   	"username": "...",
 	 *   	"password": "...",
@@ -16,10 +16,4 @@ public class UserRequest extends AbstractInputRequest<User>implements ModelInter
 	 */
 	
 	public UserRequest() {}	
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<User> Getinputclass() {
-		return User.class;
-	}
 }

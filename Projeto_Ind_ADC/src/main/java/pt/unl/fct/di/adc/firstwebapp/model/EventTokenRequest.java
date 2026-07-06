@@ -2,21 +2,15 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInput;
 
-public class EventTokenRequest extends AbstractTokenInputRequest<EventInput>implements ModelInterface{
+public class EventTokenRequest extends AbstractTokenInputRequest<EventInput>{
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": { "eventId": "..." }
 	 * }
 	 */
 	
 	public EventTokenRequest() {}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<EventInput> Getinputclass() {
-		return EventInput.class;
-	}
 
 }
