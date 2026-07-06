@@ -36,10 +36,9 @@ public class Token extends ShortUser {
 	}
 
 	public Token(String jwt, String username, Role role) {
-		long now = System.currentTimeMillis();
-		this(jwt,username,role,
-				(now)/TIME_DIVIDER,
-				(now+EXPIRATION_TIME)/TIME_DIVIDER);
+		this(jwt, username, role,
+				System.currentTimeMillis() / TIME_DIVIDER,
+				System.currentTimeMillis() / TIME_DIVIDER + EXPIRATION_TIME);
 	}
 
 	public boolean isexpierd() {

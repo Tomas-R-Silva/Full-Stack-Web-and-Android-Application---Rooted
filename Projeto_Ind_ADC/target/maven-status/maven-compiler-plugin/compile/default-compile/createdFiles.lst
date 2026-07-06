@@ -1,6 +1,4 @@
 pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest.class
-pt/unl/fct/di/adc/firstwebapp/model/ModelInterface.class
-pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest$Attributes.class
 pt/unl/fct/di/adc/firstwebapp/model/CreateEventRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest$PasswordInput.class
 pt/unl/fct/di/adc/firstwebapp/model/ForumKeyTokenRequest$ForumKeyTokenInput.class
@@ -13,7 +11,9 @@ pt/unl/fct/di/adc/firstwebapp/Objects/EventInputInterface.class
 pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest.class
 pt/unl/fct/di/adc/firstwebapp/Utilities/GCSUploader.class
 pt/unl/fct/di/adc/firstwebapp/Objects/EventAtributs.class
+pt/unl/fct/di/adc/firstwebapp/Objects/ModelToken.class
 pt/unl/fct/di/adc/firstwebapp/model/LoginRequest$LoginRequestInput.class
+pt/unl/fct/di/adc/firstwebapp/model/TwoNameTokenRequest$TwoNameTokenRequestInput.class
 pt/unl/fct/di/adc/firstwebapp/model/UpdateEventRequest.class
 pt/unl/fct/di/adc/firstwebapp/Utilities/AuthHelper.class
 pt/unl/fct/di/adc/firstwebapp/Objects/Event.class
@@ -21,6 +21,7 @@ pt/unl/fct/di/adc/firstwebapp/resources/UserResources.class
 pt/unl/fct/di/adc/firstwebapp/model/ListEventsRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/LoginRequest.class
 pt/unl/fct/di/adc/firstwebapp/Utilities/ResponceBuilder.class
+pt/unl/fct/di/adc/firstwebapp/model/TwoNameTokenRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/TokenRequestInterface.class
 pt/unl/fct/di/adc/firstwebapp/Objects/ShortUser.class
 pt/unl/fct/di/adc/firstwebapp/Objects/EventAtributsid.class
@@ -36,6 +37,7 @@ pt/unl/fct/di/adc/firstwebapp/model/PostMessageRequest$PostMessageinput.class
 pt/unl/fct/di/adc/firstwebapp/model/ShortUserTokenRequest.class
 pt/unl/fct/di/adc/firstwebapp/Objects/ForumPost.class
 pt/unl/fct/di/adc/firstwebapp/model/EventShortUserTokenRequest$EventShortUser.class
+pt/unl/fct/di/adc/firstwebapp/Objects/User$Friendstatus.class
 pt/unl/fct/di/adc/firstwebapp/model/ChangeUserRole.class
 pt/unl/fct/di/adc/firstwebapp/resources/ForumResources.class
 pt/unl/fct/di/adc/firstwebapp/Objects/Token.class
