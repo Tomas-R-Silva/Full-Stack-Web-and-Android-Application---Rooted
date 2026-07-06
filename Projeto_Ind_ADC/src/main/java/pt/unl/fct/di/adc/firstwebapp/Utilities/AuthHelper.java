@@ -20,18 +20,12 @@ public class AuthHelper {
 			.build()
 			.getService();
 
-	private static final ObjectMapper mapper = new ObjectMapper()
-			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
 	private AuthHelper() {}
 
 	public static <E> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
 		if(!clas.isInstance(obj))
 			ErrorException.trow(9929);
-
 		return clas.cast(obj);
-
-
 	}
 
 	public static Token verifyToken(TokenRequestInterface token) throws ErrorException {
