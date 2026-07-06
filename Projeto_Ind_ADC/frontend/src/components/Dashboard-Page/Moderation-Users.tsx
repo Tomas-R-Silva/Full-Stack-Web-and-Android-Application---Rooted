@@ -41,7 +41,7 @@ function ModerationUsers() {
   const totalUsers = users.length;
   const totalUserRole = users.filter((u) => u.role === "USER").length;
   const totalBackOfficerRole = users.filter(
-    (u) => u.role === "BACKOFFICER",
+    (u) => u.role === "BOFFICER",
   ).length;
   const totalAdminRole = users.filter((u) => u.role === "ADMIN").length;
 

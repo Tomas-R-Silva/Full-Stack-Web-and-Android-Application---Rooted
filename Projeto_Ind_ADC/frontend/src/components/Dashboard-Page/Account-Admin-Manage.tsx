@@ -260,7 +260,10 @@ function AccountAdminManage({ user }: UserProps) {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-                placeholder={user.email ?? "No email"}
+                placeholder={
+                  "Change your email here. Current: " +
+                  (user.email ?? "No email")
+                }
               />
               {errors.email && (
                 <small className="text-danger">{errors.email}</small>

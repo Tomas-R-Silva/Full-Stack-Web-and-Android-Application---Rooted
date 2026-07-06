@@ -164,7 +164,9 @@ function AccountInformation() {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-                placeholder={email ?? "No email"}
+                placeholder={
+                  "Change your email here. Current: " + (email ?? "No email")
+                }
               />
               {errors.email && (
                 <small className="text-danger">{errors.email}</small>
