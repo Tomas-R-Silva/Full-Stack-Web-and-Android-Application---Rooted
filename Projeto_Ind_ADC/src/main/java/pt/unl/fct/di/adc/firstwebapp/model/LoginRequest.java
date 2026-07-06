@@ -2,12 +2,11 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
-public class LoginRequest extends AbstractTokenInputRequest<LoginRequest.LoginRequestInput>{
+public class LoginRequest extends AbstractInputRequest<LoginRequest.LoginRequestInput>{
     public LoginRequest() {}
     
 	/**
 	 * {
-	 *   "token": { "jwt": "<jwt>" },
 	 *   "input":{ 
 	 *   	"username": "...",
 	 *   	"password": "..." }
