@@ -43,12 +43,6 @@ function EventElements() {
     setField(newField);
   };
 
-  const UpdateProps = {
-    onClose: () => setShowModal(false),
-    event,
-    field,
-  };
-
   useEffect(() => {
     if (!id) return;
     loadEvents(id);
