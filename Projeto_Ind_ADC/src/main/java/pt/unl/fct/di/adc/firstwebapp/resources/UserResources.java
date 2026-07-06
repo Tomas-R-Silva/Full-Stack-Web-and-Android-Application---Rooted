@@ -119,9 +119,9 @@ public class UserResources {
 	@Path("/login")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response userLogin(LoginRequest request) {//Object obj) {
+	public Response userLogin(Object obj) {
 		try {
-			//LoginRequest request=AuthHelper.verifyInput(obj,LoginRequest.class);
+			LoginRequest request=AuthHelper.verifyInput(obj,LoginRequest.class);
 			LoginRequestInput userToLog = request.getInput();
 
 			Log.info("Attempt to create userLogin: " + userToLog.getUsername());
