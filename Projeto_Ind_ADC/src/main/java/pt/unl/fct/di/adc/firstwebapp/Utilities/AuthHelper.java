@@ -22,9 +22,10 @@ public class AuthHelper {
 
 	private AuthHelper() {}
 
+	@SuppressWarnings("unchecked")
 	public static <E> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
 		try {
-			return clas.cast(obj);
+			return (E) obj;
 		}catch(Exception e) {
 			ErrorException.trow(9929,e.getMessage());
 		}
