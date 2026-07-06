@@ -69,10 +69,10 @@ public class UserResources {
 	@Path("/createaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createAccount(Object obj) {
+	public Response createAccount(UserRequest request) {
 		Transaction txn = datastore.newTransaction();
 		try {
-			UserRequest request=AuthHelper.verifyInput(obj,UserRequest.class);
+
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
 
@@ -119,9 +119,8 @@ public class UserResources {
 	@Path("/login")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response userLogin(Object obj) {
+	public Response userLogin(LoginRequest request) {
 		try {
-			LoginRequest request=AuthHelper.verifyInput(obj,LoginRequest.class);
 			LoginRequestInput userToLog = request.getInput();
 
 			Log.info("Attempt to create userLogin: " + userToLog.getUsername());
@@ -154,9 +153,8 @@ public class UserResources {
 	@Path("/showusers")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUsers(Object obj) {
+	public Response showUsers(TokenRequest request) {
 		try {
-			TokenRequest request=AuthHelper.verifyInput(obj,TokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 
 			Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
@@ -186,9 +184,8 @@ public class UserResources {
 	@Path("/deleteaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteAccount(Object obj){
+	public Response deleteAccount(ShortUserTokenRequest request){
 		try {
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Key userKeyToBeDeleted = user.getKey();	
@@ -208,9 +205,8 @@ public class UserResources {
 	@Path("/modaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response modifyAccount(Object obj) {
+	public Response modifyAccount(ModAccountRequest request) {
 		try {
-			ModAccountRequest request=AuthHelper.verifyInput(obj,ModAccountRequest.class);
 			ModAccountRequestInput input = request.getInput();
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(token);
@@ -239,9 +235,8 @@ public class UserResources {
 	@Path("/user")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAccount(Object obj) {
+	public Response getAccount(ShortUserTokenRequest request) {
 		try {
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Entity friend=datastore.get(getFriendKey(token,user));
@@ -284,9 +279,8 @@ public class UserResources {
 	@Path("/find")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response findAccount(Object obj) {
+	public Response findAccount(ShortUserTokenRequest request) {
 		try {
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			//Entity user = AuthHelper.getUser(request.getInput());
 			//TODO
@@ -306,9 +300,8 @@ public class UserResources {
 	@Path("/showuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUserRole (Object obj){
+	public Response showUserRole (ShortUserTokenRequest request){
 		try{
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
@@ -327,9 +320,8 @@ public class UserResources {
 	@Path("/logout")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response logOut(Object obj){
+	public Response logOut(ShortUserTokenRequest request){
 		try{
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 
@@ -347,9 +339,8 @@ public class UserResources {
 	@Path("/changeuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response changeUserRole(Object obj) {
+	public Response changeUserRole(ChangeUserRole request) {
 		try{
-			ChangeUserRole request=AuthHelper.verifyInput(obj,ChangeUserRole.class);
 			ChangeUserRoleInput input = request.getInput();
 			Entity user = AuthHelper.getUser(input);
 			Token token = AuthHelper.verifyToken(request);
@@ -372,9 +363,8 @@ public class UserResources {
 	@Path("/changeuserpwd")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response changeUserPassword(Object obj) {
+	public Response changeUserPassword(ChangeUserPasswordRequest request) {
 		try{
-			ChangeUserPasswordRequest request=AuthHelper.verifyInput(obj,ChangeUserPasswordRequest.class);
 			PasswordInput input = request.getInput();
 			Entity user = AuthHelper.getUser(input.getUsername());
 			Token token = AuthHelper.verifyToken(request);
@@ -401,9 +391,8 @@ public class UserResources {
 	@Path("/forgotuserpwd")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response forgotUserPassword(Object obj) {
+	public Response forgotUserPassword(ChangeUserPasswordRequest request) {
 		try{//TODO
-			ChangeUserPasswordRequest request=AuthHelper.verifyInput(obj,ChangeUserPasswordRequest.class);
 			PasswordInput input = request.getInput();
 
 			Entity user = AuthHelper.getUser(input);
@@ -431,9 +420,9 @@ public class UserResources {
 	@Path("/showauthsessions")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showAuthsessions(Object obj){
-		try{ 
-			Token token = AuthHelper.verifyToken(AuthHelper.verifyInput(obj,TokenRequest.class));
+	public Response showAuthsessions(TokenRequest request){
+		try{
+			Token token = AuthHelper.verifyToken(request);
 			Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			return buildresponse(Map.of("tokens", getAllSessions()));
 
@@ -446,10 +435,9 @@ public class UserResources {
 	@Path("/addfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response addFriend(Object obj) throws ErrorException{
+	public Response addFriend(ShortUserTokenRequest request) throws ErrorException{
 		Transaction txn = datastore.newTransaction();
 		try{
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Key friendKey = getFriendKey(token,user);
@@ -486,9 +474,8 @@ public class UserResources {
 	@Path("/addnickname")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response addnickname(Object obj) throws ErrorException{
+	public Response addnickname(TwoNameTokenRequest request) throws ErrorException{
 		try{
-			TwoNameTokenRequest request=AuthHelper.verifyInput(obj,TwoNameTokenRequest.class);
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Entity existingfriend = datastore.get(getFriendKey(token,user));
@@ -506,9 +493,8 @@ public class UserResources {
 	@Path("/unfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response unfriend(Object obj){
+	public Response unfriend(ShortUserTokenRequest request){
 		try {
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Token token = AuthHelper.verifyToken(request);
 			datastore.delete(getFriendKey(token,user));
@@ -522,10 +508,9 @@ public class UserResources {
 	@Path("/showfriends")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriends(Object obj){
+	public Response showFriends(ShortUserTokenRequest request){
 		final String friend="Friend",start="Start";	
 		try{
-			ShortUserTokenRequest request=AuthHelper.verifyInput(obj,ShortUserTokenRequest.class);;
 			String username=AuthHelper.getUser(request.getInput()).getString("user_name");
 			AuthHelper.verifyToken(request);
 			List<Map<String, Object>> friends = new LinkedList<>();
@@ -553,10 +538,9 @@ public class UserResources {
 	@Path("/showfriendrequests")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriendRequests(Object obj){
+	public Response showFriendRequests(TokenRequest request){
 		try{
-			Token token = AuthHelper.verifyToken(AuthHelper.verifyInput(obj,TokenRequest.class));
-
+			Token token = AuthHelper.verifyToken(request);
 			List<Map<String, Object>> friends = new LinkedList<>();
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
 			List<StructuredQuery.Filter> filters = new ArrayList<>(2);

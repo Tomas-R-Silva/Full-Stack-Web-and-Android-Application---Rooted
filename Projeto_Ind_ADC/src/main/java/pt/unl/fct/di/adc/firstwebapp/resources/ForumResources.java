@@ -65,9 +65,8 @@ public class ForumResources {
     @Path("/post")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postMessage(Object obj) {
+    public Response postMessage(PostMessageRequest req) {
         try {
-        	PostMessageRequest req=AuthHelper.verifyInput(obj,PostMessageRequest.class);
             Token token = AuthHelper.verifyToken(req);
             PostMessageinput input =req.getInput();
             
@@ -115,9 +114,8 @@ public class ForumResources {
     @Path("/list")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listMessages(Object obj) {
+    public Response listMessages(ListForumRequest req) {
         try {
-        	ListForumRequest req =AuthHelper.verifyInput(obj,ListForumRequest.class);
             AuthHelper.verifyToken(req);
             ListForumInput input=req.getInput();
             if (input.getEventId() == null || input.getEventId().isBlank())
@@ -162,9 +160,8 @@ public class ForumResources {
     @Path("/delete")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deletePost(Object obj) {
+    public Response deletePost(ForumKeyTokenRequest req) {
         try {
-        	ForumKeyTokenRequest req=AuthHelper.verifyInput(obj,ForumKeyTokenRequest.class);
             Token token = AuthHelper.verifyToken(req);
             Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getInput().getForumKey());
             Entity post = datastore.get(key);
