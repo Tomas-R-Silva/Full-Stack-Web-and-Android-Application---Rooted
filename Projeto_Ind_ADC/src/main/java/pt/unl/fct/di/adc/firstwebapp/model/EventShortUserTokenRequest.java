@@ -6,7 +6,7 @@ public class EventShortUserTokenRequest extends AbstractTokenInputRequest<EventS
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": { 
 	 *   	"eventId": "...",
 	 *   	"username": "..." }

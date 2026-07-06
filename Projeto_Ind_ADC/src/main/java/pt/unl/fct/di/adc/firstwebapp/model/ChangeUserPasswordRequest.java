@@ -6,7 +6,7 @@ public class ChangeUserPasswordRequest extends AbstractTokenInputRequest<ChangeU
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": {
 	 *   	"username": "...",
 	 *   	"oldpassword": "...",

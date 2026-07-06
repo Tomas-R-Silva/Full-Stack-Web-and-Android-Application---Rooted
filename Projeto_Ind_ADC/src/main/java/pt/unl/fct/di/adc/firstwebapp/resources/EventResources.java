@@ -285,6 +285,8 @@ public class EventResources {
 				builder.set("is_accessible", input.isAccessible());
 			if(input.getSDGint()!= null)
 				builder.set("SDG", input.getSDG());
+			if (input.getCoverImageUrl() != null && !input.getCoverImageUrl().isBlank())
+				builder.set("coverImageUrl", input.getCoverImageUrl());
 
 			datastore.put(builder.build());
 			return ok(Map.of("message", "Event updated successfully"));
@@ -694,7 +696,7 @@ public class EventResources {
 		map.put("createdAt", e.getLong("created_at"));
 		map.put("isAccessible", e.getBoolean("is_accessible"));
 		map.put("SDG", e.getList("SDG"));
-
+		map.put("coverImageUrl", e.getString("coverImageUrl"));
 
 		List<String> imageUrls = e.contains("image_urls")
 				? e.<Value<?>>getList("image_urls").stream()

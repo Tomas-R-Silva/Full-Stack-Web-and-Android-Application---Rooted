@@ -6,7 +6,7 @@ public class TokenRequest implements TokenRequestInterface{
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" }
+	 *   "token": { "jwt": "<jwt>" }
 	 * }
 	 */
 	public ModelToken token;

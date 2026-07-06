@@ -6,7 +6,7 @@ public class ShortUserTokenRequest extends AbstractTokenInputRequest<ShortUser> 
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": { "username": "..." }
 	 * }
 	 */

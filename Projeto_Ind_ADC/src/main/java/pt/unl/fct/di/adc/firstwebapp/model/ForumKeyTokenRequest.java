@@ -4,7 +4,7 @@ public class ForumKeyTokenRequest extends AbstractTokenInputRequest<ForumKeyToke
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": "..."
 	 * }
 	 */

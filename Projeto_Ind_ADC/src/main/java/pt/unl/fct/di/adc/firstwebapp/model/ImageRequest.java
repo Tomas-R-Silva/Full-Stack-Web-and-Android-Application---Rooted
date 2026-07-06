@@ -9,7 +9,7 @@ public class ImageRequest extends AbstractTokenInputRequest<ImageRequest.ImageRe
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": { 
 	 *   	"eventId": "...",
 	 *   	"images": ["...", ...]}

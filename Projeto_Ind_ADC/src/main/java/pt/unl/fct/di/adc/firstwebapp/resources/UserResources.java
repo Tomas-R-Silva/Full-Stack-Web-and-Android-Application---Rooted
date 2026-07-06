@@ -171,6 +171,7 @@ public class UserResources {
 				Entity e = results.next();
 				users.add(Map.of(
 						"username", e.getString("user_name"),
+						"display", e.getString("user_display"),
 						"email", e.contains("user_email") ? e.getString("user_email") : "",
 								"role", e.getString("user_role")
 						));
@@ -313,6 +314,7 @@ public class UserResources {
 			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
 					"username", user.getString("user_name"),
+					"display", user.getString("user_display"),
 					"email", user.contains("user_email") ? user.getString("user_email") : "",
 							"role", user.getString("user_role")
 					));

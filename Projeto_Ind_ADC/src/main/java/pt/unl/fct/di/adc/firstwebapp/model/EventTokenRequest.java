@@ -6,7 +6,7 @@ public class EventTokenRequest extends AbstractTokenInputRequest<EventInput>{
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": { "eventId": "..." }
 	 * }
 	 */

@@ -6,7 +6,7 @@ public abstract class AbstractTokenInputRequest<E> extends AbstractInputRequest<
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" }, 
+	 *   "token": { "jwt": "<jwt>" }, 
 	 *   "input": E
 	 * }
 	 */

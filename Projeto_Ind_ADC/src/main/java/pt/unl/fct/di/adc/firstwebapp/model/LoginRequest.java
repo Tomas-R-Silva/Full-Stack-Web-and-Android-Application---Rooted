@@ -7,7 +7,7 @@ public class LoginRequest extends AbstractTokenInputRequest<LoginRequest.LoginRe
     
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input":{ 
 	 *   	"username": "...",
 	 *   	"password": "..." }

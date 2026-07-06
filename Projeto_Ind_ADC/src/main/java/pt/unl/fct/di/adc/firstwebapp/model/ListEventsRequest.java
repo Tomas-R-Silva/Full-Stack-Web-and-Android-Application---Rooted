@@ -6,7 +6,7 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },  (optional — required only to see private events)
+	 *   "token": { "jwt": "<jwt>" },  (optional — required only to see private events)
 	 *   "input": {
 	 *   	"category": "MUSIC",              (optional filter)
 	 *   	"status": "UPCOMING",             (optional filter, defaults to UPCOMING)

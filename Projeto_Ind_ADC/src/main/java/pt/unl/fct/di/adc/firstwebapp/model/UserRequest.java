@@ -5,7 +5,7 @@ public class UserRequest extends AbstractInputRequest<User>{
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": {
 	 *   	"username": "...",
 	 *   	"password": "...",

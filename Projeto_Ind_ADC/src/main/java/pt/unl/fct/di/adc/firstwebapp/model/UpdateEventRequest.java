@@ -6,7 +6,7 @@ public class UpdateEventRequest extends AbstractTokenInputRequest<EventAtributsi
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": {
 	 *   	"eventId": "...",
 	 *   	"title": "...",           (optional — only fields present are updated)

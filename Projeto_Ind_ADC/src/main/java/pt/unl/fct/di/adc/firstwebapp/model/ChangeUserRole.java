@@ -6,7 +6,7 @@ public class ChangeUserRole extends AbstractTokenInputRequest<ChangeUserRole.Cha
 
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input": {
 	 *   	"username": "...",
 	 *   	"newrole": "..." }

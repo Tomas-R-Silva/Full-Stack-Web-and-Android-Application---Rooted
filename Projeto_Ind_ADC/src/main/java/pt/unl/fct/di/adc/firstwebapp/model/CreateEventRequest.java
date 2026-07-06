@@ -6,7 +6,7 @@ public class CreateEventRequest extends AbstractTokenInputRequest<EventAtributs>
 	
 	/**
 	 * {
-	 *   "token": { "tokenId": "<jwt>" },
+	 *   "token": { "jwt": "<jwt>" },
 	 *   "input":{
 	 *   	"title": "...",
 	 *   	"description": "...",
