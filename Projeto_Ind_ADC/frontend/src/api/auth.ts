@@ -1,9 +1,10 @@
-import type { RequestSignIn, SignInResponse} from "../utils/types";
+import type {RequestSignIn, SignInResponse} from "../utils/types";
 import type {RequestLogIn, LogInResponse} from "../utils/types";
 import type {RequestShowUsers, ShowUsersResponse} from "../utils/types";
 import type {RequestModAccount, ModAccountResponse} from "../utils/types";
 import type {RequestChangePassword, ChangePasswordResponse} from "../utils/types";
 import type {RequestChangeRole, ChangeRoleResponse} from "../utils/types";
+import type {RequestDeleteAccount, DeleteAccountResponse} from "../utils/types";
 import type {RequestAddFriend, AddFriendResponse} from "../utils/types";
 import type {RequestUnfriend, UnfriendResponse} from "../utils/types";
 import type {RequestFriendsList, FriendsListResponse} from "../utils/types";
@@ -143,6 +144,22 @@ export const changeRole = async (
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
 
   const json: ChangeRoleResponse = await res.json();
+
+  return json;
+};
+
+export const deleteAccount = async (
+  data: RequestDeleteAccount
+): Promise<DeleteAccountResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/deleteaccount`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json: DeleteAccountResponse = await res.json();
 
   return json;
 };

@@ -4,8 +4,6 @@ import type { ShowUsersResponse, User } from "../../utils/types";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
 import { useNavigate } from "react-router-dom";
 import AccountAdminManage from "./Account-Admin-Manage";
-import settings_w from "../../assets/icons/settings_w.svg";
-import settings_green from "../../assets/icons/settings_green.svg";
 
 function ModerationUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -40,6 +38,13 @@ function ModerationUsers() {
     setManagedUser(user);
   };
 
+  const totalUsers = users.length;
+  const totalUserRole = users.filter((u) => u.role === "USER").length;
+  const totalBackOfficerRole = users.filter(
+    (u) => u.role === "BACKOFFICER",
+  ).length;
+  const totalAdminRole = users.filter((u) => u.role === "ADMIN").length;
+
   useEffect(() => {
     loadUsers();
   }, []);
@@ -53,7 +58,7 @@ function ModerationUsers() {
             <div
               className="container border rounded p-3"
               style={{
-                maxHeight: "650px",
+                maxHeight: "500px",
                 overflowY: "auto",
               }}
             >
@@ -110,6 +115,35 @@ function ModerationUsers() {
                     </div>
                   </div>
                 ))}
+            </div>
+            <div
+              className="container border rounded p-3 mt-3"
+              style={{
+                backgroundColor: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              <div className="d-flex justify-content-between">
+                <span>Total Users</span>
+                <strong>{totalUsers}</strong>
+              </div>
+
+              <hr className="my-2" />
+
+              <div className="d-flex justify-content-between">
+                <span>Users</span>
+                <strong>{totalUserRole}</strong>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span>Back Officers</span>
+                <strong>{totalBackOfficerRole}</strong>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span>Admins</span>
+                <strong>{totalAdminRole}</strong>
+              </div>
             </div>
           </div>
 

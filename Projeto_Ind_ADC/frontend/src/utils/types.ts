@@ -74,11 +74,11 @@ export interface UserProps {
 
 export type RequestModAccount = {
   token: {jwt:string;}
-  input: {username:string;
-    attributes:{
-      country: string,
-      birth: number,
-    }
+  input: {
+    username:string;
+    email:string,
+    country?: string,
+    birth?: number,
   }
 }
 
@@ -110,6 +110,18 @@ export type RequestChangeRole = {
 }
 
 export type ChangeRoleResponse = {
+  status: number,
+  data: {message:string;}
+}
+
+export type RequestDeleteAccount = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type DeleteAccountResponse = {
   status: number,
   data: {message:string;}
 }

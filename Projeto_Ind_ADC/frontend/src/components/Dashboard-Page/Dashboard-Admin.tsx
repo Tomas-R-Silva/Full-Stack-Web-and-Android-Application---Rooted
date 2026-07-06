@@ -64,7 +64,7 @@ function DashboardADM() {
               style={{ background: "var(--color-white)", minHeight: "500px" }}
             >
               <h2 className="" style={{ color: "var(--color-green)" }}>
-                Dashboard: {selected}
+                Admin Dashboard: {selected}
               </h2>
               {selected === dashboardItems[0] && <Activity />}
               {selected === dashboardItems[1] && <Community />}
