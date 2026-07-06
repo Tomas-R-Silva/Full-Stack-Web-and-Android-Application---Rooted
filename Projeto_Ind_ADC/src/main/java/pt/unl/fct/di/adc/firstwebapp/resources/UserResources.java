@@ -83,7 +83,7 @@ public class UserResources {
 
 			List<StringValue> listnames = new ArrayList<>(1),
 					listtokens = new ArrayList<>(0),
-					listcategories = new ArrayList<>(0);
+					listcategory = new ArrayList<>(0);
 			listnames.add(StringValue.of(user.getUsername()));
 
 
@@ -97,7 +97,7 @@ public class UserResources {
 					.set("old_display", listnames)
 					.set("user_creation_time", Timestamp.now())
 					.set("tokens", listtokens)
-					.set("categoris", listcategories)
+					.set("category", listcategory)
 					.build();
 
 			txn.put(newUser);

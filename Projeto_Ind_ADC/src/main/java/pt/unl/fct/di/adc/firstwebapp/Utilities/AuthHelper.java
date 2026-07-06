@@ -23,9 +23,13 @@ public class AuthHelper {
 	private AuthHelper() {}
 
 	public static <E> E verifyInput(Object obj,Class<E> clas) throws ErrorException {
-		if(!clas.isInstance(obj))
-			ErrorException.trow(9929);
-		return clas.cast(obj);
+		try {
+			return clas.cast(obj);
+		}catch(Exception e) {
+			ErrorException.trow(9929,e.getMessage());
+		}
+		return null;
+
 	}
 
 	public static Token verifyToken(TokenRequestInterface token) throws ErrorException {

@@ -166,7 +166,7 @@ public class EventResources {
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Event");
 
 			// Build filters
-			List<StructuredQuery.Filter> filters = new ArrayList<>();
+			List<StructuredQuery.Filter> filters = new ArrayList<>(7);
 
 			// Unauthenticated users see only public events
 			if (!authenticated) {
