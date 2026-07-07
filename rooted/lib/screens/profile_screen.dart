@@ -89,7 +89,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => _EditProfileSheet(
         username: _username,
+        email: _email,
         onSaved: () {
+          _loadSession(); // reload data after saving
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile updated successfully!'),
@@ -462,24 +464,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 class _EditProfileSheet extends StatefulWidget {
   final String username;
+  final String email;
   final VoidCallback onSaved;
 
-  const _EditProfileSheet({required this.username, required this.onSaved});
+  const _EditProfileSheet({
+    required this.username,
+    required this.email,
+    required this.onSaved,
+  });
 
   @override
   State<_EditProfileSheet> createState() => _EditProfileSheetState();
 }
 
 class _EditProfileSheetState extends State<_EditProfileSheet> {
-  final _formKey        = GlobalKey<FormState>();
-  final _phoneController   = TextEditingController();
-  final _addressController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _displayController;
+  late final TextEditingController _emailController;
   bool _isSaving = false;
 
   @override
+  void initState() {
+    super.initState();
+    _displayController = TextEditingController(text: widget.username);
+    _emailController = TextEditingController(text: widget.email);
+  }
+
+  @override
   void dispose() {
-    _phoneController.dispose();
-    _addressController.dispose();
+    _displayController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -496,9 +510,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     try {
       await ApiService.modifyAccount(
         jwt: jwt,
-        username: widget.username,
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
+        username: _displayController.text.trim(),
+        email: _emailController.text.trim(),
       );
       if (mounted) {
         Navigator.pop(context);
@@ -540,7 +553,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
           // Handle bar
           Center(
             child: Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
@@ -559,7 +573,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Update your contact information.',
+            'Update your profile information.',
             style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           ),
           const SizedBox(height: 24),
@@ -569,39 +583,32 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             child: Column(
               children: [
                 TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
+                  controller: _displayController,
                   textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Phone number',
-                    hintText: '+351 912 345 678',
-                    prefixIcon: Icon(Icons.phone_outlined,
-                        color: AppTheme.textSecondary, size: 20),
+                  decoration: const InputDecoration(
+                    labelText: 'Display Name',
+                    prefixIcon: Icon(Icons.person_outline_rounded, size: 20),
                   ),
-                  validator: (v) {
-                    if (v != null && v.trim().isNotEmpty) {
-                      final digits = v.replaceAll(RegExp(r'\D'), '');
-                      if (digits.length < 7) return 'Enter a valid phone number';
-                    }
-                    return null; // phone is optional
-                  },
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Display name is required'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _addressController,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.done,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    labelText: 'Address',
-                    hintText: 'Rua Exemplo, 123, Lisboa',
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Icon(Icons.home_outlined,
-                          color: AppTheme.textSecondary, size: 20),
-                    ),
-                    alignLabelWithHint: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined, size: 20),
                   ),
-                  // address is optional — no validator needed
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Email is required';
+                    if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
+                      return 'Enter a valid email address';
+                    }
+                    return null;
+                  },
                 ),
               ],
             ),

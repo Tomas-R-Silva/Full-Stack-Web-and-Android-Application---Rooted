@@ -52,7 +52,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         eventId: _event['eventId'] as String,
         jwt: _jwt,
       );
-      final eventData = result['data']?['event'] ?? result['event'] ?? result;
+      final eventData = result['event'] ?? result;
       if (mounted) {
         setState(() {
           _event = Map<String, dynamic>.from(eventData);
@@ -77,9 +77,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       final result = await ApiService.listForumMessages(
         jwt: _jwt!,
         eventId: _event['eventId'] as String,
+        username: _username,
         pageSize: 50,
       );
-      final data  = result['data'] ?? {};
+      final data  = result;
       final posts = (data['posts'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
       if (mounted) {
@@ -104,9 +105,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       final result = await ApiService.listForumMessages(
         jwt: _jwt!,
         eventId: _event['eventId'] as String,
+        username: _username,
         pageSize: 50,
       );
-      final data  = result['data'] ?? {};
+      final data  = result;
       final posts = (data['posts'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
       if (!mounted) return;
@@ -150,6 +152,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         jwt: _jwt!,
         eventId: _event['eventId'] as String,
         text: text,
+        username: _username,
       );
       if (mounted) {
         final data = post['data'] ?? post;
@@ -445,14 +448,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     try {
       if (isAttending) {
-        await ApiService.unattendEvent(jwt: _jwt!, eventId: eventId);
+        await ApiService.unattendEvent(jwt: _jwt!, eventId: eventId, username: _username);
         setState(() {
           _event['_attending'] = false;
           final count = (_event['attendeeCount'] as int? ?? 1) - 1;
           _event['attendeeCount'] = count < 0 ? 0 : count;
         });
       } else {
-        await ApiService.attendEvent(jwt: _jwt!, eventId: eventId);
+        await ApiService.attendEvent(jwt: _jwt!, eventId: eventId, username: _username);
         ApiService.notifyEventUpdate(eventId);
         setState(() {
           _event['_attending'] = true;

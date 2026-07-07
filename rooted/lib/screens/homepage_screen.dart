@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
         status: 'UPCOMING',
         pageSize: 20,
       );
-      final data   = (result['data'] as Map<String, dynamic>?) ?? result;
+      final data   = result;
       final events = (data['events'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
 
@@ -65,11 +65,11 @@ class _HomePageState extends State<HomePage> {
       // But keep them if they were organized by the current user
       events.removeWhere((e) => e['_attending'] == true && e['organizerUsername'] != _username);
 
-      // Sort by startDate descending (most recent first)
+      // Sort by startDate ascending (soonest first)
       events.sort((a, b) {
         final aDate = (a['startDate'] as int?) ?? 0;
         final bDate = (b['startDate'] as int?) ?? 0;
-        return bDate.compareTo(aDate);
+        return aDate.compareTo(bDate);
       });
 
       if (mounted) setState(() { _events = events; _loading = false; });
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
     setState(() => _pendingIds.add(eventId));
     try {
       if (isAttending) {
-        await ApiService.unattendEvent(jwt: _jwt!, eventId: eventId);
+        await ApiService.unattendEvent(jwt: _jwt!, eventId: eventId, username: _username);
         if (mounted) {
           setState(() {
             event['_attending'] = false;
@@ -112,7 +112,7 @@ class _HomePageState extends State<HomePage> {
           });
         }
       } else {
-        await ApiService.attendEvent(jwt: _jwt!, eventId: eventId);
+        await ApiService.attendEvent(jwt: _jwt!, eventId: eventId, username: _username);
         ApiService.notifyEventUpdate(eventId);
         if (mounted) {
           setState(() {

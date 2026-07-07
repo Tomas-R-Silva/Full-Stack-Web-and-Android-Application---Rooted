@@ -9,12 +9,14 @@ class LocationAutocomplete extends StatefulWidget {
   final String apiKey;
   final ValueChanged<PlacePrediction>? onPlaceSelected;
   final String? Function(String?)? validator;
+  final TextEditingController? controller;
 
   const LocationAutocomplete({
     super.key,
     required this.apiKey,
     this.onPlaceSelected,
     this.validator,
+    this.controller,
   });
 
   @override
@@ -29,7 +31,11 @@ class PlacePrediction {
 }
 
 class _LocationAutocompleteState extends State<LocationAutocomplete> {
-  final TextEditingController _controller = TextEditingController();
+  // Use the controller passed in by the parent (so the parent can read the
+  // typed text even if the user never taps a suggestion) and fall back to
+  // an internal one if none was provided.
+  late final TextEditingController _controller =
+      widget.controller ?? TextEditingController();
   final List<PlacePrediction> _predictions = [];
   bool _loading = false;
   LatLng? _biasLocation;
@@ -77,10 +83,10 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
 
     final url = Uri.parse(
       'https://maps.googleapis.com/maps/api/place/autocomplete/json'
-      '?input=${Uri.encodeComponent(input)}'
-      '&types=geocode'
-      '$locationParam'
-      '&key=${widget.apiKey}',
+          '?input=${Uri.encodeComponent(input)}'
+          '&types=geocode'
+          '$locationParam'
+          '&key=${widget.apiKey}',
     );
 
     final response = await http.get(url);
@@ -91,18 +97,22 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
       _predictions
         ..clear()
         ..addAll((data['predictions'] as List<dynamic>?)
-                ?.map((item) => PlacePrediction(
-                      placeId: item['place_id'] as String,
-                      description: item['description'] as String,
-                    ))
-                .toList() ??
+            ?.map((item) => PlacePrediction(
+          placeId: item['place_id'] as String,
+          description: item['description'] as String,
+        ))
+            .toList() ??
             []);
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    // Only dispose the controller if we created it ourselves; a
+    // parent-supplied controller is owned (and disposed) by the parent.
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 
@@ -119,8 +129,8 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
           ),
           onChanged: _search,
           validator: widget.validator ??
-              (value) =>
-                  value == null || value.isEmpty ? 'Enter a location' : null,
+                  (value) =>
+              value == null || value.isEmpty ? 'Enter a location' : null,
         ),
 
         if (_loading)

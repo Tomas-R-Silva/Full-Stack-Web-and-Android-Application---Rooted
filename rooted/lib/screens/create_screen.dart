@@ -24,6 +24,7 @@ class _CreatePageState extends State<CreatePage> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _attendeesController = TextEditingController();
+  final TextEditingController _minAttendeesController = TextEditingController(text: '0');
 
   final TextEditingController _durationController = TextEditingController(text: '60');
   final TextEditingController _dateController = TextEditingController();
@@ -35,8 +36,18 @@ class _CreatePageState extends State<CreatePage> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _isPublic = true;
+  bool _isAccessible = false;
+  List<int> _selectedSDGs = [];
   bool _isSubmitting = false;
   String? _createdEventId;
+
+  final List<String> _sdgLabels = [
+    'No Poverty', 'Zero Hunger', 'Good Health', 'Quality Education',
+    'Gender Equality', 'Clean Water', 'Affordable Energy', 'Decent Work',
+    'Industry & Innovation', 'Reduced Inequalities', 'Sustainable Cities',
+    'Responsible Consumption', 'Climate Action', 'Life Below Water',
+    'Life on Land', 'Peace & Justice', 'Partnerships'
+  ];
 
   final List<String> _categories = [
     'Music',
@@ -83,6 +94,7 @@ class _CreatePageState extends State<CreatePage> {
     _descriptionController.dispose();
     _locationController.dispose();
     _attendeesController.dispose();
+    _minAttendeesController.dispose();
     _durationController.dispose();
     _dateController.dispose();
     _timeController.dispose();
@@ -120,6 +132,7 @@ class _CreatePageState extends State<CreatePage> {
       if (_createdEventId == null) {
         final result = await ApiService.createEvent(
           jwt: jwt,
+          username: await SessionStorage.getUsername(),
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),
@@ -130,10 +143,13 @@ class _CreatePageState extends State<CreatePage> {
           ).millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
+          minAttendees: int.tryParse(_minAttendeesController.text.trim()) ?? 0,
           public: _isPublic,
+          isAccessible: _isAccessible,
+          sdg: _selectedSDGs,
         );
-        eventId = (result['eventId'] ?? result['data']?['eventId'] ?? result['id'] ?? '').toString();
-        
+        eventId = (result['eventId'] ?? (result['data'] is Map ? result['data']['eventId'] : null) ?? result['id'] ?? '').toString();
+
         if (mounted) {
           setState(() {
             _createdEventId = eventId.isEmpty ? null : eventId;
@@ -154,7 +170,10 @@ class _CreatePageState extends State<CreatePage> {
           ).millisecondsSinceEpoch ~/ 1000,
           durationMinutes: int.tryParse(_durationController.text.trim()) ?? 60,
           maxAttendees: int.tryParse(_attendeesController.text.trim()) ?? 0,
+          minAttendees: int.tryParse(_minAttendeesController.text.trim()) ?? 0,
           public: _isPublic,
+          isAccessible: _isAccessible,
+          sdg: _selectedSDGs,
         );
       }
 
@@ -162,11 +181,11 @@ class _CreatePageState extends State<CreatePage> {
       if (_eventImage != null && eventId.isNotEmpty) {
         try {
           final bytes = await _eventImage!.readAsBytes();
-          
+
           final base64String = base64Encode(bytes);
           final extension = _eventImage!.path.split('.').last.toLowerCase();
           final mimeType = extension == 'png' ? 'image/png' : 'image/jpeg';
-          
+
           // Ensure exact spacing as requested by backend: "data:<mime>;base64,<data>"
           final dataUri = 'data:$mimeType;base64,$base64String';
 
@@ -192,9 +211,9 @@ class _CreatePageState extends State<CreatePage> {
         ApiService.notifyEventUpdate(eventId); // Refresh feeds
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_createdEventId == null 
-              ? 'Event created successfully!' 
-              : 'Event updated successfully!'),
+            content: Text(_createdEventId == null
+                ? 'Event created successfully!'
+                : 'Event updated successfully!'),
           ),
         );
       }
@@ -206,16 +225,14 @@ class _CreatePageState extends State<CreatePage> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
-    }
+  debugPrint('CREATE EVENT ERROR: $e');
+  if (mounted) {
+  setState(() => _isSubmitting = false);
+  ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(content: Text('Debug: $e'), backgroundColor: AppTheme.error),
+  );
+  }
+  }
   }
 
   @override
@@ -232,7 +249,7 @@ class _CreatePageState extends State<CreatePage> {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const HomeScreen(initialIndex: 0)),
-                  (route) => false,
+                      (route) => false,
                 );
               },
               child: const Text('Done', style: TextStyle(color: Colors.white)),
@@ -255,35 +272,35 @@ class _CreatePageState extends State<CreatePage> {
                     borderRadius: BorderRadius.circular(16),
                     image: _eventImage != null
                         ? DecorationImage(
-                            image: FileImage(_eventImage!),
-                            fit: BoxFit.cover,
-                          )
+                      image: FileImage(_eventImage!),
+                      fit: BoxFit.cover,
+                    )
                         : null,
                   ),
                   child: _eventImage == null
                       ? const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add_a_photo, size: 40),
-                            SizedBox(height: 8),
-                            Text('Add Event Image'),
-                          ],
-                        )
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_a_photo, size: 40),
+                      SizedBox(height: 8),
+                      Text('Add Event Image'),
+                    ],
+                  )
                       : Align(
-                          alignment: Alignment.bottomRight,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Colors.black54,
-                              child: const Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Colors.black54,
+                        child: const Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 18,
                         ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
@@ -296,7 +313,7 @@ class _CreatePageState extends State<CreatePage> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter a title' : null,
+                value!.isEmpty ? 'Enter a title' : null,
               ),
 
               const SizedBox(height: 16),
@@ -309,7 +326,7 @@ class _CreatePageState extends State<CreatePage> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Enter a description' : null,
+                (value == null || value.trim().isEmpty) ? 'Enter a description' : null,
               ),
 
               const SizedBox(height: 16),
@@ -323,10 +340,10 @@ class _CreatePageState extends State<CreatePage> {
                 items: _categories
                     .map(
                       (category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      ),
-                    )
+                    value: category,
+                    child: Text(category),
+                  ),
+                )
                     .toList(),
                 onChanged: (value) {
                   setState(() => _selectedCategory = value!);
@@ -337,6 +354,7 @@ class _CreatePageState extends State<CreatePage> {
 
               LocationAutocomplete(
                 apiKey: _placesApiKey,
+                controller: _locationController,
                 onPlaceSelected: (p) {
                   _locationController.text = p.description;
                   _selectedPlaceId = p.placeId; // add this field in the state
@@ -368,7 +386,7 @@ class _CreatePageState extends State<CreatePage> {
                         if (picked != null) {
                           setState(() => _selectedDate = picked);
                           _dateController.text =
-                              '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                          '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
                         }
                       },
                     ),
@@ -393,7 +411,7 @@ class _CreatePageState extends State<CreatePage> {
                         if (picked != null) {
                           setState(() => _selectedTime = picked);
                           _timeController.text =
-                              '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
                         }
                       },
                     ),
@@ -431,12 +449,66 @@ class _CreatePageState extends State<CreatePage> {
 
               const SizedBox(height: 16),
 
+              TextFormField(
+                controller: _minAttendeesController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Minimum Attendees',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Public event'),
                 subtitle: const Text('Anyone can find and join this event'),
                 value: _isPublic,
                 onChanged: (value) => setState(() => _isPublic = value),
+              ),
+
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Accessible event'),
+                subtitle: const Text('This event is accessible for people with reduced mobility'),
+                value: _isAccessible,
+                onChanged: (value) => setState(() => _isAccessible = value),
+              ),
+
+              const SizedBox(height: 16),
+
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Sustainability Goals (SDGs)',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(17, (index) {
+                  final sdgNum = index + 1;
+                  final isSelected = _selectedSDGs.contains(sdgNum);
+                  return FilterChip(
+                    label: Text('SDG $sdgNum'),
+                    tooltip: _sdgLabels[index],
+                    selected: isSelected,
+                    onSelected: (val) {
+                      setState(() {
+                        if (val) {
+                          _selectedSDGs.add(sdgNum);
+                        } else {
+                          _selectedSDGs.remove(sdgNum);
+                        }
+                      });
+                    },
+                    selectedColor: AppTheme.primary.withValues(alpha: 0.2),
+                    checkmarkColor: AppTheme.primary,
+                  );
+                }),
               ),
 
               const SizedBox(height: 24),
@@ -451,17 +523,17 @@ class _CreatePageState extends State<CreatePage> {
                   onPressed: _isSubmitting ? null : _submitEvent,
                   child: _isSubmitting
                       ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
                       : Text(
-                          _createdEventId == null ? 'Create Event' : 'Save Changes',
-                          style: const TextStyle(fontSize: 16),
-                        ),
+                    _createdEventId == null ? 'Create Event' : 'Save Changes',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],

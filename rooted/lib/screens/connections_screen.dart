@@ -42,17 +42,23 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         status: 'UPCOMING',
         pageSize: 50,
       );
-      
-      final data = result['data'] ?? result;
+
+      final data = result;
       final events = (data['events'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
 
       // Filter out events user is already organizing (optional, but makes sense for "discovery")
-      // and sort by date.
       events.removeWhere((e) => e['organizerUsername'] == _username);
       
       // Also filter out events user is already attending
       events.removeWhere((e) => e['_attending'] == true);
+
+      // Sort by startDate ascending (soonest first)
+      events.sort((a, b) {
+        final aDate = (a['startDate'] as int?) ?? 0;
+        final bDate = (b['startDate'] as int?) ?? 0;
+        return aDate.compareTo(bDate);
+      });
 
       if (mounted) {
         setState(() {
@@ -94,7 +100,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     // Join event logic
     try {
       final eventId = event['eventId'] as String;
-      await ApiService.attendEvent(jwt: _jwt!, eventId: eventId);
+      await ApiService.attendEvent(jwt: _jwt!, eventId: eventId, username: _username);
       ApiService.notifyEventUpdate(eventId);
 
       if (mounted) {

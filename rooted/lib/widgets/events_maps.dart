@@ -283,13 +283,29 @@ class _EventsMapsState extends State<EventsMaps> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(ev['title']?.toString() ?? 'Event', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16 )),
-                            const SizedBox(height: 6),
-                            Text(ev['location']?.toString() ?? ''),
+                            Text(
+                              ev['title']?.toString() ?? 'Event',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              ev['location']?.toString() ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13),
+                            ),
                             const Spacer(),
-                            Text(ev['attendees']?.toString() ?? (ev['attendeesCount'] != null ? '${ev['attendeesCount']} attending' : 'No attendees info')),
-                            const Spacer(),
-                            Text(dist != null ? '${(dist/1000).toStringAsFixed(1)} km' : 'Distance unknown', style: const TextStyle(fontSize: 12)),
+                            Text(
+                              ev['attendees']?.toString() ??
+                                  (ev['attendeesCount'] != null ? '${ev['attendeesCount']} attending' : 'No attendees info'),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            Text(
+                              dist != null ? '${(dist / 1000).toStringAsFixed(1)} km' : 'Distance unknown',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
                           ],
                         ),
                       ),
