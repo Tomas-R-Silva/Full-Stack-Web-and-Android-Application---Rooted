@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { getEventList } from "../../api/auth";
-import type {
-  EventItem,
-  EventListResponse,
-  FilterProps,
-} from "../../utils/types";
+import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCardSmall from "../Events-Page/Event-Card-Small";
 import { useAuth } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
+import eventUpcoming from "../../assets/icons/event_upcoming_w.svg";
+import EventControlPanel from "./Event-Control-Panel";
 
 function ModerationEvents() {
   //================= Hooks ===================
@@ -16,6 +15,8 @@ function ModerationEvents() {
   const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
   const [error, setError] = useState<string | null>(null);
   const { username } = useAuth();
+  const [managedEvent, setManagedEvent] = useState<EventItem | null>(null);
+  const navigate = useNavigate();
 
   //============== Get the events =============
   const loadEvents = async (cursor?: string) => {
@@ -56,6 +57,8 @@ function ModerationEvents() {
         setEvents(res.data.events);
       }
 
+      setManagedEvent(res.data.events[0]);
+
       setNextCursor(res.data.nextCursor);
     } catch (err) {
       console.error(err);
@@ -64,6 +67,10 @@ function ModerationEvents() {
       setLoading(false);
       setLoadingMore(false);
     }
+  };
+
+  const handleManagedEvent = (event: EventItem) => {
+    setManagedEvent(event);
   };
 
   //fetch on page render
@@ -80,7 +87,7 @@ function ModerationEvents() {
             <div
               className="container border rounded p-3"
               style={{
-                maxHeight: "500px",
+                maxHeight: "900px",
                 overflowY: "auto",
               }}
             >
@@ -107,8 +114,53 @@ function ModerationEvents() {
 
                 {!loading && events.length > 0 && (
                   <>
-                    {events.map((e) => (
-                      <EventCardSmall key={e.eventId} event={e} />
+                    {events.map((event) => (
+                      <div
+                        className="p-4 rounded mb-1"
+                        style={{
+                          maxWidth: "500px",
+                          width: "100%",
+                          backgroundColor:
+                            managedEvent?.eventId === event.eventId
+                              ? "var(--color-green)"
+                              : "var(--color-green2)",
+                          color: "var(--color-white)",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleManagedEvent(event)}
+                      >
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span className="fw-bold">{event.title}</span>
+
+                          <span
+                            className="badge"
+                            style={{
+                              background: "var(--color-bege)",
+                              color: "var(--color-green)",
+                            }}
+                          >
+                            {event.status}
+                          </span>
+                        </div>
+
+                        <p className="mt-3 mb-0">
+                          <span className="">
+                            Organizer: {event.organizerUsername}
+                          </span>
+                        </p>
+
+                        <div className="d-flex justify-content-between align-items-center">
+                          <p className="mt-3 mb-0">
+                            <span className="">Id:{event.eventId}</span>
+                          </p>
+                          <img
+                            src={eventUpcoming}
+                            alt="Event details"
+                            onClick={() => navigate(`/events/${event.eventId}`)}
+                            style={{ cursor: "pointer" }}
+                          />
+                        </div>
+                      </div>
                     ))}
 
                     {nextCursor && (
@@ -130,6 +182,9 @@ function ModerationEvents() {
                 )}
               </div>
             </div>
+          </div>
+          <div className="col-8">
+            {managedEvent && <EventControlPanel event={managedEvent} />}
           </div>
         </div>
       </div>

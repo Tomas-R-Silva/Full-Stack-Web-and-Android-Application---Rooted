@@ -198,7 +198,7 @@ export type AuthSessionsResponse = {
 }
 
 export type TokenType = {
-  tokenID: string,
+  jwt: string,
   username: string,
   role: string,
   issuedAt: number,
