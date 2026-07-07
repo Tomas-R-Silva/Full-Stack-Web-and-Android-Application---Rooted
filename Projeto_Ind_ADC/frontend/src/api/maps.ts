@@ -107,6 +107,59 @@ export const useMapsPage = (mapsApiKey: string) => {
     }
   };
 
+  const setMapContainer = (node: HTMLDivElement | null) => {
+    mapRef.current = node;
+  };
+
+  const getMapRef = () => mapRef.current;
+  const getSortedEvents = () => sortedEvents;
+  const getActiveEventId = () => activeEventId;
+
+  const renderEventMap = (event: EventItem, container?: HTMLDivElement | null) => {
+    const mapContainer = container ?? mapRef.current;
+    if (!mapContainer || !window.google) return;
+
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = new window.google.maps.Map(mapContainer, {
+        center: { lat: 0, lng: 0 },
+        zoom: 3,
+        mapTypeId: "hybrid",
+        streetViewControl: false,
+        fullscreenControl: false,
+      });
+    }
+
+    const map = mapInstanceRef.current;
+
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode(
+      { address: event.location },
+      (results: any, status: any) => {
+        if (status === "OK" && results[0]) {
+          const pos = {
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng(),
+          };
+          map.setCenter(pos);
+          map.setZoom(15);
+          new window.google.maps.Marker({
+            position: pos,
+            map,
+            title: event.title,
+            icon: {
+              path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+              scale: 9,
+              fillColor: "green",
+              fillOpacity: 1,
+              strokeColor: "white",
+              strokeWeight: 2,
+            },
+          });
+        }
+      },
+    );
+  };
+
   // -------------------------------------------------------------------------
   // Map initialisation
   // -------------------------------------------------------------------------
@@ -197,7 +250,12 @@ export const useMapsPage = (mapsApiKey: string) => {
             <a
               href="/events/${event.eventId}"
               class="btn btn-sm"
-              style="background-color: var(--color-green); color: var(--color-white); border: none; display: block; width: 100%; text-align: center;"
+              style="background-color: var(--color-green); 
+              color: var(--color-white); 
+              border: none; 
+              display: block; 
+              width: 100%; 
+              text-align: center;"
             >
               View event
             </a>
@@ -236,7 +294,9 @@ export const useMapsPage = (mapsApiKey: string) => {
 
     const addEventMarkers = async (map: any) => {
       try {
-        const res = await getEventList({ pageSize: 100, cursor: "" });
+        const res = await getEventList({
+          input: { pageSize: 100, cursor: "" },
+        });
         const eventsData: EventItem[] =
           Array.isArray(res.data.events) && res.data.events.length > 0
             ? res.data.events
@@ -281,16 +341,18 @@ export const useMapsPage = (mapsApiKey: string) => {
     };
 
     loadScript();
-  }, []);
+  }, [mapsApiKey]);
 
   // -------------------------------------------------------------------------
   // Exposed API
   // -------------------------------------------------------------------------
 
   return {
-    mapRef,
-    sortedEvents,
-    activeEventId,
+    setMapContainer,
+    getMapRef,
+    getSortedEvents,
+    getActiveEventId,
     focusEvent,
+    renderEventMap,
   };
 };

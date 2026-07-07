@@ -1,9 +1,13 @@
 import NavBar from "../NavBar/NavBar";
 import { useMapsPage } from "../../api/maps";
+import placeholder from "../../assets/images/placeholder.png";
 
 const MapsPage = () => {
   const mapsApiKey = import.meta.env.VITE_API_KEY;
-  const { mapRef, sortedEvents, activeEventId, focusEvent } = useMapsPage(mapsApiKey);
+  const { setMapContainer, getSortedEvents, getActiveEventId, focusEvent } =
+    useMapsPage(mapsApiKey);
+  const sortedEvents = getSortedEvents();
+  const activeEventId = getActiveEventId();
 
   return (
     <>
@@ -36,38 +40,53 @@ const MapsPage = () => {
                       return (
                         <div
                           key={`${event.eventId}-${idx}`}
-                          className={`mb-3 p-3 rounded bg-white border d-flex align-items-center justify-content-between ${
+                          className={`mb-3 rounded border overflow-hidden position-relative ${
                             isActive ? "border-primary" : ""
                           }`}
+                          style={{
+                            minHeight: "120px",
+                            backgroundImage: `url(${event.coverImageUrl || event.imageUrls?.[0] || placeholder})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            backgroundRepeat: "no-repeat",
+                          }}
                         >
-                          <div>
-                            <div className="fw-bold">{event.title}</div>
-                            <div className="text-muted small my-1">{event.location}</div>
-                            {event.distance != null && event.distance !== Infinity && event.distance >= 0 ? (
-                              <div className="small text-dark">
-                                {(event.distance / 1000).toFixed(1)} km away
-                              </div>
-                            ) : (
-                              <div></div>
-                            )}
-                          </div>
-
-                          <button
-                            type="button"
-                            className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ms-3 border-0"
+                          <div
+                            className="position-absolute top-0 start-0 w-100 h-100"
                             style={{
-                              width: "40px",
-                              height: "40px",
-                              backgroundColor: "var(--color-green)",
-                              color: "var(--color-white)",
-                              opacity: isLocated ? 1 : 0.5,
-                              cursor: isLocated ? "pointer" : "not-allowed",
+                              background: "linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.2) 100%)",
                             }}
-                            disabled={!isLocated}
-                            onClick={() => focusEvent(event)}
-                            aria-label={`Go to ${event.title} on the map`}
-                            title={isLocated ? "Go to location" : "Location not available yet"}
-                          >
+                          />
+                          <div className="position-relative p-3 d-flex align-items-center justify-content-between h-100">
+                            <div style={{ color: "var(--color-white)" }}>
+                              <div className="fw-bold">{event.title}</div>
+                              <div className="small my-1">{event.location}</div>
+                              {event.distance != null && event.distance !== Infinity && event.distance >= 0 ? (
+                                <div className="small">
+                                  {(event.distance / 1000).toFixed(1)} km away
+                                </div>
+                              ) : (
+                                <div></div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ms-3 border-0"
+                              style={{
+                                width: "40px",
+                                height: "40px",
+                                backgroundColor: "var(--color-green)",
+                                color: "var(--color-white)",
+                                boxShadow: "0 0 0 2px var(--color-white)",
+                                opacity: isLocated ? 1 : 0.5,
+                                cursor: isLocated ? "pointer" : "not-allowed",
+                              }}
+                              disabled={!isLocated}
+                              onClick={() => focusEvent(event)}
+                              aria-label={`Go to ${event.title} on the map`}
+                              title={isLocated ? "Go to location" : "Location not available yet"}
+                            >
                             <svg
                               width="18"
                               height="18"
@@ -81,7 +100,8 @@ const MapsPage = () => {
                               <path d="M5 12h14" />
                               <path d="m13 5 7 7-7 7" />
                             </svg>
-                          </button>
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -94,7 +114,7 @@ const MapsPage = () => {
           <div className="col-12 col-lg-8">
             <div className="card shadow-sm h-100">
               <div className="card-body p-0" style={{ minHeight: "70vh" }}>
-                <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+                <div ref={setMapContainer} style={{ width: "100%", height: "100%" }} />
               </div>
             </div>
           </div>
