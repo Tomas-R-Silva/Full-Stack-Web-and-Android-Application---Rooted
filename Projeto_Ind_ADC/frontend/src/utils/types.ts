@@ -402,7 +402,11 @@ export type ImageDeleteResponse = {
 }
 
 export type FilterProps = {
-  filter: string;
+  category?: string,
+  status?: string,
+  organizerUsername?: string,
+  isAccessible?: boolean,
+  sdg?: number
 };
 
 //========== Forum ==========

@@ -7,7 +7,11 @@ import type {
 } from "../../utils/types";
 import EventCard from "./Event-Card";
 
-function EventsList({ filter }: FilterProps) {
+type EventsListProps = {
+  filter: FilterProps;
+};
+
+function EventsList({ filter }: EventsListProps) {
   //================= Hooks ===================
   const [events, setEvents] = useState<EventItem[]>([]); //Events got from the request
   const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
@@ -28,7 +32,14 @@ function EventsList({ filter }: FilterProps) {
 
       //TODO change in order to have filters
       const res: EventListResponse = await getEventList({
-        input: { pageSize: 12, cursor: cursor ?? "" },
+        input: {
+          category: filter.category,
+          status: filter.status,
+          organizerUsername: filter.organizerUsername,
+          isAccessible: filter.isAccessible,
+          pageSize: 12,
+          cursor: cursor ?? "",
+        },
       });
 
       console.log(res.data.events);
@@ -49,10 +60,11 @@ function EventsList({ filter }: FilterProps) {
     }
   };
 
-  //fetch on page render
   useEffect(() => {
+    setEvents([]);
+    setNextCursor(undefined);
     loadEvents();
-  }, []);
+  }, [filter]);
 
   return (
     <>

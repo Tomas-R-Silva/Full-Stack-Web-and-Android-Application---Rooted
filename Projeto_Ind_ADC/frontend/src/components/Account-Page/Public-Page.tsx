@@ -155,7 +155,15 @@ function PublicPage() {
               </div>
 
               <div className="d-flex gap-3">
-                <button className="btn btn-success px-4">Friend</button>
+                <button
+                  className="btn px-4"
+                  style={{
+                    background: "var(--color-green)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  Friend
+                </button>
               </div>
             </div>
           </div>
