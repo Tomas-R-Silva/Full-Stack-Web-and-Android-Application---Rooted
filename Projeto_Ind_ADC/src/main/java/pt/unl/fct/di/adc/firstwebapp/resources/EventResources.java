@@ -3,6 +3,7 @@ package pt.unl.fct.di.adc.firstwebapp.resources;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -30,12 +31,13 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pt.unl.fct.di.adc.firstwebapp.Objects.Event;
-import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Status;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.Objects.UserFull;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.GCSUploader;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
@@ -74,33 +76,11 @@ public class EventResources {
 	public Response createEvent(CreateEventRequest req) {
 		try {
 			TokenFull tokenObj = AuthHelper.verifyToken(req);
-
-			Event event = new Event(req.getInput(),tokenObj.getUsername());
-
-			Key key = datastore.newKeyFactory().setKind("Event").newKey(event.getEventId());
-			Entity entity = Entity.newBuilder(key)
-					.set("event_id", event.getEventId())
-					.set("title", event.getTitle())
-					.set("description", event.getDescription())
-					.set("category", event.getCategory().name())
-					.set("location", event.getLocation())
-					.set("start_date", event.getStartDate())
-					.set("duration_minutes", event.getDurationMinutes())
-					.set("organizer_username", event.getOrganizerUsername())
-					.set("max_attendees", event.getMaxAttendees())
-					.set("min_attendees", event.getMinAttendees())
-					.set("attendee_count", 0L)
-					.set("is_public", event.isPublic())
-					.set("status", event.getStatus().name())
-					.set("created_at", event.getCreatedAt())
-					.set("image_urls", new ArrayList<StringValue>())
-					.set("is_accessible", event.isAccessible())
-					.set("SDG", event.getSDG())
-					.build();
-			datastore.put(entity);
+			EventFull event = EventFull.newuser(req.getInput(),tokenObj.getUsername());
+			event.setKey(datastore.newKeyFactory().setKind("Event").newKey(event.getEventId()));
+			datastore.put(event.toentity());
 			Log.info("Event created: " + event.getEventId() + " by " + tokenObj.getUsername());
 			return ok(Map.of("eventId", event.getEventId(), "message", "Event created successfully"));
-
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -115,14 +95,14 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEvent(EventTokenRequest req) {
 		try {
-			Entity entity = getEventEntity(req.getInput());
+			EventFull entity = getEventEntity(req.getInput());
 
-			boolean isPublic = entity.getBoolean("is_public");
+			boolean isPublic = entity.isPublic();
 			if (!isPublic) {
 				// Private event must be authenticated
 				TokenFull token = AuthHelper.verifyToken(req);
 				String requester = token.getUsername();
-				String organizer = entity.getString("organizer_username");
+				String organizer = entity.getOrganizerUsername();
 				Role role = token.getRole();
 				if (!requester.equals(organizer) && role != Role.ADMIN && role != Role.BOFFICER) {
 					// Also allow attendees to see the event
@@ -131,7 +111,7 @@ public class EventResources {
 				}
 			}
 
-			return ok(Map.of("event", entityToMap(entity)));
+			return ok(Map.of("event", entity.tomap()));
 
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -201,7 +181,7 @@ public class EventResources {
 
 			QueryResults<Entity> results = datastore.run(queryBuilder.build());
 
-			List<Map<String, Object>> events = new ArrayList<>();
+			List<Map<String, Object>> events = new LinkedList<>();
 
 			// SDG is optional in the request: getSDG() is null when the client omits it
 			// (the events page sends only pageSize + cursor). Guard against null/empty so
@@ -220,15 +200,14 @@ public class EventResources {
 					for(LongValue n:sdglist)
 						b|=list.contains(n);
 					if(b)
-						events.add(entityToMap(current));
+						events.add(EventFull.fromdatabase(current).tomap());
 				}
 				else
-					events.add(entityToMap(current));
+					events.add(EventFull.fromdatabase(current).tomap());
 			}
 
-			Map<String, Object> response = new HashMap<>();
-			response.put("events", events);
-			response.put("count", events.size());
+			Map<String, Object> response = Map.of("events", events,"count", events.size());
+
 			if (results.getCursorAfter() != null)
 				response.put("nextCursor", results.getCursorAfter().toUrlSafe());
 
@@ -250,21 +229,19 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventAtributsid input=req.getInput();
-			Entity existing = getEventEntity(input);
-			String organizer = existing.getString("organizer_username");
+			EventFull existing = getEventEntity(input);
+			String organizer = existing.getOrganizerUsername();
 
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			if (existing.getString("status").equals(Status.CANCELLED.name()))
+			if (existing.getStatus().equals(Status.CANCELLED.name()))
 				ErrorException.trow(9907); // can't edit a cancelled event
 
-			Entity.Builder builder = Entity.newBuilder(existing);
-
 			if (input.getTitle() != null && !input.getTitle().isBlank())
-				builder.set("title", input.getTitle());
+				existing.setTitle(input.getTitle());
 			if (input.getDescription() != null && !input.getDescription().isBlank())
-				builder.set("description", input.getDescription());
+				existing.setDescription(input.getDescription());
 			if (input.getCategory() != null)
 				builder.set("category", input.getCategory().toString());
 			if (input.getLocation() != null && !input.getLocation().isBlank())
@@ -284,8 +261,8 @@ public class EventResources {
 			if (input.isAccessiblenull() != null)
 				builder.set("is_accessible", input.isAccessible());
 			if(input.getSDGint()!= null)
-				builder.set("SDG", input.getSDG());
-			datastore.put(builder.build());
+				existing.setSDG(input.getSDGint());			
+			datastore.put(existing.toentity());
 			return ok(Map.of("message", "Event updated successfully"));
 
 		} catch (Exception e) {
@@ -303,8 +280,8 @@ public class EventResources {
 	public Response deleteEvent(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			Entity existing = getEventEntity(req.getInput());
-			String organizer = existing.getString("organizer_username");
+			EventFull existing = getEventEntity(req.getInput());
+			String organizer = existing.getOrganizerUsername();
 
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
@@ -330,8 +307,8 @@ public class EventResources {
 	public Response cancelEvent(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			Entity existing = getEventEntity(req.getInput());
-			String organizer = existing.getString("organizer_username");
+			EventFull existing = getEventEntity(req.getInput());
+			String organizer = existing.getOrganizerUsername();
 
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
@@ -358,7 +335,7 @@ public class EventResources {
 	public Response attendEvent(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			Entity eventEntity = getEventEntity(req.getInput());
+			EventFull eventEntity = getEventEntity(req.getInput());
 
 			if (eventEntity.getString("status").equals(Status.CANCELLED.name()) ||
 					eventEntity.getString("status").equals(Status.COMPLETED.name()))
@@ -410,7 +387,7 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 
-			Entity eventEntity = getEventEntity(req.getInput());
+			EventFull eventEntity = getEventEntity(req.getInput());
 
 			String username = token.getUsername();
 			String attendanceId = req.getInput() + "_" + username;
@@ -446,8 +423,8 @@ public class EventResources {
 	public Response getAttendees(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			Entity eventEntity = getEventEntity(req.getInput());
-			String organizer = eventEntity.getString("organizer_username");
+			EventFull eventEntity = getEventEntity(req);
+			String organizer = eventEntity.getOrganizerUsername();
 
 			if (!token.getUsername().equals(organizer))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
@@ -484,14 +461,14 @@ public class EventResources {
 	public Response getMyAttends(ShortUserTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			Entity user = AuthHelper.getUser(req.getInput());
+			UserFull user = AuthHelper.getUser(req.getInput());
 
-			if (!token.getUsername().equals(user.getString("user_name")))
+			if (!user.isme(token))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
 			Query<Entity> query = Query.newEntityQueryBuilder()
 					.setKind("Attendance")
-					.setFilter(PropertyFilter.eq("username", user.getString("user_name")))
+					.setFilter(PropertyFilter.eq("username", user.getUsername()))
 					.build();
 
 			QueryResults<Entity> results = datastore.run(query);
@@ -522,12 +499,12 @@ public class EventResources {
 		try {
 			//Token token = 
 			AuthHelper.verifyToken(req);
-			Entity user = AuthHelper.getUser(req.getInput());
+			UserFull user = AuthHelper.getUser(req.getInput());
 
 			//if (!token.getUsername().equals(user.getString("user_name")))
 			//	Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
-			String attendanceId = req.getInput() + "_" + user.getString("user_name");
+			String attendanceId = req.getInput() + "_" + user.getUsername();
 			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
 
 			return ok(Map.of("isattendee",datastore.get(attendanceKey) == null));
@@ -548,8 +525,8 @@ public class EventResources {
 			ImageRequestInput input=req.getInput();
 			TokenFull token = AuthHelper.verifyToken(req);
 
-			Entity eventEntity = getEventEntity(input);
-			String organizer = eventEntity.getString("organizer_username");
+			EventFull eventEntity = getEventEntity(input);
+			String organizer = eventEntity.getOrganizerUsername();
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
@@ -606,8 +583,8 @@ public class EventResources {
 			ImageRequestInput input=req.getInput();
 			if (input.getImages().isEmpty())
 				ErrorException.trow(9906);
-			Entity eventEntity = getEventEntity(input);
-			String organizer = eventEntity.getString("organizer_username");
+			EventFull eventEntity = getEventEntity(input);
+			String organizer = eventEntity.getOrganizerUsername();
 
 
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
@@ -643,13 +620,13 @@ public class EventResources {
 	// Helpers
 
 
-	private Entity getEventEntity(EventInputInterface event) throws ErrorException {
+	private EventFull getEventEntity(EventInputInterface event) throws ErrorException {
 		if (event.getEventId() == null || event.getEventId().isBlank())
 			ErrorException.trow(9906);
 		Key key = datastore.newKeyFactory().setKind("Event").newKey(event.getEventId());
 		Entity entity = datastore.get(key);
 		if (entity == null) ErrorException.trow(9902);
-		return entity;
+		return EventFull.fromdatabase(entity);
 	}
 
 	private boolean isAttending(String eventId, String username) {
@@ -665,33 +642,6 @@ public class EventResources {
 		QueryResults<Entity> results = datastore.run(query);
 		while (results.hasNext())
 			datastore.delete(results.next().getKey());
-	}
-
-	private Map<String, Object> entityToMap(Entity e) {
-		Map<String, Object> map = new HashMap<>();
-		map.put("eventId", e.contains("event_id")?e.getString("event_id"):null);
-		map.put("title", e.contains("title")?e.getString("title"):null);
-		map.put("description", e.contains("description")?e.getString("description"):null);
-		map.put("category", e.contains("category")?e.getString("category"):null);
-		map.put("location", e.contains("location")?e.getString("location"):null);
-		map.put("startDate", e.contains("start_date")?e.getLong("start_date"):null);
-		map.put("durationMinutes", e.contains("duration_minutes")?e.getLong("duration_minutes"):null);
-		map.put("organizerUsername", e.contains("organizer_username")?e.getString("organizer_username"):null);
-		map.put("maxAttendees", e.contains("max_attendees")?e.getLong("max_attendees"):null);
-		map.put("attendeeCount",e.contains("attendee_count")?e.getLong("attendee_count"):null);
-		map.put("isPublic", e.contains("is_public")?e.getBoolean("is_public"):null);
-		map.put("status", e.contains("status")?e.getString("status"):null);
-		map.put("createdAt", e.contains("created_at")?e.getLong("created_at"):null);
-		map.put("isAccessible", e.contains("is_accessible")?e.getBoolean("is_accessible"):null);
-		map.put("SDG", e.contains("SDG")?e.getList("SDG"):null);
-
-		List<String> imageUrls = e.contains("image_urls")
-				? e.<Value<?>>getList("image_urls").stream()
-						.map(v -> (String) v.get())
-						.collect(Collectors.toList())
-						: Collections.emptyList();
-		map.put("imageUrls", imageUrls);
-		return map;
 	}
 
 	private static Response ok(Map<String, Object> data) {

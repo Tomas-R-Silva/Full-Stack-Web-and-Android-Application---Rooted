@@ -3,6 +3,7 @@ package pt.unl.fct.di.adc.firstwebapp.Objects;
 import java.util.Map;
 
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.Key;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 
@@ -14,10 +15,7 @@ public class TokenFull extends ShortUser implements Full{
 	private Role role;
 	private long issuedAt;
 	private long expiresAt;
-
-	public TokenFull() {
-		this(null, null, null);
-	}
+	private Key key;
 
 	public TokenFull(String jwt, String username, Role role,long issuedAt,long expiresAt) {
 		this.jwt = jwt;
@@ -25,14 +23,6 @@ public class TokenFull extends ShortUser implements Full{
 		this.role = role;
 		this.issuedAt = issuedAt;
 		this.expiresAt = expiresAt;
-	}
-
-	public static TokenFull getfromcloud(Entity entity) {
-		return new TokenFull((entity.contains("jwt"))?entity.getString("jwt"):null,
-				(entity.contains("user_name"))?entity.getString("user_name"):null,
-				(entity.contains("role"))?Role.valueof(entity.getString("role")):null,
-				(entity.contains("issued_at"))?entity.getLong("issued_at"):0,
-				(entity.contains("expires_at"))?entity.getLong("expires_at"):0);
 	}
 
 	public TokenFull(String jwt, String username, Role role) {
@@ -59,6 +49,7 @@ public class TokenFull extends ShortUser implements Full{
 	public long getExpiresAt() { return expiresAt; }
 	public void setExpiresAt(long expiresAt) { this.expiresAt = expiresAt; }
 
+	@Override
 	public Map<String,Object> tomap(){
 		return Map.of(
 				"jwt", jwt,
@@ -69,6 +60,31 @@ public class TokenFull extends ShortUser implements Full{
 				);
 	}
 
+	@Override
+	public Entity toentity() {
+		return Entity.newBuilder(key)
+				.set("jwt", jwt)
+				.set("user_name", username)
+				.set("role", role.name())
+				.set("issued_at", issuedAt/TIME_DIVIDER)
+				.set("expires_at", expiresAt/TIME_DIVIDER)
+				.build();
+	}
 
+	public static TokenFull fromdatabase(Entity entity) {
+		return new TokenFull(Full.getString(entity,"jwt"),
+				Full.getString(entity,"user_name"),
+				Role.valueof(Full.getString(entity,"role")),
+				Full.getLong(entity, "issued_at"),
+				Full.getLong(entity, "expires_at"));
+	}
 
+	@Override
+	public Key getKey() {return key;}
+	@Override
+	public void setKey(Key key) {this.key=key;}
+	@Override
+	public Entity toentity(Key key) {this.setKey(key);return toentity();}
+	@Override
+	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
 }

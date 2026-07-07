@@ -9,6 +9,7 @@ import com.google.cloud.datastore.Key;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ModelToken;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.UserFull;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequestInterface;
@@ -49,14 +50,14 @@ public class AuthHelper {
 		return null;
 	}
 
-	public static Entity getUser(ShortUser user) throws ErrorException{
+	public static UserFull getUser(ShortUser user) throws ErrorException{
 		return getUser(user.getUsername());
 	}
 
-	public static Entity getUser(String username) throws ErrorException{
+	public static UserFull getUser(String username) throws ErrorException{
 		Key userKey = datastore.newKeyFactory().setKind("User").newKey(username);
 		Entity user = datastore.get(userKey);
 		Validator.userNotFound(new Entity[]{user});
-		return user;
+		return UserFull.fromdatabase(user);
 	}
 }

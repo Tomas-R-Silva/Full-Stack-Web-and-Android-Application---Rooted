@@ -30,7 +30,7 @@ import jakarta.ws.rs.core.Response;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ForumPost;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
-import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Status;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;

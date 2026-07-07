@@ -1,11 +1,10 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.cloud.datastore.LongValue;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Category;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Category;
 
 public class EventAtributs{
 
@@ -20,10 +19,10 @@ public class EventAtributs{
 	protected Boolean isPublic;
 	protected Boolean isAccessible;
 	protected List<Long> sdg;
-	
+
 
 	public EventAtributs() {}
-	
+
 	public String getTitle() { return title; }
 	public void setTitle(String title) { this.title = title; }
 
@@ -56,21 +55,18 @@ public class EventAtributs{
 	public boolean isPublic() { return zeroifnull(isPublic); }
 	public Boolean isPublicnull() { return isPublic; }
 	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
-	
+
 	public boolean isAccessible() { return zeroifnull(isAccessible); }
 	public Boolean isAccessiblenull() { return isAccessible; }
 	public void setAccessible(boolean isAccessible) { this.isAccessible = isAccessible; }
-	
+
 	public List<LongValue> getSDG() {
 		if(sdg==null||sdg.isEmpty())return null;
-		List<LongValue> list = new ArrayList<>(sdg.size());
-		for(Long n:sdg) 
-			list.add(LongValue.of(n));
-		return list;
+		return Full.makeLongValueList(sdg);
 	}
 	public List<Long> getSDGint() { return sdg; }
 	public void setSDG(List<Long> sdg) { this.sdg = sdg; }
-	
+
 	private static int zeroifnull(Integer n) {
 		return(n==null)?0:n;
 	}
