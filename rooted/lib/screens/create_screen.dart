@@ -160,6 +160,7 @@ class _CreatePageState extends State<CreatePage> {
         await ApiService.updateEvent(
           jwt: jwt,
           eventId: eventId,
+          username: await SessionStorage.getUsername(),
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),

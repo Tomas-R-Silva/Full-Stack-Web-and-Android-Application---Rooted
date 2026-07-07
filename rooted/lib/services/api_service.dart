@@ -41,9 +41,9 @@ class ApiService {
       body: jsonEncode({
         'input': {
           'username': username,
+          'email': email,
           'password': password,
           'confirmation' : password,
-          'email': email,
           'role': role,
         }
       }),
@@ -125,7 +125,6 @@ class ApiService {
         'input': {'username': username},
         'token': {
           'jwt': jwt,
-          'username': username,
         },
       }),
     );
@@ -165,7 +164,6 @@ class ApiService {
         'input': {'username': username},
         'token': {
           'jwt': jwt,
-          'username': username,
         },
       }),
     );
@@ -216,7 +214,6 @@ class ApiService {
       body: jsonEncode({
         'token': {
           'jwt': jwt,
-          if (username != null) 'username': username,
         },
         'input': {
           'title': title,
@@ -227,11 +224,8 @@ class ApiService {
           'durationMinutes': durationMinutes,
           'maxAttendees': maxAttendees,
           'minAttendees': minAttendees,
-          'isPublic': public,
           'public': public,
-          'isAccessible': isAccessible,
           'accessible': isAccessible,
-          'SDG': sdg,
           'sdg': sdg,
         }
       }),
@@ -277,7 +271,6 @@ class ApiService {
       body: jsonEncode({
         'token': {
           'jwt': jwt,
-          if (username != null) 'username': username,
         },
         'input': {
           'eventId': eventId,
@@ -288,12 +281,8 @@ class ApiService {
           'startDate': startDate,
           'durationMinutes': durationMinutes,
           'maxAttendees': maxAttendees,
-          'minAttendees': minAttendees,
-          'isPublic': public,
           'public': public,
-          'isAccessible': isAccessible,
           'accessible': isAccessible,
-          'SDG': sdg,
           'sdg': sdg,
         }..removeWhere((k, v) => v == null)
       }),
@@ -332,11 +321,14 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'token': {
+          'jwt': jwt,
+        },
         'input': {
           'username': username,
           'email': email,
         },
-        'token': {'jwt': jwt},
+
       }),
     );
 
@@ -419,7 +411,9 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        if (jwt != null) 'token': {'jwt': jwt},
+        if (jwt != null) 'token': {
+          'jwt': jwt,
+        },
         'input': {
           'organizerUsername': organizerUsername,
           'status': status,
@@ -500,7 +494,7 @@ class ApiService {
   /// Calls POST /rest/events/myattends.
   static Future<Map<String, dynamic>> getMyAttends({
     required String jwt,
-    required String username,
+    required String eventId,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/events/myattends');
     final response = await http.post(
@@ -508,7 +502,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'token': {'jwt': jwt},
-        'input': {'username': username},
+        'input': {'eventId': eventId},
       }),
     );
     final body = _parseBody(response.body);
@@ -529,10 +523,12 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'jwt': jwt},
+        'token': {
+          'jwt': jwt,
+        },
         'input': {
-          'eventId': eventId,
           'username': username,
+          'eventId': eventId,
         },
       }),
     );
@@ -561,7 +557,6 @@ class ApiService {
       body: jsonEncode({
         'token': {
           'jwt': jwt,
-          if (username != null) 'username': username,
         },
         'input': {
           'eventId': eventId,
@@ -598,7 +593,6 @@ class ApiService {
       body: jsonEncode({
         'token': {
           'jwt': jwt,
-          if (username != null) 'username': username,
         },
         'input': {
           'eventId': eventId,
@@ -646,7 +640,6 @@ class ApiService {
       body: jsonEncode({
         'token': {
           'jwt': jwt,
-          if (username != null) 'username': username,
         },
         'input': {'eventId': eventId},
       }),
@@ -671,7 +664,6 @@ class ApiService {
       body: jsonEncode({
         'token': {
           'jwt': jwt,
-          if (username != null) 'username': username,
         },
         'input': {'eventId': eventId},
       }),
@@ -708,8 +700,7 @@ class ApiService {
     throw ApiException(_errorMessage(body, 'Failed to upload images (Status ${response.statusCode})'));
   }
 
-  // --- Friend Endpoints ---
-
+  //Friend Endpoints
   /// Calls POST /addfriend.
   static Future<void> addFriend({
     required String jwt,
