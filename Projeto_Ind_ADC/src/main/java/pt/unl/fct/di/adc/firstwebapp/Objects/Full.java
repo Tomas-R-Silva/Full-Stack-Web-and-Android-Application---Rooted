@@ -8,7 +8,6 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.StringValue;
-import com.google.cloud.datastore.Value;
 
 public interface Full {
 	public static final long TIME_DIVIDER = 1000L;
@@ -33,7 +32,7 @@ public interface Full {
 	}
 	
 	public static List<StringValue> getStringValueList(Entity e,String name) {
-		return e.contains(name)?e.getList(name):null;
+		return e.contains(name)?e.getList(name):List.of();
 	}
 	
 	public static List<String> getStringList(Entity e,String name){
@@ -46,6 +45,11 @@ public interface Full {
 	
 	public static List<LongValue> makeLongValueList(List<Long> list) {
 		return list.stream().map(v -> LongValue.of(v)).collect(Collectors.toList());
+	}
+	
+	public static List<Long> getLongList(Entity e,String name){
+		List<LongValue> l=e.getList(name);
+		return e.contains(name)?l.stream().map(v -> v.get()).collect(Collectors.toList()):List.of();
 	}
 	
 	public static <E extends Enum<?>> List<StringValue> makeStringValueEnumList(List<E> list) {

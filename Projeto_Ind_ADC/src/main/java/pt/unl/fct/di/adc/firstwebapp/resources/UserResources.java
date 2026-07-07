@@ -29,6 +29,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.FriendFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
@@ -81,7 +82,7 @@ public class UserResources {
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
 
 			user.userValidation();
-			
+
 			if(txn.get(userKey) != null) ErrorException.trow(9901);
 
 			txn.put(UserFull.newuser(user,userKey).toentity());
@@ -367,25 +368,25 @@ public class UserResources {
 			UserFull user = AuthHelper.getUser(request.getInput());
 			Key friendKey = getFriendKey(token,user);
 			Entity existingfriend = txn.get(friendKey);
+
 			if (existingfriend == null) {
-				Entity friendrequest = Entity.newBuilder(friendKey)
-						.set("username_1", token.getUsername())
-						.set("username_2", user.getString("user_name"))
-						.set("accepted", false)
-						.set("issued_at", System.currentTimeMillis()/TIME_DIVIDER)
-						.build();
-				txn.put(friendrequest);
+				FriendFull friend=FriendFull.newfriends(token,user);
+				friend.setKey(friendKey);
+				txn.put(friend.toentity());
 				txn.commit();
 				return buildresponse(Map.of("message", "Friend Request Sent"));
 			}
 			else {
-				if(existingfriend.getBoolean("accepted")) 
+				FriendFull friend=FriendFull.fromdatabase(existingfriend);
+				if(friend.getAccepted()) 
 					ErrorException.trow(9926);
 				else {
-					if(existingfriend.getString("username_1").equals(token.getUsername()))
+					if(friend.getUsername1().equals(token.getUsername()))
 						ErrorException.trow(9927);
-					else
-						datastore.put(Entity.newBuilder(existingfriend).set("accepted", true).set("issued_at", System.currentTimeMillis()/TIME_DIVIDER).build());
+					else {
+						friend.acceptrecquest();
+						datastore.put(friend.toentity());
+						}
 				}
 			}
 			return buildresponse(Map.of("message", "Friend Request Accepted"));
@@ -403,11 +404,14 @@ public class UserResources {
 		try{
 			TokenFull token = AuthHelper.verifyToken(request);
 			UserFull user = AuthHelper.getUser(request.getInput());
-			Entity existingfriend = datastore.get(getFriendKey(token,user));
-			if(existingfriend == null || !existingfriend.getBoolean("accepted"))
+			FriendFull existingfriend = FriendFull.fromdatabase(datastore.get(getFriendKey(token,user)));
+			if(existingfriend == null || !existingfriend.getAccepted())
 				ErrorException.trow(9934);
-			String friend=existingfriend.getString("username_1").equals(token.getUsername())?"nickname_1":"nickname_2";
-			datastore.put(Entity.newBuilder(existingfriend).set(friend,request.getInput().getNewName()).build());
+			if(existingfriend.getUsername1().equals(user.getUsername()))
+				existingfriend.setNickname1(request.getInput().getNewName());
+			else
+				existingfriend.setNickname2(request.getInput().getNewName());
+			datastore.put(existingfriend.toentity());
 			return buildresponse(Map.of("message", "Friend Nickname Set"));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -422,7 +426,10 @@ public class UserResources {
 		try {
 			UserFull user = AuthHelper.getUser(request.getInput());
 			TokenFull token = AuthHelper.verifyToken(request);
-			datastore.delete(getFriendKey(token,user));
+			Key key=getFriendKey(token,user);
+			if(datastore.get(key)==null)
+				ErrorException.trow(9934);
+			datastore.delete(key);
 			return buildresponse(Map.of("message", "Friendship Ended"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -434,7 +441,6 @@ public class UserResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showFriends(ShortUserTokenRequest request){
-		final String friend="Friend",start="Start";	
 		try{
 			String username=AuthHelper.getUser(request.getInput()).getUsername();
 			AuthHelper.verifyToken(request);
@@ -442,15 +448,8 @@ public class UserResources {
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
 			queryBuilder.setFilter(PropertyFilter.eq("accepted", true));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
-			while(sessions.hasNext()){
-				Entity session = sessions.next();
-				String friend1=session.getString("username_1"),
-						friend2=session.getString("username_2");
-				if(friend1.equals(username))
-					friends.add(Map.of(friend, friend2,start, session.getLong("issued_at")*TIME_DIVIDER));
-				else if(friend2.equals(username))
-					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")*TIME_DIVIDER));
-			}
+			while(sessions.hasNext())
+				friends.add(FriendFull.fromdatabase(sessions.next()).otherfriend(username));
 			return buildresponse(Map.of("friends", friends));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -470,10 +469,8 @@ public class UserResources {
 					PropertyFilter.eq("accepted", false),
 					PropertyFilter.eq("username_2", token.getUsername())));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
-			while(sessions.hasNext()) {
-				Entity session = sessions.next();
-				friends.add(Map.of("From", session.getString("username_1"),"Sent at", session.getLong("issued_at")*TIME_DIVIDER));
-			}
+			while(sessions.hasNext()) 
+				friends.add(FriendFull.fromdatabase(sessions.next()).cesiving());
 			return buildresponse(Map.of("friends", friends));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -538,19 +535,7 @@ public class UserResources {
 	}
 
 	private Key getFriendKey(TokenFull token,UserFull user) throws ErrorException{
-		int compare=user.getUsername().compareTo(token.getUsername());
-		if(compare==0)
-			ErrorException.trow(9925);
-		String f1,f2;
-		if((compare>0)) {
-			f1=user.getUsername();
-			f2=token.getUsername();
-		}else{
-			f2=user.getUsername();
-			f1=token.getUsername();
-		}
-		return datastore.newKeyFactory().setKind("Friend").newKey(String.format("%s@@@%s", f1,f2));
-
+		return datastore.newKeyFactory().setKind("Friend").newKey(FriendFull.formatkey(token,user));
 	}
 
 

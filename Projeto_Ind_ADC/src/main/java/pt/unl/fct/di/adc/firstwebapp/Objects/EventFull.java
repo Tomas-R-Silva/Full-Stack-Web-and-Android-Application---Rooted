@@ -1,19 +1,14 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.StringValue;
-import com.google.cloud.datastore.Value;
 
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
@@ -38,7 +33,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private long createdAt;  // epoch seconds
 	private List<String> imageUrls;
 	private String eventId;
-	private int attendee;
+	private long attendee;
 	private Key key;
 	
 	public EventFull() {}
@@ -73,12 +68,25 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	}
 
 	public static EventFull fromdatabase(Entity entity) {
-
-		
-		List<String> imageUrls = e.contains("image_urls")? e.<StringValue>getList("image_urls").stream()
-						.map(v -> (String) v.get())
-						.collect(Collectors.toList())
-						: Collections.emptyList();
+		EventFull event=new EventFull();
+		event.setEventId(Full.getString(entity, "event_id"));
+		event.setTitle(Full.getString(entity,"title"));
+		event.setDescription(Full.getString(entity,"description"));
+		event.setCategory(Full.getString(entity,"category"));
+		event.setLocation(Full.getString(entity,"location"));
+		event.setStartDate(Full.getLong(entity,"start_date") * TIME_DIVIDER);
+		event.setDurationMinutes(Full.getLong(entity,"duration_minutes"));
+		event.setOrganizerUsername(Full.getString(entity,"organizer_username"));
+		event.setMaxAttendees(Full.getLong(entity,"max_attendees"));
+		event.setMinAttendees(Full.getLong(entity,"min_attendees"));
+		event.setAttendee(Full.getLong(entity,"attendee_count"));
+		event.setPublic(Full.getBoolean(entity,"is_public"));
+		event.setStatus(Status.valueof(Full.getString(entity,"status")));
+		event.setCreatedAt(Full.getLong(entity,"created_at") * TIME_DIVIDER);
+		event.setImageUrls(Full.getStringList(entity,"image_urls"));
+		event.setAccessible(Full.getBoolean(entity,"is_accessible"));
+		event.setSDG(Full.getLongList(entity,"SDG"));
+		return event;
 	}
 
 	@Override
@@ -111,7 +119,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("description", this.getDescription())
 				.set("category", this.getCategory().name())
 				.set("location", this.getLocation())
-				.set("start_date", this.getStartDate())
+				.set("start_date", this.getStartDate()/ TIME_DIVIDER)
 				.set("duration_minutes", this.getDurationMinutes())
 				.set("organizer_username", this.getOrganizerUsername())
 				.set("max_attendees", this.getMaxAttendees())
@@ -161,11 +169,14 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public String getOrganizerUsername() { return organizerUsername; }
 	public void setOrganizerUsername(String organizerUsername) { this.organizerUsername = organizerUsername;}
 	public Status getStatus() { return status; }
+	public boolean isStatus(Status status) { return this.status.equals(status);}
 	public void setStatus(Status status) { this.status = status;}
 	public long getCreatedAt() { return createdAt; }
 	public void setCreatedAt(long createdAt) { this.createdAt = createdAt;}
 	public long getAttendee() { return attendee; }
-	public void setAttendee(int attendee) { this.attendee = attendee;}
+	public void incAttendee() { attendee++; }
+	public void decAttendee() { attendee--; }
+	public void setAttendee(long attendee) { this.attendee = attendee;}
 	public List<String> getImageUrls() { return imageUrls; }
 	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 	@Override

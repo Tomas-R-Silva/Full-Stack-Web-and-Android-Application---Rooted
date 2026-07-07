@@ -1,13 +1,10 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import com.google.cloud.datastore.Cursor;
 import com.google.cloud.datastore.Datastore;
@@ -18,11 +15,9 @@ import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
-import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
-import com.google.cloud.datastore.Transaction;
 import com.google.cloud.datastore.Value;
 
 import jakarta.ws.rs.Consumes;
@@ -31,9 +26,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
-import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
@@ -151,7 +146,7 @@ public class EventResources {
 				// Regular users see public events and their own private events
 				filters.add(PropertyFilter.eq("is_public", true));
 			}
-			
+
 			if (input.isAccessible() != null && input.isAccessible())
 				filters.add(PropertyFilter.eq("is_accessible", input.isAccessible()));
 
@@ -235,7 +230,7 @@ public class EventResources {
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			if (existing.getStatus().equals(Status.CANCELLED.name()))
+			if (existing.getStatus().equals(Status.CANCELLED))
 				ErrorException.trow(9907); // can't edit a cancelled event
 
 			if (input.getTitle() != null && !input.getTitle().isBlank())
@@ -243,23 +238,23 @@ public class EventResources {
 			if (input.getDescription() != null && !input.getDescription().isBlank())
 				existing.setDescription(input.getDescription());
 			if (input.getCategory() != null)
-				builder.set("category", input.getCategory().toString());
+				existing.setCategory(input.getCategory());
 			if (input.getLocation() != null && !input.getLocation().isBlank())
-				builder.set("location", input.getLocation());
+				existing.setLocation(input.getLocation());
 			if (input.getStartDatenull() != null && input.getStartDate() > 0)
-				builder.set("start_date", input.getStartDate());
+				existing.setStartDate(input.getStartDate());
 			if (input.getDurationMinutesnull() != null && input.getDurationMinutes() > 0)
-				builder.set("duration_minutes", input.getDurationMinutes());
+				existing.setDurationMinutes(input.getDurationMinutes());
 			if (input.getMaxAttendeesnull() != null)
-				builder.set("max_attendees", input.getMaxAttendees());
+				existing.setMaxAttendees(input.getMaxAttendees());
 			if (input.getMaxAttendeesnull() != null)
-				builder.set("min_attendees", input.getMinAttendees());
+				existing.setMinAttendees(input.getMinAttendees());
 			if (input.isPublicnull() != null)
-				builder.set("is_public", input.isPublic());
+				existing.setPublic(input.isPublic());
 			if (input.isAccessiblenull() != null)
-				builder.set("is_accessible", input.isAccessible());
+				existing.setAccessible(input.isAccessible());
 			if (input.isAccessiblenull() != null)
-				builder.set("is_accessible", input.isAccessible());
+				existing.setAccessible(input.isAccessible());
 			if(input.getSDGint()!= null)
 				existing.setSDG(input.getSDGint());			
 			datastore.put(existing.toentity());
@@ -309,15 +304,10 @@ public class EventResources {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull existing = getEventEntity(req.getInput());
 			String organizer = existing.getOrganizerUsername();
-
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
-
-			Entity updated = Entity.newBuilder(existing)
-					.set("status", Status.CANCELLED.name())
-					.build();
-			datastore.put(updated);
-
+			existing.setStatus(Status.CANCELLED);
+			datastore.put(existing.toentity());
 			return ok(Map.of("message", "Event cancelled successfully"));
 
 		} catch (Exception e) {
@@ -337,11 +327,10 @@ public class EventResources {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull eventEntity = getEventEntity(req.getInput());
 
-			if (eventEntity.getString("status").equals(Status.CANCELLED.name()) ||
-					eventEntity.getString("status").equals(Status.COMPLETED.name()))
+			if (eventEntity.isStatus(Status.CANCELLED) ||eventEntity.isStatus(Status.COMPLETED))
 				ErrorException.trow(9907);
 
-			if (!eventEntity.getBoolean("is_public"))
+			if (!eventEntity.isPublic())
 				ErrorException.trow(9905); //TODO private event — attend via invite (future feature)
 
 			String username = token.getUsername();
@@ -351,8 +340,8 @@ public class EventResources {
 			if (datastore.get(attendanceKey) != null)
 				return ok(Map.of("message", "Already attending this event"));
 
-			long maxAttendees = eventEntity.getLong("max_attendees");
-			long currentCount = eventEntity.getLong("attendee_count");
+			long maxAttendees = eventEntity.getMaxAttendees();
+			long currentCount = eventEntity.getAttendee();
 			if (maxAttendees > 0 && currentCount >= maxAttendees)
 				ErrorException.trow(9928);
 
@@ -363,12 +352,8 @@ public class EventResources {
 					.set("joined_at", System.currentTimeMillis() / 1000L)
 					.build();
 			datastore.put(attendance);
-
-			Entity updatedEvent = Entity.newBuilder(eventEntity)
-					.set("attendee_count", currentCount + 1)
-					.build();
-			datastore.put(updatedEvent);
-
+			eventEntity.incAttendee();
+			datastore.put(eventEntity.toentity());
 			return ok(Map.of("message", "Successfully registered for the event"));
 
 		} catch (Exception e) {
@@ -398,12 +383,10 @@ public class EventResources {
 
 			datastore.delete(attendanceKey);
 
-			long currentCount = eventEntity.getLong("attendee_count");
+			long currentCount = eventEntity.getAttendee();
 			if (currentCount > 0) {
-				Entity updatedEvent = Entity.newBuilder(eventEntity)
-						.set("attendee_count", currentCount - 1)
-						.build();
-				datastore.put(updatedEvent);
+				eventEntity.decAttendee();
+				datastore.put(eventEntity.toentity());
 			}
 
 			return ok(Map.of("message", "Successfully unregistered from the event"));
@@ -423,7 +406,7 @@ public class EventResources {
 	public Response getAttendees(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			EventFull eventEntity = getEventEntity(req);
+			EventFull eventEntity = getEventEntity(req.getInput());
 			String organizer = eventEntity.getOrganizerUsername();
 
 			if (!token.getUsername().equals(organizer))
@@ -530,22 +513,12 @@ public class EventResources {
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<Value<?>> existing;
-			if (eventEntity.contains("image_urls")) {
-				existing = eventEntity.getList("image_urls");
-			} else {
-				existing = Collections.emptyList();
-			}
+			List<String> existing=eventEntity.getImageUrls();
 
 			int slots = 5 - existing.size();
 			if (slots <= 0)
 				return Error.invalid_input();
-
-			List<StringValue> updatedList = existing.stream()
-					.map(v -> StringValue.of((String) v.get()))
-					.collect(Collectors.toList());
-
-			List<String> uploadedUrls = new ArrayList<>();
+			List<String> uploadedUrls=new ArrayList<>(Math.min(input.getImages().size(), slots));
 			List<String> toUpload = input.getImages().subList(0, Math.min(input.getImages().size(), slots));
 			for (String dataUrl : toUpload) {
 				// Parse Base64 data URL: "data:<type>;base64,<data>"
@@ -553,15 +526,12 @@ public class EventResources {
 				String contentType = parts[0].replace("data:", "").replace(";base64", "");
 				byte[] bytes = java.util.Base64.getDecoder().decode(parts[1]);
 				String imageUrl = GCSUploader.uploadImage(bytes, contentType);
-				updatedList.add(StringValue.of(imageUrl));
+				existing.add(imageUrl);
 				uploadedUrls.add(imageUrl);
 			}
 
-			Entity updated = Entity.newBuilder(eventEntity)
-					.set("image_urls", updatedList)
-					.build();
-			datastore.put(updated);
-
+			eventEntity.setImageUrls(existing);
+			datastore.put(eventEntity.toentity());
 			return ok(Map.of("imageUrls", uploadedUrls, "message", "Images uploaded successfully"));
 
 		} catch (Exception e) {
@@ -577,7 +547,6 @@ public class EventResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteImage(ImageRequest req) {
-		Transaction txn = datastore.newTransaction();
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			ImageRequestInput input=req.getInput();
@@ -586,33 +555,20 @@ public class EventResources {
 			EventFull eventEntity = getEventEntity(input);
 			String organizer = eventEntity.getOrganizerUsername();
 
-
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
-
-			List<Value<?>> existing=(eventEntity.contains("image_urls"))?eventEntity.getList("image_urls"):Collections.emptyList();
-
-			for(String imageUrl:input.getImages()) {
-				List<StringValue> updatedList = existing.stream()
-						.filter(v -> !imageUrl.equals(v.get()))
-						.map(v -> StringValue.of((String) v.get()))
-						.collect(Collectors.toList());
-
-				if (updatedList.size() == existing.size())
-					return Error.invalid_input(); // image not found in this event
-
-				GCSUploader.deleteImage(imageUrl);
-
-				Entity updated = Entity.newBuilder(eventEntity)
-						.set("image_urls", updatedList)
-						.build();
-				txn.put(updated);
-			}
-			txn.commit();
+			
+			List<String> existing = eventEntity.getImageUrls();
+			for(String imageUrl:input.getImages()) 
+				if(existing.contains(imageUrl)) {
+					existing.remove(imageUrl);
+					GCSUploader.deleteImage(imageUrl);
+				}
+			eventEntity.setImageUrls(existing);
+			datastore.put(eventEntity.toentity());
 			return ok(Map.of("message", "Image deleted successfully"));
 
 		} catch (Exception e) {
-			txn.rollback();
 			return Error.fromexception(e);
 		}
 	}

@@ -14,8 +14,8 @@ public class EventAtributs{
 	protected String location;
 	protected Long startDate;// epoch seconds
 	protected Long durationMinutes;// how long the event lasts
-	protected Integer maxAttendees;// 0 = unlimited
-	protected Integer minAttendees;
+	protected Long maxAttendees;// 0 = unlimited
+	protected Long minAttendees;
 	protected Boolean isPublic;
 	protected Boolean isAccessible;
 	protected List<Long> sdg;
@@ -44,13 +44,13 @@ public class EventAtributs{
 	public Long getDurationMinutesnull() { return durationMinutes; }
 	public void setDurationMinutes(long durationMinutes) { this.durationMinutes = durationMinutes; }
 
-	public int getMaxAttendees() { return zeroifnull(maxAttendees); }
-	public Integer getMaxAttendeesnull() { return maxAttendees; }
-	public void setMaxAttendees(int maxAttendees) { this.maxAttendees = maxAttendees; }
+	public long getMaxAttendees() { return zeroifnull(maxAttendees); }
+	public Long getMaxAttendeesnull() { return maxAttendees; }
+	public void setMaxAttendees(long maxAttendees) { this.maxAttendees = maxAttendees; }
 
-	public int getMinAttendees() { return zeroifnull(minAttendees); }
-	public Integer getMinAttendeesnull() { return minAttendees; }
-	public void setMinAttendees(int minAttendees) { this.minAttendees = minAttendees; }
+	public long getMinAttendees() { return zeroifnull(minAttendees); }
+	public Long getMinAttendeesnull() { return minAttendees; }
+	public void setMinAttendees(long minAttendees) { this.minAttendees = minAttendees; }
 
 	public boolean isPublic() { return zeroifnull(isPublic); }
 	public Boolean isPublicnull() { return isPublic; }
@@ -67,9 +67,6 @@ public class EventAtributs{
 	public List<Long> getSDGint() { return sdg; }
 	public void setSDG(List<Long> sdg) { this.sdg = sdg; }
 
-	private static int zeroifnull(Integer n) {
-		return(n==null)?0:n;
-	}
 	private static long zeroifnull(Long n) {
 		return(n==null)?0:n;
 	}

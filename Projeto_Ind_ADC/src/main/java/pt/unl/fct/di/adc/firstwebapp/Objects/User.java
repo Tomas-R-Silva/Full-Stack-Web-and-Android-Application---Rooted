@@ -66,29 +66,12 @@ public class User extends ShortUser{
 		this.password = password;
 	}
 
-	public String getEmail(){
-		return email;
-	}
-
-	public void setEmail(String email){
-		this.email = email;
-	}
-
-	public String getConfirmation(){
-		return confirmation;
-	}
-
-	public void setConfirmation(String confirmation){
-		this.confirmation = confirmation;
-	}
-
-	public Role getRole() {
-		return Role.valueof(role);
-	}
-
-	public void setRole(String role) {
-		this.role = role;
-	}
+	public String getEmail(){return email;}
+	public void setEmail(String email){this.email = email;}
+	public String getConfirmation(){return confirmation;}
+	public void setConfirmation(String confirmation){this.confirmation = confirmation;}
+	public Role getRole() {return Role.valueof(role);}
+	public void setRole(String role) {this.role = role;}
 
 	public void userValidation() throws ErrorException{
 		List<Map<String,Object>> list=new LinkedList<>();
