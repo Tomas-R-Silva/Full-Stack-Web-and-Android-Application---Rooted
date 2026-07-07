@@ -28,11 +28,11 @@ public class Token extends ShortUser {
 	}
 
 	public static Token getfromcloud(Entity entity) {
-		return new Token(entity.getString("jwt"),
-				entity.getString("user_name"),
-				Role.valueof(entity.getString("role")),
-				entity.getLong("issued_at"),
-				entity.getLong("expires_at"));
+		return new Token((entity.contains("jwt"))?entity.getString("jwt"):null,
+				(entity.contains("user_name"))?entity.getString("user_name"):null,
+				(entity.contains("role"))?Role.valueof(entity.getString("role")):null,
+				(entity.contains("issued_at"))?entity.getLong("issued_at"):0,
+				(entity.contains("expires_at"))?entity.getLong("expires_at"):0);
 	}
 
 	public Token(String jwt, String username, Role role) {

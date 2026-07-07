@@ -137,7 +137,7 @@ public class Error {
 					ResponceBuilder.constructor(status,ex.getdata()):
 					errorswitch(status));
 		}
-		return errorswitch(9907);
+		return ResponceBuilder.constructor(9907,e.getMessage());
 	}	
 }
 

@@ -14,7 +14,7 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	 *   	"pageSize": 20,                   (optional, default 20)
 	 *   	"cursor": "...",                  (optional, for pagination)
 	 *   	"isAccessible": true,
-	 *   	"SDG": [1,14,3]  
+	 *   	"sdg": [1,14,3]  
 	 *   }
 
 	 * }
@@ -22,13 +22,13 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	
 	public ListEventsRequest() {}
 	
-	public class ListEventsInput{
+	public class ListEventsInput {
 		private String category;
 	    private String status;
 	    private String organizerUsername;
 	    private Integer pageSize;
 	    private String cursor;
-	    private List<Integer> SDG;
+	    private List<Integer> sdg;
 	    private Boolean isAccessible;
 
 	    public ListEventsInput() {}
@@ -48,8 +48,8 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	    public String getCursor() { return cursor; }
 	    public void setCursor(String cursor) { this.cursor = cursor; }
 	    
-	    public List<Integer> getSDG() { return SDG; }
-	    public void setSDG(List<Integer> SDG) { this.SDG = SDG; }
+	    public List<Integer> getSDG() { return sdg; }
+	    public void setSDG(List<Integer> sdg) { this.sdg = sdg; }
 	    
 	    public Boolean isAccessible() { return isAccessible; }
 	    public void setisAccessible(Boolean isAccessible) { this.isAccessible = isAccessible; }

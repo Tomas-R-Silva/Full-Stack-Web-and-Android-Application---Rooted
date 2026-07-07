@@ -159,7 +159,6 @@ public class EventResources {
 					// Token invalid  treat as unauthenticated
 				}
 			}
-
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Event");
 
 			// Build filters

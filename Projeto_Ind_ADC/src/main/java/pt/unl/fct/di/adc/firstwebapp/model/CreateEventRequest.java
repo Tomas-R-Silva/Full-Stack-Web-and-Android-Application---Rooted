@@ -18,7 +18,7 @@ public class CreateEventRequest extends AbstractTokenInputRequest<EventAtributs>
 	 *   	"minAttendees": 10,
 	 *   	"isPublic": true,
 	 *   	"isAccessible": true,
-	 *   	"SDG": [1,14,3]
+	 *   	"sdg": [1,14,3]
 	 *    }
 	 * }
 	 */
