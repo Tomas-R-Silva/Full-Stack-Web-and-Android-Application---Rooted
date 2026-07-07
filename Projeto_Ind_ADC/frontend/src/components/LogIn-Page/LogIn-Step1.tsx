@@ -60,11 +60,11 @@ function LogInStep1() {
       const token = response.data.token.jwt;
       const username = response.data.token.username;
       const role = response.data.token.role;
-      const email = response.data.token.email;
-      login(token, username, role, email);
+      console.log(response);
+      login(token, username, role);
       navigate("/#");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 

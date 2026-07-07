@@ -2,6 +2,7 @@ import type {RequestSignIn, SignInResponse} from "../utils/types";
 import type {RequestLogIn, LogInResponse} from "../utils/types";
 import type {RequestShowUsers, ShowUsersResponse} from "../utils/types";
 import type {RequestModAccount, ModAccountResponse} from "../utils/types";
+import type {RequestUserInformation, UserInformationResponse} from "../utils/types";
 import type {RequestChangePassword, ChangePasswordResponse} from "../utils/types";
 import type {RequestChangeRole, ChangeRoleResponse} from "../utils/types";
 import type {RequestDeleteAccount, DeleteAccountResponse} from "../utils/types";
@@ -110,6 +111,23 @@ export const modAccount = async (
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
 
   const json: ModAccountResponse = await res.json();
+
+  return json;
+};
+
+
+export const getUser = async (
+  data: RequestUserInformation
+): Promise<UserInformationResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/user`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json:UserInformationResponse = await res.json();
 
   return json;
 };

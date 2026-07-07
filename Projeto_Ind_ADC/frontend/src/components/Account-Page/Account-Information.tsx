@@ -11,7 +11,7 @@ type ErrorState = {
 };
 
 function AccountInformation() {
-  const { username, role, email } = useAuth();
+  const { username, role } = useAuth();
   const [changingPassword, setChangingPassword] = useState(false);
   const [formData, setFormData] = useState<RequestModAccount>({
     token: { jwt: "" },
@@ -165,7 +165,7 @@ function AccountInformation() {
                   color: "var(--color-white)",
                 }}
                 placeholder={
-                  "Change your email here. Current: " + (email ?? "No email")
+                  "Change your email here. Current: " + (username ?? "No email")
                 }
               />
               {errors.email && (

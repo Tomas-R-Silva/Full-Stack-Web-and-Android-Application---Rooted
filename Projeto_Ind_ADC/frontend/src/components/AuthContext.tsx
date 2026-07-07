@@ -4,8 +4,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   username: string | null;
   role: string | null;
-  email: string | null;
-  login: (token: string, username: string, role: string, email: string) => void;
+  login: (token: string, username: string, role: string) => void;
   logout: () => void;
 };
 
@@ -24,24 +23,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.getItem("role"),
   );
 
-  const [email, setEmail] = useState<string | null>(
-    sessionStorage.getItem("email"),
-  );
-
-  const login = (
-    token: string,
-    username: string,
-    role: string,
-    email: string,
-  ) => {
+  const login = (token: string, username: string, role: string) => {
     sessionStorage.setItem("token", token);
     sessionStorage.setItem("username", username);
     sessionStorage.setItem("role", role);
-    sessionStorage.setItem("email", email);
 
     setUsername(username);
     setRole(role);
-    setEmail(email);
     setIsAuthenticated(true);
   };
 
@@ -49,11 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
     sessionStorage.removeItem("role");
-    sessionStorage.removeItem("email");
 
     setUsername(null);
     setRole(null);
-    setEmail(null);
     setIsAuthenticated(false);
   };
 
@@ -63,7 +49,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         username,
         role,
-        email,
         login,
         logout,
       }}

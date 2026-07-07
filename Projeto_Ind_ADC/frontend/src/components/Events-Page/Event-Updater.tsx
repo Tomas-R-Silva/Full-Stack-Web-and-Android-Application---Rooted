@@ -31,7 +31,8 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
       maxAttendees: event.maxAttendees,
       minAttendees: 0,
       public: event.isPublic,
-      coverImageUrl: event.coverImageUrl,
+      isAccessible: event.isAccessible,
+      sdg: event.sdg,
     },
   });
 
@@ -46,7 +47,8 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
     maxAttendees: "",
     minAttendees: "",
     public: "",
-    coverImageUrl: "",
+    isAccessible: "",
+    sdg: "",
   });
 
   //========== Receber Input e Limpar erros ==========
@@ -110,7 +112,8 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
       maxAttendees: "",
       minAttendees: "",
       public: "",
-      coverImageUrl: "",
+      isAccessible: "",
+      SDQ: "",
     };
 
     switch (field) {
@@ -178,10 +181,13 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
         }
         break;
 
-      case "coverImageUrl":
+      case "isAccessible":
         break;
 
       case "public":
+        break;
+
+      case "sdg":
         break;
     }
 
@@ -265,28 +271,15 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
               />
             ) : (
               <>
-                {field === "coverImageUrl" ? (
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className={`form-control ${errors.coverImageUrl ? "is-invalid" : ""}`}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleImage(file);
-                      }
-                    }}
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    name={field}
-                    className={`form-control ${errors[field] ? "is-invalid" : ""}`}
-                    value={String(formData.input[field] ?? "")}
-                    onChange={handleChange}
-                    placeholder={"New " + field}
-                  />
-                )}
+                <input
+                  type="text"
+                  name={field}
+                  className={`form-control ${errors[field] ? "is-invalid" : ""}`}
+                  value={String(formData.input[field] ?? "")}
+                  onChange={handleChange}
+                  placeholder={"New " + field}
+                />
+
                 {errors[field] && (
                   <div className="invalid-feedback">{errors[field]}</div>
                 )}

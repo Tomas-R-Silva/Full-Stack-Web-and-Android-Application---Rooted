@@ -1,44 +1,74 @@
-import { useState, useEffect } from "react";
-import { getAuthSessions } from "../../api/auth";
-import type { AuthSessionsResponse, TokenType } from "../../utils/types";
-import personPin_w from "../../assets/icons/person_pin_w.svg";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getEventList } from "../../api/auth";
+import type {
+  EventItem,
+  EventListResponse,
+  FilterProps,
+} from "../../utils/types";
+import EventCardSmall from "../Events-Page/Event-Card-Small";
+import { useAuth } from "../AuthContext";
 
 function ModerationEvents() {
-  const [authSessions, setAuthSession] = useState<TokenType[]>([]);
-  const navigate = useNavigate();
+  //================= Hooks ===================
+  const [events, setEvents] = useState<EventItem[]>([]); //Events got from the request
+  const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
+  const [loading, setLoading] = useState(false); //if the main page is being loaded
+  const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
+  const [error, setError] = useState<string | null>(null);
+  const { username } = useAuth();
 
-  const loadAuthSessions = async () => {
+  //============== Get the events =============
+  const loadEvents = async (cursor?: string) => {
     try {
+      if (cursor) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      setError(null);
+
       const token = sessionStorage.getItem("token");
       if (!token) {
         console.log("User is not authenticated");
         return;
       }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
 
-      const res: AuthSessionsResponse = await getAuthSessions({
+      console.log(username);
+
+      const res: EventListResponse = await getEventList({
         token: { jwt: token },
+        input: {
+          pageSize: 12,
+          cursor: cursor ?? undefined,
+        },
       });
 
-      console.log(res.data);
-      setAuthSession(res.data.tokens);
+      console.log(res.data.events);
+
+      if (cursor) {
+        setEvents((prev) => [...prev, ...res.data.events]); //carregar mais => anteriores mais todos os restantes
+      } else {
+        setEvents(res.data.events);
+      }
+
+      setNextCursor(res.data.nextCursor);
     } catch (err) {
       console.error(err);
+      setError("Could not load the events.");
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
+  //fetch on page render
   useEffect(() => {
-    loadAuthSessions();
+    loadEvents();
   }, []);
 
   return (
@@ -46,7 +76,7 @@ function ModerationEvents() {
       <div className="container py-3">
         <div className="row">
           <div className="col-4">
-            <h4>Auth Sessions:</h4>
+            <h4>All Events:</h4>
             <div
               className="container border rounded p-3"
               style={{
@@ -54,68 +84,53 @@ function ModerationEvents() {
                 overflowY: "auto",
               }}
             >
-              {authSessions.length === 0 && (
-                <div
-                  className="alert alert-light"
-                  style={{ color: "var(--color-green)" }}
-                  role="alert"
-                >
-                  No auth sessions.
-                </div>
-              )}
-              {authSessions.length !== 0 &&
-                authSessions.map((session) => (
-                  <div
-                    className="d-flex justify-content-between align-items-start p-4 rounded mt-2"
-                    style={{
-                      maxWidth: "500px",
-                      width: "100%",
-                      backgroundColor: "var(--color-green2)",
-                      color: "var(--color-white)",
-                    }}
-                  >
-                    <div>
-                      <span
-                        className="fw-semibold"
-                        style={{ color: "var(--color-grenn)" }}
-                      >
-                        Username:{" "}
-                      </span>
-                      <span>{session.username}</span>
-
-                      <div>
-                        <span
-                          className="fw-semibold"
-                          style={{ color: "var(--color-grenn)" }}
-                        >
-                          TokenId:{" "}
-                        </span>
-                        <span>{session.tokenID}</span>
-                      </div>
-
-                      <div>
-                        <span
-                          className="fw-semibold"
-                          style={{ color: "var(--color-grenn)" }}
-                        >
-                          Expires at:{" "}
-                        </span>
-                        <span>{formatDate(session.expiresAt)}</span>
-                      </div>
+              <div className="mb-3">
+                {loading && (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-success" role="status">
+                      <span className="visually-hidden">Loading...</span>
                     </div>
-
-                    <img
-                      src={personPin_w}
-                      alt="View Profile"
-                      onClick={() => navigate("/profile/" + session.username)}
-                      style={{ cursor: "pointer" }}
-                    />
                   </div>
-                ))}
+                )}
+
+                {error && (
+                  <div className="alert alert-danger" role="alert">
+                    {error}
+                  </div>
+                )}
+
+                {!loading && !error && events.length === 0 && (
+                  <div className="alert alert-ligth" role="alert">
+                    There is no events availables.
+                  </div>
+                )}
+
+                {!loading && events.length > 0 && (
+                  <>
+                    {events.map((e) => (
+                      <EventCardSmall key={e.eventId} event={e} />
+                    ))}
+
+                    {nextCursor && (
+                      <div className="text-center mt-5">
+                        <button
+                          className="btn px-4"
+                          onClick={() => loadEvents(nextCursor)}
+                          disabled={loadingMore}
+                          style={{
+                            background: "var(--color-green)",
+                            color: "var(--color-white)",
+                          }}
+                        >
+                          {loadingMore ? "A carregar..." : "Carregar mais"}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
-
-          <div className="col-8"></div>
         </div>
       </div>
     </>

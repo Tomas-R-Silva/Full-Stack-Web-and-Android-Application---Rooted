@@ -1,79 +1,11 @@
 import type { RequestDeleteAccount, UserProps } from "../../utils/types";
 import { useState, useEffect } from "react";
-import type {
-  RequestChangePassword,
-  RequestModAccount,
-  RequestChangeRole,
-} from "../../utils/types";
-import {
-  changePassword,
-  deleteAccount,
-  modAccount,
-  changeRole,
-} from "../../api/auth";
-
-type ErrorState = {
-  [K in keyof RequestModAccount["input"]]: string;
-};
+import type { RequestChangeRole } from "../../utils/types";
+import { deleteAccount, changeRole } from "../../api/auth";
 
 function AccountAdminManage({ user }: UserProps) {
-  const [changingPassword, setChangingPassword] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newRole, setNewRole] = useState(user.role);
-  const [formData, setFormData] = useState<RequestModAccount>({
-    token: { jwt: "" },
-    input: {
-      username: user.username ?? "",
-      email: "",
-    },
-  });
-
-  const [errors, setErrors] = useState<ErrorState>({
-    username: "",
-    email: "",
-  });
-
-  const [passwordData, setPasswordData] = useState<RequestChangePassword>({
-    token: { jwt: "" },
-    input: {
-      username: user.username ?? "",
-      oldpassword: "",
-      newpassword: "",
-    },
-  });
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value, type } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      input: {
-        ...prev.input,
-        [name]: type === "number" ? (value === "" ? -1 : Number(value)) : value,
-      },
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
-  };
-
-  const handlePassword = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value, type } = e.target;
-
-    setPasswordData((prev) => ({
-      ...prev,
-      input: {
-        ...prev.input,
-        [name]: type === "number" ? (value === "" ? -1 : Number(value)) : value,
-      },
-    }));
-  };
 
   const handleNewRole = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -84,39 +16,12 @@ function AccountAdminManage({ user }: UserProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors = {
-      username: "",
-      email: "",
-    };
-
-    if (formData.input.email && !formData.input.email.includes("@")) {
-      newErrors.email = "Must be a valid email.";
-    }
-
-    setErrors(newErrors);
-
-    const hasErrors = Object.values(newErrors).some((error) => error !== "");
-    if (hasErrors) return;
-
     try {
       const token = sessionStorage.getItem("token");
       if (!token) {
         console.log("User is not authenticated");
         return;
       }
-      const payloadMod: RequestModAccount = {
-        ...formData,
-        token: {
-          jwt: token,
-        },
-      };
-
-      const payloadPwd: RequestChangePassword = {
-        ...passwordData,
-        token: {
-          jwt: token,
-        },
-      };
 
       const payloadRole: RequestChangeRole = {
         token: {
@@ -127,12 +32,7 @@ function AccountAdminManage({ user }: UserProps) {
           newrole: newRole,
         },
       };
-      console.log(payloadMod);
-      const responseMod = await modAccount(payloadMod);
-      console.log(responseMod);
-      console.log(payloadPwd);
-      const responsePwd = await changePassword(payloadPwd);
-      console.log(responsePwd);
+
       console.log(payloadRole);
       const responseRole = await changeRole(payloadRole);
       console.log(responseRole);
@@ -169,25 +69,7 @@ function AccountAdminManage({ user }: UserProps) {
   };
 
   useEffect(() => {
-    setFormData({
-      token: { jwt: "" },
-      input: {
-        username: user.username,
-        email: "",
-      },
-    });
-
-    setPasswordData({
-      token: { jwt: "" },
-      input: {
-        username: user.username,
-        oldpassword: "",
-        newpassword: "",
-      },
-    });
-
     setNewRole(user.role);
-    setChangingPassword(false);
     setConfirmDelete(false);
   }, [user]);
 
@@ -211,7 +93,7 @@ function AccountAdminManage({ user }: UserProps) {
                 color: "var(--color-green)",
               }}
             >
-              As Admin you can see and manage some users account information.
+              As Admin you can see and manage the users roles.
             </p>
 
             <div className="mb-3">
@@ -228,7 +110,6 @@ function AccountAdminManage({ user }: UserProps) {
                 name="username"
                 value={user.username ?? ""}
                 readOnly
-                onChange={handleChange}
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
@@ -236,9 +117,6 @@ function AccountAdminManage({ user }: UserProps) {
                 }}
                 placeholder={user.username ?? "No username"}
               />
-              {errors.username && (
-                <small className="text-danger">{errors.username}</small>
-              )}
             </div>
 
             <div className="mb-3">
@@ -253,8 +131,8 @@ function AccountAdminManage({ user }: UserProps) {
               <input
                 type="email"
                 name="email"
-                value={formData.input.email}
-                onChange={handleChange}
+                value={user.email ?? ""}
+                readOnly
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
@@ -265,9 +143,6 @@ function AccountAdminManage({ user }: UserProps) {
                   (user.email ?? "No email")
                 }
               />
-              {errors.email && (
-                <small className="text-danger">{errors.email}</small>
-              )}
             </div>
 
             <div className="mb-3">
@@ -280,57 +155,18 @@ function AccountAdminManage({ user }: UserProps) {
                 >
                   Password
                 </label>
-
-                <button
-                  type="button"
-                  className="btn btn-sm text-white"
-                  style={{ backgroundColor: "var(--color-green2)" }}
-                  onClick={() => setChangingPassword((prev) => !prev)}
-                >
-                  {changingPassword ? "Cancel" : "Change"}
-                </button>
               </div>
 
-              {!changingPassword ? (
-                <input
-                  type="password"
-                  className="form-control border-0"
-                  style={{
-                    backgroundColor: "var(--color-green2)",
-                    color: "var(--color-white)",
-                  }}
-                  value="••••••••••••"
-                  readOnly
-                />
-              ) : (
-                <>
-                  <input
-                    type="password"
-                    name="oldpassword"
-                    value={passwordData.input.oldpassword}
-                    onChange={handlePassword}
-                    className="form-control border-0 mb-2"
-                    style={{
-                      backgroundColor: "var(--color-green2)",
-                      color: "var(--color-white)",
-                    }}
-                    placeholder="Current password"
-                  />
-
-                  <input
-                    type="password"
-                    name="newpassword"
-                    value={passwordData.input.newpassword}
-                    onChange={handlePassword}
-                    className="form-control border-0"
-                    style={{
-                      backgroundColor: "var(--color-green2)",
-                      color: "var(--color-white)",
-                    }}
-                    placeholder="New password"
-                  />
-                </>
-              )}
+              <input
+                type="password"
+                className="form-control border-0"
+                style={{
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+                value="••••••••••••"
+                readOnly
+              />
             </div>
 
             <div className="mb-3">
@@ -349,6 +185,7 @@ function AccountAdminManage({ user }: UserProps) {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
+                readOnly
               />
             </div>
 
@@ -368,6 +205,7 @@ function AccountAdminManage({ user }: UserProps) {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
+                readOnly
               />
             </div>
 

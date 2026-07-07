@@ -31,7 +31,6 @@ export type LogInResponse = {
     token:{
       jwt:string,
       username: string,
-      email: string,
       role: string,
       issuedAt: number,
       expiresAt: number,
@@ -93,6 +92,25 @@ export type RequestChangePassword = {
     username:string;
     oldpassword: string,
     newpassword: string,
+  }
+}
+
+export type RequestUserInformation = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type UserInformationResponse = {
+  status: number,
+  data: {username: string,
+  email: string,
+  role: string,
+  creation_time: number,
+  display: string,
+  oldnames: String[],
+  friendship: string,
   }
 }
 
@@ -158,7 +176,7 @@ export type FriendsListResponse = {
 
 export type Friend = {
   Friend: string,
-  Start: number,
+  "Sent At": number,
 }
 
 export type RequestFriendsRequests = {
@@ -183,6 +201,7 @@ export type TokenType = {
   tokenID: string,
   username: string,
   role: string,
+  issuedAt: number,
   expiresAt: number,
 }
 
@@ -202,8 +221,9 @@ export type EventItem = {
   isPublic: boolean;
   status: string;
   createdAt: number;
-  coverImageUrl?: string;
   imageUrls: string[];
+  isAccessible: boolean,
+  sdg: number[]
 };
 
 export type EventProps = {
@@ -221,7 +241,9 @@ export type RequestEventCreation = {
   durationMinutes: number,
   maxAttendees: number,
   minAttendees: number,
-  public: boolean
+  public: boolean,
+  accessible: boolean,
+  sdg: number[]
   }
 };
 
@@ -246,7 +268,9 @@ export type RequestEventList = {
   status?: string;
   organizerUsername?: string;
   pageSize: number;
-  cursor?: string;},
+  cursor?: string;
+  isAccessible?: boolean,
+  sdg?: number[]},
 };
 
 export type EventListResponse = {
@@ -270,7 +294,8 @@ export type RequestEventUpdate = {
     maxAttendees: number,
     minAttendees: number,
     public: boolean,
-    coverImageUrl?: string,
+    isAccessible?: boolean,
+    sdg?: number[]
   }
 }
 

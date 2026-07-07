@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { getEventList } from "../../api/auth";
-import type {
-  EventItem,
-  EventListResponse,
-  FilterProps,
-} from "../../utils/types";
+import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCardSmall from "../Events-Page/Event-Card-Small";
 import { useAuth } from "../AuthContext";
 
