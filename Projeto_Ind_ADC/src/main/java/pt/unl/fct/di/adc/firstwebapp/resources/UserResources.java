@@ -248,7 +248,7 @@ public class UserResources {
 				Entity friend=datastore.get(getFriendKey(token,user));
 				if(friend==null) 
 					friendshipstatus=Friendstatus.NOT_FRIENDS;
-				if(friend.getBoolean("accepted")) {
+				else if(friend.getBoolean("accepted")) {
 					friendshipstatus=Friendstatus.FRIENDS;
 					String ke=(friend.getString("username_1").equals(user.getString("user_name")))?"nickname_1":"nickname_2";
 					if(friend.contains(ke)) 
