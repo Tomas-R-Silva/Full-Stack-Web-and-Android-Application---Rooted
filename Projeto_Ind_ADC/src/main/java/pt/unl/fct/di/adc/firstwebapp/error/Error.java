@@ -135,9 +135,13 @@ public class Error {
 			int status=ex.getStatus();
 			return((ex.getdata()!=null)? 
 					ResponceBuilder.constructor(status,ex.getdata()):
-					errorswitch(status));
+						errorswitch(status));
 		}
-		return ResponceBuilder.constructor(9907,e.getMessage());
+		try {
+			return ResponceBuilder.constructor(9907,e.getMessage());
+		}catch (Exception e1) {
+			return errorswitch(9907);	
+		}
 	}	
 }
 
