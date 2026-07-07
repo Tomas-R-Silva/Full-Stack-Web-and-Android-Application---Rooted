@@ -2,7 +2,7 @@ package pt.unl.fct.di.adc.firstwebapp.error;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.Entity;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 
 public class Validator {
@@ -20,7 +20,7 @@ public class Validator {
 		ErrorException.trow(9905);
 	}
 
-	public static void unauthorized(Token tokenJson, Role[] allowed) throws ErrorException {
+	public static void unauthorized(TokenFull tokenJson, Role[] allowed) throws ErrorException {
 		unauthorized(tokenJson.getRole(),allowed);
 	}
 
@@ -40,12 +40,12 @@ public class Validator {
 
 	// With JWT, signature and expiry are verified by JwtUtils.verify().
 	// This method just confirms the session entity exists (not revoked).
-	public static void invalidToken(Entity entity, Token tokenJson) throws ErrorException {
+	public static void invalidToken(Entity entity, TokenFull tokenJson) throws ErrorException {
 		if (entity == null)
 			ErrorException.trow(9903);
 	}
 
-	public static void invalidToken(Token token) throws ErrorException {
+	public static void invalidToken(TokenFull token) throws ErrorException {
 		if(token == null ||
 				token.getJwt() == null ||
 				token.getUsername() == null ||

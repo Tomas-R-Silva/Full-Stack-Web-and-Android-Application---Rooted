@@ -8,7 +8,7 @@ import com.google.cloud.datastore.Key;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.ModelToken;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequestInterface;
@@ -22,17 +22,17 @@ public class AuthHelper {
 
 	private AuthHelper() {}
 
-	public static Token verifyToken(TokenRequestInterface token) throws ErrorException {
+	public static TokenFull verifyToken(TokenRequestInterface token) throws ErrorException {
 		return verifyToken(token.getToken());
 	}
 
-	public static Token verifyToken(ModelToken token) throws ErrorException {
+	public static TokenFull verifyToken(ModelToken token) throws ErrorException {
 		if (token == null)
 			ErrorException.trow(9903);
 		return verifyToken(token.getJwt());
 	}
 
-	public static Token verifyToken(String jwt) throws ErrorException {
+	public static TokenFull verifyToken(String jwt) throws ErrorException {
 		if (jwt == null)
 			ErrorException.trow(9903);
 		Key key = datastore.newKeyFactory().setKind("Session").newKey(jwt);

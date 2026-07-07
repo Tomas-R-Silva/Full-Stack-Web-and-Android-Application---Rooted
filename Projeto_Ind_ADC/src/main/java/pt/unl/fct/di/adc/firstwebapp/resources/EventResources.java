@@ -34,7 +34,7 @@ import pt.unl.fct.di.adc.firstwebapp.Objects.Event;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.GCSUploader;
@@ -73,7 +73,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createEvent(CreateEventRequest req) {
 		try {
-			Token tokenObj = AuthHelper.verifyToken(req);
+			TokenFull tokenObj = AuthHelper.verifyToken(req);
 
 			Event event = new Event(req.getInput(),tokenObj.getUsername());
 
@@ -120,7 +120,7 @@ public class EventResources {
 			boolean isPublic = entity.getBoolean("is_public");
 			if (!isPublic) {
 				// Private event must be authenticated
-				Token token = AuthHelper.verifyToken(req);
+				TokenFull token = AuthHelper.verifyToken(req);
 				String requester = token.getUsername();
 				String organizer = entity.getString("organizer_username");
 				Role role = token.getRole();
@@ -152,7 +152,7 @@ public class EventResources {
 			ListEventsInput input =req.getInput();
 			if (req.getToken() != null && req.getToken().getJwt() != null) {
 				try {
-					Token token = AuthHelper.verifyToken(req);
+					TokenFull token = AuthHelper.verifyToken(req);
 					authenticated = true;
 					requesterRole = token.getRole();
 				} catch (ErrorException ignored) {
@@ -248,7 +248,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateEvent(UpdateEventRequest req) {
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 			EventAtributsid input=req.getInput();
 			Entity existing = getEventEntity(input);
 			String organizer = existing.getString("organizer_username");
@@ -302,7 +302,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteEvent(EventTokenRequest req) {
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 			Entity existing = getEventEntity(req.getInput());
 			String organizer = existing.getString("organizer_username");
 
@@ -329,7 +329,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response cancelEvent(EventTokenRequest req) {
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 			Entity existing = getEventEntity(req.getInput());
 			String organizer = existing.getString("organizer_username");
 
@@ -357,7 +357,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response attendEvent(EventTokenRequest req) {
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 			Entity eventEntity = getEventEntity(req.getInput());
 
 			if (eventEntity.getString("status").equals(Status.CANCELLED.name()) ||
@@ -408,7 +408,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response unattendEvent(EventTokenRequest req) {
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 
 			Entity eventEntity = getEventEntity(req.getInput());
 
@@ -445,7 +445,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAttendees(EventTokenRequest req) {
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 			Entity eventEntity = getEventEntity(req.getInput());
 			String organizer = eventEntity.getString("organizer_username");
 
@@ -483,7 +483,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getMyAttends(ShortUserTokenRequest req) {
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 			Entity user = AuthHelper.getUser(req.getInput());
 
 			if (!token.getUsername().equals(user.getString("user_name")))
@@ -546,7 +546,7 @@ public class EventResources {
 	public Response uploadImages(ImageRequest req) {
 		try {
 			ImageRequestInput input=req.getInput();
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 
 			Entity eventEntity = getEventEntity(input);
 			String organizer = eventEntity.getString("organizer_username");
@@ -602,7 +602,7 @@ public class EventResources {
 	public Response deleteImage(ImageRequest req) {
 		Transaction txn = datastore.newTransaction();
 		try {
-			Token token = AuthHelper.verifyToken(req);
+			TokenFull token = AuthHelper.verifyToken(req);
 			ImageRequestInput input=req.getInput();
 			if (input.getImages().isEmpty())
 				ErrorException.trow(9906);

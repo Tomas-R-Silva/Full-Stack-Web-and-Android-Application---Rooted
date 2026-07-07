@@ -29,7 +29,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ForumPost;
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.Event.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
@@ -67,7 +67,7 @@ public class ForumResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response postMessage(PostMessageRequest req) {
         try {
-            Token token = AuthHelper.verifyToken(req);
+            TokenFull token = AuthHelper.verifyToken(req);
             PostMessageinput input =req.getInput();
             
             Entity eventEntity = getEventEntity(input);
@@ -162,7 +162,7 @@ public class ForumResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response deletePost(ForumKeyTokenRequest req) {
         try {
-            Token token = AuthHelper.verifyToken(req);
+            TokenFull token = AuthHelper.verifyToken(req);
             Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getInput().getForumKey());
             Entity post = datastore.get(key);
             if (post == null)

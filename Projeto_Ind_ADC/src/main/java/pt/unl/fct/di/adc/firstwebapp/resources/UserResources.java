@@ -29,7 +29,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
@@ -133,7 +133,7 @@ public class UserResources {
 			String jwtString = JWTToken.createJWT(user.getString("user_name"), Map.of("role", Role.valueof(user.getString("user_role")).name()));
 			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
 
-			Token token =JWTToken.filltoken(jwtString,decoded);
+			TokenFull token =JWTToken.filltoken(jwtString,decoded);
 			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jwtString);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
 					.set("jwt", jwtString)
@@ -143,7 +143,7 @@ public class UserResources {
 					.set("expires_at", token.getExpiresAt()/TIME_DIVIDER)
 					.build();
 			datastore.put(sessionEntity);
-			return buildresponse(Map.of("token", Token.getfromcloud(sessionEntity).tomap()));
+			return buildresponse(Map.of("token", TokenFull.getfromcloud(sessionEntity).tomap()));
 		}catch(Exception e) {
 			return Error.fromexception(e);
 		}
@@ -156,7 +156,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showUsers(TokenRequest request) {
 		try {
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 
 			Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
@@ -187,7 +187,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteAccount(ShortUserTokenRequest request){
 		try {
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Key userKeyToBeDeleted = user.getKey();	
 
@@ -209,7 +209,7 @@ public class UserResources {
 	public Response modifyAccount(ModAccountRequest request) {
 		try {
 			ModAccountRequestInput input = request.getInput();
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(token);
 			Builder updatedUser = Entity.newBuilder(user);
 			if(input.getUsername()!=null&&(user.contains("user_display")||!user.getString("user_display").equals(input.getUsername()))) {
@@ -238,7 +238,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAccount(ShortUserTokenRequest request) {
 		try {
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			String displayname=(user.contains("user_display"))?user.getString("user_display"):user.getString("user_name");
 			Friendstatus friendshipstatus;
@@ -282,7 +282,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response findAccount(ShortUserTokenRequest request) {
 		try {
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			//Entity user = AuthHelper.getUser(request.getInput());
 			//TODO
 
@@ -303,7 +303,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showUserRole(ShortUserTokenRequest request){
 		try{
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
 			return buildresponse(Map.of(
@@ -323,7 +323,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response logOut(ShortUserTokenRequest request){
 		try{
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 
 			if(!token.getUsername().equals(user.getString("user_name")))
@@ -344,7 +344,7 @@ public class UserResources {
 		try{
 			ChangeUserRoleInput input = request.getInput();
 			Entity user = AuthHelper.getUser(input);
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			Role newRole = Role.valueof(input.getNewrole());
 			Entity updatedUser = Entity.newBuilder(user)
@@ -368,7 +368,7 @@ public class UserResources {
 		try{
 			PasswordInput input = request.getInput();
 			Entity user = AuthHelper.getUser(input.getUsername());
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 
 			if(!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN});
@@ -397,7 +397,7 @@ public class UserResources {
 			PasswordInput input = request.getInput();
 
 			Entity user = AuthHelper.getUser(input);
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 
 			if(!token.getUsername().equals(user.getString("user_name")))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN});
@@ -423,7 +423,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showAuthsessions(TokenRequest request){
 		try{
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			return buildresponse(Map.of("tokens", getAllSessions()));
 
@@ -449,7 +449,7 @@ public class UserResources {
 	public Response addFriend(ShortUserTokenRequest request) throws ErrorException{
 		Transaction txn = datastore.newTransaction();
 		try{
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Key friendKey = getFriendKey(token,user);
 			Entity existingfriend = txn.get(friendKey);
@@ -487,7 +487,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response addnickname(TwoNameTokenRequest request) throws ErrorException{
 		try{
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 			Entity existingfriend = datastore.get(getFriendKey(token,user));
 			if(existingfriend == null || !existingfriend.getBoolean("accepted"))
@@ -507,7 +507,7 @@ public class UserResources {
 	public Response unfriend(ShortUserTokenRequest request){
 		try {
 			Entity user = AuthHelper.getUser(request.getInput());
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			datastore.delete(getFriendKey(token,user));
 			return buildresponse(Map.of("message", "Friendship Ended"));
 		}catch(Exception e) {
@@ -549,7 +549,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response showFriendRequests(TokenRequest request){
 		try{
-			Token token = AuthHelper.verifyToken(request);
+			TokenFull token = AuthHelper.verifyToken(request);
 			List<Map<String, Object>> friends = new LinkedList<>();
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
 			queryBuilder.setFilter(CompositeFilter.and(
@@ -576,7 +576,7 @@ public class UserResources {
 
 		while(sessions.hasNext()) {
 			Entity session=sessions.next();
-			Token token=Token.getfromcloud(session);
+			TokenFull token=TokenFull.getfromcloud(session);
 			if(token.isexpierd())
 				datastore.delete(session.getKey());
 			else
@@ -623,7 +623,7 @@ public class UserResources {
 		return ResponceBuilder.constructorsuccess(map);
 	}
 
-	private Key getFriendKey(Token token,Entity user) throws ErrorException{
+	private Key getFriendKey(TokenFull token,Entity user) throws ErrorException{
 		int compare=user.getString("user_name").compareTo(token.getUsername());
 		if(compare==0)
 			ErrorException.trow(9925);

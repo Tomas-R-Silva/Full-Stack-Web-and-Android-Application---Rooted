@@ -13,7 +13,7 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.Token;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 
 public class JWTToken {
@@ -68,8 +68,8 @@ public class JWTToken {
 		} catch (Exception e) {return null;}
 	}
 
-	public static Token filltoken(String jwt,DecodedJWT decoded) throws TokenExpiredException, Exception {
-		Token token=new Token(jwt, 
+	public static TokenFull filltoken(String jwt,DecodedJWT decoded) throws TokenExpiredException, Exception {
+		TokenFull token=new TokenFull(jwt, 
 				decoded.getSubject(), 
 				Role.valueof(decoded.getClaim("role").asString()),
 				decoded.getIssuedAt().getTime(),
@@ -77,7 +77,7 @@ public class JWTToken {
 		return token;
 	}
 
-	public static Token filltoken(String jwt) throws TokenExpiredException, Exception {
+	public static TokenFull filltoken(String jwt) throws TokenExpiredException, Exception {
 		return filltoken(jwt,JWTToken.decodeUnsafe(jwt));
 	}
 

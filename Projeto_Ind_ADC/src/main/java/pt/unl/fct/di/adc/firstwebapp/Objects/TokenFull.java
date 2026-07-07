@@ -6,7 +6,7 @@ import com.google.cloud.datastore.Entity;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 
-public class Token extends ShortUser {
+public class TokenFull extends ShortUser implements Full{
 	private static final long TIME_DIVIDER = 1000L;
 	public static final long EXPIRATION_TIME = 15 * 60;
 
@@ -15,11 +15,11 @@ public class Token extends ShortUser {
 	private long issuedAt;
 	private long expiresAt;
 
-	public Token() {
+	public TokenFull() {
 		this(null, null, null);
 	}
 
-	public Token(String jwt, String username, Role role,long issuedAt,long expiresAt) {
+	public TokenFull(String jwt, String username, Role role,long issuedAt,long expiresAt) {
 		this.jwt = jwt;
 		this.username = username;
 		this.role = role;
@@ -27,15 +27,15 @@ public class Token extends ShortUser {
 		this.expiresAt = expiresAt;
 	}
 
-	public static Token getfromcloud(Entity entity) {
-		return new Token((entity.contains("jwt"))?entity.getString("jwt"):null,
+	public static TokenFull getfromcloud(Entity entity) {
+		return new TokenFull((entity.contains("jwt"))?entity.getString("jwt"):null,
 				(entity.contains("user_name"))?entity.getString("user_name"):null,
 				(entity.contains("role"))?Role.valueof(entity.getString("role")):null,
 				(entity.contains("issued_at"))?entity.getLong("issued_at"):0,
 				(entity.contains("expires_at"))?entity.getLong("expires_at"):0);
 	}
 
-	public Token(String jwt, String username, Role role) {
+	public TokenFull(String jwt, String username, Role role) {
 		this(jwt, username, role,
 				System.currentTimeMillis() / TIME_DIVIDER,
 				System.currentTimeMillis() / TIME_DIVIDER + EXPIRATION_TIME);
