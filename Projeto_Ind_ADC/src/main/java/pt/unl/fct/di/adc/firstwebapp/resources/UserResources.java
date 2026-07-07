@@ -472,7 +472,7 @@ public class UserResources {
 					if(existingfriend.getString("username_1").equals(token.getUsername()))
 						ErrorException.trow(9927);
 					else
-						datastore.put(Entity.newBuilder(existingfriend).set("accepted", true).set("issued_at", Timestamp.now()).build());
+						datastore.put(Entity.newBuilder(existingfriend).set("accepted", true).set("issued_at", System.currentTimeMillis()/TIME_DIVIDER).build());
 				}
 			}
 			return buildresponse(Map.of("message", "Friend Request Accepted"));
