@@ -71,7 +71,7 @@ public class Event extends EventAtributsid {
 		if(minAttendees<0||(maxAttendees!=0&&minAttendees>maxAttendees))
 			list.add(Error.createmap(9918));
 		boolean found=false;
-		Iterator<Integer> it=sdg.iterator();
+		Iterator<Long> it=sdg.iterator();
 		while(!found && it.hasNext()) found=SDGcheck(it.next());
 		if(found)
 			list.add(Error.createmap(9933));
@@ -79,7 +79,7 @@ public class Event extends EventAtributsid {
 			Error.invalid_input(list);
 	}
 
-	private static final boolean SDGcheck(int n) {return n>17||n<1;}
+	private static final boolean SDGcheck(long n) {return n>17||n<1;}
 
 	public static boolean validVariable(String var){
 		return var != null && !var.isBlank();

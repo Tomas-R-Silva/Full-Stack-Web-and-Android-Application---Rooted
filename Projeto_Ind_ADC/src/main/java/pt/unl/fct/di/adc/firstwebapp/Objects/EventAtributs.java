@@ -19,7 +19,7 @@ public class EventAtributs{
 	protected Integer minAttendees;
 	protected Boolean isPublic;
 	protected Boolean isAccessible;
-	protected List<Integer> sdg;
+	protected List<Long> sdg;
 	
 
 	public EventAtributs() {}
@@ -64,12 +64,12 @@ public class EventAtributs{
 	public List<LongValue> getSDG() {
 		if(sdg==null||sdg.isEmpty())return null;
 		List<LongValue> list = new ArrayList<>(sdg.size());
-		for(Integer n:sdg) 
+		for(Long n:sdg) 
 			list.add(LongValue.of(n));
 		return list;
 	}
-	public List<Integer> getSDGint() { return sdg; }
-	public void setSDG(List<Integer> sdg) { this.sdg = sdg; }
+	public List<Long> getSDGint() { return sdg; }
+	public void setSDG(List<Long> sdg) { this.sdg = sdg; }
 	
 	private static int zeroifnull(Integer n) {
 		return(n==null)?0:n;

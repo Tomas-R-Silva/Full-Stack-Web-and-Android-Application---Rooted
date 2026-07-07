@@ -212,9 +212,11 @@ public class UserResources {
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(token);
 			Builder updatedUser = Entity.newBuilder(user);
-			if(input.getUsername()!=null&&!user.getString("user_display").equals(input.getUsername())) {
+			if(input.getUsername()!=null&&(user.contains("user_display")||!user.getString("user_display").equals(input.getUsername()))) {
 				updatedUser.set("user_display", input.getUsername());
-				List<StringValue> list = user.getList("old_display");
+				List<StringValue> list = (user.contains("old_display"))?user.getList("old_display"):new ArrayList<>(1);
+				if(!user.contains("old_display"))
+					list.add(StringValue.of(user.getString("user_name")));
 				StringValue news=StringValue.of(input.getUsername());
 				if(!list.contains(news)) {
 					list.add(news);
@@ -224,8 +226,6 @@ public class UserResources {
 			if(input.getEmail()!=null&&!user.getString("user_email").equals(input.getEmail()))
 				updatedUser.set("user_email", input.getEmail());	
 			datastore.put(updatedUser.build());
-
-
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -240,24 +240,24 @@ public class UserResources {
 		try {
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
-			Entity friend=datastore.get(getFriendKey(token,user));
+			String displayname=(user.contains("user_display"))?user.getString("user_display"):user.getString("user_name");
 			Friendstatus friendshipstatus;
 			if(user.getString("user_name").equals(token.getUsername())) 
 				friendshipstatus=Friendstatus.SELF;
-			else if(friend!=null) 
-				if(friend.getBoolean("accepted"))
+			else {
+				Entity friend=datastore.get(getFriendKey(token,user));
+				if(friend==null) 
+					friendshipstatus=Friendstatus.NOT_FRIENDS;
+				if(friend.getBoolean("accepted")) {
 					friendshipstatus=Friendstatus.FRIENDS;
+					String ke=(friend.getString("username_1").equals(user.getString("user_name")))?"nickname_1":"nickname_2";
+					if(friend.contains(ke)) 
+						displayname=friend.getString(ke);	
+				}
 				else if(friend.getString("username_1").equals(token.getUsername()))
 					friendshipstatus=Friendstatus.REQUEST_SENT;
 				else
 					friendshipstatus=Friendstatus.REQUEST_RECIVED;
-			else
-				friendshipstatus=Friendstatus.NOT_FRIENDS;
-			String displayname=(user.contains("user_display"))?user.getString("user_display"):user.getString("user_name");
-			if(friendshipstatus==Friendstatus.FRIENDS) {
-				String ke=(friend.getString("username_1").equals(token.getUsername()))?"nickname_1":"nickname_2";
-				if(friend.contains(ke)) 
-					displayname=friend.getString(ke);
 			}
 			List<StringValue> list =user.contains("old_display")?user.getList("old_display"):new ArrayList<>(0);
 			List<String> newlist=new ArrayList<>(list.size());
@@ -301,7 +301,7 @@ public class UserResources {
 	@Path("/showuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUserRole (ShortUserTokenRequest request){
+	public Response showUserRole(ShortUserTokenRequest request){
 		try{
 			Token token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
@@ -441,8 +441,7 @@ public class UserResources {
 			datastore.delete(sessions.next().getKey());
 		return buildresponse(Map.of("message", "ALL UNFRIEND"));
 	}
-	
-	
+
 	@POST
 	@Path("/addfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
