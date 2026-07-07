@@ -1,7 +1,7 @@
 import NavBar from "../NavBar/NavBar";
 import Ticket from "./Ticket";
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   RequestEventGetter,
   EventGetterResponse,
@@ -15,12 +15,15 @@ import { useAuth } from "../AuthContext";
 import editSquare_w from "../../assets/icons/edit_square_white.svg";
 import EventUpdater from "./Event-Updater";
 import Chat from "../Forum-elements/Chat";
+import { useMapsPage } from "../../api/maps";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventItem | undefined>();
   const { isAuthenticated, username } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const eventMapRef = useRef<HTMLDivElement | null>(null);
+  const { renderEventMap } = useMapsPage(import.meta.env.VITE_API_KEY);
   type UpdateField = keyof RequestEventUpdate["input"];
   const [field, setField] = useState<UpdateField>("title");
 
@@ -47,6 +50,12 @@ function EventElements() {
     if (!id) return;
     loadEvents(id);
   }, [id]);
+
+  useEffect(() => {
+    if (!event || !eventMapRef.current) return;
+
+    renderEventMap(event, eventMapRef.current);
+  }, [event, renderEventMap]);
 
   return (
     <>
@@ -115,7 +124,10 @@ function EventElements() {
 
               <div className="col-4">
                 <h2 style={{ color: "var(--color-white)" }}>Event Location:</h2>
-                {/* map here */}
+                <div
+                  ref={eventMapRef}
+                  style={{ width: "100%", height: "300px", borderRadius: "8px" }}
+                />
               </div>
             </div>
             <div className="row mt-5">
