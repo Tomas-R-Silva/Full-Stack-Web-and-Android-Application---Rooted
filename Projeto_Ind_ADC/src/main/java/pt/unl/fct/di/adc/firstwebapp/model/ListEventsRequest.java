@@ -2,6 +2,8 @@ package pt.unl.fct.di.adc.firstwebapp.model;
 
 import java.util.List;
 
+//import com.google.appengine.repackaged.org.codehaus.jackson.annotate.JsonProperty;
+
 public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsRequest.ListEventsInput>{
 
 	/**
@@ -28,6 +30,7 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	    private String organizerUsername;
 	    private Integer pageSize;
 	    private String cursor;
+	   // @JsonProperty("SDG")
 	    private List<Integer> sdg;
 	    private Boolean isAccessible;
 

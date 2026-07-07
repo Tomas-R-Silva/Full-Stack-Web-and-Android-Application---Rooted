@@ -669,21 +669,21 @@ public class EventResources {
 
 	private Map<String, Object> entityToMap(Entity e) {
 		Map<String, Object> map = new HashMap<>();
-		map.put("eventId", e.getString("event_id"));
-		map.put("title", e.getString("title"));
-		map.put("description", e.getString("description"));
-		map.put("category", e.getString("category"));
-		map.put("location", e.getString("location"));
-		map.put("startDate", e.getLong("start_date"));
-		map.put("durationMinutes", e.getLong("duration_minutes"));
-		map.put("organizerUsername", e.getString("organizer_username"));
-		map.put("maxAttendees", e.getLong("max_attendees"));
-		map.put("attendeeCount", e.getLong("attendee_count"));
-		map.put("isPublic", e.getBoolean("is_public"));
-		map.put("status", e.getString("status"));
-		map.put("createdAt", e.getLong("created_at"));
-		map.put("isAccessible", e.getBoolean("is_accessible"));
-		map.put("SDG", e.getList("SDG"));
+		map.put("eventId", e.contains("event_id")?e.getString("event_id"):null);
+		map.put("title", e.contains("title")?e.getString("title"):null);
+		map.put("description", e.contains("description")?e.getString("description"):null);
+		map.put("category", e.contains("category")?e.getString("category"):null);
+		map.put("location", e.contains("location")?e.getString("location"):null);
+		map.put("startDate", e.contains("start_date")?e.getLong("start_date"):null);
+		map.put("durationMinutes", e.contains("duration_minutes")?e.getLong("duration_minutes"):null);
+		map.put("organizerUsername", e.contains("organizer_username")?e.getString("organizer_username"):null);
+		map.put("maxAttendees", e.contains("max_attendees")?e.getLong("max_attendees"):null);
+		map.put("attendeeCount",e.contains("attendee_count")?e.getLong("attendee_count"):null);
+		map.put("isPublic", e.contains("is_public")?e.getBoolean("is_public"):null);
+		map.put("status", e.contains("status")?e.getString("status"):null);
+		map.put("createdAt", e.contains("created_at")?e.getLong("created_at"):null);
+		map.put("isAccessible", e.contains("is_accessible")?e.getBoolean("is_accessible"):null);
+		map.put("SDG", e.contains("SDG")?e.getList("SDG"):null);
 
 		List<String> imageUrls = e.contains("image_urls")
 				? e.<Value<?>>getList("image_urls").stream()

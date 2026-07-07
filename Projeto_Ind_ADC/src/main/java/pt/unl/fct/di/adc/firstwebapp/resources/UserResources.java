@@ -15,6 +15,7 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Entity.Builder;
+import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
@@ -131,7 +132,7 @@ public class UserResources {
 
 			String jwtString = JWTToken.createJWT(user.getString("user_name"), Map.of("role", Role.valueof(user.getString("user_role")).name()));
 			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
-			
+
 			Token token =JWTToken.filltoken(jwtString,decoded);
 			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jwtString);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
@@ -168,10 +169,10 @@ public class UserResources {
 			while (results.hasNext()) {
 				Entity e = results.next();
 				users.add(Map.of(
-						"username", e.getString("user_name"),
-						"display", e.getString("user_display"),
-						"email", e.contains("user_email") ? e.getString("user_email") : "",
-								"role", e.getString("user_role")
+						"username", e.contains("user_name") ?e.getString("user_name"):null,
+								"display", e.contains("user_display") ?e.getString("user_display"):null,
+										"email", e.contains("user_email") ? e.getString("user_email"):null,
+												"role", e.contains("user_role") ?e.getString("user_role"):null
 						));
 			}
 			return buildresponse(Map.of("users", users));
@@ -252,13 +253,13 @@ public class UserResources {
 					friendshipstatus=Friendstatus.REQUEST_RECIVED;
 			else
 				friendshipstatus=Friendstatus.NOT_FRIENDS;
-			String displayname=user.getString("user_display");
+			String displayname=(user.contains("user_display"))?user.getString("user_display"):user.getString("user_name");
 			if(friendshipstatus==Friendstatus.FRIENDS) {
-				String temp=friend.getString((friend.getString("username_1").equals(token.getUsername()))?"nickname_1":"nickname_2");
-				if(temp!=null)
-					displayname=temp;
+				String ke=(friend.getString("username_1").equals(token.getUsername()))?"nickname_1":"nickname_2";
+				if(friend.contains(ke)) 
+					displayname=friend.getString(ke);
 			}
-			List<StringValue> list = user.getList("old_display");
+			List<StringValue> list =user.contains("old_display")?user.getList("old_display"):new ArrayList<>(0);
 			List<String> newlist=new ArrayList<>(list.size());
 			for(StringValue v:list) newlist.add(v.get());
 			return buildresponse(
@@ -432,6 +433,17 @@ public class UserResources {
 	}	
 
 	@POST
+	@Path("/endfriend")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response endFriend() throws ErrorException{
+		QueryResults<Entity> sessions = datastore.run(Query.newEntityQueryBuilder().setKind("Friend").build());
+		while(sessions.hasNext())
+			datastore.delete(sessions.next().getKey());
+		return buildresponse(Map.of("message", "ALL UNFRIEND"));
+	}
+	
+	
+	@POST
 	@Path("/addfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -447,7 +459,7 @@ public class UserResources {
 						.set("username_1", token.getUsername())
 						.set("username_2", user.getString("user_name"))
 						.set("accepted", false)
-						.set("issued_at", Timestamp.now())
+						.set("issued_at", System.currentTimeMillis()/TIME_DIVIDER)
 						.build();
 				txn.put(friendrequest);
 				txn.commit();
@@ -515,18 +527,16 @@ public class UserResources {
 			AuthHelper.verifyToken(request);
 			List<Map<String, Object>> friends = new LinkedList<>();
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
-			List<StructuredQuery.Filter> filters = new ArrayList<>(1);
-			filters.add(PropertyFilter.eq("accepted", true));
-
+			queryBuilder.setFilter(PropertyFilter.eq("accepted", true));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
 			while(sessions.hasNext()){
 				Entity session = sessions.next();
 				String friend1=session.getString("username_1"),
 						friend2=session.getString("username_2");
 				if(friend1.equals(username))
-					friends.add(Map.of(friend, friend2,start, session.getLong("issued_at")));
+					friends.add(Map.of(friend, friend2,start, session.getLong("issued_at")*TIME_DIVIDER));
 				else if(friend2.equals(username))
-					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")));
+					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")*TIME_DIVIDER));
 			}
 			return buildresponse(Map.of("friends", friends));
 		} catch (Exception e){
@@ -543,13 +553,13 @@ public class UserResources {
 			Token token = AuthHelper.verifyToken(request);
 			List<Map<String, Object>> friends = new LinkedList<>();
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
-			List<StructuredQuery.Filter> filters = new ArrayList<>(2);
-			filters.add(PropertyFilter.eq("accepted", false));
-			filters.add(PropertyFilter.eq("username_2", token.getUsername()));
+			queryBuilder.setFilter(CompositeFilter.and(
+					PropertyFilter.eq("accepted", false),
+					PropertyFilter.eq("username_2", token.getUsername())));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
 			while(sessions.hasNext()) {
 				Entity session = sessions.next();
-				friends.add(Map.of("From", session.getString("username_1"),"Sent at", session.getLong("issued_at")));
+				friends.add(Map.of("From", session.getString("username_1"),"Sent at", session.getLong("issued_at")*TIME_DIVIDER));
 			}
 			return buildresponse(Map.of("friends", friends));
 		} catch (Exception e){
