@@ -1,10 +1,10 @@
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ImageRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ChangeUserRole.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/ApplicationConfig.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/TokenFull.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ForumKeyTokenRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/EventAtributs.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/ShortUser.java
-/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/Token.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/TwoNameTokenRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/ListForumRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/EventShortUserTokenRequest.java
@@ -31,10 +31,14 @@
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/GCSUploader.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/resources/UserResources.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/error/Error.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Utilities/AdminSeeder.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/EventFull.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/LoginRequest.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/Full.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/AbstractTokenInputRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/model/AbstractInputRequest.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/User.java
+/home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/Objects/UserFull.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/error/Validator.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/resources/EventResources.java
 /home/tom-s-silva/Uni/Year 3/ADC/ADC-Final/Projeto_Ind_ADC/src/main/java/pt/unl/fct/di/adc/firstwebapp/error/ErrorException.java
