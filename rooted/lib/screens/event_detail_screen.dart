@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
+import 'create_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final Map<String, dynamic> event;
@@ -16,6 +17,7 @@ class EventDetailScreen extends StatefulWidget {
 class _EventDetailScreenState extends State<EventDetailScreen> {
   String? _jwt;
   String? _username;
+  String? _role;
 
   final List<Map<String, dynamic>> _posts = [];
   final TextEditingController _messageController = TextEditingController();
@@ -37,6 +39,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Future<void> _init() async {
     _jwt = await SessionStorage.getJwt();
     _username = await SessionStorage.getUsername();
+    _role = await SessionStorage.getRole();
     
     // Refresh event data to ensure attendance status is current
     await _refreshEventData();
@@ -259,6 +262,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          if (_event['organizerUsername'] == _username || _role == 'ADMIN')
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CreatePage(event: _event),
+                  ),
+                );
+                _refreshEventData();
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -374,6 +392,39 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     '${_event['durationMinutes'] ?? 0} minutes'),
                 _infoRow(Icons.people_outline,
                     '${_event['attendeeCount'] ?? 0} / ${_event['maxAttendees'] ?? '∞'} attendees'),
+                
+                // SDG Display
+                if (_event['sdg'] != null && (_event['sdg'] as List).isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Sustainability Goals',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: (_event['sdg'] as List).map((s) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                        ),
+                        child: Text(
+                          'SDG $s',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+
                 if ((_event['description'] as String? ?? '').isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(

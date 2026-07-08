@@ -11,7 +11,8 @@ import 'home_screen.dart';
 
 
 class CreatePage extends StatefulWidget {
-  const CreatePage({super.key});
+  final Map<String, dynamic>? event;
+  const CreatePage({super.key, this.event});
 
   @override
   State<CreatePage> createState() => _CreatePageState();
@@ -40,6 +41,40 @@ class _CreatePageState extends State<CreatePage> {
   List<int> _selectedSDGs = [];
   bool _isSubmitting = false;
   String? _createdEventId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.event != null) {
+      final e = widget.event!;
+      _createdEventId = e['eventId']?.toString();
+      _titleController.text = e['title']?.toString() ?? '';
+      _descriptionController.text = e['description']?.toString() ?? '';
+      _selectedCategory = _categories.firstWhere(
+        (c) => c.toUpperCase() == (e['category']?.toString().toUpperCase()),
+        orElse: () => 'Other',
+      );
+      _locationController.text = e['location']?.toString() ?? '';
+      
+      final start = e['startDate'] as int?;
+      if (start != null) {
+        _selectedDate = DateTime.fromMillisecondsSinceEpoch(start * 1000);
+        _selectedTime = TimeOfDay.fromDateTime(_selectedDate!);
+        _dateController.text =
+            '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+        _timeController.text =
+            '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
+      }
+
+      _durationController.text = (e['durationMinutes'] ?? 60).toString();
+      _attendeesController.text = (e['maxAttendees'] ?? 0).toString();
+      _minAttendeesController.text = (e['minAttendees'] ?? 0).toString();
+      _isPublic = e['public'] ?? e['isPublic'] ?? true;
+      _isAccessible = e['accessible'] ?? e['isAccessible'] ?? false;
+      _selectedSDGs = (e['sdg'] as List<dynamic>?)?.cast<int>() ?? 
+                      (e['sdgs'] as List<dynamic>?)?.cast<int>() ?? [];
+    }
+  }
 
   final List<String> _sdgLabels = [
     'No Poverty', 'Zero Hunger', 'Good Health', 'Quality Education',
@@ -217,6 +252,10 @@ class _CreatePageState extends State<CreatePage> {
                 : 'Event updated successfully!'),
           ),
         );
+        // Automatically pop back to detail screen after successful update
+        if (_createdEventId != null && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -247,11 +286,15 @@ class _CreatePageState extends State<CreatePage> {
           if (_createdEventId != null)
             TextButton(
               onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen(initialIndex: 0)),
-                      (route) => false,
-                );
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen(initialIndex: 0)),
+                    (route) => false,
+                  );
+                }
               },
               child: const Text('Done', style: TextStyle(color: Colors.white)),
             ),

@@ -439,7 +439,7 @@ class ApiService {
           'status': status,
           'category': category,
           'isAccessible': isAccessible,
-          'SDG': sdg,
+          'sdg': sdg,
           'pageSize': pageSize,
           'cursor': cursor,
         }..removeWhere((k, v) => v == null)

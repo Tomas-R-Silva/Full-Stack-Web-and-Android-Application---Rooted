@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
+import '../widgets/filter_dialog.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
 
@@ -23,6 +24,10 @@ class _HomePageState extends State<HomePage> {
 
   List<Map<String, dynamic>> _events = [];
   HomeViewType _viewType = HomeViewType.feed;
+
+  // Filtering
+  String? _selectedCategory;
+  List<int> _selectedSDGs = [];
 
   // For Discover View (Tinder cards)
   int _discoverIndex = 0;
@@ -66,6 +71,8 @@ class _HomePageState extends State<HomePage> {
       final result = await ApiService.listEvents(
         jwt: _jwt,
         status: 'UPCOMING',
+        category: _selectedCategory?.toUpperCase(),
+        sdg: _selectedSDGs.isEmpty ? null : _selectedSDGs,
         pageSize: 50,
       );
       final data   = result;
@@ -203,6 +210,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _showFilterDialog() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => FilterDialog(
+        initialCategory: _selectedCategory,
+        initialSDGs: _selectedSDGs,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedCategory = result['category'];
+        _selectedSDGs = result['sdgs'];
+      });
+      _loadEvents();
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   String _formatDate(dynamic epochSeconds) {
@@ -287,6 +312,15 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary),
             onPressed: _loadEvents,
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.filter_list_rounded,
+              color: (_selectedCategory != null || _selectedSDGs.isNotEmpty)
+                  ? AppTheme.primary
+                  : AppTheme.textSecondary,
+            ),
+            onPressed: _showFilterDialog,
           ),
         ],
       ),
@@ -593,6 +627,7 @@ class _HomePageState extends State<HomePage> {
     final isOwn         = event['organizerUsername'] == _username;
     final imageUrls     = event['imageUrls'] as List<dynamic>?;
     final firstImage    = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+    final sdgs          = event['sdg'] as List<dynamic>? ?? [];
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -676,6 +711,18 @@ class _HomePageState extends State<HomePage> {
                         ? '$attendeeCount / $maxAttendees attending'
                         : '$attendeeCount attending',
                   ),
+                  if (sdgs.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: sdgs.map((s) => _badge(
+                        'SDG $s',
+                        Colors.green.shade50,
+                        Colors.green.shade700,
+                      )).toList(),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   if (!isOwn)
                     SizedBox(
