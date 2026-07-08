@@ -1,6 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -168,12 +169,15 @@ public class UserResources {
 
 			while (results.hasNext()) {
 				Entity e = results.next();
-				users.add(Map.of(
-						"username", e.contains("user_name") ?e.getString("user_name"):null,
-								"display", e.contains("user_display") ?e.getString("user_display"):null,
-										"email", e.contains("user_email") ? e.getString("user_email"):null,
-												"role", e.contains("user_role") ?e.getString("user_role"):null
-						));
+				// Use a HashMap, not Map.of: Map.of throws NPE on null values, so a single
+				// user missing any field (e.g. older accounts without user_display) would
+				// crash the whole listing with error 9907.
+				Map<String, String> u = new HashMap<>();
+				u.put("username", e.contains("user_name") ? e.getString("user_name") : null);
+				u.put("display", e.contains("user_display") ? e.getString("user_display") : null);
+				u.put("email", e.contains("user_email") ? e.getString("user_email") : null);
+				u.put("role", e.contains("user_role") ? e.getString("user_role") : null);
+				users.add(u);
 			}
 			return buildresponse(Map.of("users", users));
 		}catch(Exception e) {
