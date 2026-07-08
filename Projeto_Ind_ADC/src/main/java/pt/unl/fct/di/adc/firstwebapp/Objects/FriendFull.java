@@ -2,12 +2,18 @@ package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.Map;
 
+import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 
 public class FriendFull implements Full{
+	private static final Datastore datastore = DatastoreOptions.newBuilder()
+			.setProjectId("adc-final")
+			.build()
+			.getService();
 
 	private String username1;
 	private String username2;
@@ -15,9 +21,8 @@ public class FriendFull implements Full{
 	private String nickname2;
 	private boolean accepted;
 	private long start;
-	private Key key;
-	public FriendFull() {}
-
+	private final Key key;
+	public FriendFull(Key key) {this.key=key;}
 	public String getUsername1(){return username1;}
 	public void setUsername1(String username1){this.username1 = username1;}
 	public String getUsername2(){return username2;}
@@ -32,12 +37,18 @@ public class FriendFull implements Full{
 	public void setAccepted(boolean accepted){this.accepted = accepted;}
 
 	public static FriendFull fromdatabase(Entity entity) {
-		// TODO Auto-generated method stub
-		return null;
+		FriendFull friend=new FriendFull(entity.getKey());
+		friend.setUsername1(Full.getString(entity, "username_1"));
+		friend.setUsername2(Full.getString(entity, "username_2"));
+		friend.setNickname1(Full.getString(entity, "nickname_1"));
+		friend.setNickname2(Full.getString(entity, "nickname_2"));
+		friend.setAccepted(Full.getBoolean(entity, "accepted"));
+		friend.setStart(Full.getLong(entity, "issued_at")*TIME_DIVIDER);
+		return friend;
 	}
 
-	public static FriendFull newfriends(TokenFull token,UserFull user) {
-		FriendFull friends = new FriendFull();
+	public static FriendFull newfriends(TokenFull token,UserFull user) throws ErrorException {
+		FriendFull friends = new FriendFull(getFriendKey(token,user));
 		friends.setUsername1(token.getUsername());
 		friends.setUsername1(user.getUsername());
 		friends.setAccepted(false);
@@ -104,12 +115,12 @@ public class FriendFull implements Full{
 		return String.format("%s@@@%s", f1,f2);
 	}
 	
+	public static Key getFriendKey(TokenFull token,UserFull user) throws ErrorException{
+		return datastore.newKeyFactory().setKind("Friend").newKey(FriendFull.formatkey(token,user));
+	}
+	
 	@Override
 	public Key getKey() {return key;}
-	@Override
-	public void setKey(Key key) {this.key=key;}
-	@Override
-	public Entity toentity(Key key) {this.setKey(key);return toentity();}
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
 }

@@ -1,6 +1,5 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -9,18 +8,16 @@ import java.util.logging.Logger;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery;
-import com.google.cloud.datastore.Entity.Builder;
-import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
-import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
+import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
+import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Transaction;
 
 import jakarta.ws.rs.Consumes;
@@ -48,7 +45,6 @@ import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
-import com.google.cloud.datastore.StringValue;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
@@ -58,7 +54,6 @@ import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
 
 @Path("/")
 public class UserResources {
-	private static final long TIME_DIVIDER = 1000L;
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
 			.setProjectId("adc-final")
 			.build()
@@ -110,9 +105,8 @@ public class UserResources {
 			Validator.invalidCredencials(userToLog.getPassword(), user.getPassword());
 			String jwtString = JWTToken.createJWT(user.getUsername(), Map.of("role", user.getRole().name()));
 			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
-			TokenFull token =JWTToken.filltoken(jwtString,decoded);
-			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jwtString);
-			datastore.put(token.toentity(sessionKey));
+			TokenFull token =JWTToken.filltoken(datastore,jwtString,decoded);
+			datastore.put(token.toentity());
 			return buildresponse(Map.of("token", token.tomap()));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -189,7 +183,7 @@ public class UserResources {
 			if(user.isme(token)) 
 				friendshipstatus=Friendstatus.SELF;
 			else {
-				Entity friend=datastore.get(getFriendKey(token,user));
+				Entity friend=datastore.get(FriendFull.getFriendKey(token,user));
 				if(friend==null) 
 					friendshipstatus=Friendstatus.NOT_FRIENDS;
 				else if(friend.getBoolean("accepted")) {
@@ -366,12 +360,11 @@ public class UserResources {
 		try{
 			TokenFull token = AuthHelper.verifyToken(request);
 			UserFull user = AuthHelper.getUser(request.getInput());
-			Key friendKey = getFriendKey(token,user);
+			Key friendKey = FriendFull.getFriendKey(token,user);
 			Entity existingfriend = txn.get(friendKey);
 
 			if (existingfriend == null) {
 				FriendFull friend=FriendFull.newfriends(token,user);
-				friend.setKey(friendKey);
 				txn.put(friend.toentity());
 				txn.commit();
 				return buildresponse(Map.of("message", "Friend Request Sent"));
@@ -404,7 +397,7 @@ public class UserResources {
 		try{
 			TokenFull token = AuthHelper.verifyToken(request);
 			UserFull user = AuthHelper.getUser(request.getInput());
-			FriendFull existingfriend = FriendFull.fromdatabase(datastore.get(getFriendKey(token,user)));
+			FriendFull existingfriend = FriendFull.fromdatabase(datastore.get(FriendFull.getFriendKey(token,user)));
 			if(existingfriend == null || !existingfriend.getAccepted())
 				ErrorException.trow(9934);
 			if(existingfriend.getUsername1().equals(user.getUsername()))
@@ -426,7 +419,7 @@ public class UserResources {
 		try {
 			UserFull user = AuthHelper.getUser(request.getInput());
 			TokenFull token = AuthHelper.verifyToken(request);
-			Key key=getFriendKey(token,user);
+			Key key=FriendFull.getFriendKey(token,user);
 			if(datastore.get(key)==null)
 				ErrorException.trow(9934);
 			datastore.delete(key);
@@ -533,11 +526,5 @@ public class UserResources {
 	private static Response buildresponse(Map<String,Object> map) {
 		return ResponceBuilder.constructorsuccess(map);
 	}
-
-	private Key getFriendKey(TokenFull token,UserFull user) throws ErrorException{
-		return datastore.newKeyFactory().setKind("Friend").newKey(FriendFull.formatkey(token,user));
-	}
-
-
 
 }

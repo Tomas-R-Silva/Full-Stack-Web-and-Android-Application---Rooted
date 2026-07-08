@@ -1,6 +1,5 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,7 +9,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.StringValue;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Category;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
@@ -26,12 +24,10 @@ public class UserFull extends ShortUser implements Full{
 	private List<String> old;
 	private long birth;
 	private String country;
-	private Key key;
+	private final Key key;
 
 	@Override
 	public Key getKey() {return key;}
-	@Override
-	public void setKey(Key key) {this.key = key;}
 	public String getPassword() {return password;}
 	public void setPassword(String password) {this.password = DigestUtils.sha512Hex(password);}
 	private void setbasePassword(String password) {this.password = password;}
@@ -50,23 +46,20 @@ public class UserFull extends ShortUser implements Full{
 	private void setbaseCategory(List<Category> category) {this.category=category;}
 	public void setOld(List<String> old){this.old=old;}
 
-	private UserFull() {}
+	private UserFull(Key key) {this.key=key;}
 
 	public static UserFull newuser(User user, Key userKey) {
-		UserFull newuser=new UserFull();
-		newuser.setKey(userKey);
+		UserFull newuser=new UserFull(userKey);
 		newuser.setUsername(user.getUsername());
 		newuser.setEmail(user.getEmail());
 		newuser.setPassword(user.getPassword());
 		newuser.setRole(user.getRole());
 		newuser.setDisplay(user.getUsername());
-		List<String> listnames = new ArrayList<>(1);
-		listnames.add(user.getUsername());
-		newuser.setOld(listnames);
+		newuser.setOld(List.of(user.getUsername()));
 		newuser.setbaseCreation(System.currentTimeMillis());
 		
 		
-		newuser.setbaseCategory(new ArrayList<>(0));
+		newuser.setbaseCategory(List.of());
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
 		
@@ -117,7 +110,7 @@ public class UserFull extends ShortUser implements Full{
 	}
 	
 	public static UserFull fromdatabase(Entity entity) {
-		UserFull user=new UserFull();
+		UserFull user=new UserFull(entity.getKey());
 		user.setUsername(Full.getString(entity,"user_name"));
 		user.setEmail(Full.getString(entity,"user_email"));
 		user.setbasePassword(Full.getString(entity,"user_pwd"));
@@ -132,8 +125,6 @@ public class UserFull extends ShortUser implements Full{
 		return user;
 	}
 
-	@Override
-	public Entity toentity(Key key) {this.setKey(key);return toentity();}
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
 

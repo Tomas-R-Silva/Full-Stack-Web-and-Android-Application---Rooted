@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 
@@ -34,9 +35,9 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private List<String> imageUrls;
 	private String eventId;
 	private long attendee;
-	private Key key;
+	private final Key key;
 	
-	public EventFull() {}
+	public EventFull(Key key) {this.key=key;}
 		
 	public void isValid() throws ErrorException{
 		List<Map<String,Object>> list=new LinkedList<>();
@@ -68,7 +69,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	}
 
 	public static EventFull fromdatabase(Entity entity) {
-		EventFull event=new EventFull();
+		EventFull event=new EventFull(entity.getKey());
 		event.setEventId(Full.getString(entity, "event_id"));
 		event.setTitle(Full.getString(entity,"title"));
 		event.setDescription(Full.getString(entity,"description"));
@@ -135,9 +136,10 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		return entity;
 	}
 	
-	public static EventFull newuser(EventAtributs input,String username) throws ErrorException {
-		EventFull event=new EventFull();
-		event.setEventId(UUID.randomUUID().toString());
+	public static EventFull newuser(Datastore datastore, EventAtributs input,String username) throws ErrorException {
+		String ID=UUID.randomUUID().toString();
+		EventFull event=new EventFull(datastore.newKeyFactory().setKind("Event").newKey(ID));
+		event.setEventId(ID);
 		event.setTitle(input.getTitle());
 		event.setDescription(input.getDescription());
 		event.setCategory(input.getCategory());
@@ -160,10 +162,6 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	
 	@Override
 	public Key getKey() {return key;}
-	@Override
-	public void setKey(Key key) {this.key=key;}
-	@Override
-	public Entity toentity(Key key) {this.setKey(key);return toentity();}
 	private static final boolean SDGcheck(long n) {return n>17||n<1;}
 	public static boolean validVariable(String var) {return var != null && !var.isBlank();}
 	public String getOrganizerUsername() { return organizerUsername; }

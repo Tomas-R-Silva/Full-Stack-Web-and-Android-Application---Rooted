@@ -71,8 +71,7 @@ public class EventResources {
 	public Response createEvent(CreateEventRequest req) {
 		try {
 			TokenFull tokenObj = AuthHelper.verifyToken(req);
-			EventFull event = EventFull.newuser(req.getInput(),tokenObj.getUsername());
-			event.setKey(datastore.newKeyFactory().setKind("Event").newKey(event.getEventId()));
+			EventFull event = EventFull.newuser(datastore,req.getInput(),tokenObj.getUsername());
 			datastore.put(event.toentity());
 			Log.info("Event created: " + event.getEventId() + " by " + tokenObj.getUsername());
 			return ok(Map.of("eventId", event.getEventId(), "message", "Event created successfully"));

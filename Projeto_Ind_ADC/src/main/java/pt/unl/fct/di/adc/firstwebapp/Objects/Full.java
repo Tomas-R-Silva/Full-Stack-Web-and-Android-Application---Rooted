@@ -14,10 +14,8 @@ public interface Full {
 	public Map<String,Object> tomap();
 	public Map<String,Object> tomap(Entity e);	
 	public Key getKey();
-	public void setKey(Key key);
 
 	public Entity toentity();
-	public Entity toentity(Key key);
 	
 	public static String getString(Entity e,String name) {
 		return e.contains(name)?e.getString(name):null;

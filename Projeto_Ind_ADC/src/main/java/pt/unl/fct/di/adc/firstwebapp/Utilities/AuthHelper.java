@@ -40,7 +40,7 @@ public class AuthHelper {
 		if(datastore.get(key)==null)
 			ErrorException.trow(9904);
 		try {
-			return JWTToken.filltoken(jwt);
+			return JWTToken.filltoken(datastore,jwt);
 		} catch (TokenExpiredException e) {
 			datastore.delete(key);
 			ErrorException.trow(9904);

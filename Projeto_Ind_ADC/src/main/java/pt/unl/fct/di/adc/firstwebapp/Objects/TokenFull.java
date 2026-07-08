@@ -15,9 +15,12 @@ public class TokenFull extends ShortUser implements Full{
 	private Role role;
 	private long issuedAt;
 	private long expiresAt;
-	private Key key;
+	private final Key key;
 
-	public TokenFull(String jwt, String username, Role role,long issuedAt,long expiresAt) {
+	private TokenFull(Key key) {this.key=key;}
+	
+	public TokenFull(Key key,String jwt, String username, Role role,long issuedAt,long expiresAt) {
+		this(key);
 		this.jwt = jwt;
 		this.username = username;
 		this.role = role;
@@ -25,8 +28,8 @@ public class TokenFull extends ShortUser implements Full{
 		this.expiresAt = expiresAt;
 	}
 
-	public TokenFull(String jwt, String username, Role role) {
-		this(jwt, username, role,
+	public TokenFull(Key key,String jwt, String username, Role role) {
+		this(key,jwt, username, role,
 				System.currentTimeMillis() / TIME_DIVIDER,
 				System.currentTimeMillis() / TIME_DIVIDER + EXPIRATION_TIME);
 	}
@@ -72,7 +75,8 @@ public class TokenFull extends ShortUser implements Full{
 	}
 
 	public static TokenFull fromdatabase(Entity entity) {
-		return new TokenFull(Full.getString(entity,"jwt"),
+		return new TokenFull(entity.getKey(),
+				Full.getString(entity,"jwt"),
 				Full.getString(entity,"user_name"),
 				Role.valueof(Full.getString(entity,"role")),
 				Full.getLong(entity, "issued_at"),
@@ -81,10 +85,6 @@ public class TokenFull extends ShortUser implements Full{
 
 	@Override
 	public Key getKey() {return key;}
-	@Override
-	public void setKey(Key key) {this.key=key;}
-	@Override
-	public Entity toentity(Key key) {this.setKey(key);return toentity();}
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
 }
