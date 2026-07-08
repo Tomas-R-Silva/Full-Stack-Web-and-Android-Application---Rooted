@@ -151,7 +151,7 @@ function PublicPage() {
 
               <div className="ms-4 flex-grow-1">
                 <h4 className="mb-0 text-white fw-bold">Display Name</h4>
-                <div className="text-white">Username</div>
+                <div className="text-white mt-2">{username}</div>
               </div>
 
               <div className="d-flex gap-3">
