@@ -26,6 +26,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.AttendanceFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
@@ -324,35 +325,27 @@ public class EventResources {
 	public Response attendEvent(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			EventFull eventEntity = getEventEntity(req.getInput());
-
-			if (eventEntity.isStatus(Status.CANCELLED) ||eventEntity.isStatus(Status.COMPLETED))
+			EventFull event = getEventEntity(req.getInput());
+			
+			if (event.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
 				ErrorException.trow(9907);
 
-			if (!eventEntity.isPublic())
+			if (!event.isPublic())
 				ErrorException.trow(9905); //TODO private event — attend via invite (future feature)
-
-			String username = token.getUsername();
-			String attendanceId = req.getInput() + "_" + username;
-			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
-
-			if (datastore.get(attendanceKey) != null)
+			
+			UserFull user = AuthHelper.getUser(token);
+			AttendanceFull attendance=AttendanceFull.newattendance(event,user);
+			if (datastore.get(attendance.getKey()) != null)
 				return ok(Map.of("message", "Already attending this event"));
 
-			long maxAttendees = eventEntity.getMaxAttendees();
-			long currentCount = eventEntity.getAttendee();
+			long maxAttendees = event.getMaxAttendees();
+			long currentCount = event.getAttendee();
 			if (maxAttendees > 0 && currentCount >= maxAttendees)
 				ErrorException.trow(9928);
 
-			// Register attendance and increment counter
-			Entity attendance = Entity.newBuilder(attendanceKey)
-					.set("event_id", req.getInput().getEventId())
-					.set("username", username)
-					.set("joined_at", System.currentTimeMillis() / 1000L)
-					.build();
-			datastore.put(attendance);
-			eventEntity.incAttendee();
-			datastore.put(eventEntity.toentity());
+			datastore.put(attendance.toentity());
+			event.incAttendee();
+			datastore.put(event.toentity());
 			return ok(Map.of("message", "Successfully registered for the event"));
 
 		} catch (Exception e) {
@@ -371,21 +364,19 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 
-			EventFull eventEntity = getEventEntity(req.getInput());
+			EventFull event = getEventEntity(req.getInput());
+			UserFull user = AuthHelper.getUser(token);
 
-			String username = token.getUsername();
-			String attendanceId = req.getInput() + "_" + username;
-			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
-
+			Key attendanceKey=AttendanceFull.makekey(event, user);
 			if (datastore.get(attendanceKey) == null)
 				return ok(Map.of("message", "Not attending this event"));
 
 			datastore.delete(attendanceKey);
 
-			long currentCount = eventEntity.getAttendee();
+			long currentCount = event.getAttendee();
 			if (currentCount > 0) {
-				eventEntity.decAttendee();
-				datastore.put(eventEntity.toentity());
+				event.decAttendee();
+				datastore.put(event.toentity());
 			}
 
 			return ok(Map.of("message", "Successfully unregistered from the event"));
@@ -406,9 +397,9 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull eventEntity = getEventEntity(req.getInput());
-			String organizer = eventEntity.getOrganizerUsername();
-
-			if (!token.getUsername().equals(organizer))
+			UserFull organizer = AuthHelper.getUser(eventEntity.getOrganizerUsername());
+			
+			if (!token.getUsername().equals(organizer.getUsername()))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
 			Query<Entity> query = Query.newEntityQueryBuilder()
@@ -417,15 +408,10 @@ public class EventResources {
 					.build();
 
 			QueryResults<Entity> results = datastore.run(query);
-			List<Map<String, Object>> attendees = new ArrayList<>();
+			List<Map<String, Object>> attendees = new ArrayList<>((int) eventEntity.getAttendee());
 
-			while (results.hasNext()) {
-				Entity a = results.next();
-				attendees.add(Map.of(
-						"username", a.getString("username"),
-						"joinedAt", a.getLong("joined_at")));
-			}
-
+			while (results.hasNext()) 
+				attendees.add(AttendanceFull.fromdatabase(results.next()).tomapusers());
 			return ok(Map.of("attendees", attendees, "count", attendees.size()));
 
 		} catch (Exception e) {
@@ -456,12 +442,8 @@ public class EventResources {
 			QueryResults<Entity> results = datastore.run(query);
 			List<Map<String, Object>> attendees = new ArrayList<>();
 
-			while (results.hasNext()) {
-				Entity a = results.next();
-				attendees.add(Map.of(
-						"event_id", a.getString("event_id"),
-						"joinedAt", a.getLong("joined_at")));
-			}
+			while (results.hasNext()) 
+				attendees.add(AttendanceFull.fromdatabase(results.next()).tomapevents());
 
 			return ok(Map.of("myattends", attendees, "count", attendees.size()));
 
@@ -486,7 +468,7 @@ public class EventResources {
 			//if (!token.getUsername().equals(user.getString("user_name")))
 			//	Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
-			String attendanceId = req.getInput() + "_" + user.getUsername();
+			String attendanceId = AttendanceFull.format(req.getInput(), user);
 			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
 
 			return ok(Map.of("isattendee",datastore.get(attendanceKey) == null));

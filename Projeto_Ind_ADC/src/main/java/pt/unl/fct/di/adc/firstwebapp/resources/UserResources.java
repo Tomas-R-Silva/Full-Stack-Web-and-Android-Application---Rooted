@@ -504,25 +504,6 @@ public class UserResources {
 		}
 	}
 
-	private void updateUserTokensRole(String username, String newRole) {
-		Query<Entity> query = Query.newEntityQueryBuilder()
-				.setKind("Session")
-				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
-				.build();
-
-		QueryResults<Entity> sessions = datastore.run(query);
-
-		//List<Entity> updatedSessions = new ArrayList<>();
-
-		while (sessions.hasNext()) {
-			Entity session = sessions.next();
-			Entity updated = Entity.newBuilder(session)
-					.set("role", newRole) // atualiza o role
-					.build();
-			datastore.put(updated);
-		}
-	}
-
 	private static Response buildresponse(Map<String,Object> map) {
 		return ResponceBuilder.constructorsuccess(map);
 	}

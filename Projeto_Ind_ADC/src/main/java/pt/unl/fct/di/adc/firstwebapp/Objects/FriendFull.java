@@ -37,6 +37,7 @@ public class FriendFull implements Full{
 	public void setAccepted(boolean accepted){this.accepted = accepted;}
 
 	public static FriendFull fromdatabase(Entity entity) {
+		if(entity==null)return null;
 		FriendFull friend=new FriendFull(entity.getKey());
 		friend.setUsername1(Full.getString(entity, "username_1"));
 		friend.setUsername2(Full.getString(entity, "username_2"));

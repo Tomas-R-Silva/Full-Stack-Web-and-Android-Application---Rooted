@@ -75,6 +75,7 @@ public class TokenFull extends ShortUser implements Full{
 	}
 
 	public static TokenFull fromdatabase(Entity entity) {
+		if(entity==null)return null;
 		return new TokenFull(entity.getKey(),
 				Full.getString(entity,"jwt"),
 				Full.getString(entity,"user_name"),

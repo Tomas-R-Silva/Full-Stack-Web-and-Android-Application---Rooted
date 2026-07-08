@@ -16,7 +16,7 @@ import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 
 public class EventFull extends EventAtributsid implements Full,EventInputInterface {
 
-	
+
 	public enum Category {
 		MUSIC, SPORTS, TECH, ART, FOOD, BUSINESS, COMMUNITY, OTHER;
 		public static Category valueof(String v) {
@@ -36,9 +36,9 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private String eventId;
 	private long attendee;
 	private final Key key;
-	
+
 	public EventFull(Key key) {this.key=key;}
-		
+
 	public void isValid() throws ErrorException{
 		List<Map<String,Object>> list=new LinkedList<>();
 		if(!validVariable(title))
@@ -69,6 +69,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	}
 
 	public static EventFull fromdatabase(Entity entity) {
+		if(entity==null)return null;
 		EventFull event=new EventFull(entity.getKey());
 		event.setEventId(Full.getString(entity, "event_id"));
 		event.setTitle(Full.getString(entity,"title"));
@@ -135,7 +136,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.build();
 		return entity;
 	}
-	
+
 	public static EventFull newuser(Datastore datastore, EventAtributs input,String username) throws ErrorException {
 		String ID=UUID.randomUUID().toString();
 		EventFull event=new EventFull(datastore.newKeyFactory().setKind("Event").newKey(ID));
@@ -159,7 +160,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.isValid();
 		return event;
 	}
-	
+
 	@Override
 	public Key getKey() {return key;}
 	private static final boolean SDGcheck(long n) {return n>17||n<1;}
@@ -168,6 +169,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public void setOrganizerUsername(String organizerUsername) { this.organizerUsername = organizerUsername;}
 	public Status getStatus() { return status; }
 	public boolean isStatus(Status status) { return this.status.equals(status);}
+	public boolean isStatuss(Status[] statuss) {for(Status s : statuss)if(s.equals(status))return true;return false;}
 	public void setStatus(Status status) { this.status = status;}
 	public long getCreatedAt() { return createdAt; }
 	public void setCreatedAt(long createdAt) { this.createdAt = createdAt;}
@@ -177,6 +179,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public void setAttendee(long attendee) { this.attendee = attendee;}
 	public List<String> getImageUrls() { return imageUrls; }
 	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
+	public long getEnd() { return getStartDate() + getDurationMinutes() * 60L; }
+	public boolean getEnded() {return System.currentTimeMillis()>=getEnd(); }
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
 }

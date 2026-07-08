@@ -110,6 +110,7 @@ public class UserFull extends ShortUser implements Full{
 	}
 	
 	public static UserFull fromdatabase(Entity entity) {
+		if(entity==null)return null;
 		UserFull user=new UserFull(entity.getKey());
 		user.setUsername(Full.getString(entity,"user_name"));
 		user.setEmail(Full.getString(entity,"user_email"));
@@ -127,6 +128,4 @@ public class UserFull extends ShortUser implements Full{
 
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
-
-
 }
