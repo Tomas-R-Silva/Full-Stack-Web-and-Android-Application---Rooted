@@ -19,6 +19,8 @@ function EventForm() {
       maxAttendees: -1,
       minAttendees: -1,
       public: false,
+      accessible: false,
+      sdg: [],
     },
   });
 

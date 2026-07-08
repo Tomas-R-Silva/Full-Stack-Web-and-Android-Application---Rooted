@@ -87,7 +87,7 @@ function ModerationEvents() {
             <div
               className="container border rounded p-3"
               style={{
-                maxHeight: "900px",
+                maxHeight: "1000px",
                 overflowY: "auto",
               }}
             >

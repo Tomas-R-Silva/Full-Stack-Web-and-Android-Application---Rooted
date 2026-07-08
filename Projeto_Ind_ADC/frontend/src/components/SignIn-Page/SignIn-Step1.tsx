@@ -10,10 +10,21 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
   });
 
   //========== Receber Input e Limpar erros ==========
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        [name]: value,
+      },
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
   //========== Submissão dos Campos ==========
@@ -22,15 +33,15 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
 
     const newErrors = { email: "", password: "", confirmation: "" };
 
-    if (!formData.email) {
+    if (!formData.input.email) {
       newErrors.email = "Email is required";
-    } else if (!formData.email.includes("@")) {
+    } else if (!formData.input.email.includes("@")) {
       newErrors.email = "Invalid Email";
     }
-    if (!formData.password) newErrors.password = "Password is required";
-    if (!formData.confirmation) {
+    if (!formData.input.password) newErrors.password = "Password is required";
+    if (!formData.input.confirmation) {
       newErrors.confirmation = "Please confirm your password";
-    } else if (formData.confirmation !== formData.password) {
+    } else if (formData.input.confirmation !== formData.input.password) {
       newErrors.confirmation = "Passwords do not match";
     }
 
@@ -51,7 +62,7 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
             type="text"
             name="email"
             className={`form-control  ${errors.email ? "is-invalid" : ""}`}
-            value={formData.email}
+            value={formData.input.email}
             onChange={handleChange}
             placeholder="Example@email.com"
           />
@@ -65,7 +76,7 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
             type="password"
             name="password"
             className={`form-control  ${errors.password ? "is-invalid" : ""}`}
-            value={formData.password}
+            value={formData.input.password}
             onChange={handleChange}
             placeholder="Use a strong password"
           />
@@ -79,7 +90,7 @@ function SignInStep1({ formData, setFormData, onNext }: StepProps) {
             type="password"
             name="confirmation"
             className={`form-control  ${errors.confirmation ? "is-invalid" : ""}`}
-            value={formData.confirmation}
+            value={formData.input.confirmation}
             onChange={handleChange}
             placeholder="Re-enter your password"
           />

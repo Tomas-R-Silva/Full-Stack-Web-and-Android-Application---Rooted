@@ -35,7 +35,7 @@ export const registerUser = async (
   const res = await fetch(`${import.meta.env.VITE_API_URL}/createaccount`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: data }),
+    body: JSON.stringify( data ),
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);

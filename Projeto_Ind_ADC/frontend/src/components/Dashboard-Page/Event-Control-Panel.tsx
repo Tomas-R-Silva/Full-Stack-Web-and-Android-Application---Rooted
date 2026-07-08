@@ -4,6 +4,30 @@ import { useState, useEffect } from "react";
 
 function EventControlPanel({ event }: EventProps) {
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+
+  const handleImage = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64 = reader.result as string;
+
+      setSelectedImages((prev) => [...prev, base64]);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const deleteImage = (image: string) => {
+    setSelectedImages((prev) => prev.filter((img) => img !== image));
+  };
+
+  const selectCover = (image: string) => {
+    setSelectedImages((prev) => {
+      const filtered = prev.filter((img) => img !== image);
+      return [image, ...filtered];
+    });
+  };
 
   const toggleSDG = (id: number) => {
     setSelectedSDGs((prev) =>
@@ -17,7 +41,10 @@ function EventControlPanel({ event }: EventProps) {
 
   useEffect(() => {
     loadSdg();
-  });
+    if (event.imageUrls) {
+      setSelectedImages(event.imageUrls);
+    }
+  }, [event.imageUrls]);
 
   return (
     <>
@@ -214,7 +241,7 @@ function EventControlPanel({ event }: EventProps) {
                   onClick={() => toggleSDG(sdg.id)}
                 >
                   <img
-                    src={sdg.icon}
+                    src={sdg.image}
                     alt={sdg.title}
                     className="card-img-top p-2"
                     style={{
@@ -234,6 +261,74 @@ function EventControlPanel({ event }: EventProps) {
                     >
                       {sdg.title}
                     </small>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="row g-3 mt-2">
+            <h5
+              style={{
+                color: "var(--color-green)",
+              }}
+            >
+              Event Images:
+            </h5>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="form-control mb-3"
+              style={{
+                color: "var(--color-green)",
+              }}
+              onChange={(e) => {
+                if (!e.target.files) return;
+
+                Array.from(e.target.files).forEach(handleImage);
+              }}
+            />
+
+            {selectedImages.map((image) => (
+              <div key={image} className="col-6 col-md-3 col-lg-2">
+                <div
+                  className="card h-100 text-center"
+                  style={{
+                    cursor: "pointer",
+                    transition: "0.2s",
+                    backgroundColor:
+                      selectedImages[0] === image
+                        ? "var(--color-green2)"
+                        : "white",
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt="event"
+                    className="card-img-top p-2"
+                    style={{
+                      height: "70px",
+                      width: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+
+                  <div
+                    className="card-body p-2"
+                    onClick={() => selectCover(image)}
+                  >
+                    <small style={{ color: "var(--color-gold)" }}>
+                      {selectedImages[0] === image
+                        ? "Cover image"
+                        : "Select as cover"}
+                    </small>
+                  </div>
+
+                  <div
+                    className="card-body p-2"
+                    onClick={() => deleteImage(image)}
+                  >
+                    <small style={{ color: "var(--color-ods1)" }}>Delete</small>
                   </div>
                 </div>
               </div>
