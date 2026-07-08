@@ -17,7 +17,7 @@ class AppTheme {
         seedColor: primary,
         primary: primary,
         secondary: primaryLight,
-        primaryContainer: Color(0xFFD8F3DC),
+        primaryContainer: const Color(0xFFD8F3DC),
         onPrimaryContainer: primary,
         surface: surface,
         error: error,
@@ -62,7 +62,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: inputBorder.withValues(alpha: 0.5), width: 1),
+          side: BorderSide(color: inputBorder.withOpacity(0.5), width: 1),
         ),
       ),
 
@@ -111,7 +111,7 @@ class AppTheme {
             letterSpacing: 0.5,
           ),
           elevation: 2,
-          shadowColor: primary.withValues(alpha: 0.4),
+          shadowColor: primary.withOpacity(0.4),
         ),
       ),
 
@@ -144,7 +144,7 @@ class AppTheme {
       // Other
       dividerTheme: DividerThemeData(
         thickness: 1,
-        color: inputBorder.withValues(alpha: 0.5),
+        color: inputBorder.withOpacity(0.5),
         space: 24,
       ),
 

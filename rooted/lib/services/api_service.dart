@@ -18,8 +18,28 @@ class ApiService {
   /// Notifies listeners when an event is joined or left.
   static final ValueNotifier<String?> eventUpdateNotifier = ValueNotifier(null);
 
-  static void notifyEventUpdate(String? eventId) {
+  // Local cache to handle eventual consistency and cross-screen sync
+  static final Set<String> _locallyAttending = {};
+  static final Set<String> _locallyNotAttending = {};
+
+  static void notifyEventUpdate(String? eventId, {bool? isAttending}) {
+    if (eventId != null && isAttending != null) {
+      if (isAttending) {
+        _locallyAttending.add(eventId);
+        _locallyNotAttending.remove(eventId);
+      } else {
+        _locallyNotAttending.add(eventId);
+        _locallyAttending.remove(eventId);
+      }
+    }
     eventUpdateNotifier.value = eventId;
+  }
+
+  /// Checks the attendance status against the local cache.
+  static bool checkAttendance(String eventId, bool serverStatus) {
+    if (_locallyAttending.contains(eventId)) return true;
+    if (_locallyNotAttending.contains(eventId)) return false;
+    return serverStatus;
   }
 
   /// Calls POST /createaccount.

@@ -62,8 +62,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Create',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Connections',
+            icon: Icon(Icons.people_alt_rounded),
+            label: 'Social',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

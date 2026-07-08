@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
-import 'event_detail_screen.dart';
 import 'login_screen.dart';
 
 class ConnectionsScreen extends StatefulWidget {
@@ -13,382 +12,476 @@ class ConnectionsScreen extends StatefulWidget {
 }
 
 class _ConnectionsScreenState extends State<ConnectionsScreen> {
-  List<Map<String, dynamic>> _events = [];
-  int _currentIndex = 0;
-  bool _loading = true;
-  String? _error;
   String? _jwt;
   String? _username;
+  bool _isLoading = true;
+
+  List<dynamic> _friends = [];
+  List<dynamic> _requests = [];
+  List<String> _suggested = [];
+  List<String> _filteredSuggested = [];
+  
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadEvents();
+    _searchController.addListener(_onSearchChanged);
+    _loadData();
   }
 
-  Future<void> _loadEvents() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-      _currentIndex = 0;
-    });
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
 
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredSuggested = _suggested;
+      } else {
+        _filteredSuggested = _suggested
+            .where((u) => u.toLowerCase().contains(query))
+            .toList();
+      }
+    });
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
     try {
       _jwt = await SessionStorage.getJwt();
       _username = await SessionStorage.getUsername();
 
-      final result = await ApiService.listEvents(
-        jwt: _jwt,
-        status: 'UPCOMING',
-        pageSize: 50,
-      );
+      if (_jwt == null || _username == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
 
-      final data = result;
-      final events = (data['events'] as List<dynamic>? ?? [])
-          .cast<Map<String, dynamic>>();
-
-      // Filter out events user is already organizing (optional, but makes sense for "discovery")
-      events.removeWhere((e) => e['organizerUsername'] == _username);
+      // Fetch friends and requests using the correct backend keys
+      final friendsResult = await ApiService.showFriends(jwt: _jwt!, username: _username!);
+      final requestsResult = await ApiService.showFriendRequests(jwt: _jwt!);
       
-      // Also filter out events user is already attending
-      events.removeWhere((e) => e['_attending'] == true);
+      // showfriends returns {"friends": [{"Friend": "username", "Start": ...}]}
+      final friendsList = friendsResult['friends'] as List<dynamic>? ?? [];
+      
+      // showfriendrequests returns {"friends": [{"From": "username", "Sent at": ...}]}
+      final requestsList = requestsResult['friends'] as List<dynamic>? ?? [];
 
-      // Sort by startDate ascending (soonest first)
-      events.sort((a, b) {
-        final aDate = (a['startDate'] as int?) ?? 0;
-        final bDate = (b['startDate'] as int?) ?? 0;
-        return aDate.compareTo(bDate);
-      });
+      final currentFriendsSet = friendsList
+          .map((f) => (f is Map) ? (f['Friend'] as String? ?? '') : f.toString())
+          .where((name) => name.isNotEmpty)
+          .toSet();
+
+      // Fetch upcoming events to generate recommendations (event organizers)
+      final eventsResult = await ApiService.listEvents(jwt: _jwt, status: 'UPCOMING', pageSize: 50);
+      final eventsData = (eventsResult is Map) ? (eventsResult['events'] as List<dynamic>? ?? []) : [];
+      final events = eventsData.cast<Map<String, dynamic>>();
+      
+      final Set<String> organizers = {};
+      for (var e in events) {
+        final org = e['organizerUsername'] as String?;
+        if (org != null && org != _username && !currentFriendsSet.contains(org)) {
+          organizers.add(org);
+        }
+      }
 
       if (mounted) {
         setState(() {
-          _events = events;
-          _loading = false;
+          _friends = friendsList;
+          _requests = requestsList;
+          _suggested = organizers.toList();
+          _filteredSuggested = _suggested;
+          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _error = 'Could not load events.';
-          _loading = false;
-        });
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
+        );
       }
     }
   }
 
-  Future<void> _handleSwipeRight(Map<String, dynamic> event) async {
+  Future<void> _addFriend({String? targetUsername}) async {
+    final target = targetUsername ?? _searchController.text.trim();
+    if (target.isEmpty) return;
     if (_jwt == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please login to join events'),
-          action: SnackBarAction(
-            label: 'Login',
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-          ),
-        ),
-      );
-      _nextCard();
+      _showLoginPrompt();
       return;
     }
-    
-    // Join event logic
-    try {
-      final eventId = event['eventId'] as String;
-      await ApiService.attendEvent(jwt: _jwt!, eventId: eventId, username: _username);
-      ApiService.notifyEventUpdate(eventId);
 
+    try {
+      await ApiService.addFriend(jwt: _jwt!, username: target);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Joined ${event['title']}!'),
+            content: Text('Request processed for $target'),
             backgroundColor: AppTheme.primary,
-            duration: const Duration(seconds: 1),
+            duration: const Duration(seconds: 2),
           ),
         );
-        // Navigate to details after joining
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)),
-        );
+        _searchController.clear();
+        _loadData();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to join event'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text('Failed: $e'), backgroundColor: AppTheme.error),
         );
       }
     }
-    
-    _nextCard();
   }
 
-  void _nextCard() {
-    setState(() {
-      _currentIndex++;
-    });
-  }
-
-  String _formatDate(dynamic epochSeconds) {
-    if (epochSeconds == null) return '';
-    final dt = DateTime.fromMillisecondsSinceEpoch((epochSeconds as int) * 1000);
-    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
-  }
-
-  String _categoryEmoji(String? category) {
-    switch (category) {
-      case 'MUSIC': return '🎵';
-      case 'SPORTS': return '⚽';
-      case 'TECH': return '💻';
-      case 'ART': return '🎨';
-      case 'FOOD': return '🍔';
-      default: return '📌';
+  Future<void> _unfriend(String target) async {
+    if (_jwt == null) return;
+    try {
+      await ApiService.unfriend(jwt: _jwt!, username: target);
+      _loadData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e'), backgroundColor: AppTheme.error),
+        );
+      }
     }
+  }
+
+  Future<void> _setNickname(String target) async {
+    final controller = TextEditingController();
+    final newNickname = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Set Nickname for $target'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Enter nickname'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Save')),
+        ],
+      ),
+    );
+
+    if (newNickname != null && newNickname.isNotEmpty) {
+      try {
+        await ApiService.addNickname(jwt: _jwt!, username: target, nickname: newNickname);
+        _loadData();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to set nickname: $e'), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
+  }
+
+  void _showLoginPrompt() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Please login to connect with friends'),
+        action: SnackBarAction(
+          label: 'Login',
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loader first while checking session and loading data
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Social Hub')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // After loading, if no session was found, show login prompt
+    if (_jwt == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Social Hub')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.people_outline, size: 80, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('Login to see your friends and connections.'),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _showLoginPrompt,
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Event Discover'),
+        title: const Text('Social Hub'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _loadEvents,
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
           ),
         ],
       ),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
-            const SizedBox(height: 16),
-            Text(_error!),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadEvents, child: const Text('Retry')),
-          ],
-        ),
-      );
-    }
-
-    if (_currentIndex >= _events.length) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.celebration_rounded, size: 64, color: AppTheme.primary),
-            const SizedBox(height: 16),
-            const Text(
-              'No more events!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text('You\'ve seen everything for now.', style: TextStyle(color: AppTheme.textSecondary)),
+            _buildSearchSection(),
+            if (_searchController.text.isNotEmpty && _filteredSuggested.isNotEmpty)
+              _buildLiveRecommendations(),
             const SizedBox(height: 24),
-            OutlinedButton(onPressed: _loadEvents, child: const Text('Refresh')),
+            
+            // Incoming Friend Requests Section
+            if (_requests.isNotEmpty) ...[
+              _buildSectionTitle('Friend Requests'),
+              const SizedBox(height: 12),
+              ..._requests.map((r) => _buildRequestTile(r)),
+              const SizedBox(height: 24),
+            ],
+
+            // Discovery Section
+            if (_suggested.isNotEmpty && _searchController.text.isEmpty) ...[
+              _buildSectionTitle('Suggested for You'),
+              const SizedBox(height: 12),
+              _buildSuggestedHorizontalList(),
+              const SizedBox(height: 24),
+            ],
+
+            // Friends List Section
+            _buildSectionTitle('Your Friends'),
+            const SizedBox(height: 12),
+            if (_friends.isEmpty)
+              const Center(child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text('No friends yet. Search above to add some!', style: TextStyle(color: AppTheme.textSecondary)),
+              ))
+            else
+              ..._friends.map((f) => _buildFriendTile(f)),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    final event = _events[_currentIndex];
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Center(
-        child: Dismissible(
-          key: Key(event['eventId'] as String),
-          onDismissed: (direction) {
-            if (direction == DismissDirection.endToStart) {
-              // Swiped Left
-              _nextCard();
-            } else {
-              // Swiped Right
-              _handleSwipeRight(event);
-            }
-          },
-          background: _swipeBackground(true),
-          secondaryBackground: _swipeBackground(false),
-          child: _buildTinderCard(event),
+  Widget _buildSearchSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Add Friend'),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search by username...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onSubmitted: (val) => _addFriend(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 56,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () => _addFriend(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Icon(Icons.add),
+              ),
+            ),
+          ],
         ),
-      ),
+      ],
     );
   }
 
-  Widget _swipeBackground(bool isRight) {
+  Widget _buildLiveRecommendations() {
     return Container(
-      alignment: isRight ? Alignment.centerLeft : Alignment.centerRight,
-      padding: const EdgeInsets.symmetric(horizontal: 40),
-      decoration: BoxDecoration(
-        color: isRight ? AppTheme.primary.withValues(alpha: 0.2) : AppTheme.error.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Icon(
-        isRight ? Icons.check_circle_rounded : Icons.cancel_rounded,
-        color: isRight ? AppTheme.primary : AppTheme.error,
-        size: 80,
-      ),
-    );
-  }
-
-  Widget _buildTinderCard(Map<String, dynamic> event) {
-    final imageUrls = event['imageUrls'] as List<dynamic>?;
-    final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
-
-    return Container(
-      width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.65,
+      margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Simulated "Image" area or actual event image
-          Expanded(
-            flex: 3,
+        children: _filteredSuggested.take(3).map((uname) => ListTile(
+          dense: true,
+          leading: const Icon(Icons.person_add_alt_1, color: AppTheme.primary, size: 20),
+          title: Text(uname, style: const TextStyle(fontWeight: FontWeight.w600)),
+          trailing: const Icon(Icons.chevron_right, size: 16),
+          onTap: () => _addFriend(targetUsername: uname),
+        )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSuggestedHorizontalList() {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _suggested.length,
+        itemBuilder: (context, index) {
+          final uname = _suggested[index];
+          return GestureDetector(
+            onTap: () => _addFriend(targetUsername: uname),
             child: Container(
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.05),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: firstImage != null
-                  ? ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                      child: Image.network(
-                        firstImage,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        _categoryEmoji(event['category'] as String?),
-                        style: const TextStyle(fontSize: 120),
-                      ),
-                    ),
-            ),
-          ),
-          // Info Area
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              width: 80,
+              margin: const EdgeInsets.only(right: 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event['title'] as String? ?? '',
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        '${event['attendeeCount'] ?? 0} ppl',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppTheme.primary.withOpacity(0.1),
+                    child: Text(uname[0].toUpperCase(), style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today_rounded, size: 16, color: AppTheme.textSecondary),
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatDate(event['startDate']),
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_rounded, size: 16, color: AppTheme.textSecondary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          event['location'] as String? ?? 'No location',
-                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    event['description'] as String? ?? 'No description provided.',
-                    style: const TextStyle(color: AppTheme.textSecondary, height: 1.4),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  const SizedBox(height: 4),
+                  Text(uname, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFriendTile(dynamic friend) {
+    // Backend returns: {"Friend": "username", "Start": ...}
+    final String uname = (friend is Map) ? (friend['Friend'] ?? 'Unknown') : friend.toString();
+    final String? nickname = (friend is Map) ? friend['nickname'] : null;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          // Actions visual indicators
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        ],
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: AppTheme.primary.withOpacity(0.1),
+          child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+        ),
+        title: Text(nickname ?? uname, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: nickname != null ? Text('@$uname', style: const TextStyle(fontSize: 12)) : null,
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'unfriend') _unfriend(uname);
+            if (value == 'nickname') _setNickname(uname);
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'nickname', child: Text('Set Nickname')),
+            const PopupMenuItem(value: 'unfriend', child: Text('Unfriend', style: TextStyle(color: AppTheme.error))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRequestTile(dynamic request) {
+    // Backend returns: {"From": "username", "Sent at": ...}
+    final String uname = (request is Map) ? (request['From'] ?? 'Unknown') : request.toString();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: AppTheme.primary,
+            child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _circularAction(Icons.close, AppTheme.error, () => _nextCard()),
-                _circularAction(Icons.favorite, AppTheme.primary, () => _handleSwipeRight(event)),
+                Text(uname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Friend Request', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               ],
             ),
           ),
+          const SizedBox(width: 8),
+          _requestAction(Icons.check, 'Accept', AppTheme.primary, () => _addFriend(targetUsername: uname)),
+          const SizedBox(width: 8),
+          _requestAction(Icons.close, 'Refuse', AppTheme.error, () => _unfriend(uname)),
         ],
       ),
     );
   }
 
-  Widget _circularAction(IconData icon, Color color, VoidCallback onTap) {
+  Widget _requestAction(IconData icon, String label, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.2), width: 2),
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: color, size: 30),
+        child: Icon(icon, color: color, size: 20),
       ),
     );
   }
