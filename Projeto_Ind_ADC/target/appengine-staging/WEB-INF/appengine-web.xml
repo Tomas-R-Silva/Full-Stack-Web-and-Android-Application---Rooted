@@ -7,7 +7,17 @@
   <system-properties>
     <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
   </system-properties>
-  
+
+  <!-- Root admin bootstrap (see AdminSeeder). On startup, if this admin does not
+       exist it is created from these values. Change the password before deploying,
+       and prefer injecting it via Secret Manager instead of committing it here.
+       If ROOT_ADMIN_PASSWORD is empty, seeding is skipped. -->
+  <env-variables>
+    <env-var name="ROOT_ADMIN_USERNAME" value="root" />
+    <env-var name="ROOT_ADMIN_EMAIL"    value="admin@rooted.pt" />
+    <env-var name="ROOT_ADMIN_PASSWORD" value="CHANGE_ME_BEFORE_DEPLOY" />
+  </env-variables>
+
   <static-files>
     <include path="/**.html" expiration="1m" /> <!-- 1 minute, normal is 12h or more -->
     <include path="/**.css" expiration="1m" />  <!-- 1 minute, normal is 12h or more -->
