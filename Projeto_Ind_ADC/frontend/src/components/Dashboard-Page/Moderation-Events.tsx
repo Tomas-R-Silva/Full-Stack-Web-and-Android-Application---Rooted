@@ -73,6 +73,16 @@ function ModerationEvents() {
     setManagedEvent(event);
   };
 
+  const totalEvents = events.length;
+
+  const totalUpcoming = events.filter((e) => e.status === "UPCOMING").length;
+
+  const totalLive = events.filter((e) => e.status === "LIVE").length;
+
+  const totalFinished = events.filter((e) => e.status === "FINISHED").length;
+
+  const totalCanceled = events.filter((e) => e.status === "CANCELED").length;
+
   //fetch on page render
   useEffect(() => {
     loadEvents();
@@ -87,7 +97,7 @@ function ModerationEvents() {
             <div
               className="container border rounded p-3"
               style={{
-                maxHeight: "1000px",
+                maxHeight: "1100px",
                 overflowY: "auto",
               }}
             >
@@ -182,7 +192,42 @@ function ModerationEvents() {
                 )}
               </div>
             </div>
+            <div
+              className="container border rounded p-3 mt-3"
+              style={{
+                backgroundColor: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              <div className="d-flex justify-content-between">
+                <span>Total Events</span>
+                <strong>{totalEvents}</strong>
+              </div>
+
+              <hr className="my-2" />
+
+              <div className="d-flex justify-content-between">
+                <span>Upcoming</span>
+                <strong>{totalUpcoming}</strong>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span>Live</span>
+                <strong>{totalLive}</strong>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span>Finished</span>
+                <strong>{totalFinished}</strong>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span>Canceled</span>
+                <strong>{totalCanceled}</strong>
+              </div>
+            </div>
           </div>
+
           <div className="col-8">
             {managedEvent && <EventControlPanel event={managedEvent} />}
           </div>

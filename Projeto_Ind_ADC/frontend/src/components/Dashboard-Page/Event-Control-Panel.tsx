@@ -1,10 +1,95 @@
 import type { EventProps } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useState, useEffect } from "react";
+import type {
+  EventItem,
+  RequestEventUpdate,
+  EventUpdateResponse,
+} from "../../utils/types";
+import { useNavigate } from "react-router-dom";
+import { updateEvent } from "../../api/auth";
+
+type ErrorState = {
+  [K in keyof RequestEventUpdate["input"]]: string;
+};
 
 function EventControlPanel({ event }: EventProps) {
+  //========== Hooks ==========
+  const categories = [
+    "MUSIC",
+    "SPORTS",
+    "TECH",
+    "ART",
+    "FOOD",
+    "BUSINESS",
+    "COMMUNITY",
+    "OTHER",
+  ];
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [formData, setFormData] = useState<RequestEventUpdate>({
+    token: { jwt: "" },
+    input: {
+      eventId: event.eventId,
+      title: event.title,
+      description: event.description,
+      category: event.category,
+      location: event.location,
+      startDate: event.startDate,
+      durationMinutes: event.durationMinutes,
+      maxAttendees: event.maxAttendees,
+      minAttendees: 0,
+      public: event.isPublic,
+      isAccessible: event.isAccessible,
+      sdg: event.sdg,
+    },
+  });
+  const [errors, setErrors] = useState<ErrorState>({
+    eventId: "",
+    title: "",
+    description: "",
+    category: "",
+    location: "",
+    startDate: "",
+    durationMinutes: "",
+    maxAttendees: "",
+    minAttendees: "",
+    public: "",
+    isAccessible: "",
+    sdg: "",
+  });
+
+  //========== Handles: Receber Input e Limpar erros ==========
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value, type } = e.target;
+
+    const newValue =
+      type === "checkbox"
+        ? (e.target as HTMLInputElement).checked
+        : type === "number"
+          ? value === ""
+            ? 0
+            : Number(value)
+          : value;
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        [name]: newValue,
+      },
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
 
   const handleImage = (file: File) => {
     const reader = new FileReader();
@@ -39,6 +124,87 @@ function EventControlPanel({ event }: EventProps) {
     if (event.sdg) event.sdg.map((i) => toggleSDG(i));
   };
 
+  //========== Submissão dos Campos ==========
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newErrors = {
+      eventId: "",
+      title: "",
+      description: "",
+      category: "",
+      location: "",
+      startDate: "",
+      durationMinutes: "",
+      maxAttendees: "",
+      minAttendees: "",
+      public: "",
+      isAccessible: "",
+      SDQ: "",
+    };
+
+    if (formData.input.title && formData.input.title.length > 100) {
+      newErrors.title = "Must be less than 100 characters";
+    }
+
+    if (formData.input.description && formData.input.description.length > 300) {
+      newErrors.title = "Must be less than 300 characters";
+    }
+
+    if (formData.input.durationMinutes && formData.input.durationMinutes <= 0) {
+      newErrors.durationMinutes = "Duration must be greater than 0";
+    }
+
+    if (formData.input.maxAttendees) {
+      if (formData.input.maxAttendees <= 0) {
+        newErrors.maxAttendees = "Max attendees must be greater than 0";
+      } else if (
+        formData.input.minAttendees > 0 &&
+        formData.input.maxAttendees < formData.input.minAttendees
+      ) {
+        newErrors.maxAttendees =
+          "Max attendees cannot be less than min attendees";
+      }
+    }
+
+    if (formData.input.minAttendees) {
+      if (formData.input.minAttendees <= 0) {
+        newErrors.minAttendees = "Min attendees must be greater than 0";
+      } else if (
+        formData.input.maxAttendees > 0 &&
+        formData.input.minAttendees > formData.input.maxAttendees
+      ) {
+        newErrors.minAttendees =
+          "Min attendees cannot be greater than max attendees";
+      }
+    }
+
+    setErrors(newErrors);
+
+    const hasErrors = Object.values(newErrors).some((error) => error !== "");
+    if (hasErrors) return;
+
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      const payload: RequestEventUpdate = {
+        ...formData,
+        token: {
+          jwt: token,
+        },
+      };
+      console.log(payload);
+      //const response = await updateEvent(payload);
+      //console.log(response);
+      //window.location.reload();
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
+  };
+
   useEffect(() => {
     loadSdg();
     if (event.imageUrls) {
@@ -70,8 +236,10 @@ function EventControlPanel({ event }: EventProps) {
             </span>
             <input
               type="text"
+              name="title"
               className="form-control"
-              placeholder={event.title}
+              value={formData.input.title}
+              onChange={handleChange}
             />
           </div>
 
@@ -87,8 +255,10 @@ function EventControlPanel({ event }: EventProps) {
             </span>
             <input
               type="text"
+              name="location"
               className="form-control"
-              placeholder={event.location}
+              value={formData.input.location}
+              onChange={handleChange}
             />
           </div>
 
@@ -121,8 +291,10 @@ function EventControlPanel({ event }: EventProps) {
             </span>
             <input
               type="number"
+              name="durationMinutes"
               className="form-control"
-              placeholder={String(event.durationMinutes)}
+              value={formData.input.durationMinutes}
+              onChange={handleChange}
             />
             <span
               className="input-group-text"
@@ -146,9 +318,11 @@ function EventControlPanel({ event }: EventProps) {
               Minimum Vacancies:
             </span>
             <input
-              type="text"
+              type="number"
+              name="minAttendees"
               className="form-control"
-              placeholder={String(event.attendeeCount)}
+              value={formData.input.minAttendees}
+              onChange={handleChange}
             />
             <span
               className="input-group-text"
@@ -160,9 +334,11 @@ function EventControlPanel({ event }: EventProps) {
               Maximum Vacancies
             </span>
             <input
-              type="text"
+              type="number"
+              name="maxAttendees"
               className="form-control"
-              placeholder={String(event.maxAttendees)}
+              value={formData.input.maxAttendees}
+              onChange={handleChange}
             />
             <span
               className="input-group-text"
@@ -177,7 +353,13 @@ function EventControlPanel({ event }: EventProps) {
 
           <div className="d-flex gap-4 mb-3">
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" />
+              <input
+                type="checkbox"
+                name="public"
+                className="form-check-input"
+                checked={formData.input.public}
+                onChange={handleChange}
+              />
               <label
                 className="form-check-label"
                 style={{
@@ -190,7 +372,13 @@ function EventControlPanel({ event }: EventProps) {
             </div>
 
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" />
+              <input
+                type="checkbox"
+                name="isAccessible"
+                className="form-check-input"
+                checked={formData.input.isAccessible}
+                onChange={handleChange}
+              />
               <label
                 className="form-check-label"
                 style={{
@@ -214,9 +402,33 @@ function EventControlPanel({ event }: EventProps) {
               Description
             </span>
             <textarea
+              name="description"
               className="form-control"
-              placeholder={event.description}
-            ></textarea>
+              value={formData.input.description}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="row g-3 mt-2">
+            <h5
+              style={{
+                color: "var(--color-green)",
+              }}
+            >
+              Category:
+            </h5>
+            <select
+              className="form-select"
+              name="category"
+              value={formData.input.category}
+              onChange={handleChange}
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="row g-3 mt-2">
@@ -334,6 +546,14 @@ function EventControlPanel({ event }: EventProps) {
               </div>
             ))}
           </div>
+          <button
+            type="submit"
+            className="btn text-white fw-bold px-4"
+            style={{ background: "var(--color-green2)" }}
+            onClick={handleSubmit}
+          >
+            Save Changes
+          </button>
         </div>
       </div>
     </>

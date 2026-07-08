@@ -128,7 +128,7 @@ function EventUpdater({ onClose, event, field }: UpdateProps) {
       case "description":
         if (!formData.input.description) {
           newErrors.description = "Description is required";
-        } else if (formData.input.title.length > 300) {
+        } else if (formData.input.description.length > 300) {
           newErrors.title = "Must be less than 300 characters";
         }
         break;
