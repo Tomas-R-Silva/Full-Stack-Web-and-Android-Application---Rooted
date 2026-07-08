@@ -120,10 +120,6 @@ function EventControlPanel({ event }: EventProps) {
     );
   };
 
-  const loadSdg = () => {
-    if (event.sdg) event.sdg.map((i) => toggleSDG(i));
-  };
-
   //========== Submissão dos Campos ==========
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,11 +202,27 @@ function EventControlPanel({ event }: EventProps) {
   };
 
   useEffect(() => {
-    loadSdg();
-    if (event.imageUrls) {
-      setSelectedImages(event.imageUrls);
-    }
-  }, [event.imageUrls]);
+    setFormData({
+      token: { jwt: "" },
+      input: {
+        eventId: event.eventId,
+        title: event.title,
+        description: event.description,
+        category: event.category,
+        location: event.location,
+        startDate: event.startDate,
+        durationMinutes: event.durationMinutes,
+        maxAttendees: event.maxAttendees,
+        minAttendees: 0,
+        public: event.isPublic,
+        isAccessible: event.isAccessible,
+        sdg: event.sdg,
+      },
+    });
+
+    setSelectedSDGs(event.sdg ?? []);
+    setSelectedImages(event.imageUrls ?? []);
+  }, [event]);
 
   return (
     <>
@@ -546,14 +558,16 @@ function EventControlPanel({ event }: EventProps) {
               </div>
             ))}
           </div>
-          <button
-            type="submit"
-            className="btn text-white fw-bold px-4"
-            style={{ background: "var(--color-green2)" }}
-            onClick={handleSubmit}
-          >
-            Save Changes
-          </button>
+          <div className="row g-3 mt-2">
+            <button
+              type="submit"
+              className="btn text-white fw-bold px-4"
+              style={{ background: "var(--color-green2)" }}
+              onClick={handleSubmit}
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </>
