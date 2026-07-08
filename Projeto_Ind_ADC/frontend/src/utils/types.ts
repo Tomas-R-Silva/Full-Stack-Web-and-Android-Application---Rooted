@@ -38,6 +38,18 @@ export type LogInResponse = {
   }
 };
 
+export type RequestLogOut = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type LogOutResponse = {
+  status: number,
+  data: {message:string;}
+}
+
 export interface AccountProps {
   image?: ImageBitmap;
   bio?: string;

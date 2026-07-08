@@ -1,5 +1,6 @@
 import type {RequestSignIn, SignInResponse} from "../utils/types";
 import type {RequestLogIn, LogInResponse} from "../utils/types";
+import type {RequestLogOut, LogOutResponse} from "../utils/types";
 import type {RequestShowUsers, ShowUsersResponse} from "../utils/types";
 import type {RequestModAccount, ModAccountResponse} from "../utils/types";
 import type {RequestUserInformation, UserInformationResponse} from "../utils/types";
@@ -81,6 +82,24 @@ export const removeToken = () => {
 export const isAuthenticated = () => {
   return !!sessionStorage.getItem("token");
 };
+
+
+export const logoutUser = async (
+  data: RequestLogOut
+): Promise<LogOutResponse> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+
+  const json: LogOutResponse = await res.json();
+
+  return json;
+};
+
 
 export const getUsers = async (
   data: RequestShowUsers

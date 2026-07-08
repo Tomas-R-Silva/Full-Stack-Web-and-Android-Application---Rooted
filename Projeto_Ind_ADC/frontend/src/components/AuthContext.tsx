@@ -1,11 +1,12 @@
 import { createContext, useContext, useState } from "react";
+import { logoutUser } from "../api/auth";
 
 type AuthContextType = {
   isAuthenticated: boolean;
   username: string | null;
   role: string | null;
   login: (token: string, username: string, role: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -33,14 +34,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("role");
+  const logout = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const username = sessionStorage.getItem("username");
 
-    setUsername(null);
-    setRole(null);
-    setIsAuthenticated(false);
+      if (token && username) {
+        await logoutUser({
+          token: {
+            jwt: token,
+          },
+          input: {
+            username,
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("username");
+      sessionStorage.removeItem("role");
+
+      setUsername(null);
+      setRole(null);
+      setIsAuthenticated(false);
+    }
   };
 
   return (

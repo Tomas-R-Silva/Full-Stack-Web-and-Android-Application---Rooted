@@ -1,8 +1,15 @@
 import app from "../../assets/images/app_white.svg";
 import { useAuth } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
 
 function NavBar() {
   const { isAuthenticated, username, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   return (
     <nav
@@ -65,7 +72,7 @@ function NavBar() {
               </a>
 
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="btn fw-bold"
                 style={{
                   border: "none",
