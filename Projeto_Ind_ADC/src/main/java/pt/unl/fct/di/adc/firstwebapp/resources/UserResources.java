@@ -169,9 +169,6 @@ public class UserResources {
 
 			while (results.hasNext()) {
 				Entity e = results.next();
-				// Use a HashMap, not Map.of: Map.of throws NPE on null values, so a single
-				// user missing any field (e.g. older accounts without user_display) would
-				// crash the whole listing with error 9907.
 				Map<String, String> u = new HashMap<>();
 				u.put("username", e.contains("user_name") ? e.getString("user_name") : null);
 				u.put("display", e.contains("user_display") ? e.getString("user_display") : null);
