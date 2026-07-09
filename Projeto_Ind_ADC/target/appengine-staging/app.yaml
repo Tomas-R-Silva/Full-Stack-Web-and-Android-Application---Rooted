@@ -2,6 +2,10 @@ runtime: java21
 inbound_services:
 - warmup
 auto_id_policy: default
+env_variables:
+  'ROOT_ADMIN_EMAIL': 'admin@rooted.pt'
+  'ROOT_ADMIN_USERNAME': 'root'
+  'ROOT_ADMIN_PASSWORD': 'CHANGE_ME_BEFORE_DEPLOY'
 handlers:
 - url: (/.*/)
   static_files: __static__\1index.html
