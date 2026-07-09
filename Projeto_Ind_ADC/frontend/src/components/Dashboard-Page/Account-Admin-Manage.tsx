@@ -170,6 +170,18 @@ function AccountAdminManage({ user }: UserProps) {
             </div>
 
             <div className="mb-3">
+              <label className="form-label fw-semibold">Biography</label>
+              <textarea
+                name="bio"
+                className="form-control border-0"
+                style={{
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+              />
+            </div>
+
+            <div className="mb-3">
               <label
                 className="form-label fw-semibold"
                 style={{

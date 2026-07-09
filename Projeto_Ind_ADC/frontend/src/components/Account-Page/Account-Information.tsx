@@ -18,12 +18,14 @@ function AccountInformation() {
     input: {
       username: username ?? "",
       email: "",
+      bio: "",
     },
   });
 
   const [errors, setErrors] = useState<ErrorState>({
     username: "",
     email: "",
+    bio: "",
   });
 
   const [passwordData, setPassowrdData] = useState<RequestChangePassword>({
@@ -74,6 +76,7 @@ function AccountInformation() {
     const newErrors = {
       username: "",
       email: "",
+      bio: "",
     };
 
     if (formData.input.email && !formData.input.email.includes("@")) {
@@ -229,6 +232,23 @@ function AccountInformation() {
                   />
                 </>
               )}
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label text-white fw-semibold">
+                Biography
+              </label>
+              <textarea
+                name="bio"
+                value={formData.input.bio}
+                onChange={handleChange}
+                className="form-control border-0"
+                style={{
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+                placeholder={"Change your description here."}
+              />
             </div>
 
             <div className="mb-3">

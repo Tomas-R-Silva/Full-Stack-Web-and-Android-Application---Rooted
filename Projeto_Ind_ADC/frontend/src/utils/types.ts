@@ -88,6 +88,7 @@ export type RequestModAccount = {
   input: {
     username:string;
     email:string,
+    bio:string,
     country?: string,
     birth?: number,
   }
@@ -123,6 +124,7 @@ export type UserInformationResponse = {
   display: string,
   oldnames: String[],
   friendship: string,
+  bio: string,
   }
 }
 

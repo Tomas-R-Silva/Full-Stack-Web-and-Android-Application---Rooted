@@ -287,12 +287,7 @@ function PublicPage() {
               Biography
             </h5>
 
-            <p className="mb-0">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
-              eget ligula eu lectus lobortis condimentum. Aliquam nonummy auctor
-              massa. Pellentesque habitant morbi tristique senectus et netus et
-              malesuada fames ac turpis egestas. Nulla at risus.
-            </p>
+            <p className="mb-0">{user && user.data.bio}</p>
           </div>
           <div className="p-4">
             <h5
