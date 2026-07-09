@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { RequestEventCreation } from "../../utils/types";
 import { createEvent } from "../../api/auth";
-import { useNavigate } from "react-router-dom";
 import { usePlacesAutocomplete } from "../../api/places";
 import { sdgInfos } from "../../utils/sdgInfo";
 
@@ -11,7 +10,6 @@ type ErrorState = {
 
 function EventForm() {
   //========== Hook ==========
-  const [startDateInput, setStartDateInput] = useState("");
   const categories = [
     "MUSIC",
     "SPORTS",
@@ -24,7 +22,6 @@ function EventForm() {
   ];
 
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [formData, setFormData] = useState<RequestEventCreation>({
     token: { jwt: "" },
     input: {
@@ -56,8 +53,6 @@ function EventForm() {
   });
 
   //========== Receber Input e Limpar erros ==========
-  const navigate = useNavigate();
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -90,29 +85,6 @@ function EventForm() {
       ...prev,
       [name]: "",
     }));
-  };
-
-  const handleImage = (file: File) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const base64 = reader.result as string;
-
-      setSelectedImages((prev) => [...prev, base64]);
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  const deleteImage = (image: string) => {
-    setSelectedImages((prev) => prev.filter((img) => img !== image));
-  };
-
-  const selectCover = (image: string) => {
-    setSelectedImages((prev) => {
-      const filtered = prev.filter((img) => img !== image);
-      return [image, ...filtered];
-    });
   };
 
   const toggleSDG = (id: number) => {
@@ -585,74 +557,7 @@ function EventForm() {
               </div>
             ))}
           </div>
-          <div className="row g-3 mt-2">
-            <h5
-              style={{
-                color: "var(--color-green)",
-              }}
-            >
-              Event Images:
-            </h5>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="form-control mb-3"
-              style={{
-                color: "var(--color-green)",
-              }}
-              onChange={(e) => {
-                if (!e.target.files) return;
 
-                Array.from(e.target.files).forEach(handleImage);
-              }}
-            />
-
-            {selectedImages.map((image) => (
-              <div key={image} className="col-6 col-md-3 col-lg-2">
-                <div
-                  className="card h-100 text-center"
-                  style={{
-                    cursor: "pointer",
-                    transition: "0.2s",
-                    backgroundColor:
-                      selectedImages[0] === image
-                        ? "var(--color-green2)"
-                        : "white",
-                  }}
-                >
-                  <img
-                    src={image}
-                    alt="event"
-                    className="card-img-top p-2"
-                    style={{
-                      height: "70px",
-                      width: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
-
-                  <div
-                    className="card-body p-2"
-                    onClick={() => selectCover(image)}
-                  >
-                    <small style={{ color: "var(--color-gold)" }}>
-                      {selectedImages[0] === image
-                        ? "Cover image"
-                        : "Select as cover"}
-                    </small>
-                  </div>
-
-                  <div
-                    className="card-body p-2"
-                    onClick={() => deleteImage(image)}
-                  >
-                    <small style={{ color: "var(--color-ods1)" }}>Delete</small>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
           <div className="row g-3 mt-2">
             <button
               type="submit"

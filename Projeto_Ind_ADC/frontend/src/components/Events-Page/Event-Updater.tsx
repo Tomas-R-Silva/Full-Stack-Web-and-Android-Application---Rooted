@@ -1,4 +1,4 @@
-import type { EventProps } from "../../utils/types";
+import type { EventProps, ImageUploadResponse } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useState, useEffect } from "react";
 import type {
@@ -8,7 +8,7 @@ import type {
   RequestEventUpdate,
 } from "../../utils/types";
 import { useNavigate, useParams } from "react-router-dom";
-import { updateEvent, getEvent } from "../../api/auth";
+import { updateEvent, getEvent, uploadImage } from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
 
 type ErrorState = {
@@ -138,6 +138,31 @@ function EventUpdater() {
   };
 
   //========== Submissão dos Campos ==========
+  const handleImagesUpload = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!event) {
+        console.log("Invalid event");
+        return;
+      }
+
+      const res: ImageUploadResponse = await uploadImage({
+        token: { jwt: token },
+        input: {
+          eventId: event.eventId,
+          images: selectedImages,
+        },
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -200,6 +225,8 @@ function EventUpdater() {
     const hasErrors = Object.values(newErrors).some((error) => error !== "");
     if (hasErrors) return;
 
+    handleImagesUpload();
+
     try {
       const token = sessionStorage.getItem("token");
       if (!token) {
@@ -215,7 +242,7 @@ function EventUpdater() {
       console.log(payload);
       const response = await updateEvent(payload);
       console.log(response);
-      //window.location.reload();
+      window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
     }

@@ -409,7 +409,7 @@ export type Attends = {
 export type RequestImageUpload = {
   token?: {jwt:string;}
   input: {eventId:string,
-    imageUrls: string[],
+    images: string[],
   },
 }
 
