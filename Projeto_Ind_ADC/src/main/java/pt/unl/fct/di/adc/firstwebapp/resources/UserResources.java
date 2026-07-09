@@ -163,6 +163,8 @@ public class UserResources {
 				user.setDisplay(input.getUsername());
 			if(input.getEmail()!=null&&!user.getEmail().equals(input.getEmail()))
 				user.setEmail(input.getEmail());	
+			if(input.getBio()!=null&&!user.getBio().equals(input.getBio()))
+				user.setBio(input.getBio());
 			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {
@@ -192,10 +194,8 @@ public class UserResources {
 						friendshipstatus = Friendstatus.FRIENDS;
 						displayname = friend.getnickname(user);
 					}
-					else if(friend.getUsername1().equals(token.getUsername()))
-						friendshipstatus=Friendstatus.REQUEST_SENT;
-					else
-						friendshipstatus=Friendstatus.REQUEST_RECIVED;
+					friendshipstatus=(friend.getUsername1().equals(token.getUsername()))?
+						Friendstatus.REQUEST_SENT:Friendstatus.REQUEST_RECIVED;
 				}
 			}
 			return buildresponse(user.tobigmap(displayname,friendshipstatus));

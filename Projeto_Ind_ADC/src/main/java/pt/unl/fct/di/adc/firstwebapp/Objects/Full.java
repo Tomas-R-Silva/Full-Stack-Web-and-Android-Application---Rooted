@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ public interface Full {
 	}
 	
 	public static List<StringValue> getStringValueList(Entity e,String name) {
-		return e.contains(name)?e.getList(name):List.of();
+		return e.contains(name)?e.getList(name):Collections.emptyList();
 	}
 	
 	public static List<String> getStringList(Entity e,String name){
@@ -51,7 +52,7 @@ public interface Full {
 	
 	public static List<Long> getLongList(Entity e,String name){
 		List<LongValue> l=e.getList(name);
-		return e.contains(name)?l.stream().map(v -> v.get()).collect(Collectors.toList()):List.of();
+		return e.contains(name)?l.stream().map(v -> v.get()).collect(Collectors.toList()):Collections.emptyList();
 	}
 	
 	public static <E extends Enum<?>> List<StringValue> makeStringValueEnumList(List<E> list) {

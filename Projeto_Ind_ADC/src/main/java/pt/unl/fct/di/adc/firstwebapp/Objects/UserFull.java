@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ public class UserFull extends ShortUser implements Full{
 	private List<String> old;
 	private long birth;
 	private String country;
+	private String bio;
 	private final Key key;
 
 	@Override
@@ -45,6 +47,8 @@ public class UserFull extends ShortUser implements Full{
 	private void setbaseBirth(long birth) {this.birth=birth*TIME_DIVIDER;}
 	private void setbaseCategory(List<Category> category) {this.category=category;}
 	public void setOld(List<String> old){this.old=old;}
+    public String getBio() {return bio;}
+    public void setBio(String bio) {this.bio = bio;}
 
 	private UserFull(Key key) {this.key=key;}
 
@@ -57,9 +61,9 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setDisplay(user.getUsername());
 		newuser.setOld(List.of(user.getUsername()));
 		newuser.setbaseCreation(System.currentTimeMillis());
+		newuser.setBio("");
 		
-		
-		newuser.setbaseCategory(List.of());
+		newuser.setbaseCategory(Collections.emptyList());
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
 		
@@ -79,10 +83,10 @@ public class UserFull extends ShortUser implements Full{
 	public Map<String,Object> tobigmap(String display,Friendstatus friendshipstatus){
 		Map<String,Object> map=this.tomap();
 		map.put("friendship",friendshipstatus.toString());
-		if(display!=null)
-			map.put("display",Full.string(display));
+		map.put("display",Full.string(display));//may be friend nickname or user display name
 		map.put("creation_time",creation);
 		map.put("oldnames",old);
+		map.put("bio",Full.string(bio));
 		return map;
 	}
 
@@ -104,6 +108,7 @@ public class UserFull extends ShortUser implements Full{
 		newUser.set("user_creation_time", creation / TIME_DIVIDER);
 		newUser.set("birth_time", birth / TIME_DIVIDER);
 		newUser.set("country", country);
+		newUser.set("user_bio", bio);
 		newUser.set("old_display", Full.makeStringValueList(old));
 		newUser.set("category", Full.makeStringValueEnumList(category));
 		return newUser.build();
@@ -116,13 +121,13 @@ public class UserFull extends ShortUser implements Full{
 		user.setEmail(Full.getString(entity,"user_email"));
 		user.setbasePassword(Full.getString(entity,"user_pwd"));
 		user.setRole(Full.getString(entity,"user_role"));
+		user.setBio(Full.getString(entity,"user_bio"));
 		user.setbaseDisplay(Full.getString(entity,"user_display"));
 		user.setCountry(Full.getString(entity,"country"));
 		user.setbaseCreation(Full.getLong(entity,"user_creation_time")*TIME_DIVIDER);
 		user.setbaseBirth(Full.getLong(entity,"birth_time")*TIME_DIVIDER);
 		user.setOld(Full.getStringList(entity,"old_display"));
-		user.setbaseCategory(Full.getStringValueList(entity,"category").stream().map(v -> Category.valueof( v.get())).collect(Collectors.toList()));
-		
+		user.setbaseCategory(Full.getStringValueList(entity,"category").stream().map(v -> Category.valueof(v.get())).collect(Collectors.toList()));
 		return user;
 	}
 
