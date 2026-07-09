@@ -267,8 +267,8 @@ export type EventCreationResponse = {
 };
 
 export type RequestEventGetter = {
-  token?: {jwt:String;}
-  input: {eventId:String;}
+  token?: {jwt:string;}
+  input: {eventId:string;}
 }
 
 export type EventGetterResponse = {
@@ -296,7 +296,7 @@ export type EventListResponse = {
 };
 
 export type RequestEventUpdate = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {
     eventId:string,
     title: string,
@@ -319,7 +319,7 @@ export type EventUpdateResponse = {
 }
 
 export type RequestEventCancel = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {eventId:string;}
 }
 
@@ -329,7 +329,7 @@ export type EventCancelResponse = {
 }
 
 export type RequestEventDelete = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {eventId:string;}
 }
 
@@ -349,7 +349,7 @@ export type EventAttendResponse = {
 }
 
 export type RequestEventUnattend = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {eventId:string;}
 }
 
@@ -375,7 +375,7 @@ type Attendee = {
 }
 
 export type RequestIsAttendee = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {username:string,
     eventId: string,
   },
@@ -386,6 +386,24 @@ export type IsAttendeeResponse = {
   data:{
     eventId: boolean,
   }
+}
+
+export type RequestUserAttends = {
+  token: {jwt:string;}
+  input: {username:string},
+}
+
+export type UserAttendsResponse = {
+  status: number,
+  data:{
+    myAttends: Attends[],
+  },
+  count: number,
+}
+
+export type Attends = {
+  eventId: string,
+  joinedAt: number,
 }
 
 export type RequestImageUpload = {

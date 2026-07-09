@@ -8,6 +8,7 @@ import FriendsRequests from "./Friends-Requests";
 import { useAuth } from "../AuthContext";
 import AccountEvents from "./Account-Events";
 import { useNavigate } from "react-router-dom";
+import AccountAttends from "./Account-Attends";
 
 function AccountSettings() {
   const profileItems = [
@@ -15,6 +16,7 @@ function AccountSettings() {
     "Friends List",
     "Friends Requests",
     "My Events",
+    "My Attends",
     "Admin Dashboard",
     "Backofficer Dashboard",
     "Claimed Rewards",
@@ -40,8 +42,8 @@ function AccountSettings() {
             </h5>
 
             {profileItems.map((item, i) => {
-              if (i === 4 && role !== "ADMIN") return null;
-              if (i === 5 && role !== "BACKOFFICER") return null;
+              if (i === 5 && role !== "ADMIN") return null;
+              if (i === 6 && role !== "BACKOFFICER") return null;
 
               return (
                 <div
@@ -109,7 +111,8 @@ function AccountSettings() {
             {selected === profileItems[1] && <FriendsList />}
             {selected === profileItems[2] && <FriendsRequests />}
             {selected === profileItems[3] && username && <AccountEvents />}
-            {selected === profileItems[4] && (
+            {selected === profileItems[4] && username && <AccountAttends />}
+            {selected === profileItems[5] && (
               <div className="container">
                 <div className="row w-100 justify-content-center">
                   <div className="col-12 col-lg-8">
@@ -131,7 +134,7 @@ function AccountSettings() {
                 </div>
               </div>
             )}
-            {selected === profileItems[5] && (
+            {selected === profileItems[6] && (
               <div className="container">
                 <div className="row w-100 justify-content-center">
                   <div className="col-12 col-lg-8">

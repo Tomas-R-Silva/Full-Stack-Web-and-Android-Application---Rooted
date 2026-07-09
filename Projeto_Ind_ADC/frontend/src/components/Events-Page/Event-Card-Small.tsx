@@ -5,7 +5,7 @@ import eventUpcoming from "../../assets/icons/event_upcoming_w.svg";
 
 function EventCardSmall({ event }: EventProps) {
   const startDate = new Date(event.startDate * 1000);
-  const Ids = event.sdg ?? [];
+  const Ids = event.SDG ?? [];
   const navigate = useNavigate();
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {
