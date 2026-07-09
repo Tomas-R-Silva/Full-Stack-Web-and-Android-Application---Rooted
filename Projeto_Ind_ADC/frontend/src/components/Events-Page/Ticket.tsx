@@ -19,11 +19,8 @@ import { useNavigate } from "react-router-dom";
 
 function Ticket({ event }: EventProps) {
   const startDate = new Date(event.startDate * 1000);
-  const Ids = [2, 6, 7, 8, 13];
+  const Ids = event.SDG ?? [];
   const { isAuthenticated, username } = useAuth();
-  const [showModal, setShowModal] = useState(false);
-  type UpdateField = keyof RequestEventUpdate["input"];
-  const [field, setField] = useState<UpdateField>("title");
   const [IsAttendee, setIsAttendee] = useState(false);
 
   const navigate = useNavigate();
@@ -42,17 +39,6 @@ function Ticket({ event }: EventProps) {
   const sdgIcons = sdgInfos
     .filter((item) => Ids.includes(item.id))
     .map((item) => item.icon);
-
-  const handleUpdate = (newField: any) => {
-    setShowModal(true);
-    setField(newField);
-  };
-
-  const UpdateProps = {
-    onClose: () => setShowModal(false),
-    event,
-    field,
-  };
 
   const handleAttend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,38 +141,13 @@ function Ticket({ event }: EventProps) {
             style={{ borderRight: "3px dotted var(--color-green)" }}
           >
             <div className="container py-3 px-3">
-              <h1>
-                {event.title}{" "}
-                {isAuthenticated && event.organizerUsername === username && (
-                  <img
-                    src={editSquare}
-                    onClick={() => handleUpdate("title")}
-                    style={{ cursor: "pointer" }}
-                  />
-                )}
-              </h1>
+              <h1>{event.title} </h1>
 
-              <p>
-                {event.location}{" "}
-                {isAuthenticated && event.organizerUsername === username && (
-                  <img
-                    src={editSquare}
-                    onClick={() => handleUpdate("location")}
-                    style={{ cursor: "pointer" }}
-                  />
-                )}
-              </p>
+              <p>{event.location} </p>
               <div className="mt-auto">
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>Date:</strong>{" "}
                   {formattedDate}{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("startDate")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
                 </p>
 
                 <p className="mb-1">
@@ -199,35 +160,13 @@ function Ticket({ event }: EventProps) {
                     Duration:
                   </strong>{" "}
                   {event.durationMinutes} min{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("durationMinutes")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
                 </p>
 
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>
                     Vacancies:
                   </strong>{" "}
-                  {event.attendeeCount}{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("minAttendees")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
-                  /{event.maxAttendees}{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("maxAttendees")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
+                  {event.attendeeCount} /{event.maxAttendees}{" "}
                 </p>
 
                 <p className="mb-3">
@@ -303,7 +242,6 @@ function Ticket({ event }: EventProps) {
           </div>
         </div>
       </div>
-      {showModal && <EventUpdater {...UpdateProps} />}
     </>
   );
 }

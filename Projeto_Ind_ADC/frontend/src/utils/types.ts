@@ -235,7 +235,7 @@ export type EventItem = {
   createdAt: number;
   imageUrls: string[];
   isAccessible: boolean,
-  sdg: number[]
+  SDG: number[]
 };
 
 export type EventProps = {
@@ -255,7 +255,7 @@ export type RequestEventCreation = {
   minAttendees: number,
   public: boolean,
   accessible: boolean,
-  sdg: number[]
+  SDG: number[]
   }
 };
 
@@ -282,7 +282,7 @@ export type RequestEventList = {
   pageSize: number;
   cursor?: string;
   isAccessible?: boolean,
-  sdg?: number[]},
+  SDG?: number[]},
 };
 
 export type EventListResponse = {
@@ -307,7 +307,7 @@ export type RequestEventUpdate = {
     minAttendees: number,
     public: boolean,
     isAccessible?: boolean,
-    sdg?: number[]
+    SDG?: number[]
   }
 }
 

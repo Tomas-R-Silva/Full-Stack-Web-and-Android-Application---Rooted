@@ -1,6 +1,6 @@
 import NavBar from "../NavBar/NavBar";
 import Ticket from "./Ticket";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import type {
   RequestEventGetter,
@@ -26,6 +26,7 @@ function EventElements() {
   const { renderEventMap } = useMapsPage(import.meta.env.VITE_API_KEY);
   type UpdateField = keyof RequestEventUpdate["input"];
   const [field, setField] = useState<UpdateField>("title");
+  const navigate = useNavigate();
 
   const loadEvents = async (id: string) => {
     const request: RequestEventGetter = {
@@ -39,11 +40,6 @@ function EventElements() {
     setEvent(res.data.event);
 
     console.log(event);
-  };
-
-  const handleUpdate = (newField: any) => {
-    setShowModal(true);
-    setField(newField);
   };
 
   useEffect(() => {
@@ -70,7 +66,7 @@ function EventElements() {
           <img
             className="edit-icon"
             src={editSquare_w}
-            onClick={() => handleUpdate("coverImageUrl")}
+            onClick={() => navigate("/events/" + id + "/edit")}
             style={{ cursor: "pointer" }}
           />
         )}
@@ -86,15 +82,6 @@ function EventElements() {
               <div className="col-8">
                 <h2 style={{ color: "var(--color-white)" }}>
                   Event Descriprion:{" "}
-                  {isAuthenticated &&
-                    event &&
-                    event.organizerUsername === username && (
-                      <img
-                        src={editSquare_w}
-                        onClick={() => handleUpdate("description")}
-                        style={{ cursor: "pointer" }}
-                      />
-                    )}
                 </h2>
                 <p className="mb-1" style={{ color: "var(--color-white)" }}>
                   {event?.description}
@@ -126,7 +113,11 @@ function EventElements() {
                 <h2 style={{ color: "var(--color-white)" }}>Event Location:</h2>
                 <div
                   ref={eventMapRef}
-                  style={{ width: "100%", height: "300px", borderRadius: "8px" }}
+                  style={{
+                    width: "100%",
+                    height: "300px",
+                    borderRadius: "8px",
+                  }}
                 />
               </div>
             </div>
@@ -136,13 +127,6 @@ function EventElements() {
             </div>
           </div>
         </section>
-        {showModal && event && (
-          <EventUpdater
-            onClose={() => setShowModal(false)}
-            event={event}
-            field={field}
-          />
-        )}
       </div>
     </>
   );

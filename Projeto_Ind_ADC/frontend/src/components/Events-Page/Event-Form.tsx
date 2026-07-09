@@ -20,7 +20,7 @@ function EventForm() {
       minAttendees: -1,
       public: false,
       accessible: false,
-      sdg: [],
+      SDG: [],
     },
   });
 

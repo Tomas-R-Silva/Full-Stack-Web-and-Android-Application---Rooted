@@ -4,7 +4,7 @@ import placeholder from "../../assets/images/placeholder.png";
 
 function EventCard({ event }: EventProps) {
   const startDate = new Date(event.startDate * 1000);
-  const Ids = event.sdg ?? [];
+  const Ids = event.SDG ?? [];
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {
     day: "2-digit",
@@ -66,8 +66,6 @@ function EventCard({ event }: EventProps) {
               </strong>{" "}
               {event.attendeeCount}/{event.maxAttendees}
             </p>
-
-            <p>{event.sdg}</p>
 
             <p className="mb-3">
               {sdgIcons.map((icon, i) => (

@@ -6,7 +6,6 @@ import "./index.css";
 import App from "./App.tsx";
 import SignInPage from "./components/SignIn-Page/SignIn-Page";
 import LogInPage from "./components/LogIn-Page/LogIn-Page.tsx";
-import ProfilePage from "./components/Profile-Page/Profile-Page.tsx";
 import MapsPage from "./components/Maps-Page/Maps-Page.tsx";
 import ProtectedRoute from "./components/Protected-Route.tsx";
 import { AuthProvider } from "./components/AuthContext.tsx";
@@ -19,6 +18,7 @@ import AccountSettings from "./components/Account-Page/Account-Settings.tsx";
 import DashboardADM from "./components/Dashboard-Page/Dashboard-Admin.tsx";
 import DashboardBO from "./components/Dashboard-Page/Dashboard-Backoffice.tsx";
 import PublicPage from "./components/Account-Page/Public-Page.tsx";
+import EventUpdater from "./components/Events-Page/Event-Updater.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -28,14 +28,6 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<App />} />
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/login" element={<LogInPage />} />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/profile/:username"
             element={
@@ -56,6 +48,14 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/dashboard/backofficer" element={<DashboardBO />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventElements />} />
+          <Route
+            path="/events/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EventUpdater />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/maps" element={<MapsPage />} />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/maps" element={<MapsPage />} />

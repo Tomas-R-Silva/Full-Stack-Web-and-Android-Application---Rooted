@@ -41,7 +41,7 @@ function EventControlPanel({ event }: EventProps) {
       minAttendees: 0,
       public: event.isPublic,
       isAccessible: event.isAccessible,
-      sdg: event.sdg,
+      SDG: event.SDG ?? [],
     },
   });
   const [errors, setErrors] = useState<ErrorState>({
@@ -56,7 +56,7 @@ function EventControlPanel({ event }: EventProps) {
     minAttendees: "",
     public: "",
     isAccessible: "",
-    sdg: "",
+    SDG: "",
   });
 
   //========== Handles: Receber Input e Limpar erros ==========
@@ -115,9 +115,21 @@ function EventControlPanel({ event }: EventProps) {
   };
 
   const toggleSDG = (id: number) => {
-    setSelectedSDGs((prev) =>
-      prev.includes(id) ? prev.filter((sdgId) => sdgId !== id) : [...prev, id],
-    );
+    setSelectedSDGs((prev) => {
+      const updated = prev.includes(id)
+        ? prev.filter((sdgId) => sdgId !== id)
+        : [...prev, id];
+
+      setFormData((prevForm) => ({
+        ...prevForm,
+        input: {
+          ...prevForm.input,
+          SDG: updated,
+        },
+      }));
+
+      return updated;
+    });
   };
 
   //========== Submissão dos Campos ==========
@@ -136,15 +148,18 @@ function EventControlPanel({ event }: EventProps) {
       minAttendees: "",
       public: "",
       isAccessible: "",
-      SDQ: "",
+      SDG: "",
     };
 
     if (formData.input.title && formData.input.title.length > 100) {
       newErrors.title = "Must be less than 100 characters";
     }
 
-    if (formData.input.description && formData.input.description.length > 300) {
-      newErrors.title = "Must be less than 300 characters";
+    if (
+      formData.input.description &&
+      formData.input.description.length > 1000
+    ) {
+      newErrors.description = "Must be less than 300 characters";
     }
 
     if (formData.input.durationMinutes && formData.input.durationMinutes <= 0) {
@@ -193,8 +208,8 @@ function EventControlPanel({ event }: EventProps) {
         },
       };
       console.log(payload);
-      //const response = await updateEvent(payload);
-      //console.log(response);
+      const response = await updateEvent(payload);
+      console.log(response);
       //window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
@@ -215,12 +230,12 @@ function EventControlPanel({ event }: EventProps) {
         maxAttendees: event.maxAttendees,
         minAttendees: 0,
         public: event.isPublic,
-        isAccessible: event.isAccessible,
-        sdg: event.sdg,
+        isAccessible: event.isAccessible ?? false,
+        SDG: event.SDG ?? [],
       },
     });
 
-    setSelectedSDGs(event.sdg ?? []);
+    setSelectedSDGs(event.SDG ?? []);
     setSelectedImages(event.imageUrls ?? []);
   }, [event]);
 
@@ -250,7 +265,7 @@ function EventControlPanel({ event }: EventProps) {
               type="text"
               name="title"
               className="form-control"
-              value={formData.input.title}
+              value={formData.input.title ?? ""}
               onChange={handleChange}
             />
           </div>
@@ -269,7 +284,7 @@ function EventControlPanel({ event }: EventProps) {
               type="text"
               name="location"
               className="form-control"
-              value={formData.input.location}
+              value={formData.input.location ?? ""}
               onChange={handleChange}
             />
           </div>
@@ -305,7 +320,7 @@ function EventControlPanel({ event }: EventProps) {
               type="number"
               name="durationMinutes"
               className="form-control"
-              value={formData.input.durationMinutes}
+              value={formData.input.durationMinutes ?? ""}
               onChange={handleChange}
             />
             <span
@@ -333,7 +348,7 @@ function EventControlPanel({ event }: EventProps) {
               type="number"
               name="minAttendees"
               className="form-control"
-              value={formData.input.minAttendees}
+              value={formData.input.minAttendees ?? ""}
               onChange={handleChange}
             />
             <span
@@ -349,7 +364,7 @@ function EventControlPanel({ event }: EventProps) {
               type="number"
               name="maxAttendees"
               className="form-control"
-              value={formData.input.maxAttendees}
+              value={formData.input.maxAttendees ?? ""}
               onChange={handleChange}
             />
             <span
@@ -388,7 +403,7 @@ function EventControlPanel({ event }: EventProps) {
                 type="checkbox"
                 name="isAccessible"
                 className="form-check-input"
-                checked={formData.input.isAccessible}
+                checked={formData.input.isAccessible ?? false}
                 onChange={handleChange}
               />
               <label
@@ -416,7 +431,7 @@ function EventControlPanel({ event }: EventProps) {
             <textarea
               name="description"
               className="form-control"
-              value={formData.input.description}
+              value={formData.input.description ?? ""}
               onChange={handleChange}
             />
           </div>
@@ -432,7 +447,7 @@ function EventControlPanel({ event }: EventProps) {
             <select
               className="form-select"
               name="category"
-              value={formData.input.category}
+              value={formData.input.category ?? ""}
               onChange={handleChange}
             >
               {categories.map((category) => (
