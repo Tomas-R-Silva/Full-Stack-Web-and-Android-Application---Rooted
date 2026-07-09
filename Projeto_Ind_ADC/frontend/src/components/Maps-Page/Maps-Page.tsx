@@ -1,13 +1,39 @@
+import { useEffect, useState } from "react";
 import NavBar from "../NavBar/NavBar";
 import { useMapsPage } from "../../api/maps";
 import placeholder from "../../assets/images/placeholder.png";
+import type { FilterProps } from "../../utils/types";
+import accessible_w from "../../assets/icons/accessible_w.svg";
+import { sdgInfos } from "../../utils/sdgInfo";
 
 const MapsPage = () => {
   const mapsApiKey = import.meta.env.VITE_API_KEY;
-  const { setMapContainer, getSortedEvents, getActiveEventId, focusEvent } =
-    useMapsPage(mapsApiKey);
-  const sortedEvents = getSortedEvents();
+  const {
+    setMapContainer,
+    getFilteredEvents,
+    getActiveEventId,
+    getHasGeolocation,
+    focusEvent,
+    renderVisibleMarkers,
+  } = useMapsPage(mapsApiKey);
   const activeEventId = getActiveEventId();
+  const hasGeolocation = getHasGeolocation();
+
+  const [filter, setFilter] = useState<FilterProps>({
+    category: undefined,
+    status: undefined,
+    organizerUsername: undefined,
+    isAccessible: undefined,
+    sdg: undefined,
+  });
+  const [nearYouEnabled, setNearYouEnabled] = useState(false);
+  const [nearYouRadiusKm, setNearYouRadiusKm] = useState(10);
+
+  const filteredEvents = getFilteredEvents(filter, nearYouEnabled, nearYouRadiusKm);
+
+  useEffect(() => {
+    renderVisibleMarkers(filteredEvents);
+  }, [filteredEvents, renderVisibleMarkers]);
 
   return (
     <>
@@ -25,16 +51,160 @@ const MapsPage = () => {
           </div>
         </div>
 
+        <div className="rounded-4 p-3 my-4" style={{ background: "var(--color-green2)" }}>
+          <div className="row g-3 align-items-end">
+            <div className="col-lg-3 col-md-6">
+              <label className="form-label fw-semibold" style={{ color: "var(--color-white)" }}>
+                Filters:
+              </label>
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  className="btn"
+                  style={{
+                    color: "var(--color-green)",
+                    background: nearYouEnabled ? "rgba(255,255,255,0.5)" : "var(--color-white)",
+                    border: nearYouEnabled ? "1px solid transparent" : "1px solid var(--color-white)",
+                  }}
+                  onClick={() => setNearYouEnabled((prev) => !prev)}
+                  disabled={!hasGeolocation}
+                >
+                  Near you
+                </button>
+                {nearYouEnabled && hasGeolocation && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      style={{ background: "var(--color-white)", color: "var(--color-green)" }}
+                      onClick={() => setNearYouRadiusKm((prev) => Math.max(0, prev - 5))}
+                    >
+                      -
+                    </button>
+                    <span className="fw-bold" style={{ color: "var(--color-white)" }}>
+                      {nearYouRadiusKm} km
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      style={{ background: "var(--color-white)", color: "var(--color-green)" }}
+                      onClick={() => setNearYouRadiusKm((prev) => prev + 5)}
+                    >
+                      +
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="col-lg-3 col-md-6">
+              <label className="form-label fw-semibold" style={{ color: "var(--color-white)" }}>
+                Theme
+              </label>
+              <select
+                className="form-select"
+                value={filter.category ?? ""}
+                onChange={(e) =>
+                  setFilter((prev) => ({
+                    ...prev,
+                    category: e.target.value || undefined,
+                  }))
+                }
+              >
+                <option value="">All Themes</option>
+                <option value="MUSIC">Music</option>
+                <option value="SPORTS">Sports</option>
+                <option value="TECH">Tech</option>
+                <option value="ART">Art</option>
+                <option value="FOOD">Food</option>
+                <option value="BUSINESS">Business</option>
+                <option value="COMMUNITY">Community</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+
+            <div className="col-lg-3 col-md-6">
+              <label className="form-label fw-semibold" style={{ color: "var(--color-white)" }}>
+                SDG's
+              </label>
+              <select
+                className="form-select"
+                value={filter.sdg ?? ""}
+                onChange={(e) =>
+                  setFilter((prev) => ({
+                    ...prev,
+                    sdg: e.target.value === "" ? undefined : Number(e.target.value),
+                  }))
+                }
+              >
+                <option value="">All</option>
+                {sdgInfos.map((sdg) => (
+                  <option key={sdg.id} value={sdg.id}>
+                    {sdg.id} - {sdg.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-lg-2 col-md-6">
+              <label className="form-label fw-semibold" style={{ color: "var(--color-white)" }}>
+                Accessibility
+              </label>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="mapsAccessibility"
+                  checked={filter.isAccessible ?? false}
+                  onChange={(e) =>
+                    setFilter((prev) => ({
+                      ...prev,
+                      isAccessible: e.target.checked || undefined,
+                    }))
+                  }
+                />
+                <label className="form-check-label" htmlFor="mapsAccessibility">
+                  <img
+                    src={accessible_w}
+                    alt="Accessibility"
+                    style={{ width: "24px", height: "24px", cursor: "pointer" }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="col-lg-1 col-md-6 d-grid">
+              <button
+                className="btn"
+                style={{ color: "var(--color-green)", background: "var(--color-white)" }}
+                onClick={() => {
+                  setFilter({
+                    category: undefined,
+                    status: undefined,
+                    organizerUsername: undefined,
+                    isAccessible: undefined,
+                    sdg: undefined,
+                  });
+                  setNearYouEnabled(false);
+                  setNearYouRadiusKm(10);
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="row g-4">
           <div className="col-12 col-lg-4">
             <div className="card shadow-sm h-100">
               <div className="card-body d-flex flex-column">
                 <h3 className="card-title">Nearby events</h3>
-                {sortedEvents.length === 0 ? (
-                  <div className="alert alert-info mt-3">There are no events loaded.</div>
+                {filteredEvents.length === 0 ? (
+                  <div className="alert alert-info mt-3">There are no events matching the current filters.</div>
                 ) : (
                   <div className="overflow-auto pe-3" style={{ maxHeight: "65vh" }}>
-                    {sortedEvents.map((event, idx) => {
+                    {filteredEvents.map((event, idx) => {
                       const isLocated = event.position != null;
                       const isActive = event.eventId === activeEventId;
                       return (
@@ -54,7 +224,7 @@ const MapsPage = () => {
                           <div
                             className="position-absolute top-0 start-0 w-100 h-100"
                             style={{
-                              background: "linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.2) 100%)",
+                              background: "linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.1) 100%)",
                             }}
                           />
                           <div className="position-relative p-3 d-flex align-items-center justify-content-between h-100">
