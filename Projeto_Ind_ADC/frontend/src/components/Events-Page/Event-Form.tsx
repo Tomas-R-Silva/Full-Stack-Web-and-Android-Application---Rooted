@@ -37,8 +37,8 @@ function EventForm() {
       maxAttendees: -1,
       minAttendees: -1,
       public: false,
-      isAccessible: false,
-      SDG: [],
+      accessible: false,
+      sdg: [],
     },
   });
   const [errors, setErrors] = useState<ErrorState>({
@@ -51,8 +51,8 @@ function EventForm() {
     maxAttendees: "",
     minAttendees: "",
     public: "",
-    isAccessible: "",
-    SDG: "",
+    accessible: "",
+    sdg: "",
   });
 
   //========== Receber Input e Limpar erros ==========
@@ -125,18 +125,12 @@ function EventForm() {
         ...prevForm,
         input: {
           ...prevForm.input,
-          SDG: updated,
+          sdg: updated,
         },
       }));
 
       return updated;
     });
-  };
-
-  const dateToLong = (dateString: string): number => {
-    const [day, month, year] = dateString.split("-").map(Number);
-
-    return new Date(year, month - 1, day).getTime();
   };
 
   //========== Submissão dos Campos ==========
@@ -153,8 +147,8 @@ function EventForm() {
       maxAttendees: "",
       minAttendees: "",
       public: "",
-      isAccessible: "",
-      SDG: "",
+      accessible: "",
+      sdg: "",
     };
 
     if (!formData.input.title) {
@@ -182,7 +176,7 @@ function EventForm() {
       newErrors.maxAttendees = "Number of Max Attendees is required";
     }
 
-    if (formData.input.minAttendees <= 0) {
+    if (formData.input.minAttendees < 0) {
       newErrors.minAttendees = "Number of Min Attendees is required";
     }
     if (
@@ -213,7 +207,7 @@ function EventForm() {
       };
       console.log(payload);
       const response = await createEvent(payload);
-      navigate("/events");
+      console.log(response);
       window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
@@ -264,7 +258,7 @@ function EventForm() {
   return (
     <>
       <div
-        className="container py-5"
+        className="container py-1"
         style={{ background: "var(--color-white)" }}
       >
         <div className="row w-100 justify-content-center">
@@ -292,6 +286,7 @@ function EventForm() {
               className={`form-control  ${errors.title ? "is-invalid" : ""}`}
               value={formData.input.title}
               onChange={handleChange}
+              placeholder="Enter the event title..."
             />
             {errors.title && (
               <div className="invalid-feedback">{errors.title}</div>
@@ -485,9 +480,9 @@ function EventForm() {
             <div className="form-check">
               <input
                 type="checkbox"
-                name="isAccessible"
+                name="accessible"
                 className="form-check-input"
-                checked={formData.input.isAccessible ?? false}
+                checked={formData.input.accessible ?? false}
                 onChange={handleChange}
               />
               <label

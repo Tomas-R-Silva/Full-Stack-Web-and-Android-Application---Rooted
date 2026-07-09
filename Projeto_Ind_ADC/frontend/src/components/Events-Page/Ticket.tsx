@@ -131,7 +131,7 @@ function Ticket({ event }: EventProps) {
         className="card"
         style={{
           minWidth: "1000px",
-          height: "280px",
+          height: event.title.length > 25 ? "320px" : "280px",
           filter: "drop-shadow(0 0 8px black)",
         }}
       >
