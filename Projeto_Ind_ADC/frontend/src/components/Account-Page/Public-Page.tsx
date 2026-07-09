@@ -4,7 +4,8 @@ import type { UserInformationResponse } from "../../utils/types";
 import NavBar from "../NavBar/NavBar";
 import { useState, useEffect } from "react";
 import settings_w from "../../assets/icons/settings_w.svg";
-import account_profile_green2 from "../../assets/icons/account_circle_green2.svg";
+import account_circle_w from "../../assets/icons/account_circle_w.svg";
+import all_border from "../../assets/images/all_ods_border.png";
 import { sdgInfos } from "../../utils/sdgInfo";
 import AccountEvents from "./Account-Events";
 import { getEventList } from "../../api/auth";
@@ -124,6 +125,7 @@ function PublicPage() {
         input: { username: friendToAdd },
       });
       console.log(res.data.message);
+      window.location.reload();
     } catch (err) {
       console.error(err);
     }
@@ -146,6 +148,7 @@ function PublicPage() {
         input: { username: friendToDelete },
       });
       console.log(res.data.message);
+      window.location.reload();
     } catch (err) {
       console.error(err);
     }
@@ -159,7 +162,6 @@ function PublicPage() {
     });
   };
 
-  //fetch on page render
   useEffect(() => {
     loadEvents();
   }, []);
@@ -177,16 +179,37 @@ function PublicPage() {
             style={{ background: "var(--color-green2)" }}
           >
             <div className="d-flex align-items-center">
-              <img
-                src={account_profile_green2}
-                alt="Avatar"
-                className="rounded-circle"
+              <div
                 style={{
-                  width: "100px",
-                  height: "100px",
-                  objectFit: "cover",
+                  position: "relative",
+                  width: "48px",
+                  height: "48px",
                 }}
-              />
+              >
+                <img
+                  src={account_circle_w}
+                  alt="Avatar"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
+
+                <img
+                  src={all_border}
+                  alt=""
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                  }}
+                />
+              </div>
 
               <div className="ms-4 flex-grow-1">
                 <h4 className="mb-0 text-white fw-bold">

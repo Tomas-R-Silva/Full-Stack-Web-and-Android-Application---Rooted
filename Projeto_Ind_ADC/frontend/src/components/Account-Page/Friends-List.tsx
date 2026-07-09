@@ -67,7 +67,7 @@ function FriendsList() {
             )}
             {friends.length !== 0 && (
               <div
-                className="d-flex justify-content-between align-items-center p-4 rounded"
+                className="d-flex justify-content-between align-items-center p-4 rounded mt-1"
                 style={{
                   maxWidth: "500px",
                   width: "100%",
