@@ -151,6 +151,14 @@ function PublicPage() {
     }
   };
 
+  const longToVisualDate = (date: number) => {
+    return new Date(date * 1000).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   //fetch on page render
   useEffect(() => {
     loadEvents();
@@ -182,9 +190,28 @@ function PublicPage() {
 
               <div className="ms-4 flex-grow-1">
                 <h4 className="mb-0 text-white fw-bold">
-                  {user?.data.display}
+                  {user && user.data.display}
                 </h4>
-                <div className="text-white mt-2">{user?.data.username}</div>
+                <div className="text-white mt-2">
+                  {user && user.data.username}
+                </div>
+              </div>
+
+              <div className="ms-4 flex-grow-1">
+                <div className="text-white ">Email:</div>
+                <h6 className="mb-0 text-white">{user && user.data.email}</h6>
+              </div>
+
+              <div className="ms-4 flex-grow-1">
+                <div className="text-white ">Role:</div>
+                <h6 className="mb-0 text-white">{user && user.data.role}</h6>
+              </div>
+
+              <div className="ms-4 flex-grow-1">
+                <div className="text-white ">Member since:</div>
+                <h6 className="mb-0 text-white">
+                  {user && longToVisualDate(user.data.creation_time)}
+                </h6>
               </div>
 
               <div className="d-flex gap-3">

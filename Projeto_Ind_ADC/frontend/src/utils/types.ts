@@ -254,7 +254,7 @@ export type RequestEventCreation = {
   maxAttendees: number,
   minAttendees: number,
   public: boolean,
-  accessible: boolean,
+  isAccessible: boolean,
   SDG: number[]
   }
 };

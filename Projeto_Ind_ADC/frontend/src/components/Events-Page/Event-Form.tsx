@@ -3,10 +3,28 @@ import type { RequestEventCreation } from "../../utils/types";
 import { createEvent } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import { usePlacesAutocomplete } from "../../api/places";
+import { sdgInfos } from "../../utils/sdgInfo";
+
+type ErrorState = {
+  [K in keyof RequestEventCreation["input"]]: string;
+};
 
 function EventForm() {
   //========== Hook ==========
   const [startDateInput, setStartDateInput] = useState("");
+  const categories = [
+    "MUSIC",
+    "SPORTS",
+    "TECH",
+    "ART",
+    "FOOD",
+    "BUSINESS",
+    "COMMUNITY",
+    "OTHER",
+  ];
+
+  const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [formData, setFormData] = useState<RequestEventCreation>({
     token: { jwt: "" },
     input: {
@@ -19,46 +37,52 @@ function EventForm() {
       maxAttendees: -1,
       minAttendees: -1,
       public: false,
-      accessible: false,
+      isAccessible: false,
       SDG: [],
     },
   });
-
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<ErrorState>({
     title: "",
     description: "",
-    location: "",
     category: "",
+    location: "",
     startDate: "",
     durationMinutes: "",
     maxAttendees: "",
     minAttendees: "",
+    public: "",
+    isAccessible: "",
+    SDG: "",
   });
-
-  const categories = [
-    "MUSIC",
-    "SPORTS",
-    "TECH",
-    "ART",
-    "FOOD",
-    "BUSINESS",
-    "COMMUNITY",
-    "OTHER",
-  ];
 
   //========== Receber Input e Limpar erros ==========
   const navigate = useNavigate();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
+
+    let newValue: string | number | boolean;
+
+    if (type === "checkbox") {
+      newValue = (e.target as HTMLInputElement).checked;
+    } else if (name === "startDate") {
+      // Convert date string to Unix timestamp (seconds)
+      newValue = Math.floor(new Date(value).getTime() / 1000);
+    } else if (type === "number") {
+      newValue = value === "" ? 0 : Number(value);
+    } else {
+      newValue = value;
+    }
 
     setFormData((prev) => ({
       ...prev,
       input: {
         ...prev.input,
-        [name]: type === "number" ? (value === "" ? -1 : Number(value)) : value,
+        [name]: newValue,
       },
     }));
 
@@ -68,19 +92,45 @@ function EventForm() {
     }));
   };
 
-  const handleCategorySelect = (category: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      input: {
-        ...prev.input,
-        category,
-      },
-    }));
+  const handleImage = (file: File) => {
+    const reader = new FileReader();
 
-    setErrors((prev) => ({
-      ...prev,
-      category: "",
-    }));
+    reader.onload = () => {
+      const base64 = reader.result as string;
+
+      setSelectedImages((prev) => [...prev, base64]);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const deleteImage = (image: string) => {
+    setSelectedImages((prev) => prev.filter((img) => img !== image));
+  };
+
+  const selectCover = (image: string) => {
+    setSelectedImages((prev) => {
+      const filtered = prev.filter((img) => img !== image);
+      return [image, ...filtered];
+    });
+  };
+
+  const toggleSDG = (id: number) => {
+    setSelectedSDGs((prev) => {
+      const updated = prev.includes(id)
+        ? prev.filter((sdgId) => sdgId !== id)
+        : [...prev, id];
+
+      setFormData((prevForm) => ({
+        ...prevForm,
+        input: {
+          ...prevForm.input,
+          SDG: updated,
+        },
+      }));
+
+      return updated;
+    });
   };
 
   const dateToLong = (dateString: string): number => {
@@ -96,12 +146,15 @@ function EventForm() {
     const newErrors = {
       title: "",
       description: "",
-      location: "",
       category: "",
+      location: "",
       startDate: "",
       durationMinutes: "",
       maxAttendees: "",
       minAttendees: "",
+      public: "",
+      isAccessible: "",
+      SDG: "",
     };
 
     if (!formData.input.title) {
@@ -161,6 +214,7 @@ function EventForm() {
       console.log(payload);
       const response = await createEvent(payload);
       navigate("/events");
+      window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -209,222 +263,413 @@ function EventForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label is-invalid">Title:</label>
-          <input
-            type="text"
-            name="title"
-            className={`form-control  ${errors.title ? "is-invalid" : ""}`}
-            value={formData.input.title}
-            onChange={handleChange}
-            placeholder="My Event..."
-          />
-          {errors.title && (
-            <div className="invalid-feedback">{errors.title}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Description:</label>
-          <textarea
-            name="description"
-            className={`form-control  ${errors.description ? "is-invalid" : ""}`}
-            value={formData.input.description}
-            onChange={handleChange}
-            maxLength={300}
-            placeholder="Write up to 300 characters..."
-          />
-          {errors.description && (
-            <div className="invalid-feedback">{errors.description}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Location:</label>
-
-          <div className="position-relative">
-            <input
-              type="text"
-              name="location"
-              className={`form-control ${errors.location ? "is-invalid" : ""}`}
-              value={locationInputValue}
-              onChange={handleLocationInputChange}
-              placeholder="Enter the event location..."
-              autoComplete="off"
-            />
-
-            {locationLoading && (
-              <div className="form-text mt-1">Searching...</div>
-            )}
-
-            {errors.location && (
-              <div className="invalid-feedback d-block">{errors.location}</div>
-            )}
-
-            {locationPredictions.length > 0 && (
-              <ul
-                className="list-group position-absolute w-100 mt-1 shadow-sm"
-                style={{ zIndex: 1050 }}
-              >
-                {locationPredictions.map((prediction) => (
-                  <li
-                    key={prediction.placeId}
-                    className="list-group-item list-group-item-action"
-                  >
-                    <button
-                      type="button"
-                      className="btn p-0 text-start w-100"
-                      onClick={() => handleLocationSelect(prediction)}
-                    >
-                      {prediction.description}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Category:</label>
-
-          <div className="input-group mb-3">
-            <button
-              className="btn btn-outline-secondary dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              Options
-            </button>
-
-            <ul className="dropdown-menu">
-              {categories.map((category) => (
-                <li key={category}>
-                  <button
-                    className="dropdown-item"
-                    type="button"
-                    onClick={() => handleCategorySelect(category)}
-                  >
-                    {category}
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            <input
-              type="text"
-              className="form-control"
-              value={formData.input.category}
-              readOnly
-              aria-label="Selected category"
-              placeholder="Selected category..."
-            />
-          </div>
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Start Date:</label>
-          <input
-            type="date"
-            name="startDate"
-            className={`form-control  ${errors.startDate ? "is-invalid" : ""}`}
-            value={startDateInput}
-            onChange={(e) => {
-              const value = e.target.value;
-
-              setStartDateInput(value);
-
-              setFormData((prev) => ({
-                ...prev,
-                input: {
-                  ...prev.input,
-                  startDate: dateToLong(value),
-                },
-              }));
-
-              setErrors((prev) => ({
-                ...prev,
-                startDate: "",
-              }));
-            }}
-            placeholder="Enter the event location..."
-          />
-          {errors.startDate && (
-            <div className="invalid-feedback">{errors.startDate}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Duration (in Minutes):</label>
-          <input
-            type="number"
-            name="durationMinutes"
-            className={`form-control  ${errors.durationMinutes ? "is-invalid" : ""}`}
-            value={formData.input.durationMinutes}
-            onChange={handleChange}
-          />
-          {errors.durationMinutes && (
-            <div className="invalid-feedback">{errors.durationMinutes}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Number Min of Attendees:</label>
-          <input
-            type="number"
-            name="minAttendees"
-            className={`form-control  ${errors.minAttendees ? "is-invalid" : ""}`}
-            value={formData.input.minAttendees}
-            onChange={handleChange}
-          />
-          {errors.minAttendees && (
-            <div className="invalid-feedback">{errors.minAttendees}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Number Max of Attendees:</label>
-          <input
-            type="number"
-            name="maxAttendees"
-            className={`form-control  ${errors.maxAttendees ? "is-invalid" : ""}`}
-            value={formData.input.maxAttendees}
-            onChange={handleChange}
-          />
-          {errors.maxAttendees && (
-            <div className="invalid-feedback">{errors.maxAttendees}</div>
-          )}
-        </div>
-        <div className="mb-3">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="public"
-            name="public"
-            checked={formData.input.public}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                input: {
-                  ...prev.input,
-                  public: e.target.checked,
-                },
-              }))
-            }
-          />
-
-          <label className="form-check-label" htmlFor="isPublic">
-            Public event
-          </label>
-        </div>
-        <div className="d-flex justify-content-end mt-3">
-          <button
-            type="submit"
-            className="btn rounded-pill"
+      <div
+        className="container py-5"
+        style={{ background: "var(--color-white)" }}
+      >
+        <div className="row w-100 justify-content-center">
+          <h1
+            className="fw-bold mb-3"
             style={{
-              background: "var(--color-green)",
-              color: "var(--color-bege)",
+              color: "var(--color-green)",
             }}
           >
-            Next Section
-          </button>
+            Event Creation Panel:
+          </h1>
+          <div className="input-group mb-3">
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              Title
+            </span>
+            <input
+              type="text"
+              name="title"
+              className={`form-control  ${errors.title ? "is-invalid" : ""}`}
+              value={formData.input.title}
+              onChange={handleChange}
+            />
+            {errors.title && (
+              <div className="invalid-feedback">{errors.title}</div>
+            )}
+          </div>
+
+          <div className="input-group mb-3">
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              Location
+            </span>
+
+            <div className="position-relative">
+              <input
+                type="text"
+                name="location"
+                className={`form-control ${errors.location ? "is-invalid" : ""}`}
+                value={locationInputValue}
+                onChange={handleLocationInputChange}
+                placeholder="Enter the event location..."
+                autoComplete="off"
+              />
+
+              {locationLoading && (
+                <div className="form-text mt-1">Searching...</div>
+              )}
+
+              {errors.location && (
+                <div className="invalid-feedback d-block">
+                  {errors.location}
+                </div>
+              )}
+
+              {locationPredictions.length > 0 && (
+                <ul
+                  className="list-group position-absolute w-100 mt-1 shadow-sm"
+                  style={{ zIndex: 1050 }}
+                >
+                  {locationPredictions.map((prediction) => (
+                    <li
+                      key={prediction.placeId}
+                      className="list-group-item list-group-item-action"
+                    >
+                      <button
+                        type="button"
+                        className="btn p-0 text-start w-100"
+                        onClick={() => handleLocationSelect(prediction)}
+                      >
+                        {prediction.description}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className="input-group mb-3">
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              Date & Time
+            </span>
+            <input
+              type="datetime-local"
+              name="startDate"
+              className={`form-control  ${errors.startDate ? "is-invalid" : ""}`}
+              value={
+                formData.input.startDate
+                  ? new Date(formData.input.startDate * 1000)
+                      .toISOString()
+                      .slice(0, 16)
+                  : ""
+              }
+              onChange={handleChange}
+            />
+            {errors.startDate && (
+              <div className="invalid-feedback">{errors.startDate}</div>
+            )}
+          </div>
+
+          <div className="input-group mb-3">
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              Duration
+            </span>
+            <input
+              type="number"
+              name="durationMinutes"
+              className={`form-control  ${errors.durationMinutes ? "is-invalid" : ""}`}
+              value={formData.input.durationMinutes}
+              onChange={handleChange}
+            />
+            {errors.durationMinutes && (
+              <div className="invalid-feedback">{errors.durationMinutes}</div>
+            )}
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              minutes
+            </span>
+          </div>
+
+          <div className="input-group mb-3">
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              Minimum Vacancies:
+            </span>
+            <input
+              type="number"
+              name="minAttendees"
+              className={`form-control  ${errors.minAttendees ? "is-invalid" : ""}`}
+              value={formData.input.minAttendees}
+              onChange={handleChange}
+            />
+            {errors.minAttendees && (
+              <div className="invalid-feedback">{errors.minAttendees}</div>
+            )}
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              Maximum Vacancies
+            </span>
+            <input
+              type="number"
+              name="maxAttendees"
+              className={`form-control  ${errors.maxAttendees ? "is-invalid" : ""}`}
+              value={formData.input.maxAttendees}
+              onChange={handleChange}
+            />
+            {errors.maxAttendees && (
+              <div className="invalid-feedback">{errors.maxAttendees}</div>
+            )}
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              persons
+            </span>
+          </div>
+
+          <div className="d-flex gap-4 mb-3">
+            <div className="form-check">
+              <input
+                type="checkbox"
+                name="public"
+                className="form-check-input"
+                checked={formData.input.public}
+                onChange={handleChange}
+              />
+              <label
+                className="form-check-label"
+                style={{
+                  color: "var(--color-green)",
+                }}
+              >
+                Public
+              </label>
+            </div>
+
+            <div className="form-check">
+              <input
+                type="checkbox"
+                name="isAccessible"
+                className="form-check-input"
+                checked={formData.input.isAccessible ?? false}
+                onChange={handleChange}
+              />
+              <label
+                className="form-check-label"
+                style={{
+                  color: "var(--color-green)",
+                }}
+              >
+                Accessible
+              </label>
+            </div>
+          </div>
+
+          <div className="input-group">
+            <span
+              className="input-group-text"
+              style={{
+                background: "var(--color-green2)",
+                color: "var(--color-white)",
+              }}
+            >
+              Description
+            </span>
+            <textarea
+              name="description"
+              className={`form-control  ${errors.description ? "is-invalid" : ""}`}
+              value={formData.input.description}
+              onChange={handleChange}
+              maxLength={1000}
+              placeholder="Write up to 1000 characters..."
+            />
+          </div>
+
+          <div className="row g-3 mt-2">
+            <h5
+              style={{
+                color: "var(--color-green)",
+              }}
+            >
+              Category:
+            </h5>
+            <select
+              className="form-select"
+              name="category"
+              value={formData.input.category ?? ""}
+              onChange={handleChange}
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="row g-3 mt-2">
+            <h5
+              style={{
+                color: "var(--color-green)",
+              }}
+            >
+              Sustainable Development Goals:
+            </h5>
+            {sdgInfos.map((sdg) => (
+              <div key={sdg.id} className="col-6 col-md-3 col-lg-2">
+                <div
+                  className={"card h-100 text-center"}
+                  style={{
+                    cursor: "pointer",
+                    transition: "0.2s",
+                    backgroundColor: selectedSDGs.includes(sdg.id)
+                      ? "var(--color-green2)"
+                      : "white",
+                  }}
+                  onClick={() => toggleSDG(sdg.id)}
+                >
+                  <img
+                    src={sdg.image}
+                    alt={sdg.title}
+                    className="card-img-top p-2"
+                    style={{
+                      height: "70px",
+                      width: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+
+                  <div className="card-body p-2">
+                    <small
+                      style={{
+                        color: selectedSDGs.includes(sdg.id)
+                          ? "var(--color-white)"
+                          : "var(--color-green2)",
+                      }}
+                    >
+                      {sdg.title}
+                    </small>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="row g-3 mt-2">
+            <h5
+              style={{
+                color: "var(--color-green)",
+              }}
+            >
+              Event Images:
+            </h5>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="form-control mb-3"
+              style={{
+                color: "var(--color-green)",
+              }}
+              onChange={(e) => {
+                if (!e.target.files) return;
+
+                Array.from(e.target.files).forEach(handleImage);
+              }}
+            />
+
+            {selectedImages.map((image) => (
+              <div key={image} className="col-6 col-md-3 col-lg-2">
+                <div
+                  className="card h-100 text-center"
+                  style={{
+                    cursor: "pointer",
+                    transition: "0.2s",
+                    backgroundColor:
+                      selectedImages[0] === image
+                        ? "var(--color-green2)"
+                        : "white",
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt="event"
+                    className="card-img-top p-2"
+                    style={{
+                      height: "70px",
+                      width: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+
+                  <div
+                    className="card-body p-2"
+                    onClick={() => selectCover(image)}
+                  >
+                    <small style={{ color: "var(--color-gold)" }}>
+                      {selectedImages[0] === image
+                        ? "Cover image"
+                        : "Select as cover"}
+                    </small>
+                  </div>
+
+                  <div
+                    className="card-body p-2"
+                    onClick={() => deleteImage(image)}
+                  >
+                    <small style={{ color: "var(--color-ods1)" }}>Delete</small>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="row g-3 mt-2">
+            <button
+              type="submit"
+              className="btn text-white fw-bold px-4"
+              style={{ background: "var(--color-green2)" }}
+              onClick={handleSubmit}
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
-      </form>
+      </div>
     </>
   );
 }
