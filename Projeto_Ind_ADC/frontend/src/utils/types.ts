@@ -187,7 +187,7 @@ export type FriendsListResponse = {
 }
 
 export type Friend = {
-  Friend: string,
+  From: string,
   "Sent At": number,
 }
 

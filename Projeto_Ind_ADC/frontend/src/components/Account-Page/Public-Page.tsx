@@ -9,9 +9,11 @@ import { sdgInfos } from "../../utils/sdgInfo";
 import AccountEvents from "./Account-Events";
 import { getEventList } from "../../api/auth";
 import type { EventItem, EventListResponse } from "../../utils/types";
-import EventCardSmall from "../Events-Page/Event-Card-Small";
+import type { RequestAddFriend, AddFriendResponse } from "../../utils/types";
+import type { RequestUnfriend, UnfriendResponse } from "../../utils/types";
 import { useAuth } from "../AuthContext";
 import EventCard from "../Events-Page/Event-Card";
+import { addFriend, unfriend } from "../../api/auth";
 
 function PublicPage() {
   const { username } = useParams<{ username: string }>();
@@ -35,7 +37,7 @@ function PublicPage() {
       const res: UserInformationResponse = await getUser({
         token: { jwt: token },
         input: {
-          username: "gg",
+          username: username,
         },
       });
       console.log(res);
@@ -105,6 +107,50 @@ function PublicPage() {
     }
   };
 
+  const handleAddfriend = async (friendToAdd: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: AddFriendResponse = await addFriend({
+        token: { jwt: token },
+        input: { username: friendToAdd },
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUnfriend = async (friendToDelete: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UnfriendResponse = await unfriend({
+        token: { jwt: token },
+        input: { username: friendToDelete },
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   //fetch on page render
   useEffect(() => {
     loadEvents();
@@ -114,21 +160,6 @@ function PublicPage() {
     <>
       <NavBar />
       <div className="container py-5">
-        <div className="row">
-          <div className="d-flex justify-content-end mb-2">
-            <img
-              src={settings_w}
-              alt="Settings"
-              onClick={() => navigate("/account/settings")}
-              style={{
-                width: "24px",
-                height: "24px",
-                cursor: "pointer",
-              }}
-            />
-          </div>
-        </div>
-
         <div
           className="rounded-4 overflow-hidden"
           style={{ background: "var(--color-white)" }}
@@ -150,20 +181,73 @@ function PublicPage() {
               />
 
               <div className="ms-4 flex-grow-1">
-                <h4 className="mb-0 text-white fw-bold">Display Name</h4>
-                <div className="text-white mt-2">{username}</div>
+                <h4 className="mb-0 text-white fw-bold">
+                  {user?.data.display}
+                </h4>
+                <div className="text-white mt-2">{user?.data.username}</div>
               </div>
 
               <div className="d-flex gap-3">
-                <button
-                  className="btn px-4"
-                  style={{
-                    background: "var(--color-green)",
-                    color: "var(--color-white)",
-                  }}
-                >
-                  Friend
-                </button>
+                {user && user.data.friendship === "SELF" && (
+                  <img
+                    src={settings_w}
+                    alt="Settings"
+                    onClick={() => navigate("/account/settings")}
+                    style={{
+                      width: "70px",
+                      height: "70px",
+                      cursor: "pointer",
+                    }}
+                  />
+                )}
+                {user && user.data.friendship === "NOT_FRIENDS" && (
+                  <button
+                    className="btn px-4"
+                    style={{
+                      background: "var(--color-green)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={() => handleAddfriend(user.data.username)}
+                  >
+                    Add Friend
+                  </button>
+                )}
+                {user && user.data.friendship === "FRIENDS" && (
+                  <button
+                    className="btn px-4"
+                    style={{
+                      background: "var(--color-green)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={() => handleUnfriend(user.data.username)}
+                  >
+                    Unfriend
+                  </button>
+                )}
+                {user && user.data.friendship === "REQUEST_RECIVED" && (
+                  <button
+                    className="btn px-4"
+                    style={{
+                      background: "var(--color-green)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={() => handleAddfriend(user.data.username)}
+                  >
+                    Accept Request
+                  </button>
+                )}
+                {user && user.data.friendship === "REQUEST_SENT" && (
+                  <button
+                    className="btn px-4"
+                    style={{
+                      background: "var(--color-green)",
+                      color: "var(--color-white)",
+                    }}
+                    disabled
+                  >
+                    Request Sent
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -183,6 +267,60 @@ function PublicPage() {
               malesuada fames ac turpis egestas. Nulla at risus.
             </p>
           </div>
+          <div className="p-4">
+            <h5
+              className="fw-bold mb-3"
+              style={{ color: "var(--color-green)" }}
+            >
+              Old Names:
+            </h5>
+
+            {user && user.data.oldnames && (
+              <p className="mb-0">
+                {user.data.oldnames.length === 0
+                  ? "This user hasn't older names."
+                  : user.data.oldnames}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div
+          className="rounded-4 h-100 p-3 mt-5"
+          style={{ background: "var(--color-white)" }}
+        >
+          <h5 className="fw-bold mb-3" style={{ color: "var(--color-green)" }}>
+            SDG Analitcs
+          </h5>
+          {sdgs.map((id, i) => (
+            <div key={id} className="d-flex align-items-center mb-3">
+              <img
+                src={sdgInfos[id - 1].image}
+                alt="sdg"
+                style={{
+                  width: "25px",
+                  height: "25px",
+                  objectFit: "cover",
+                }}
+              />
+
+              <div
+                className="progress flex-grow-1 ms-3"
+                role="progressbar"
+                aria-label={`SDG ${id}`}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="progress-bar"
+                  style={{
+                    width: `${value[i]}%`,
+                    backgroundColor: `var(--color-ods${id})`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
 
         <div
@@ -243,44 +381,6 @@ function PublicPage() {
               </div>
             </h5>
           </div>
-        </div>
-
-        <div
-          className="rounded-4 h-100 p-3 mt-5"
-          style={{ background: "var(--color-white)" }}
-        >
-          <h5 className="fw-bold mb-3" style={{ color: "var(--color-green)" }}>
-            SDG Analitcs
-          </h5>
-          {sdgs.map((id, i) => (
-            <div key={id} className="d-flex align-items-center mb-3">
-              <img
-                src={sdgInfos[id - 1].image}
-                alt="sdg"
-                style={{
-                  width: "25px",
-                  height: "25px",
-                  objectFit: "cover",
-                }}
-              />
-
-              <div
-                className="progress flex-grow-1 ms-3"
-                role="progressbar"
-                aria-label={`SDG ${id}`}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div
-                  className="progress-bar"
-                  style={{
-                    width: `${value[i]}%`,
-                    backgroundColor: `var(--color-ods${id})`,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </>
