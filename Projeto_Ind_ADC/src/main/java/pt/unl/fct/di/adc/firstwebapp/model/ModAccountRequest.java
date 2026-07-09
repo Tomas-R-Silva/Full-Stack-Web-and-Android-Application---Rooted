@@ -8,6 +8,7 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
 
     public static class ModAccountRequestInput extends ShortUser{
         private String email;
+        private String bio;
 
 
         public String getEmail() {
@@ -16,7 +17,15 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
 
         public void setEmail(String email) {
             this.email = email;
-        }  
+        }
+
+        public String getBio() {
+            return bio;
+        }
+
+        public void setBio(String bio) {
+            this.bio = bio;
+        }
     }
 
 }

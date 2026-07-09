@@ -225,7 +225,9 @@ public class UserResources {
 				}
 			}
 			if(input.getEmail()!=null&&!user.getString("user_email").equals(input.getEmail()))
-				updatedUser.set("user_email", input.getEmail());	
+				updatedUser.set("user_email", input.getEmail());
+			if(input.getBio()!=null)
+				updatedUser.set("user_bio", input.getBio());
 			datastore.put(updatedUser.build());
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {
@@ -271,7 +273,8 @@ public class UserResources {
 								? user.getTimestamp("user_creation_time").getSeconds() : 0L,
 							"display",displayname,
 							"oldnames",newlist,
-							"friendship",friendshipstatus.toString()
+							"friendship",friendshipstatus.toString(),
+							"bio", user.contains("user_bio") ? user.getString("user_bio") : ""
 							));
 		}catch(Exception e) {
 			return Error.fromexception(e);
