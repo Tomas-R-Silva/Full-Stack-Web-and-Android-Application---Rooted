@@ -683,7 +683,14 @@ public class EventResources {
 		map.put("status", e.contains("status")?e.getString("status"):null);
 		map.put("createdAt", e.contains("created_at")?e.getLong("created_at"):null);
 		map.put("isAccessible", e.contains("is_accessible")?e.getBoolean("is_accessible"):null);
-		map.put("SDG", e.contains("SDG")?e.getList("SDG"):null);
+		List<Integer> sdg = new ArrayList<>();
+		if (e.contains("SDG")) {
+			for (Value<?> v : e.<Value<?>>getList("SDG")) {
+				Long number = (Long) v.get();
+				sdg.add(number.intValue());
+			}
+		}
+		map.put("SDG", sdg);
 
 		List<String> imageUrls = e.contains("image_urls")
 				? e.<Value<?>>getList("image_urls").stream()
