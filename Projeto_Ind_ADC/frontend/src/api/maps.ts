@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getEventList } from "./auth";
+import type { FilterProps } from "../utils/types";
 
 declare global {
   interface Window {
@@ -107,6 +108,68 @@ export const useMapsPage = (mapsApiKey: string) => {
     }
   };
 
+  const clearMarkers = () => {
+    markersRef.current.forEach(({ marker }) => marker.setMap(null));
+    markersRef.current.clear();
+  };
+
+  const addMarkerToMap = (
+    map: any,
+    position: { lat: number; lng: number },
+    event: EventItem,
+  ) => {
+    const marker = new window.google.maps.Marker({
+      position,
+      map,
+      title: event.title,
+      icon: {
+        path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        scale: 9,
+        fillColor: "green",
+        fillOpacity: 1,
+        strokeColor: "white",
+        strokeWeight: 2,
+      },
+    });
+
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: `
+        <div>
+          <h3>${event.title}</h3>
+          <p>${event.location}</p>
+          <a
+            href="/events/${event.eventId}"
+            class="btn btn-sm"
+            style="background-color: var(--color-green); 
+            color: var(--color-white); 
+            border: none; 
+            display: block; 
+            width: 100%; 
+            text-align: center;"
+          >
+            View event
+          </a>
+        </div>
+      `,
+    });
+
+    marker.addListener("click", () => openInfoWindow(infoWindow, marker));
+    markersRef.current.set(event.eventId, { marker, infoWindow });
+  };
+
+  const renderVisibleMarkers = (eventList: EventItem[]) => {
+    const map = mapInstanceRef.current;
+    if (!map || !window.google) return;
+
+    clearMarkers();
+
+    eventList.forEach((event) => {
+      if (event.position) {
+        addMarkerToMap(map, event.position, event);
+      }
+    });
+  };
+
   const setMapContainer = (node: HTMLDivElement | null) => {
     mapRef.current = node;
   };
@@ -114,6 +177,48 @@ export const useMapsPage = (mapsApiKey: string) => {
   const getMapRef = () => mapRef.current;
   const getSortedEvents = () => sortedEvents;
   const getActiveEventId = () => activeEventId;
+  const getHasGeolocation = () => hasGeolocation;
+
+  const getFilteredEvents = (
+    filter: FilterProps,
+    nearYouEnabled: boolean,
+    nearYouRadiusKm: number,
+  ) => {
+    return sortedEvents.filter((event) => {
+      const matchesCategory =
+        !filter.category || event.category === filter.category;
+      const matchesStatus = !filter.status || event.status === filter.status;
+      const matchesOrganizer =
+        !filter.organizerUsername ||
+        event.organizerUsername
+          ?.toLowerCase()
+          .includes(filter.organizerUsername.toLowerCase());
+      const matchesAccessibility =
+        filter.isAccessible === undefined ||
+        filter.isAccessible === false ||
+        event.isAccessible === filter.isAccessible;
+      const matchesSdg =
+        filter.sdg === undefined ||
+        (Array.isArray(event.sdg)
+          ? event.sdg.includes(filter.sdg)
+          : event.sdg === filter.sdg);
+      const matchesNearYou =
+        !nearYouEnabled ||
+        !hasGeolocation ||
+        (event.distance != null &&
+          event.distance >= 0 &&
+          event.distance <= nearYouRadiusKm * 1000);
+
+      return (
+        matchesCategory &&
+        matchesStatus &&
+        matchesOrganizer &&
+        matchesAccessibility &&
+        matchesSdg &&
+        matchesNearYou
+      );
+    });
+  };
 
   const renderEventMap = (event: EventItem, container?: HTMLDivElement | null) => {
     const mapContainer = container ?? mapRef.current;
@@ -223,50 +328,6 @@ export const useMapsPage = (mapsApiKey: string) => {
       );
     };
 
-    const addMarker = (
-      map: any,
-      position: { lat: number; lng: number },
-      event: EventItem,
-    ) => {
-      const marker = new window.google.maps.Marker({
-        position,
-        map,
-        title: event.title,
-        icon: {
-          path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-          scale: 9,
-          fillColor: "green",
-          fillOpacity: 1,
-          strokeColor: "white",
-          strokeWeight: 2,
-        },
-      });
-
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `
-          <div>
-            <h3>${event.title}</h3>
-            <p>${event.location}</p>
-            <a
-              href="/events/${event.eventId}"
-              class="btn btn-sm"
-              style="background-color: var(--color-green); 
-              color: var(--color-white); 
-              border: none; 
-              display: block; 
-              width: 100%; 
-              text-align: center;"
-            >
-              View event
-            </a>
-          </div>
-        `,
-      });
-
-      marker.addListener("click", () => openInfoWindow(infoWindow, marker));
-      markersRef.current.set(event.eventId, { marker, infoWindow });
-    };
-
     const renderEvents = (map: any, eventList: EventItem[]) => {
       const geocoder = new window.google.maps.Geocoder();
 
@@ -285,7 +346,7 @@ export const useMapsPage = (mapsApiKey: string) => {
                   item.eventId === updatedEvent.eventId ? updatedEvent : item,
                 ),
               );
-              addMarker(map, pos, updatedEvent);
+              addMarkerToMap(map, pos, updatedEvent);
             }
           },
         );
@@ -352,7 +413,10 @@ export const useMapsPage = (mapsApiKey: string) => {
     getMapRef,
     getSortedEvents,
     getActiveEventId,
+    getHasGeolocation,
+    getFilteredEvents,
     focusEvent,
     renderEventMap,
+    renderVisibleMarkers,
   };
 };
