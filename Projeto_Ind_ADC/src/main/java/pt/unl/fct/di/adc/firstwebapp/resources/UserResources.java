@@ -267,7 +267,8 @@ public class UserResources {
 					Map.of("username", user.getString("user_name"),
 							"email", user.getString("user_email"),
 							"role", user.getString("user_role"),
-							"creation_time",user.getLong("user_creation_time"),
+							"creation_time", user.contains("user_creation_time")
+								? user.getTimestamp("user_creation_time").getSeconds() : 0L,
 							"display",displayname,
 							"oldnames",newlist,
 							"friendship",friendshipstatus.toString()
