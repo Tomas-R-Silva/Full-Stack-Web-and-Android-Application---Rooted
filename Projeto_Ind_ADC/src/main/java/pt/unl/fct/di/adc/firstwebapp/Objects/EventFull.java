@@ -94,14 +94,14 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	@Override
 	public Map<String, Object> tomap() {
 		Map<String, Object> map = Map.of();
-		map.put("eventId",this.eventId);
-		map.put("title",this.title);		
-		map.put("description",this.description);
-		map.put("category", this.category);
-		map.put("location", this.location);
+		map.put("eventId",Full.string(this.eventId));
+		map.put("title",Full.string(this.title));		
+		map.put("description",Full.string(this.description));
+		map.put("category", Full.string(this.category));
+		map.put("location", Full.string(this.location));
 		map.put("startDate", this.startDate);
 		map.put("durationMinutes", this.durationMinutes);
-		map.put("organizerUsername", this.organizerUsername);
+		map.put("organizerUsername", Full.string(this.organizerUsername));
 		map.put("maxAttendees", this.maxAttendees);
 		map.put("attendeeCount",attendee);
 		map.put("isPublic", this.isPublic);

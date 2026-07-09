@@ -55,7 +55,7 @@ public class TokenFull extends ShortUser implements Full{
 	@Override
 	public Map<String,Object> tomap(){
 		return Map.of(
-				"jwt", jwt,
+				"jwt", Full.string(jwt),
 				"username", username,
 				"role", role.toString(),
 				"issuedAt", issuedAt*TIME_DIVIDER,

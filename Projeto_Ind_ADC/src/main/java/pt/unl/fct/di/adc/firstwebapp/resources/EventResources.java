@@ -247,7 +247,7 @@ public class EventResources {
 				existing.setDurationMinutes(input.getDurationMinutes());
 			if (input.getMaxAttendeesnull() != null)
 				existing.setMaxAttendees(input.getMaxAttendees());
-			if (input.getMaxAttendeesnull() != null)
+			if (input.getMinAttendeesnull() != null)
 				existing.setMinAttendees(input.getMinAttendees());
 			if (input.isPublicnull() != null)
 				existing.setPublic(input.isPublic());

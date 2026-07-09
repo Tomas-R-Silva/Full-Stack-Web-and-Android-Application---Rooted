@@ -47,6 +47,11 @@ public class FriendFull implements Full{
 		friend.setStart(Full.getLong(entity, "issued_at")*TIME_DIVIDER);
 		return friend;
 	}
+	
+	public String getnickname(UserFull user){
+		String ke=(getUsername1().equals(user.getUsername()))?ke=getNickname1():getNickname2();
+		return ke.isBlank()?user.getDisplay():ke;
+	}
 
 	public static FriendFull newfriends(TokenFull token,UserFull user) throws ErrorException {
 		FriendFull friends = new FriendFull(getFriendKey(token,user));

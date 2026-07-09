@@ -70,17 +70,17 @@ public class UserFull extends ShortUser implements Full{
 	@Override
 	public Map<String,Object> tomap(){
 		return Map.of(
-				"username", username,
-				"display", display,
-				"email", email,
-				"role", role.name()
+				"username", Full.string(username),
+				"display", Full.string(display),
+				"email", Full.string(email),
+				"role", Full.string(role.name())
 				);
 	}
 	public Map<String,Object> tobigmap(String display,Friendstatus friendshipstatus){
 		Map<String,Object> map=this.tomap();
 		map.put("friendship",friendshipstatus.toString());
 		if(display!=null)
-			map.put("display",display);
+			map.put("display",Full.string(display));
 		map.put("creation_time",creation);
 		map.put("oldnames",old);
 		return map;

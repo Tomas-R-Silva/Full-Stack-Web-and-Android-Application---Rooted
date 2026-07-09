@@ -18,7 +18,11 @@ public interface Full {
 	public Entity toentity();
 	
 	public static String getString(Entity e,String name) {
-		return e.contains(name)?e.getString(name):null;
+		return e.contains(name)?e.getString(name):"";
+	}
+	
+	public static String string(String str) {
+		return str!=null?str:"";
 	}
 	
 	public static long getLong(Entity e,String name) {

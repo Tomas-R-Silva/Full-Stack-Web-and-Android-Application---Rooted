@@ -183,19 +183,20 @@ public class UserResources {
 			if(user.isme(token)) 
 				friendshipstatus=Friendstatus.SELF;
 			else {
-				Entity friend=datastore.get(FriendFull.getFriendKey(token,user));
-				if(friend==null) 
+				Entity friendent=datastore.get(FriendFull.getFriendKey(token,user));
+				if(friendent==null) 
 					friendshipstatus=Friendstatus.NOT_FRIENDS;
-				else if(friend.getBoolean("accepted")) {
-					friendshipstatus=Friendstatus.FRIENDS;
-					String ke=(friend.getString("username_1").equals(user.getUsername()))?"nickname_1":"nickname_2";
-					if(friend.contains(ke)) 
-						displayname=friend.getString(ke);	
+				else {
+					FriendFull friend=FriendFull.fromdatabase(friendent);
+					if(friend.getAccepted()) {
+						friendshipstatus = Friendstatus.FRIENDS;
+						displayname = friend.getnickname(user);
+					}
+					else if(friend.getUsername1().equals(token.getUsername()))
+						friendshipstatus=Friendstatus.REQUEST_SENT;
+					else
+						friendshipstatus=Friendstatus.REQUEST_RECIVED;
 				}
-				else if(friend.getString("username_1").equals(token.getUsername()))
-					friendshipstatus=Friendstatus.REQUEST_SENT;
-				else
-					friendshipstatus=Friendstatus.REQUEST_RECIVED;
 			}
 			return buildresponse(user.tobigmap(displayname,friendshipstatus));
 		}catch(Exception e) {
@@ -379,7 +380,7 @@ public class UserResources {
 					else {
 						friend.acceptrecquest();
 						datastore.put(friend.toentity());
-						}
+					}
 				}
 			}
 			return buildresponse(Map.of("message", "Friend Request Accepted"));

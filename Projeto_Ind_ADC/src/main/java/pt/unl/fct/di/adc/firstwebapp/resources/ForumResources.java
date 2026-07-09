@@ -28,7 +28,7 @@ import jakarta.ws.rs.core.Response;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
-import pt.unl.fct.di.adc.firstwebapp.Objects.ForumPost;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ForumFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
@@ -70,13 +70,13 @@ public class ForumResources {
 
 			if (eventEntity.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
 				ErrorException.trow(9931); // event is closed, forum no longer accepts posts
-			ForumPost post=ForumPost.newforum(datastore, eventEntity, token, req.getInput());
+			ForumFull post=ForumFull.newforum(datastore, eventEntity, token, req.getInput());
 
 			datastore.put(post.toentity());
 			Log.info("Forum post " + post.getPostId() + " on event " + post.getEventId()
 			+ " by " + token.getUsername());
 
-			return ok(ForumPost.fromdatabase(datastore.get(post.getKey())).tomap());
+			return ok(ForumFull.fromdatabase(datastore.get(post.getKey())).tomap());
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -111,7 +111,7 @@ public class ForumResources {
 
 			List<Map<String, Object>> posts = new ArrayList<>();
 			while (results.hasNext())
-				posts.add(ForumPost.fromdatabase(results.next()).tomap());
+				posts.add(ForumFull.fromdatabase(results.next()).tomap());
 
 			// Only hand back a cursor when the page was full — otherwise the
 			// client already has everything and should keep reusing its last cursor.
@@ -134,7 +134,7 @@ public class ForumResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			Key key = datastore.newKeyFactory().setKind("ForumPost").newKey(req.getInput().getForumKey());
-			ForumPost post=ForumPost.fromdatabase(datastore.get(key));
+			ForumFull post=ForumFull.fromdatabase(datastore.get(key));
 			if (post == null)
 				ErrorException.trow(9932);
 

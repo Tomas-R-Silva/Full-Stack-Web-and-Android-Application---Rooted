@@ -39,15 +39,15 @@ public class AttendanceFull implements Full{
 
 	@Override
 	public Map<String, Object> tomap() {
-		return Map.of("event_id", event,"username", username,"joinedAt", joined);
+		return Map.of("event_id", Full.string(event),"username", Full.string(username),"joinedAt", joined);
 	}
 	
 	public Map<String, Object> tomapusers() {
-		return Map.of("username", username,"joinedAt", joined);
+		return Map.of("username", Full.string(username),"joinedAt", joined);
 	}
 	
 	public Map<String, Object> tomapevents() {
-		return Map.of("event_id", event,"joinedAt", joined);
+		return Map.of("event_id",Full.string(event),"joinedAt", joined);
 	}
 
 	@Override
