@@ -43,11 +43,11 @@ public interface Full {
 	}
 	
 	public static List<StringValue> makeStringValueList(List<String> list) {
-		return list.stream().map(v -> StringValue.of(v)).collect(Collectors.toList());
+		return (list!=null)?list.stream().map(v -> StringValue.of(v)).collect(Collectors.toList()):Collections.emptyList();
 	}
 	
 	public static List<LongValue> makeLongValueList(List<Long> list) {
-		return list.stream().map(v -> LongValue.of(v)).collect(Collectors.toList());
+		return (list!=null)?list.stream().map(v -> LongValue.of(v)).collect(Collectors.toList()):Collections.emptyList();
 	}
 	
 	public static List<Long> getLongList(Entity e,String name){
@@ -56,7 +56,11 @@ public interface Full {
 	}
 	
 	public static <E extends Enum<?>> List<StringValue> makeStringValueEnumList(List<E> list) {
-		return list.stream().map(v -> StringValue.of(v.name())).collect(Collectors.toList());
+		return (list!=null)?list.stream().map(v -> StringValue.of(v.name())).collect(Collectors.toList()):Collections.emptyList();
+	}
+	
+	public static <E extends Enum<?>> List<String> makeStringEnumList(List<E> list) {
+		return (list!=null)?list.stream().map(v -> v.name()).collect(Collectors.toList()):Collections.emptyList();
 	}
 	
 	

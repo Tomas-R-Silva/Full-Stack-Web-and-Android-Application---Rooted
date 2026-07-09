@@ -10,6 +10,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.StringValue;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Category;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
@@ -45,7 +46,10 @@ public class UserFull extends ShortUser implements Full{
 	public String getCountry() {return country;}
 	private void setbaseCreation(long creation) {this.creation=creation*TIME_DIVIDER;}
 	private void setbaseBirth(long birth) {this.birth=birth*TIME_DIVIDER;}
+	public void setBirth(long birth) {this.birth=birth;}
+	public long getBirth() {return birth;}
 	private void setbaseCategory(List<Category> category) {this.category=category;}
+	public void setbaseCategorystr(List<String> category) {this.category= (category!=null)?category.stream().map(v -> Category.valueof(v)).collect(Collectors.toList()):Collections.emptyList();}
 	public void setOld(List<String> old){this.old=old;}
     public String getBio() {return bio;}
     public void setBio(String bio) {this.bio = bio;}
@@ -61,11 +65,11 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setDisplay(user.getUsername());
 		newuser.setOld(List.of(user.getUsername()));
 		newuser.setbaseCreation(System.currentTimeMillis());
-		newuser.setBio("");
+		newuser.setbaseCategorystr(user.getCategory());
 		
-		newuser.setbaseCategory(Collections.emptyList());
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
+		newuser.setBio("");
 		
 		return newuser;
 		
@@ -87,6 +91,9 @@ public class UserFull extends ShortUser implements Full{
 		map.put("creation_time",creation);
 		map.put("oldnames",old);
 		map.put("bio",Full.string(bio));
+		map.put("category",Full.makeStringEnumList(category));
+		map.put("country",Full.string(country));
+		map.put("birth",birth);
 		return map;
 	}
 

@@ -47,6 +47,7 @@ public class User extends ShortUser{
 	private String confirmation;
 	private String role;
 	private String email;
+	private List<String> category;
 
 	public User() {}
 
@@ -72,7 +73,8 @@ public class User extends ShortUser{
 	public void setConfirmation(String confirmation){this.confirmation = confirmation;}
 	public Role getRole() {return Role.valueof(role);}
 	public void setRole(String role) {this.role = role;}
-
+	public void setCategory(List<String> category) {this.category=category;}
+	public List<String> getCategory() {return category;}
 	public void userValidation() throws ErrorException{
 		List<Map<String,Object>> list=new LinkedList<>();
 		if(!validVariable(getUsername()))
