@@ -262,8 +262,9 @@ export type RequestEventCreation = {
 };
 
 export type EventCreationResponse = {
-  eventId: string,
-  message: string,
+  status: number,
+  data:{eventId: string,
+  message: string,}
 };
 
 export type RequestEventGetter = {
