@@ -31,6 +31,7 @@ import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Objects.UserFull;
@@ -72,7 +73,7 @@ public class EventResources {
 	public Response createEvent(CreateEventRequest req) {
 		try {
 			TokenFull tokenObj = AuthHelper.verifyToken(req);
-			EventFull event = EventFull.newuser(datastore,req.getInput(),tokenObj.getUsername());
+			EventFull event = EventFull.newevent(datastore,req.getInput(),tokenObj.getUsername());
 			datastore.put(event.toentity());
 			Log.info("Event created: " + event.getEventId() + " by " + tokenObj.getUsername());
 			return ok(Map.of("eventId", event.getEventId(), "message", "Event created successfully"));
@@ -97,9 +98,8 @@ public class EventResources {
 				// Private event must be authenticated
 				TokenFull token = AuthHelper.verifyToken(req);
 				String requester = token.getUsername();
-				String organizer = entity.getOrganizerUsername();
 				Role role = token.getRole();
-				if (!requester.equals(organizer) && role != Role.ADMIN && role != Role.BOFFICER) {
+				if (!requester.equals(entity.getOrganizerUsername()) && role != Role.ADMIN && role != Role.BOFFICER) {
 					// Also allow attendees to see the event
 					if (!isAttending(req.getInput().getEventId(), requester))
 						ErrorException.trow(9905);
@@ -225,9 +225,8 @@ public class EventResources {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventAtributsid input=req.getInput();
 			EventFull existing = getEventEntity(input);
-			String organizer = existing.getOrganizerUsername();
 
-			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+			if (!existing.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
 			if (existing.getStatus().equals(Status.CANCELLED))
@@ -276,9 +275,8 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull existing = getEventEntity(req.getInput());
-			String organizer = existing.getOrganizerUsername();
 
-			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+			if (!existing.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
 			Key key = datastore.newKeyFactory().setKind("Event").newKey(req.getInput().getEventId());
@@ -303,8 +301,7 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull existing = getEventEntity(req.getInput());
-			String organizer = existing.getOrganizerUsername();
-			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+			if (!existing.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 			existing.setStatus(Status.CANCELLED);
 			datastore.put(existing.toentity());
@@ -326,13 +323,13 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull event = getEventEntity(req.getInput());
-			
+
 			if (event.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
 				ErrorException.trow(9907);
 
 			if (!event.isPublic())
 				ErrorException.trow(9905); //TODO private event — attend via invite (future feature)
-			
+
 			UserFull user = AuthHelper.getUser(token);
 			AttendanceFull attendance=AttendanceFull.newattendance(event,user);
 			if (datastore.get(attendance.getKey()) != null)
@@ -397,9 +394,8 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull eventEntity = getEventEntity(req.getInput());
-			UserFull organizer = AuthHelper.getUser(eventEntity.getOrganizerUsername());
-			
-			if (!token.getUsername().equals(organizer.getUsername()))
+
+			if (!eventEntity.isOwner(token))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
 			Query<Entity> query = Query.newEntityQueryBuilder()
@@ -490,8 +486,7 @@ public class EventResources {
 			TokenFull token = AuthHelper.verifyToken(req);
 
 			EventFull eventEntity = getEventEntity(input);
-			String organizer = eventEntity.getOrganizerUsername();
-			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+			if (!eventEntity.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
 			List<String> existing=eventEntity.getImageUrls();
@@ -534,11 +529,10 @@ public class EventResources {
 			if (input.getImages().isEmpty())
 				ErrorException.trow(9906);
 			EventFull eventEntity = getEventEntity(input);
-			String organizer = eventEntity.getOrganizerUsername();
 
-			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+			if (!eventEntity.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
-			
+
 			List<String> existing = eventEntity.getImageUrls();
 			for(String imageUrl:input.getImages()) 
 				if(existing.contains(imageUrl)) {

@@ -1,6 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private String eventId;
 	private long attendee;
 	private final Key key;
-
+	
 	public EventFull(Key key) {this.key=key;}
 
 	public void isValid() throws ErrorException{
@@ -88,6 +89,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setImageUrls(Full.getStringList(entity,"image_urls"));
 		event.setAccessible(Full.getBoolean(entity,"is_accessible"));
 		event.setSDG(Full.getLongList(entity,"SDG"));
+		
+		
 		return event;
 	}
 
@@ -137,7 +140,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		return entity;
 	}
 
-	public static EventFull newuser(Datastore datastore, EventAtributs input,String username) throws ErrorException {
+	public static EventFull newevent(Datastore datastore, EventAtributs input,String username) throws ErrorException {
 		String ID=UUID.randomUUID().toString();
 		EventFull event=new EventFull(datastore.newKeyFactory().setKind("Event").newKey(ID));
 		event.setEventId(ID);
@@ -155,11 +158,13 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setCreatedAt(System.currentTimeMillis());
 		event.setSDG(input.getSDGint());
 		event.setAccessible(input.isAccessible());
-		event.setImageUrls(new ArrayList<String>(0));
+		
+		event.setImageUrls(Collections.emptyList());
 		event.setAttendee(0);
 		event.isValid();
 		return event;
 	}
+
 
 	@Override
 	public Key getKey() {return key;}
@@ -181,6 +186,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 	public long getEnd() { return getStartDate() + getDurationMinutes() * 60L; }
 	public boolean getEnded() {return System.currentTimeMillis()>=getEnd(); }
+	public boolean isOwner(TokenFull token) {return organizerUsername.equals(token.getUsername());}
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
 }
