@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import '../screens/event_detail_screen.dart';
+import '../screens/user_profile_screen.dart';
 
 class EventsMaps extends StatefulWidget {
   /// Optional server base URL for fetching events. If empty, sample events are used.
@@ -16,12 +18,12 @@ class EventsMaps extends StatefulWidget {
   final String? searchQuery;
 
   const EventsMaps({
-    Key? key,
+    super.key,
     this.server = '',
     this.mapsApiKey,
     this.categoryFilter,
     this.searchQuery,
-  }) : super(key: key);
+  });
 
   @override
   State<EventsMaps> createState() => _EventsMapsState();
@@ -194,13 +196,45 @@ class _EventsMapsState extends State<EventsMaps> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(ev['title']?.toString() ?? 'Event', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            GestureDetector(
+              onTap: () {
+                final organizer = ev['organizerUsername'];
+                if (organizer != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => UserProfileScreen(username: organizer)),
+                  );
+                }
+              },
+              child: Text(
+                'By ${ev['organizerUsername'] ?? 'Unknown'}',
+                style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+              ),
+            ),
             const SizedBox(height: 8),
             Text(ev['location']?.toString() ?? ''),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            )
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => EventDetailScreen(event: ev)),
+                      );
+                    },
+                    child: const Text('View Details'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

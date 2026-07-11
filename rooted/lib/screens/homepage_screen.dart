@@ -5,6 +5,7 @@ import '../services/session_storage.dart';
 import '../widgets/filter_dialog.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
+import 'user_profile_screen.dart';
 
 enum HomeViewType { feed, discover }
 
@@ -770,6 +771,33 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ],
+                    ),
+                  if (!isOwn)
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => UserProfileScreen(username: event['organizerUsername']),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person_outline_rounded,
+                              size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 4),
+                          Text(
+                            event['organizerUsername'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),

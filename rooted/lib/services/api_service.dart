@@ -721,6 +721,27 @@ class ApiService {
     throw ApiException(_errorMessage(body, 'Failed to upload images (Status ${response.statusCode})'));
   }
 
+  /// Calls POST /rest/user.
+  static Future<Map<String, dynamic>> getUserAccount({
+    required String jwt,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/user');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'username': username},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return _extractData(body);
+    }
+    throw ApiException(_errorMessage(body, 'Failed to load user profile'));
+  }
+
   //Friend Endpoints
   /// Calls POST /addfriend.
   static Future<void> addFriend({
