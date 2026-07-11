@@ -37,6 +37,7 @@ function EventsList({ filter }: EventsListProps) {
           status: filter.status,
           organizerUsername: filter.organizerUsername,
           isAccessible: filter.isAccessible,
+          SDG: filter.sdg,
           pageSize: 12,
           cursor: cursor ?? "",
         },

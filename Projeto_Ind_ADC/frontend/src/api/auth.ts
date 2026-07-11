@@ -166,7 +166,7 @@ export const uploadImage = (data: RequestImageUpload) =>
   apiRequest<ImageUploadResponse>("/events/uploadimages", data);
 
 export const deleteImage = (data: RequestImageDelete) =>
-  apiRequest<ImageDeleteResponse>("/events/deleteimages", data);
+  apiRequest<ImageDeleteResponse>("/events/deleteimage", data);
 
 
 //========== Forum ==========

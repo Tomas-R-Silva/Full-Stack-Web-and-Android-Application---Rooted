@@ -1,19 +1,38 @@
 import NavBar from "../NavBar/NavBar";
 import { sdgInfos } from "../../utils/sdgInfo";
-import type { SdgItem } from "../../utils/types";
+import type { FilterProps, SdgItem } from "../../utils/types";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import EventsList from "../Events-Page/Events-List";
+import { useState, useEffect } from "react";
 
 function SDGelements() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [filter, setFilter] = useState<FilterProps>({
+    category: undefined,
+    status: undefined,
+    organizerUsername: undefined,
+    isAccessible: false,
+    sdg: undefined,
+  });
 
   if (!id) {
     return <div>Invalid SDG number!</div>;
   }
 
   const sdg: SdgItem = sdgInfos[Number(id) - 1];
+
+  const handleSDGFilter = (sdgId: number) => {
+    setFilter((prev) => ({
+      ...prev,
+      sdg: [...(prev.sdg ?? []), sdgId],
+    }));
+  };
+
+  useEffect(() => {
+    handleSDGFilter(sdg.id);
+  }, [id]);
 
   return (
     <>
@@ -120,7 +139,7 @@ function SDGelements() {
           />
           :
         </h1>
-        <EventsList filter={String(sdg.id)} />
+        <EventsList filter={filter} />
       </div>
     </>
   );

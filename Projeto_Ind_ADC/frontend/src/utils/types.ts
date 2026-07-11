@@ -425,7 +425,7 @@ export type ImageUploadResponse = {
 export type RequestImageDelete = {
   token?: {jwt:string;}
   input: {eventId:string,
-    imageUrls: string[],
+    images: string[],
   },
 }
 
@@ -439,7 +439,7 @@ export type FilterProps = {
   status?: string,
   organizerUsername?: string,
   isAccessible?: boolean,
-  sdg?: number
+  sdg?: number[]
 };
 
 //========== Forum ==========

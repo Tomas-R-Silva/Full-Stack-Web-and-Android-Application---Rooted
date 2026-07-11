@@ -32,6 +32,8 @@ function EventsPage() {
     }
   };
 
+  console.log(filter);
+
   return (
     <>
       <NavBar />
@@ -128,33 +130,62 @@ function EventsPage() {
               </select>
             </div>
 
-            <div className="col-lg-2 col-md-6">
+            <div className="col-lg-2 col-md-4">
               <label
                 className="form-label fw-semibold"
                 style={{ color: "var(--color-white)" }}
               >
-                SDG's
+                SDGs
               </label>
-              <select
-                className="form-select"
-                value={filter.sdg ?? ""}
-                onChange={(e) =>
-                  setFilter((prev) => ({
-                    ...prev,
-                    sdg:
-                      e.target.value === ""
-                        ? undefined
-                        : Number(e.target.value),
-                  }))
-                }
-              >
-                <option value="">All</option>
-                {sdgInfos.map((sdg) => (
-                  <option key={sdg.id} value={sdg.id}>
-                    {sdg.id} - {sdg.title}
-                  </option>
-                ))}
-              </select>
+
+              <div className="dropdown w-100">
+                <button
+                  className="btn dropdown-toggle w-100 text-start"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  style={{ background: "var(--color-white)" }}
+                >
+                  {filter.sdg?.length
+                    ? `${filter.sdg.length} selected`
+                    : "Select SDGs"}
+                </button>
+
+                <ul
+                  className="dropdown-menu w-100 p-2"
+                  style={{ maxHeight: "300px", overflowY: "auto" }}
+                >
+                  {sdgInfos.map((sdg) => (
+                    <li key={sdg.id}>
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`sdg-${sdg.id}`}
+                          checked={filter.sdg?.includes(sdg.id) ?? false}
+                          onChange={(e) => {
+                            setFilter((prev) => ({
+                              ...prev,
+                              sdg: e.target.checked
+                                ? [...(prev.sdg ?? []), sdg.id]
+                                : (prev.sdg ?? []).filter(
+                                    (id) => id !== sdg.id,
+                                  ),
+                            }));
+                          }}
+                        />
+
+                        <label
+                          className="form-check-label"
+                          htmlFor={`sdg-${sdg.id}`}
+                        >
+                          {sdg.id} - {sdg.title}
+                        </label>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <div className="col-lg-2 col-md-6">

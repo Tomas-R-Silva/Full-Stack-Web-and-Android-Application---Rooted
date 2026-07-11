@@ -29,8 +29,13 @@ function EventElements() {
   const navigate = useNavigate();
 
   const loadEvents = async (id: string) => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      console.log("User is not authenticated");
+    }
+
     const request: RequestEventGetter = {
-      token: { jwt: "" },
+      token: { jwt: token ?? "" },
       input: { eventId: id },
     };
     const res: EventGetterResponse = await getEvent(request);

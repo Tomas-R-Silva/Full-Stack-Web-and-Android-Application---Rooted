@@ -1,4 +1,9 @@
-import type { EventProps, ImageUploadResponse } from "../../utils/types";
+import type {
+  EventProps,
+  ImageDeleteResponse,
+  ImageUploadResponse,
+  RequestEventCancel,
+} from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useState, useEffect } from "react";
 import type {
@@ -8,7 +13,13 @@ import type {
   RequestEventUpdate,
 } from "../../utils/types";
 import { useNavigate, useParams } from "react-router-dom";
-import { updateEvent, getEvent, uploadImage } from "../../api/auth";
+import {
+  updateEvent,
+  getEvent,
+  uploadImage,
+  deleteImage,
+  cancelEvent,
+} from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
 
 type ErrorState = {
@@ -28,10 +39,16 @@ function EventUpdater() {
     "OTHER",
   ];
   const { id } = useParams<{ id: string }>();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const navigate = useNavigate();
   const [event, setEvent] = useState<EventItem>();
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  type SelectedImage = {
+    preview: string;
+    upload: string;
+  };
+
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [formData, setFormData] = useState<RequestEventUpdate>({
     token: { jwt: "" },
     input: {
@@ -102,20 +119,45 @@ function EventUpdater() {
     reader.onload = () => {
       const base64 = reader.result as string;
 
-      setSelectedImages((prev) => [...prev, base64]);
+      setSelectedImages((prev) => [
+        ...prev,
+        {
+          preview: base64,
+          upload: base64,
+        },
+      ]);
     };
 
     reader.readAsDataURL(file);
   };
 
-  const deleteImage = (image: string) => {
+  const handleDeleteImage = (image: SelectedImage) => {
     setSelectedImages((prev) => prev.filter((img) => img !== image));
   };
 
-  const selectCover = (image: string) => {
+  const handleInitialization = async () => {
+    if (!event?.imageUrls) return;
+
+    const images = await Promise.all(
+      event.imageUrls.map(async (url) => {
+        try {
+          return {
+            preview: url,
+            upload: await urlToBase64(url),
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    setSelectedImages(images.filter(Boolean) as SelectedImage[]);
+  };
+
+  const selectCover = (image: SelectedImage) => {
     setSelectedImages((prev) => {
-      const filtered = prev.filter((img) => img !== image);
-      return [image, ...filtered];
+      const rest = prev.filter((i) => i !== image);
+      return [image, ...rest];
     });
   };
 
@@ -137,24 +179,53 @@ function EventUpdater() {
     });
   };
 
+  const urlToBase64 = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+
+      reader.readAsDataURL(blob);
+    });
+  };
+
   //========== Submissão dos Campos ==========
   const handleImagesUpload = async () => {
     try {
       const token = sessionStorage.getItem("token");
-      if (!token) {
-        console.log("User is not authenticated");
-        return;
-      }
-      if (!event) {
-        console.log("Invalid event");
-        return;
-      }
+      if (!token || !event) return;
+
+      console.log("Uploading..." + selectedImages);
 
       const res: ImageUploadResponse = await uploadImage({
         token: { jwt: token },
         input: {
           eventId: event.eventId,
-          images: selectedImages,
+          images: selectedImages.map((i) => i.upload),
+        },
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleImagesDelete = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token || !event) return;
+
+      console.log("Deleting...");
+
+      const res: ImageDeleteResponse = await deleteImage({
+        token: { jwt: token },
+        input: {
+          eventId: event.eventId,
+          images: event.imageUrls ?? [],
         },
       });
       console.log(res.data.message);
@@ -225,7 +296,12 @@ function EventUpdater() {
     const hasErrors = Object.values(newErrors).some((error) => error !== "");
     if (hasErrors) return;
 
-    handleImagesUpload();
+    if (event?.imageUrls && event.imageUrls.length > 0) {
+      await handleImagesDelete();
+    }
+    if (selectedImages.length > 0) {
+      await handleImagesUpload();
+    }
 
     try {
       const token = sessionStorage.getItem("token");
@@ -248,9 +324,46 @@ function EventUpdater() {
     }
   };
 
+  const handleCancel = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+
+      if (!event) {
+        console.log("Event Invalid");
+        return;
+      }
+
+      const payload: RequestEventCancel = {
+        token: {
+          jwt: token,
+        },
+        input: {
+          eventId: event.eventId,
+        },
+      };
+      console.log(payload);
+      const response = await cancelEvent(payload);
+      console.log(response);
+      navigate("/events/" + event.eventId);
+      window.location.reload();
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
+  };
+
   const loadEvents = async (id: string) => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      console.log("User is not authenticated");
+    }
     const request: RequestEventGetter = {
-      token: { jwt: "" },
+      token: { jwt: token ?? "" },
       input: { eventId: id },
     };
     const res: EventGetterResponse = await getEvent(request);
@@ -290,7 +403,7 @@ function EventUpdater() {
     });
 
     setSelectedSDGs(event.SDG ?? []);
-    setSelectedImages(event.imageUrls ?? []);
+    handleInitialization();
   }, [event]);
 
   return (
@@ -597,7 +710,7 @@ function EventUpdater() {
             />
 
             {selectedImages.map((image) => (
-              <div key={image} className="col-6 col-md-3 col-lg-2">
+              <div key={image.preview} className="col-6 col-md-3 col-lg-2">
                 <div
                   className="card h-100 text-center"
                   style={{
@@ -610,7 +723,7 @@ function EventUpdater() {
                   }}
                 >
                   <img
-                    src={image}
+                    src={image.preview}
                     alt="event"
                     className="card-img-top p-2"
                     style={{
@@ -633,7 +746,7 @@ function EventUpdater() {
 
                   <div
                     className="card-body p-2"
-                    onClick={() => deleteImage(image)}
+                    onClick={() => handleDeleteImage(image)}
                   >
                     <small style={{ color: "var(--color-ods1)" }}>Delete</small>
                   </div>
@@ -650,6 +763,38 @@ function EventUpdater() {
             >
               Save Changes
             </button>
+          </div>
+          <div className="row g-3 mt-2">
+            <div>
+              {!confirmDelete && (
+                <button
+                  className="btn btn-danger fw-bold px-4"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Cancel Event
+                </button>
+              )}
+              {confirmDelete && (
+                <>
+                  <button
+                    className="btn btn-danger fw-bold"
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn fw-bold ms-1"
+                    style={{
+                      background: "var(--color-green2)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={handleCancel}
+                  >
+                    Confirm
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
