@@ -8,7 +8,6 @@ import java.util.UUID;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
-
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest;
@@ -48,16 +47,16 @@ public class ForumFull implements Full,EventInputInterface{
 	public static ForumFull fromdatabase(Entity entity) {
 		if(entity==null)return null;
 		ForumFull post = new ForumFull(entity.getKey());
-		post.setPostId(Full.getString(entity, "postId"));
-		post.setEventId(Full.getString(entity, "eventId"));
+		post.setPostId(Full.getString(entity, "post_id"));
+		post.setEventId(Full.getString(entity, "event_id"));
 
 		post.setEventId(Full.getString(entity, "type"));
 		post.setEventId(Full.getString(entity, "friend_id"));
 
-		post.setAuthorUsername(Full.getString(entity, "authorUsername"));
+		post.setAuthorUsername(Full.getString(entity, "author_username"));
 		post.setText(Full.getString(entity, "text"));
 		post.setParentPostId(Full.getString(entity, "parentPostId"));
-		post.setCreatedAt(Full.getLong(entity, "createdAt"));
+		post.setCreatedAt(Full.getLong(entity, "created_at"));
 		return post;
 	}
 
@@ -85,7 +84,7 @@ public class ForumFull implements Full,EventInputInterface{
 
 	public static ForumFull newforumfriend(Datastore datastore, FriendFull friend,TokenFull token,PostMessageRequest.PostMessageinput input) throws ErrorException {
 		if(friend==null||!friend.getAccepted())
-				ErrorException.trow(9937);
+			ErrorException.trow(9937);
 		ForumFull post = ForumFull.newforum(datastore,token,input);
 		post.setType(ForumType.FRIEND);
 		post.setFriendId(friend.formatkey());	
@@ -138,16 +137,18 @@ public class ForumFull implements Full,EventInputInterface{
 
 	@Override
 	public Entity toentity() {
-		return Entity.newBuilder(key)
+		Entity.Builder entity= Entity.newBuilder(key)
 				.set("post_id", this.getPostId())
-				.set("friend_id", this.getFriendId())
-				.set("event_id", this.getEventId())
 				.set("type", this.type.name())
 				.set("author_username", this.getAuthorUsername())
 				.set("text", this.getText())
 				.set("created_at", this.getCreatedAt()/TIME_DIVIDER)
-				.set("parent_post_id", this.getParentPostId())
-				.build();
+				.set("parent_post_id", this.getParentPostId());
+		if(type.equals(ForumType.EVENT)) 
+			entity.set("event_id", this.getEventId());
+		else if(type.equals(ForumType.FRIEND)) 
+			entity.set("friend_id", this.getFriendId());
+		return entity.build();
 	}
 
 
