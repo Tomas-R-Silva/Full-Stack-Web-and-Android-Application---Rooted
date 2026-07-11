@@ -263,6 +263,50 @@ public class EventResources {
 			return Error.fromexception(e);
 		}
 	}
+	
+	@POST
+	@Path("/addpartner")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addpartner(EventShortUserTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			UserFull user = AuthHelper.getUser(req.getInput());
+			EventFull event = getEventEntity(req.getInput());
+			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
+				ErrorException.trow(9905);
+			if (event.getStatus().equals(Status.CANCELLED))
+				ErrorException.trow(9907); // can't edit a cancelled event
+			if(user != null)
+				event.addpartner(user);			
+			datastore.put(event.toentity());
+			return ok(Map.of("message", "Partner added to event"));
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+	
+	@POST
+	@Path("/removepartner")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response removepartner(EventShortUserTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			UserFull user = AuthHelper.getUser(req.getInput());
+			EventFull event = getEventEntity(req.getInput());
+			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
+				ErrorException.trow(9905);
+			if (event.getStatus().equals(Status.CANCELLED))
+				ErrorException.trow(9907); // can't edit a cancelled event
+			if(user != null)
+				event.removepartner(user);			
+			datastore.put(event.toentity());
+			return ok(Map.of("message", "Partner removed to event"));
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
 
 	// -------------------------------------------------------------------------
 	// POST /rest/events/delete

@@ -469,6 +469,7 @@
     <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,
     <span class="key-str">"createdAt"</span>:         <span class="val-num">1759000000</span>,
     <span class="key-str">"imageUrls"</span>:         [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> ],
+    <span class="key-str">"partners"</span>:          [ <span class="val-str">"mcdonalds"</span> ],
     <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
     <span class="key-str">"sdq"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
@@ -531,6 +532,42 @@
 }</pre>
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event updated successfully"</span> }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/addpartner</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <p class="desc">Adds a partner to a specific event.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, 
+  <span class="key-str">"input"</span>: { 
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+  }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"message"</span>: <span class="val-str">"Partner added to event"</span>} }</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/removepartner</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <p class="desc">Removes a partner from a specific event.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, 
+  <span class="key-str">"input"</span>: { 
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+  }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"message"</span>: <span class="val-str">"Partner removed to event"</span>} }</pre>
 </div>
 
 <div class="endpoint">
@@ -865,6 +902,8 @@
     <tr><td>9932</td><td>Forum post not found</td></tr>
     <tr><td>9933</td><td>SDG does not exist(n>17 || n<1)</td></tr>
     <tr><td>9934</td><td>You are not friends with this user</td></tr>
+    <tr><td>9935</td><td>Partner already in the event</td></tr>
+    <tr><td>9936</td><td>Partner not in the event</td></tr>
   </table>
 </div>
 

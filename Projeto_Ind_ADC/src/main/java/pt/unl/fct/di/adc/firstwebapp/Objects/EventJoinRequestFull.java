@@ -41,7 +41,7 @@ public class EventJoinRequestFull implements Full{
 		request.setUsername(Full.getString(entity, "requester"));
 		request.setEvent(Full.getString(entity, "event_id"));
 		request.setOrganizer(Full.getString(entity, "organizer"));
-		request.setCreated(Full.getLong(entity, "created_at"));
+		request.setCreated(Full.getLong(entity, "created_at")*TIME_DIVIDER);
 		request.setStatus(Full.getString(entity, "status"));
 		return request;
 	}
@@ -55,7 +55,7 @@ public class EventJoinRequestFull implements Full{
 		request.setUsername(user.getUsername());
 		request.setEvent(event.getEventId());
 		request.setOrganizer(event.getOrganizerUsername());
-		request.setCreated(System.currentTimeMillis() );
+		request.setCreated(System.currentTimeMillis());
 		request.setStatus(RequestStatus.PENDING);
 		return request;
 	}
@@ -82,7 +82,7 @@ public class EventJoinRequestFull implements Full{
 				.set("requester", username)
 				.set("organizer", organizer)
 				.set("status", status.name())
-				.set("created_at", created_at / 1000L)
+				.set("created_at", created_at / TIME_DIVIDER)
 				.build();
 	}
 	

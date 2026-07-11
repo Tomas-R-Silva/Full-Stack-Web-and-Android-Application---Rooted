@@ -37,7 +37,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private String eventId;
 	private long attendee;
 	private final Key key;
-	
+
 	public EventFull(Key key) {this.key=key;}
 
 	public void isValid() throws ErrorException{
@@ -87,10 +87,9 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setStatus(Status.valueof(Full.getString(entity,"status")));
 		event.setCreatedAt(Full.getLong(entity,"created_at") * TIME_DIVIDER);
 		event.setImageUrls(Full.getStringList(entity,"image_urls"));
+		event.setpartner(Full.getStringList(entity,"partners"));
 		event.setAccessible(Full.getBoolean(entity,"is_accessible"));
 		event.setSDG(Full.getLongList(entity,"SDG"));
-		
-		
 		return event;
 	}
 
@@ -113,6 +112,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		map.put("isAccessible", this.isAccessible);
 		map.put("SDG", this.sdg);
 		map.put("imageUrls", imageUrls);
+		map.put("partners", partners);
 		return map;
 	}
 
@@ -134,6 +134,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("status", this.getStatus().name())
 				.set("created_at", this.getCreatedAt() / TIME_DIVIDER)
 				.set("image_urls", Full.makeStringValueList(imageUrls))
+				.set("partners", Full.makeStringValueList(partners))
 				.set("is_accessible", this.isAccessible())
 				.set("SDG", this.getSDG())
 				.build();
@@ -158,7 +159,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setCreatedAt(System.currentTimeMillis());
 		event.setSDG(input.getSDGint());
 		event.setAccessible(input.isAccessible());
-		
+		event.setpartner(Collections.emptyList());
 		event.setImageUrls(Collections.emptyList());
 		event.setAttendee(0);
 		event.isValid();
@@ -189,4 +190,19 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public boolean isOwner(TokenFull token) {return organizerUsername.equals(token.getUsername());}
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
+
+	public void removepartner(UserFull user) throws ErrorException {
+		if(!partners.contains(user.getUsername()))
+			ErrorException.trow(9935);
+		partners.remove(user.getUsername());
+	}
+
+	public void setpartner(List<String> partners) {this.partners=partners;}
+	
+	public void addpartner(UserFull user) throws ErrorException {
+		if(partners.contains(user.getUsername()))
+			ErrorException.trow(9936);
+		partners.remove(user.getUsername());
+
+	}
 }
