@@ -49,6 +49,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest.ImageRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest.ListEventsInput;
+import pt.unl.fct.di.adc.firstwebapp.model.RespondJoinRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UpdateEventRequest;
 
@@ -358,41 +359,57 @@ public class EventResources {
 	public Response attendEvent(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			Entity eventEntity = getEventEntity(req.getInput());
+			Entity event = getEventEntity(req.getInput());
+			String username = token.getUsername();
+			String eventId = req.getInput().getEventId();
 
-			if (eventEntity.getString("status").equals(Status.CANCELLED.name()) ||
-					eventEntity.getString("status").equals(Status.COMPLETED.name()))
+			String status = event.getString("status");
+			if (status.equals(Status.CANCELLED.name()) || status.equals(Status.COMPLETED.name()))
 				ErrorException.trow(9907);
 
-			if (!eventEntity.getBoolean("is_public"))
-				ErrorException.trow(9905); //TODO private event — attend via invite (future feature)
+			// PRIVATE event: joining needs the organizer's approval. Like following a
+			// private account, the same action creates a pending request instead of joining.
+			if (!event.getBoolean("is_public")) {
+				if (username.equals(event.getString("organizer_username")))
+					ErrorException.trow(9905); // organizer can't request their own event
+				if (isAttending(eventId, username))
+					return ok(Map.of("message", "Already attending this event", "status", "JOINED"));
 
-			String username = token.getUsername();
-			String attendanceId = req.getInput() + "_" + username;
-			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
+				Key reqKey = joinRequestKey(eventId, username);
+				Entity existing = datastore.get(reqKey);
+				if (existing != null && "PENDING".equals(existing.getString("status")))
+					return ok(Map.of("message", "Join request already pending", "status", "PENDING"));
 
+				Entity joinRequest = Entity.newBuilder(reqKey)
+						.set("event_id", eventId)
+						.set("requester", username)
+						.set("organizer", event.getString("organizer_username"))
+						.set("status", "PENDING")
+						.set("created_at", System.currentTimeMillis() / 1000L)
+						.build();
+				datastore.put(joinRequest);
+				return ok(Map.of("message", "Join request sent", "status", "PENDING"));
+			}
+
+			// PUBLIC event: join directly.
+			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(eventId + "_" + username);
 			if (datastore.get(attendanceKey) != null)
-				return ok(Map.of("message", "Already attending this event"));
+				return ok(Map.of("message", "Already attending this event", "status", "JOINED"));
 
-			long maxAttendees = eventEntity.getLong("max_attendees");
-			long currentCount = eventEntity.getLong("attendee_count");
+			long maxAttendees = event.getLong("max_attendees");
+			long currentCount = event.getLong("attendee_count");
 			if (maxAttendees > 0 && currentCount >= maxAttendees)
 				ErrorException.trow(9928);
 
-			// Register attendance and increment counter
 			Entity attendance = Entity.newBuilder(attendanceKey)
-					.set("event_id", req.getInput().getEventId())
+					.set("event_id", eventId)
 					.set("username", username)
 					.set("joined_at", System.currentTimeMillis() / 1000L)
 					.build();
 			datastore.put(attendance);
+			datastore.put(Entity.newBuilder(event).set("attendee_count", currentCount + 1).build());
 
-			Entity updatedEvent = Entity.newBuilder(eventEntity)
-					.set("attendee_count", currentCount + 1)
-					.build();
-			datastore.put(updatedEvent);
-
-			return ok(Map.of("message", "Successfully registered for the event"));
+			return ok(Map.of("message", "Successfully registered for the event", "status", "JOINED"));
 
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -413,8 +430,8 @@ public class EventResources {
 			Entity eventEntity = getEventEntity(req.getInput());
 
 			String username = token.getUsername();
-			String attendanceId = req.getInput() + "_" + username;
-			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
+			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance")
+					.newKey(req.getInput().getEventId() + "_" + username);
 
 			if (datastore.get(attendanceKey) == null)
 				return ok(Map.of("message", "Not attending this event"));
@@ -434,6 +451,111 @@ public class EventResources {
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /rest/events/joinrequests  — organizer lists the PENDING join requests
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/joinrequests")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response listJoinRequests(EventTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			Entity event = getEventEntity(req.getInput());
+
+			if (!token.getUsername().equals(event.getString("organizer_username")))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+
+			Query<Entity> query = Query.newEntityQueryBuilder()
+					.setKind("EventJoinRequest")
+					.setFilter(PropertyFilter.eq("event_id", req.getInput().getEventId()))
+					.build();
+
+			QueryResults<Entity> results = datastore.run(query);
+			List<Map<String, Object>> requests = new ArrayList<>();
+			while (results.hasNext()) {
+				Entity r = results.next();
+				Map<String, Object> m = new HashMap<>();
+				m.put("requester", r.getString("requester"));
+				m.put("requestedAt", r.getLong("created_at"));
+				requests.add(m);
+			}
+
+			return ok(Map.of("requests", requests, "count", requests.size()));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /rest/events/respondjoin  — organizer accepts/rejects a join request
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/respondjoin")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response respondJoin(RespondJoinRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			RespondJoinRequest.RespondJoinInput input = req.getInput();
+			String eventId = input.getEventId();
+			String requester = input.getUsername();
+
+			if (eventId == null || eventId.isBlank() || requester == null || requester.isBlank())
+				ErrorException.trow(9906);
+
+			Key eventKey = datastore.newKeyFactory().setKind("Event").newKey(eventId);
+			Entity event = datastore.get(eventKey);
+			if (event == null) ErrorException.trow(9902);
+
+			// Only the organizer (or a moderator) can answer requests for the event.
+			if (!token.getUsername().equals(event.getString("organizer_username")))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+
+			Key reqKey = joinRequestKey(eventId, requester);
+			Entity joinRequest = datastore.get(reqKey);
+			if (joinRequest == null || !"PENDING".equals(joinRequest.getString("status")))
+				ErrorException.trow(9902); // no pending request for this user/event
+
+			if (!input.isAccept()) {
+				datastore.put(Entity.newBuilder(joinRequest).set("status", "REJECTED").build());
+				return ok(Map.of("message", "Join request rejected"));
+			}
+
+			// Accept: enforce capacity, register the attendance
+			long max = event.getLong("max_attendees");
+			long count = event.getLong("attendee_count");
+			if (max > 0 && count >= max)
+				ErrorException.trow(9928);
+
+			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance")
+					.newKey(eventId + "_" + requester);
+			if (datastore.get(attendanceKey) == null) {
+				Entity attendance = Entity.newBuilder(attendanceKey)
+						.set("event_id", eventId)
+						.set("username", requester)
+						.set("joined_at", System.currentTimeMillis() / 1000L)
+						.build();
+				datastore.put(attendance);
+				datastore.put(Entity.newBuilder(event).set("attendee_count", count + 1).build());
+			}
+
+			// The request is resolved: once accepted the attendance is the source of truth,
+			// so the pending request is deleted.
+			datastore.delete(reqKey);
+			return ok(Map.of("message", "Join request accepted"));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// Key for a join request: one per (event, requester) so a user can't spam requests.
+	private Key joinRequestKey(String eventId, String requester) {
+		return datastore.newKeyFactory().setKind("EventJoinRequest").newKey(eventId + "@@@" + requester);
 	}
 
 	// -------------------------------------------------------------------------
@@ -527,10 +649,11 @@ public class EventResources {
 			//if (!token.getUsername().equals(user.getString("user_name")))
 			//	Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
-			String attendanceId = req.getInput() + "_" + user.getString("user_name");
-			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
+			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance")
+					.newKey(req.getInput().getEventId() + "_" + user.getString("user_name"));
 
-			return ok(Map.of("isattendee",datastore.get(attendanceKey) == null));
+			// isattendee is true when an Attendance exists (get != null).
+			return ok(Map.of("isattendee", datastore.get(attendanceKey) != null));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
