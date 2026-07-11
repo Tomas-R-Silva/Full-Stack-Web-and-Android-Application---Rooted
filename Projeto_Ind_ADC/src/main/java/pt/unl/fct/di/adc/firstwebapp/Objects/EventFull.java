@@ -1,6 +1,5 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -34,6 +33,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private Status status;
 	private long createdAt;  // epoch seconds
 	private List<String> imageUrls;
+	private List<String> partners;
 	private String eventId;
 	private long attendee;
 	private final Key key;

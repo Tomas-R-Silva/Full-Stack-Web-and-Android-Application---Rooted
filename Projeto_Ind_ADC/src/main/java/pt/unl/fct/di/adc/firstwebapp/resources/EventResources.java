@@ -31,7 +31,6 @@ import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
-import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Objects.UserFull;
