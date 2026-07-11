@@ -29,7 +29,10 @@ import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ForumFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.FriendFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ForumFull.ForumType;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.UserFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
@@ -66,17 +69,23 @@ public class ForumResources {
 	public Response postMessage(PostMessageRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			EventFull eventEntity = getEventEntity(req.getInput());
-
-			if (eventEntity.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
-				ErrorException.trow(9931); // event is closed, forum no longer accepts posts
-			ForumFull post=ForumFull.newforum(datastore, eventEntity, token, req.getInput());
-
+			ForumFull post;
+			if(req.getInput().getType().equals(ForumType.EVENT)) {
+				EventFull eventEntity = getEventEntity(req.getInput());
+				if (eventEntity.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
+					ErrorException.trow(9931); // event is closed, forum no longer accepts posts
+				post=ForumFull.newforumevent(datastore, eventEntity, token, req.getInput());
+				Log.info("Forum post " + post.getPostId() + " on event " + post.getEventId()
+				+ " by " + token.getUsername());
+			}else {
+				UserFull user = AuthHelper.getUser(req.getInput().getId());
+				FriendFull friend = FriendFull.fromdatabase(token,user);
+				post=ForumFull.newforumfriend(datastore, friend, token, req.getInput());
+				Log.info("Forum post " + post.getPostId() + " for " + post.getFriendId()
+				+ " by " + token.getUsername());
+			}
 			datastore.put(post.toentity());
-			Log.info("Forum post " + post.getPostId() + " on event " + post.getEventId()
-			+ " by " + token.getUsername());
-
-			return ok(ForumFull.fromdatabase(datastore.get(post.getKey())).tomap());
+			return ok(post.tomap());
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -93,16 +102,18 @@ public class ForumResources {
 		try {
 			AuthHelper.verifyToken(req);
 			ListForumInput input=req.getInput();
-			if (input.getEventId() == null || input.getEventId().isBlank())
+			if (input.getType() == null || input.getId() == null || input.getId().isBlank())
 				return Error.invalid_input();
 
 			int pageSize = input.getPageSize() > 0 ? Math.min(input.getPageSize(), MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
 
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder()
-					.setKind("ForumPost")
-					.setFilter(PropertyFilter.eq("event_id", input.getEventId()))
-					.setOrderBy(OrderBy.asc("created_at"))
+					.setKind("ForumPost").setOrderBy(OrderBy.asc("created_at"))
 					.setLimit(pageSize);
+			if(input.getType().equals(ForumType.EVENT))
+				queryBuilder.setFilter(PropertyFilter.eq("event_id", input.getEventId()));
+			else if(input.getType().equals(ForumType.FRIEND))
+				queryBuilder.setFilter(PropertyFilter.eq("friend_id", input.getId()));
 
 			if (input.getCursor() != null && !input.getCursor().isBlank())
 				queryBuilder.setStartCursor(Cursor.fromUrlSafe(input.getCursor()));
@@ -138,16 +149,16 @@ public class ForumResources {
 			if (post == null)
 				ErrorException.trow(9932);
 
-			String author = post.getAuthorUsername();
-			EventFull eventEntity = getEventEntity(post);
-			String organizer = eventEntity.getOrganizerUsername();
+			if(post.isType(ForumType.EVENT)) {
+				String author = post.getAuthorUsername();
+				EventFull eventEntity = getEventEntity(post);
+				String organizer = eventEntity.getOrganizerUsername();
 
-			boolean canDelete = token.getUsername().equals(author)
-					|| token.getUsername().equals(organizer)
-					|| token.getRole() == Role.ADMIN;
-			if (!canDelete)
-				ErrorException.trow(9905);
-
+				if (!token.getUsername().equals(author)
+					&& !token.getUsername().equals(organizer)
+					&& token.getRole() != Role.ADMIN)
+					ErrorException.trow(9905);
+			}
 			datastore.delete(key);
 			return ok(Map.of("message", "Post deleted successfully"));
 

@@ -36,6 +36,9 @@ public class FriendFull implements Full{
 	public boolean getAccepted(){return accepted;}
 	public void setAccepted(boolean accepted){this.accepted = accepted;}
 
+	public static FriendFull fromdatabase(TokenFull token,UserFull user) throws ErrorException {
+		return fromdatabase(datastore.get(getFriendKey(token,user)));
+	}
 	public static FriendFull fromdatabase(Entity entity) {
 		if(entity==null)return null;
 		FriendFull friend=new FriendFull(entity.getKey());
@@ -119,6 +122,10 @@ public class FriendFull implements Full{
 			f1=token.getUsername();
 		}
 		return String.format("%s@@@%s", f1,f2);
+	}
+	
+	public String formatkey() {
+		return String.format("%s@@@%s", this.username1,this.username2);
 	}
 	
 	public static Key getFriendKey(TokenFull token,UserFull user) throws ErrorException{

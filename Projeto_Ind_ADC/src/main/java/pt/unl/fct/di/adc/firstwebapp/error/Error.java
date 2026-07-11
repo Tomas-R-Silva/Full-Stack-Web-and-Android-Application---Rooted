@@ -42,7 +42,8 @@ public class Error {
 			SDG_DOESNT_EXIST="SDG_DOESNT_EXIST",
 			PARTNER_NOT_IN_EVENT="PARTNER_NOT_IN_EVENT",
 			PARTNER_ALLREDY_IN_EVENT="PARTNER_ALLREDY_IN_EVENT",
-			NOT_FRIEND="NOT_FRIEND";
+			NOT_FRIEND="NOT_FRIEND",
+			FORUM_ORIGEN_INVALID="FORUM_ORIGEN_INVALID";
 
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
@@ -128,6 +129,7 @@ public class Error {
 		case 9934->data=NOT_FRIEND;
 		case 9935->data=PARTNER_NOT_IN_EVENT;
 		case 9936->data=PARTNER_ALLREDY_IN_EVENT;
+		case 9937->data=FORUM_ORIGEN_INVALID;
 		default->data="";
 		}
 		return data;

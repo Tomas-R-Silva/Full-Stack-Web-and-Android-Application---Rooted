@@ -1,6 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.EventInput;
+import pt.unl.fct.di.adc.firstwebapp.Objects.ForumModel;
 
 public class ListForumRequest extends AbstractTokenInputRequest<ListForumRequest.ListForumInput>{
 
@@ -15,7 +15,7 @@ public class ListForumRequest extends AbstractTokenInputRequest<ListForumRequest
 	 * }
 	 */
 	public ListForumRequest() {}
-	public class ListForumInput extends EventInput{
+	public class ListForumInput extends ForumModel{
 
 		private String cursor;
 		private int pageSize;
@@ -27,6 +27,7 @@ public class ListForumRequest extends AbstractTokenInputRequest<ListForumRequest
 
 		public int getPageSize() { return pageSize; }
 		public void setPageSize(int pageSize) { this.pageSize = pageSize; }
+
 	}
 	
 }

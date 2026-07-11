@@ -15,14 +15,11 @@ import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest;
 
 public class ForumFull implements Full,EventInputInterface{
 
-
-
-	private static final long TIME_DIVIDER = 1000L;
 	public static final int MAX_TEXT_LENGTH = 1000;
 	private final Key key;
-	//private ForumType type;
+	private ForumType type;
 	private String postId;
-	//private String friendId;
+	private String friendId;
 	private String eventId;
 	private String authorUsername;
 	private String text;
@@ -40,8 +37,10 @@ public class ForumFull implements Full,EventInputInterface{
 		List<Map<String,Object>> list = new LinkedList<>();
 		if (!validVariable(text) || text.length() > MAX_TEXT_LENGTH)
 			list.add(Error.createmap(9930));
-		if (!validVariable(eventId))
-			list.add(Error.createmap(9906));
+		if (!(validVariable(eventId)&&type.equals(ForumType.EVENT)))
+			list.add(Error.createmap(9937));
+		if (!(validVariable(postId)&&type.equals(ForumType.FRIEND)))
+			list.add(Error.createmap(9937));
 		if (!list.isEmpty())
 			Error.invalid_input(list);
 	}
@@ -51,6 +50,10 @@ public class ForumFull implements Full,EventInputInterface{
 		ForumFull post = new ForumFull(entity.getKey());
 		post.setPostId(Full.getString(entity, "postId"));
 		post.setEventId(Full.getString(entity, "eventId"));
+
+		post.setEventId(Full.getString(entity, "type"));
+		post.setEventId(Full.getString(entity, "friend_id"));
+
 		post.setAuthorUsername(Full.getString(entity, "authorUsername"));
 		post.setText(Full.getString(entity, "text"));
 		post.setParentPostId(Full.getString(entity, "parentPostId"));
@@ -58,15 +61,34 @@ public class ForumFull implements Full,EventInputInterface{
 		return post;
 	}
 
-	public static ForumFull newforum(Datastore datastore, EventFull event,TokenFull token,PostMessageRequest.PostMessageinput input) throws ErrorException {
+	public static ForumFull newforumevent(Datastore datastore, EventFull event,TokenFull token,PostMessageRequest.PostMessageinput input) throws ErrorException {
+		if(event==null)
+			ErrorException.trow(9937);
+		ForumFull post = ForumFull.newforum(datastore,token,input);
+		post.setType(ForumType.EVENT);
+		post.setEventId(event.getEventId());
+		post.isValid();
+		return post;
+	}
+
+	private static ForumFull newforum(Datastore datastore,TokenFull token,PostMessageRequest.PostMessageinput input) throws ErrorException {
 		String ID=UUID.randomUUID().toString();
 		ForumFull post = new ForumFull(datastore.newKeyFactory().setKind("ForumPost").newKey(ID));
 		post.setPostId(ID);
-		post.setEventId(event.getEventId());
 		post.setAuthorUsername(token.getUsername());
 		post.setText(input.getText());
 		post.setParentPostId(input.getParentPostId());
 		post.setCreatedAt(System.currentTimeMillis());
+		post.isValid();
+		return post;
+	}
+
+	public static ForumFull newforumfriend(Datastore datastore, FriendFull friend,TokenFull token,PostMessageRequest.PostMessageinput input) throws ErrorException {
+		if(friend==null||!friend.getAccepted())
+				ErrorException.trow(9937);
+		ForumFull post = ForumFull.newforum(datastore,token,input);
+		post.setType(ForumType.FRIEND);
+		post.setFriendId(friend.formatkey());	
 		post.isValid();
 		return post;
 	}
@@ -77,34 +99,34 @@ public class ForumFull implements Full,EventInputInterface{
 
 	public String getPostId() { return postId; }
 	public void setPostId(String postId) { this.postId = postId; }
-
 	public String getEventId() { return eventId; }
 	public void setEventId(String eventId) { this.eventId = eventId; }
-
+	public String getFriendId() {return friendId;}
+	public void setFriendId(String friendId) { this.friendId = friendId; }
 	public String getAuthorUsername() { return authorUsername; }
 	public void setAuthorUsername(String authorUsername) { this.authorUsername = authorUsername; }
-
 	public String getText() { return text; }
 	public void setText(String text) { this.text = text; }
-
 	public long getCreatedAt() { return createdAt; }
 	public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
-
 	public String getParentPostId() { return parentPostId; }
 	public void setParentPostId(String parentPostId) { this.parentPostId = parentPostId; }
-
+	public String getType() { return type.name(); }
+	private void setType(ForumType type) { this.type = type; }
+	public boolean isType(ForumType type) { return this.type.equals(type); }
 	@Override
 	public Map<String, Object> tomap() {
-		Map<String, Object> map = Map.of("postId", Full.string(this.postId),
-				//"type",Full.string(this.type.name()),
+		Map<String, Object> map = Map.of(
+				"postId", Full.string(this.postId),
+				"type",Full.string(this.type.name()),
 				"authorUsername", Full.string(this.authorUsername),
 				"text", Full.string(this.text),
 				"createdAt", this.createdAt,
 				"parentPostId", Full.string(this.parentPostId));
-		//if(this.type.equals(ForumType.EVENT)) 
+		if(this.type.equals(ForumType.EVENT)) 
 			map.put("eventId", Full.string(this.eventId));
-		//else if(this.type.equals(ForumType.FRIEND)) 
-		//	map.put("friendId", Full.string(this.friendId));
+		else if(this.type.equals(ForumType.FRIEND)) 
+			map.put("friendId", Full.string(this.friendId));
 		return map;
 	}
 
@@ -118,13 +140,15 @@ public class ForumFull implements Full,EventInputInterface{
 	public Entity toentity() {
 		return Entity.newBuilder(key)
 				.set("post_id", this.getPostId())
-				//.set("friend", this.friendId)
+				.set("friend_id", this.getFriendId())
 				.set("event_id", this.getEventId())
-				//.set("type", this.type)
+				.set("type", this.type.name())
 				.set("author_username", this.getAuthorUsername())
 				.set("text", this.getText())
 				.set("created_at", this.getCreatedAt()/TIME_DIVIDER)
 				.set("parent_post_id", this.getParentPostId())
 				.build();
 	}
+
+
 }

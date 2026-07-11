@@ -14,7 +14,6 @@ public class ForumKeyTokenRequest extends AbstractTokenInputRequest<ForumKeyToke
     public static class ForumKeyTokenInput{
         private String forumKey;
 
-
         public ForumKeyTokenInput() {}
 
         public String getForumKey() {
