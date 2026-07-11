@@ -217,7 +217,7 @@ public class EventResources {
 				Entity current = results.next();
 				if(filterBySdg) {
 					boolean b=false;
-					List<Value<?>> list = current.getList("SDG");
+					List<Value<?>> list = current.contains(null)?current.getList("SDG"):new ArrayList<>(0);
 					for(LongValue n:sdglist)
 						b|=list.contains(n);
 					if(b)
