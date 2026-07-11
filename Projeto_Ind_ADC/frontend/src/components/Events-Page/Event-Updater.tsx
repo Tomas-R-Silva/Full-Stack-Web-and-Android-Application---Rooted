@@ -45,12 +45,7 @@ function EventUpdater() {
   const navigate = useNavigate();
   const [event, setEvent] = useState<EventItem>();
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
-  type SelectedImage = {
-    preview: string;
-    upload: string;
-  };
-
-  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [formData, setFormData] = useState<RequestEventUpdate>({
     token: { jwt: "" },
     input: {
@@ -119,47 +114,22 @@ function EventUpdater() {
     const reader = new FileReader();
 
     reader.onload = () => {
-      const base64 = reader.result as string;
+      const image = reader.result as string;
 
-      setSelectedImages((prev) => [
-        ...prev,
-        {
-          preview: base64,
-          upload: base64,
-        },
-      ]);
+      setSelectedImages((prev) => [...prev, image]);
     };
 
     reader.readAsDataURL(file);
   };
 
-  const handleDeleteImage = (image: SelectedImage) => {
-    setSelectedImages((prev) => prev.filter((img) => img !== image));
+  const handleDeleteImage = (url: string) => {
+    setSelectedImages((prev) => prev.filter((img) => img !== url));
   };
 
-  const handleInitialization = async () => {
-    if (!event?.imageUrls) return;
-
-    const images = await Promise.all(
-      event.imageUrls.map(async (url) => {
-        try {
-          return {
-            preview: url,
-            upload: await urlToBase64(url),
-          };
-        } catch {
-          return null;
-        }
-      }),
-    );
-
-    setSelectedImages(images.filter(Boolean) as SelectedImage[]);
-  };
-
-  const selectCover = (image: SelectedImage) => {
+  const selectCover = (url: string) => {
     setSelectedImages((prev) => {
-      const rest = prev.filter((i) => i !== image);
-      return [image, ...rest];
+      const rest = prev.filter((img) => img !== url);
+      return [url, ...rest];
     });
   };
 
@@ -181,20 +151,6 @@ function EventUpdater() {
     });
   };
 
-  const urlToBase64 = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-
-      reader.readAsDataURL(blob);
-    });
-  };
-
   //========== Submissão dos Campos ==========
   const handleImagesUpload = async () => {
     try {
@@ -207,7 +163,7 @@ function EventUpdater() {
         token: { jwt: token },
         input: {
           eventId: event.eventId,
-          images: selectedImages.map((i) => i.upload),
+          images: selectedImages,
         },
       });
       console.log(res.data.message);
@@ -438,7 +394,7 @@ function EventUpdater() {
     });
 
     setSelectedSDGs(event.SDG ?? []);
-    handleInitialization();
+    setSelectedImages(event.imageUrls ?? []);
   }, [event]);
 
   return (
@@ -745,7 +701,7 @@ function EventUpdater() {
             />
 
             {selectedImages.map((image) => (
-              <div key={image.preview} className="col-6 col-md-3 col-lg-2">
+              <div key={image} className="col-6 col-md-3 col-lg-2">
                 <div
                   className="card h-100 text-center"
                   style={{
@@ -758,7 +714,7 @@ function EventUpdater() {
                   }}
                 >
                   <img
-                    src={image.preview}
+                    src={image}
                     alt="event"
                     className="card-img-top p-2"
                     style={{
