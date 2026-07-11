@@ -2,7 +2,7 @@ import app from "../../assets/images/app_white.svg";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
 import account_circle from "../../assets/icons/account_circle_green2.svg";
-import all_border from "../../assets/images/all_ods_border.png";
+import border_all from "../../assets/images/border_all.png";
 
 function NavBar() {
   const { isAuthenticated, username, logout } = useAuth();
@@ -96,7 +96,7 @@ function NavBar() {
                   />
 
                   <img
-                    src={all_border}
+                    src={border_all}
                     alt=""
                     style={{
                       position: "absolute",

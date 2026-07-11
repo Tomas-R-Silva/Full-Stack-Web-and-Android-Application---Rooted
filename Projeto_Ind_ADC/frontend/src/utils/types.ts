@@ -453,12 +453,15 @@ export type RequestPostMessage = {
 }
 
 export type PostMessageResponse = {
-  postId: string,
-  eventId: string,
-  authorUsername: string,
-  text: string,
-  createdAt: number,
-  parentPostId?: string,
+  status:number,
+  data:{
+    postId: string,
+    eventId: string,
+    authorUsername: string,
+    text: string,
+    createdAt: number,
+    parentPostId?: string,
+  }
 }
 
 export type RequestListMessages = {
@@ -469,6 +472,7 @@ export type RequestListMessages = {
 }
 
 export type ListMessagesResponse = {
+  status:number,
   data:{posts: Post[],
   count: number,
   nextCursor?: string,},
@@ -489,6 +493,7 @@ export type RequestMessageDelete = {
 }
 
 export type MessageDeleteResponse = {
+  status:number,
   data:{message: string},
 }
 
@@ -521,3 +526,13 @@ export type SdgItem = {
   photo?: string;
   icon?: string;
 };
+
+//========== Borders ==========
+
+export type BorderItem = {
+  id:string,
+  name: string,
+  image: string,
+  value: number,
+  valueType: string,
+}

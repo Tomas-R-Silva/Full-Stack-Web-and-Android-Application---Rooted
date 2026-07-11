@@ -9,6 +9,7 @@ import { useAuth } from "../AuthContext";
 import AccountEvents from "./Account-Events";
 import { useNavigate } from "react-router-dom";
 import AccountAttends from "./Account-Attends";
+import AccountRewards from "./Account-Rewards";
 
 function AccountSettings() {
   const profileItems = [
@@ -160,6 +161,7 @@ function AccountSettings() {
                 </div>
               </div>
             )}
+            {selected === profileItems[7] && username && <AccountRewards />}
           </div>
         </div>
       </div>

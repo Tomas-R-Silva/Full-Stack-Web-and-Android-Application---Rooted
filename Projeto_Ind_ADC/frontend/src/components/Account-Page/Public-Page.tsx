@@ -5,7 +5,7 @@ import NavBar from "../NavBar/NavBar";
 import { useState, useEffect } from "react";
 import settings_w from "../../assets/icons/settings_w.svg";
 import account_circle_w from "../../assets/icons/account_circle_w.svg";
-import all_border from "../../assets/images/all_ods_border.png";
+import border_1 from "../../assets/images/border_1.png";
 import { sdgInfos } from "../../utils/sdgInfo";
 import AccountEvents from "./Account-Events";
 import { getEventList } from "../../api/auth";
@@ -198,7 +198,7 @@ function PublicPage() {
                 />
 
                 <img
-                  src={all_border}
+                  src={border_1}
                   alt=""
                   style={{
                     position: "absolute",
