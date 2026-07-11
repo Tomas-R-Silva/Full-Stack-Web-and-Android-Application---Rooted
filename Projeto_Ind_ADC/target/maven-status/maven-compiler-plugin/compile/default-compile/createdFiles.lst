@@ -3,6 +3,7 @@ pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/CreateEventRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ChangeUserPasswordRequest$PasswordInput.class
 pt/unl/fct/di/adc/firstwebapp/model/ForumKeyTokenRequest$ForumKeyTokenInput.class
+pt/unl/fct/di/adc/firstwebapp/model/RespondJoinRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/PostMessageRequest.class
 pt/unl/fct/di/adc/firstwebapp/Utilities/JWTConfig$AlgorithmType.class
 pt/unl/fct/di/adc/firstwebapp/error/ErrorException.class
@@ -53,6 +54,7 @@ pt/unl/fct/di/adc/firstwebapp/model/EventTokenRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ImageRequest$ImageRequestInput.class
 pt/unl/fct/di/adc/firstwebapp/model/TokenRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ImageRequest.class
+pt/unl/fct/di/adc/firstwebapp/model/RespondJoinRequest$RespondJoinInput.class
 pt/unl/fct/di/adc/firstwebapp/model/AbstractInputRequest.class
 pt/unl/fct/di/adc/firstwebapp/model/ModAccountRequest$ModAccountRequestInput.class
 pt/unl/fct/di/adc/firstwebapp/model/AbstractTokenInputRequest.class

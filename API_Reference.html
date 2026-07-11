@@ -558,12 +558,52 @@
     <span class="path">/events/attend</span>
     <span class="tag tag-auth">auth required</span>
   </div>
-  <p class="desc">Registers the authenticated user for a public event. Idempotent. Blocked if cancelled/completed/full/private.</p>
+  <p class="desc">Joins the authenticated user to an event. <b>Public</b> events register the user immediately (<code>status: JOINED</code>). <b>Private</b> events instead create a join request for the organizer to approve (<code>status: PENDING</code>) — like following a private account. Idempotent. Blocked if cancelled/completed/full, or if the organizer tries to join their own private event.</p>
   <div class="label">Request</div>
   <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Successfully registered for the event"</span> }}
-<span class="comment">// or "Already attending this event" / "Event is full"</span></pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Successfully registered for the event"</span>, <span class="key-str">"status"</span>: <span class="val-str">"JOINED"</span> }}
+<span class="comment">// public  event → "status": "JOINED"</span>
+<span class="comment">// private event → { "message": "Join request sent", "status": "PENDING" }</span></pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/joinrequests</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer, ADMIN or BOFFICER</span>
+  </div>
+  <p class="desc">Lists the pending join requests of a private event, for the organizer to review (the "notification" side of the flow).</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
+  <span class="key-str">"requests"</span>: [
+    { <span class="key-str">"requester"</span>: <span class="val-str">"bob"</span>, <span class="key-str">"requestedAt"</span>: <span class="val-num">1759500000</span> }
+  ],
+  <span class="key-str">"count"</span>: <span class="val-num">1</span>
+}}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/respondjoin</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer, ADMIN or BOFFICER</span>
+  </div>
+  <p class="desc">Accepts or rejects a pending join request for a private event. On <b>accept</b>, the requester becomes an attendee (and can then view the event) and the request is deleted. On <b>reject</b>, the request is marked <code>REJECTED</code>. Capacity (<code>maxAttendees</code>) is enforced on accept.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>,
+    <span class="key-str">"username"</span>: <span class="val-str">"bob"</span>,
+    <span class="key-str">"accept"</span>: <span class="val-str">true</span>
+  }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Join request accepted"</span> }}
+<span class="comment">// accept:false → "Join request rejected"</span></pre>
 </div>
 
 <div class="endpoint">
@@ -632,7 +672,7 @@
     <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
   }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"event_id"</span>: <span class="val-str">true</span>} }</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"isattendee"</span>: <span class="val-str">true</span>} }</pre>
 </div>
 
 <div class="endpoint">
