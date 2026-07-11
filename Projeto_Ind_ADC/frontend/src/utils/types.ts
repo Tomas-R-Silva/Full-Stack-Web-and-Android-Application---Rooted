@@ -99,14 +99,6 @@ export type ModAccountResponse = {
   data: {message:string;}
 }
 
-export type RequestChangePassword = {
-  token: {jwt:string;}
-  input: {
-    username:string;
-    oldpassword: string,
-    newpassword: string,
-  }
-}
 
 export type RequestUserInformation = {
   token: {jwt:string;}
@@ -125,6 +117,27 @@ export type UserInformationResponse = {
   oldnames: String[],
   friendship: string,
   bio: string,
+  }
+}
+
+export type RequestFindUser = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type FindUserResponse = {
+  status: number,
+  data: {found:string[];}
+}
+
+export type RequestChangePassword = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    oldpassword: string,
+    newpassword: string,
   }
 }
 
@@ -168,10 +181,24 @@ export type AddFriendResponse = {
   data: {message:string;}
 }
 
+export type RequestAddNickname = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    newusername:string;
+   }
+}
+
+export type AddNicknameResponse = {
+  status: number,
+  data: {message:string;}
+}
+
 export type RequestUnfriend = {
   token: {jwt:string;}
   input: {username:string;}
 }
+
 
 export type UnfriendResponse = {
   status: number,
@@ -345,6 +372,36 @@ export type RequestEventAttend = {
 }
 
 export type EventAttendResponse = {
+  status: number,
+  data:{message: string},
+}
+
+export type RequestJoinRequests = {
+  token?: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type JoinRequestsResponse = {
+  status: number,
+  data:{requests: JoinRequests[]},
+  count: number,
+}
+
+export type JoinRequests = {
+  requester: string,
+  requestedAt: number,
+}
+
+export type RequestRespondJoin = {
+  token?: {jwt:string;}
+  input: {
+    eventId:string;
+    username: string;
+    accept: boolean;
+  }
+}
+
+export type RespondJoinResponse = {
   status: number,
   data:{message: string},
 }

@@ -1,8 +1,8 @@
 import type {
-  EventProps,
   ImageDeleteResponse,
   ImageUploadResponse,
   RequestEventCancel,
+  RequestEventDelete,
 } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useState, useEffect } from "react";
@@ -19,6 +19,7 @@ import {
   uploadImage,
   deleteImage,
   cancelEvent,
+  deleteEvent,
 } from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
 
@@ -39,6 +40,7 @@ function EventUpdater() {
     "OTHER",
   ];
   const { id } = useParams<{ id: string }>();
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const navigate = useNavigate();
   const [event, setEvent] = useState<EventItem>();
@@ -351,6 +353,39 @@ function EventUpdater() {
       const response = await cancelEvent(payload);
       console.log(response);
       navigate("/events/" + event.eventId);
+      window.location.reload();
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
+  };
+
+  const handleDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+
+      if (!event) {
+        console.log("Event Invalid");
+        return;
+      }
+
+      const payload: RequestEventDelete = {
+        token: {
+          jwt: token,
+        },
+        input: {
+          eventId: event.eventId,
+        },
+      };
+      console.log(payload);
+      const response = await deleteEvent(payload);
+      console.log(response);
+      navigate("/events");
       window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
@@ -766,12 +801,44 @@ function EventUpdater() {
           </div>
           <div className="row g-3 mt-2">
             <div>
+              {!confirmCancel && (
+                <button
+                  className="btn btn-danger fw-bold px-4"
+                  onClick={() => setConfirmCancel(true)}
+                >
+                  Cancel Event
+                </button>
+              )}
+              {confirmCancel && (
+                <>
+                  <button
+                    className="btn btn-danger fw-bold"
+                    onClick={() => setConfirmCancel(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn fw-bold ms-1"
+                    style={{
+                      background: "var(--color-green2)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={handleCancel}
+                  >
+                    Confirm
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="row g-3 mt-2">
+            <div>
               {!confirmDelete && (
                 <button
                   className="btn btn-danger fw-bold px-4"
                   onClick={() => setConfirmDelete(true)}
                 >
-                  Cancel Event
+                  Delete Event
                 </button>
               )}
               {confirmDelete && (
@@ -788,7 +855,7 @@ function EventUpdater() {
                       background: "var(--color-green2)",
                       color: "var(--color-white)",
                     }}
-                    onClick={handleCancel}
+                    onClick={handleDelete}
                   >
                     Confirm
                   </button>

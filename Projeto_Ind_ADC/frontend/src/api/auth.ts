@@ -19,6 +19,8 @@ import type { RequestEventUpdate, EventUpdateResponse} from "../utils/types";
 import type { RequestEventCancel, EventCancelResponse} from "../utils/types";
 import type { RequestEventDelete, EventDeleteResponse} from "../utils/types";
 import type { RequestEventAttend, EventAttendResponse} from "../utils/types";
+import type {JoinRequestsResponse, RequestJoinRequests} from "../utils/types";
+import type {RespondJoinResponse, RequestRespondJoin} from "../utils/types";
 import type { RequestEventUnattend, EventUnattendResponse} from "../utils/types";
 import type { RequestEventAttendees, EventAttendeesResponse} from "../utils/types";
 import type { RequestIsAttendee, IsAttendeeResponse} from "../utils/types";
@@ -149,6 +151,12 @@ export const deleteEvent = (data: RequestEventDelete) =>
 
 export const attendEvent = (data: RequestEventAttend) =>
   apiRequest<EventAttendResponse>("/events/attend", data);
+
+export const requestJoinEvent = (data: RequestJoinRequests) =>
+  apiRequest<JoinRequestsResponse>("/events/joinrequests", data);
+
+export const respondJoinEvent = (data: RequestRespondJoin) =>
+  apiRequest<RespondJoinResponse>("/events/respondjoin", data);
 
 export const unattendEvent = (data: RequestEventUnattend) =>
   apiRequest<EventUnattendResponse>("/events/unattend", data);
