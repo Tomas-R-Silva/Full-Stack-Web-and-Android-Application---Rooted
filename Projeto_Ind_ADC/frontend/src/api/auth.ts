@@ -28,14 +28,11 @@ import type { RequestImageDelete, ImageDeleteResponse} from "../utils/types";
 import type { RequestPostMessage, PostMessageResponse} from "../utils/types";
 import type { RequestMessageDelete, MessageDeleteResponse} from "../utils/types";
 import type { RequestListMessages, ListMessagesResponse} from "../utils/types";
-import { useNavigate } from "react-router-dom";
-
-const navigate = useNavigate();
 
 const handleTokenExpiration = (status:number) => {
   if (status === 9904) {
     removeToken();
-    navigate("/login");
+    window.location.replace("/login");
     throw new Error("Session expired");
   }
 } 
