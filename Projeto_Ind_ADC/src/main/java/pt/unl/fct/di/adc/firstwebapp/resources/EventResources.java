@@ -671,25 +671,15 @@ public class EventResources {
 			ImageRequestInput input = req.getInput();
 			TokenFull token = AuthHelper.verifyToken(req);
 
-			Entity eventEntity = getEventEntity(input);
-			String organizer = eventEntity.getString("organizer_username");
-			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
+			EventFull event = getEventEntity(input);
+			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<Value<?>> existing;
-			if (eventEntity.contains("image_urls")) {
-				existing = eventEntity.getList("image_urls");
-			} else {
-				existing = Collections.emptyList();
-			}
+			List<String> updatedList = event.getImageUrls();
 
-			int slots = 5 - existing.size();
+			int slots = 5 - updatedList.size();
 			if (slots <= 0)
 				return Error.invalid_input();
-
-			List<StringValue> updatedList = existing.stream()
-					.map(v -> StringValue.of((String) v.get()))
-					.collect(Collectors.toList());
 
 			// Unlike /uploadimages, these are already hosted URLs, so no Base64 decode
 			// or GCS upload just attach them directly (respecting the 5-image limit).
@@ -698,15 +688,11 @@ public class EventResources {
 			for (String url : toAdd) {
 				if (url == null || url.isBlank())
 					continue;
-				updatedList.add(StringValue.of(url));
+				updatedList.add(url);
 				addedUrls.add(url);
 			}
-
-			Entity updated = Entity.newBuilder(eventEntity)
-					.set("image_urls", updatedList)
-					.build();
-			datastore.put(updated);
-
+			event.setImageUrls(updatedList);
+			datastore.put(event.toentity());
 			return ok(Map.of("imageUrls", addedUrls, "message", "Image URLs added successfully"));
 
 		} catch (Exception e) {
