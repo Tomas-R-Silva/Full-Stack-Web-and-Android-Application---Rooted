@@ -28,6 +28,17 @@ import type { RequestImageDelete, ImageDeleteResponse} from "../utils/types";
 import type { RequestPostMessage, PostMessageResponse} from "../utils/types";
 import type { RequestMessageDelete, MessageDeleteResponse} from "../utils/types";
 import type { RequestListMessages, ListMessagesResponse} from "../utils/types";
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
+
+const handleTokenExpiration = (status:number) => {
+  if (status === 9904) {
+    removeToken();
+    navigate("/login");
+    throw new Error("Session expired");
+  }
+} 
 
 //========== USER ==========
 
@@ -41,6 +52,7 @@ export const registerUser = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: SignInResponse = await res.json();
 
@@ -58,6 +70,7 @@ export const loginUser = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: LogInResponse = await res.json();
 
@@ -95,6 +108,7 @@ export const logoutUser = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: LogOutResponse = await res.json();
 
@@ -112,6 +126,7 @@ export const getUsers = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: ShowUsersResponse = await res.json();
 
@@ -129,6 +144,7 @@ export const modAccount = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: ModAccountResponse = await res.json();
 
@@ -146,6 +162,7 @@ export const getUser = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json:UserInformationResponse = await res.json();
 
@@ -163,6 +180,7 @@ export const changePassword = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: ChangePasswordResponse = await res.json();
 
@@ -180,6 +198,7 @@ export const changeRole = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: ChangeRoleResponse = await res.json();
 
@@ -196,6 +215,7 @@ export const deleteAccount = async (
   });
 
   if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  handleTokenExpiration(res.status);
 
   const json: DeleteAccountResponse = await res.json();
 
@@ -217,6 +237,7 @@ export const addFriend = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to add friend");
   }
+  handleTokenExpiration(res.status);
 
   const json: AddFriendResponse = await res.json();
   return json;
@@ -237,6 +258,7 @@ export const unfriend = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to unfriend");
   }
+  handleTokenExpiration(res.status);
 
   const json: UnfriendResponse = await res.json();
   return json;
@@ -257,6 +279,7 @@ export const getFriendsList = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to list friends");
   }
+  handleTokenExpiration(res.status);
 
   const json: FriendsListResponse = await res.json();
   return json;
@@ -277,6 +300,7 @@ export const getFriendsRequests = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to friends requests");
   }
+  handleTokenExpiration(res.status);
 
   const json: FriendsRequestsResponse = await res.json();
   return json;
@@ -297,6 +321,7 @@ export const getAuthSessions = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to show auth sessions.");
   }
+  handleTokenExpiration(res.status);
 
   const json: AuthSessionsResponse = await res.json();
   return json;
@@ -319,6 +344,7 @@ export const createEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to create an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventCreationResponse = await res.json();
 
@@ -340,6 +366,7 @@ export const getEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to get an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventGetterResponse = await res.json();
   return json;
@@ -360,6 +387,7 @@ export const getEventList = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to fetch event list");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventListResponse = await res.json();
 
@@ -381,6 +409,7 @@ export const updateEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to update an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventUpdateResponse = await res.json();
   return json;
@@ -401,6 +430,7 @@ export const cancelEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to cancel an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventCancelResponse = await res.json();
   return json;
@@ -421,6 +451,7 @@ export const deleteEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to delete an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventDeleteResponse = await res.json();
   return json;
@@ -441,6 +472,7 @@ export const attendEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to attend an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventAttendResponse = await res.json();
   return json;
@@ -461,6 +493,7 @@ export const unattendEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to unattend an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventUnattendResponse = await res.json();
   return json;
@@ -481,6 +514,7 @@ export const attendeesEvent = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to list attendees an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: EventAttendeesResponse = await res.json();
   return json;
@@ -501,6 +535,7 @@ export const isAttendee = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to check if it is attendee of an event");
   }
+  handleTokenExpiration(res.status);
 
   const json: IsAttendeeResponse = await res.json();
   return json;
@@ -521,6 +556,7 @@ export const UserAttends = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to get user attends");
   }
+  handleTokenExpiration(res.status);
 
   const json: UserAttendsResponse = await res.json();
   return json;
@@ -541,6 +577,7 @@ export const uploadImage = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to upload an image");
   }
+  handleTokenExpiration(res.status);
 
   const json: ImageUploadResponse = await res.json();
   return json;
@@ -561,6 +598,7 @@ export const deleteImage = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to delete an image");
   }
+  handleTokenExpiration(res.status);
 
   const json: ImageDeleteResponse = await res.json();
   return json;
@@ -584,6 +622,7 @@ export const PostMessage = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to create a posts");
   }
+  handleTokenExpiration(res.status);
 
   const json: PostMessageResponse = await res.json();
   return json;
@@ -604,6 +643,7 @@ export const DeleteMessage = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to delete a post");
   }
+  handleTokenExpiration(res.status);
 
   const json: MessageDeleteResponse = await res.json();
   return json;
@@ -624,6 +664,7 @@ export const ListMessages = async (
   if (!res.ok && res.status === 200) {
     throw new Error("Failed to list the posts");
   }
+  handleTokenExpiration(res.status);
 
   const json: ListMessagesResponse = await res.json();
   return json;
