@@ -39,6 +39,7 @@ public class UserFull extends ShortUser implements Full{
 	public Role getRole() {return role;}
 	public void setRole(String role) {this.role = Role.valueof(role);}
 	public void setRole(Role role) {this.role = role;}
+	public boolean isRole(Role[] roles) {for(Role qrole:roles)if(qrole.equals(role))return true;return false;}	
 	public String getDisplay() {return display;}
 	public void setDisplay(String display) {this.display=display;if(!old.contains(display))old.add(display);}
 	private void setbaseDisplay(String display) {this.display=display;}

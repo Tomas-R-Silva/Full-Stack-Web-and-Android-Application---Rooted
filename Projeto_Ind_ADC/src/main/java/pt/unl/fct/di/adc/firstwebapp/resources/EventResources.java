@@ -31,6 +31,8 @@ import pt.unl.fct.di.adc.firstwebapp.Objects.EventAtributsid;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventJoinRequestFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventJoinRequestFull.RequestStatus;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 import pt.unl.fct.di.adc.firstwebapp.Objects.UserFull;
@@ -47,6 +49,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest.ImageRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ListEventsRequest.ListEventsInput;
+import pt.unl.fct.di.adc.firstwebapp.model.RespondJoinRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UpdateEventRequest;
 
@@ -96,13 +99,11 @@ public class EventResources {
 			if (!isPublic) {
 				// Private event must be authenticated
 				TokenFull token = AuthHelper.verifyToken(req);
-				String requester = token.getUsername();
-				Role role = token.getRole();
-				if (!requester.equals(entity.getOrganizerUsername()) && role != Role.ADMIN && role != Role.BOFFICER) {
+				UserFull user =AuthHelper.getUser(token);
+				if (!entity.isOwner(token) && !user.isRole(new Role[] {Role.ADMIN,Role.BOFFICER})) 
 					// Also allow attendees to see the event
-					if (!isAttending(req.getInput().getEventId(), requester))
+					if (!isAttending(req.getInput(), user))
 						ErrorException.trow(9905);
-				}
 			}
 
 			return ok(Map.of("event", entity.tomap()));
@@ -190,7 +191,7 @@ public class EventResources {
 				Entity current = results.next();
 				if(filterBySdg) {
 					boolean b=false;
-					List<Value<?>> list = current.getList("SDG");
+					List<Value<?>> list = current.contains(null)?current.getList("SDG"):new ArrayList<>(0);
 					for(LongValue n:sdglist)
 						b|=list.contains(n);
 					if(b)
@@ -280,7 +281,8 @@ public class EventResources {
 
 			Key key = datastore.newKeyFactory().setKind("Event").newKey(req.getInput().getEventId());
 			datastore.delete(key);
-			deleteAllAttendances(req.getInput().getEventId());
+			deleteAllAttendances(req.getInput());
+			deleteAllRequests(req.getInput());
 
 			return ok(Map.of("message", "Event deleted successfully"));
 
@@ -322,17 +324,31 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			EventFull event = getEventEntity(req.getInput());
+			UserFull user = AuthHelper.getUser(token);
 
 			if (event.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
 				ErrorException.trow(9907);
 
-			if (!event.isPublic())
-				ErrorException.trow(9905); //TODO private event — attend via invite (future feature)
+			// PRIVATE event: joining needs the organizer's approval. Like following a
+			// private account, the same action creates a pending request instead of joining.
+			if (!event.isPublic()) {
+				if (event.isOwner(token))
+					ErrorException.trow(9905); // organizer can't request their own event
+				if (isAttending(event, user))
+					return ok(Map.of("message", "Already attending this event", "status", "JOINED"));
 
-			UserFull user = AuthHelper.getUser(token);
+				EventJoinRequestFull request=EventJoinRequestFull.fromdatabase(event,user);
+				if (request != null)
+					return ok(Map.of("message", "Join request already exists", "status", request.getstringStatus()));
+				request=EventJoinRequestFull.newrequest(event,user);
+				datastore.put(request.toentity());
+				return ok(Map.of("message", "Join request sent", "status", request.getstringStatus()));
+			}
+
+			// PUBLIC event: join directly.
 			AttendanceFull attendance=AttendanceFull.newattendance(event,user);
 			if (datastore.get(attendance.getKey()) != null)
-				return ok(Map.of("message", "Already attending this event"));
+				return ok(Map.of("message", "Already attending this event", "status", "JOINED"));
 
 			long maxAttendees = event.getMaxAttendees();
 			long currentCount = event.getAttendee();
@@ -342,7 +358,7 @@ public class EventResources {
 			datastore.put(attendance.toentity());
 			event.incAttendee();
 			datastore.put(event.toentity());
-			return ok(Map.of("message", "Successfully registered for the event"));
+			return ok(Map.of("message", "Successfully registered for the event", "status", "JOINED"));
 
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -359,7 +375,6 @@ public class EventResources {
 	public Response unattendEvent(EventTokenRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-
 			EventFull event = getEventEntity(req.getInput());
 			UserFull user = AuthHelper.getUser(token);
 
@@ -376,6 +391,91 @@ public class EventResources {
 			}
 
 			return ok(Map.of("message", "Successfully unregistered from the event"));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /rest/events/joinrequests  — organizer lists the PENDING join requests
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/joinrequests")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response listJoinRequests(EventTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			EventFull event = getEventEntity(req.getInput());
+
+			if (!event.isOwner(token))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+
+			Query<Entity> query = Query.newEntityQueryBuilder()
+					.setKind("EventJoinRequest")
+					.setFilter(PropertyFilter.eq("event_id", event.getEventId()))
+					.build();
+
+			QueryResults<Entity> results = datastore.run(query);
+			List<Map<String, Object>> requests = new ArrayList<>();
+			while (results.hasNext()) {
+				EventJoinRequestFull result=EventJoinRequestFull.fromdatabase(results.next());
+				requests.add(Map.of("requester",result.getRequestr(),"requestedAt",result.getCreated()));
+			}
+
+			return ok(Map.of("requests", requests, "count", requests.size()));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /rest/events/respondjoin  — organizer accepts/rejects a join request
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/respondjoin")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response respondJoin(RespondJoinRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			RespondJoinRequest.RespondJoinInput input = req.getInput();
+
+			EventFull event = getEventEntity(req.getInput());
+			UserFull user = AuthHelper.getUser(token);
+
+			if (event == null) ErrorException.trow(9902);
+
+			// Only the organizer (or a moderator) can answer requests for the event.
+			if (!event.isOwner(token))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+
+			EventJoinRequestFull joinRequest = EventJoinRequestFull.fromdatabase(event,user);
+			if (joinRequest == null || !joinRequest.isStatus(RequestStatus.PENDING))
+				ErrorException.trow(9902); // no pending request for this user/event
+
+			if (!input.isAccept()) {
+				joinRequest.setStatus(RequestStatus.REJECTED);
+				datastore.put(joinRequest.toentity());
+				return ok(Map.of("message", "Join request rejected"));
+			}
+
+			// Accept: enforce capacity, register the attendance
+			long maxAttendees = event.getMaxAttendees();
+			long currentCount = event.getAttendee();
+			if (maxAttendees > 0 && currentCount >= maxAttendees)
+				ErrorException.trow(9928);
+
+			datastore.put(AttendanceFull.newattendance(event,user).toentity());
+			event.incAttendee();
+			datastore.put(event.toentity());
+
+			// The request is resolved: once accepted the attendance is the source of truth,
+			// so the pending request is deleted.
+			datastore.delete(joinRequest.getKey());
+			return ok(Map.of("message", "Join request accepted"));
 
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -463,10 +563,11 @@ public class EventResources {
 			//if (!token.getUsername().equals(user.getString("user_name")))
 			//	Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
-			String attendanceId = AttendanceFull.format(req.getInput(), user);
-			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance").newKey(attendanceId);
+			Key attendanceKey = AttendanceFull.makekey(req.getInput(), user);
 
-			return ok(Map.of("isattendee",datastore.get(attendanceKey) == null));
+
+			// isattendee is true when an Attendance exists (get != null).
+			return ok(Map.of("isattendee", datastore.get(attendanceKey) != null));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -559,15 +660,24 @@ public class EventResources {
 		return EventFull.fromdatabase(entity);
 	}
 
-	private boolean isAttending(String eventId, String username) {
-		Key key = datastore.newKeyFactory().setKind("Attendance").newKey(eventId + "_" + username);
-		return datastore.get(key) != null;
+	private boolean isAttending(EventInputInterface eventId, UserFull user) {
+		return datastore.get(AttendanceFull.makekey(eventId, user)) != null;
 	}
-
-	private void deleteAllAttendances(String eventId) {
+	
+	private void deleteAllRequests(EventInputInterface event) {
+		Query<Entity> query = Query.newEntityQueryBuilder()
+				.setKind("EventJoinRequest")
+				.setFilter(PropertyFilter.eq("event_id", event.getEventId()))
+				.build();
+		QueryResults<Entity> results = datastore.run(query);
+		while (results.hasNext())
+			datastore.delete(results.next().getKey());
+	}
+	
+	private void deleteAllAttendances(EventInputInterface event) {
 		Query<Entity> query = Query.newEntityQueryBuilder()
 				.setKind("Attendance")
-				.setFilter(PropertyFilter.eq("event_id", eventId))
+				.setFilter(PropertyFilter.eq("event_id", event.getEventId()))
 				.build();
 		QueryResults<Entity> results = datastore.run(query);
 		while (results.hasNext())
