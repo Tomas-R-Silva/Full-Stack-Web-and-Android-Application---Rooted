@@ -98,8 +98,9 @@ class _EventsMapsState extends State<EventsMaps> {
               } else {
                 final title = (evMap['title'] as String? ?? '').toLowerCase();
                 final desc = (evMap['description'] as String? ?? '').toLowerCase();
+                final organizer = (evMap['organizerUsername'] as String? ?? '').toLowerCase();
                 final query = widget.searchQuery!.toLowerCase();
-                if (title.contains(query) || desc.contains(query)) {
+                if (title.contains(query) || desc.contains(query) || organizer.contains(query)) {
                   events.add(evMap);
                 }
               }

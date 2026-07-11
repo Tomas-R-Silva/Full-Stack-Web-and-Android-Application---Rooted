@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   // Filtering
   String? _selectedCategory;
   List<int> _selectedSDGs = [];
+  bool _selectedAccessible = false;
 
   // For Discover View (Tinder cards)
   int _discoverIndex = 0;
@@ -73,11 +74,22 @@ class _HomePageState extends State<HomePage> {
         status: 'UPCOMING',
         category: _selectedCategory?.toUpperCase(),
         sdg: _selectedSDGs.isEmpty ? null : _selectedSDGs,
+        isAccessible: _selectedAccessible ? true : null,
         pageSize: 50,
       );
       final data   = result;
       final events = (data['events'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
+
+      // Client-side SDG Filtering (OR Logic)
+      if (_selectedSDGs.isNotEmpty) {
+        events.retainWhere((e) {
+          final eventSDGs = (e['sdg'] as List<dynamic>? ?? [])
+              .map((s) => (s as num).toInt())
+              .toSet();
+          return _selectedSDGs.any((s) => eventSDGs.contains(s));
+        });
+      }
 
       // Filter logic:
       if (_viewType == HomeViewType.feed) {
@@ -216,6 +228,7 @@ class _HomePageState extends State<HomePage> {
       builder: (_) => FilterDialog(
         initialCategory: _selectedCategory,
         initialSDGs: _selectedSDGs,
+        initialAccessible: _selectedAccessible,
       ),
     );
 
@@ -223,6 +236,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _selectedCategory = result['category'];
         _selectedSDGs = result['sdgs'];
+        _selectedAccessible = result['accessible'] ?? false;
       });
       _loadEvents();
     }
@@ -316,7 +330,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(
               Icons.filter_list_rounded,
-              color: (_selectedCategory != null || _selectedSDGs.isNotEmpty)
+              color: (_selectedCategory != null || _selectedSDGs.isNotEmpty || _selectedAccessible)
                   ? AppTheme.primary
                   : AppTheme.textSecondary,
             ),
@@ -366,7 +380,7 @@ class _HomePageState extends State<HomePage> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     )
@@ -460,7 +474,7 @@ class _HomePageState extends State<HomePage> {
       alignment: isRight ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 40),
       decoration: BoxDecoration(
-        color: isRight ? AppTheme.primary.withOpacity(0.2) : AppTheme.error.withOpacity(0.2),
+        color: isRight ? AppTheme.primary.withValues(alpha: 0.2) : AppTheme.error.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Icon(
@@ -483,7 +497,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -496,16 +510,19 @@ class _HomePageState extends State<HomePage> {
             flex: 3,
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.05),
+                color: AppTheme.primary.withValues(alpha: 0.05),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
               ),
               child: firstImage != null
                   ? ClipRRect(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                      child: Image.network(
-                        firstImage,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
+                      child: Hero(
+                        tag: 'event_image_${event['eventId']}',
+                        child: Image.network(
+                          firstImage,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
                       ),
                     )
                   : Center(
@@ -583,7 +600,7 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: color.withOpacity(0.2), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 2),
         ),
         child: Icon(icon, color: color, size: 28),
       ),
@@ -642,7 +659,7 @@ class _HomePageState extends State<HomePage> {
           border: Border.all(color: AppTheme.inputBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -654,14 +671,17 @@ class _HomePageState extends State<HomePage> {
             if (firstImage != null)
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  firstImage,
-                  height: 140,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 4,
-                    color: AppTheme.primary.withOpacity(0.7),
+                child: Hero(
+                  tag: 'event_image_${event['eventId']}',
+                  child: Image.network(
+                    firstImage,
+                    height: 140,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 4,
+                      color: AppTheme.primary.withValues(alpha: 0.7),
+                    ),
                   ),
                 ),
               )
@@ -669,7 +689,7 @@ class _HomePageState extends State<HomePage> {
               Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.7),
+                  color: AppTheme.primary.withValues(alpha: 0.7),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
               ),
@@ -682,7 +702,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _badge(
                         '${_categoryEmoji(category)} ${_toTitleCase(category ?? 'Other')}',
-                        AppTheme.primary.withOpacity(0.08),
+                        AppTheme.primary.withValues(alpha: 0.08),
                         AppTheme.primary,
                       ),
                       const SizedBox(width: 6),

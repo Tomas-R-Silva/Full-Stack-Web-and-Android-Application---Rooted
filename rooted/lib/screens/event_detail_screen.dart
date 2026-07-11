@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
+import '../widgets/full_screen_image.dart';
 import 'create_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
@@ -326,11 +327,27 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (firstImage != null)
-            Image.network(
-              firstImage,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImage(
+                      imageUrl: firstImage,
+                      tag: 'event_image_${_event['eventId']}',
+                    ),
+                  ),
+                );
+              },
+              child: Hero(
+                tag: 'event_image_${_event['eventId']}',
+                child: Image.network(
+                  firstImage,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           Padding(
             padding: const EdgeInsets.all(16),

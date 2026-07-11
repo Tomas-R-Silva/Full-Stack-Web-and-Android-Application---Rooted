@@ -301,6 +301,7 @@ class ApiService {
           'startDate': startDate,
           'durationMinutes': durationMinutes,
           'maxAttendees': maxAttendees,
+          'minAttendees': minAttendees,
           'public': public,
           'accessible': isAccessible,
           'sdg': sdg,

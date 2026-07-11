@@ -4,11 +4,13 @@ import '../theme/app_theme.dart';
 class FilterDialog extends StatefulWidget {
   final String? initialCategory;
   final List<int> initialSDGs;
+  final bool initialAccessible;
 
   const FilterDialog({
     super.key,
     this.initialCategory,
     required this.initialSDGs,
+    this.initialAccessible = false,
   });
 
   @override
@@ -18,6 +20,7 @@ class FilterDialog extends StatefulWidget {
 class _FilterDialogState extends State<FilterDialog> {
   String? _selectedCategory;
   late List<int> _selectedSDGs;
+  late bool _selectedAccessible;
 
   final List<String> _categories = [
     'All',
@@ -44,6 +47,7 @@ class _FilterDialogState extends State<FilterDialog> {
     super.initState();
     _selectedCategory = widget.initialCategory ?? 'All';
     _selectedSDGs = List.from(widget.initialSDGs);
+    _selectedAccessible = widget.initialAccessible;
   }
 
   @override
@@ -61,7 +65,7 @@ class _FilterDialogState extends State<FilterDialog> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -101,6 +105,18 @@ class _FilterDialogState extends State<FilterDialog> {
                 );
               }),
             ),
+            const SizedBox(height: 20),
+            const Text(
+              'Accessibility',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Accessible Only', style: TextStyle(fontSize: 14)),
+              value: _selectedAccessible,
+              onChanged: (val) => setState(() => _selectedAccessible = val),
+              activeThumbColor: AppTheme.primary,
+            ),
           ],
         ),
       ),
@@ -118,6 +134,7 @@ class _FilterDialogState extends State<FilterDialog> {
             Navigator.pop(context, {
               'category': _selectedCategory == 'All' ? null : _selectedCategory,
               'sdgs': _selectedSDGs,
+              'accessible': _selectedAccessible,
             });
           },
           child: const Text('Apply'),
