@@ -427,7 +427,7 @@ export type EventAttendeesResponse = {
         count: number},
 }
 
-type Attendee = {
+export type Attendee = {
   username: string, 
   joinedAt: number,
 }

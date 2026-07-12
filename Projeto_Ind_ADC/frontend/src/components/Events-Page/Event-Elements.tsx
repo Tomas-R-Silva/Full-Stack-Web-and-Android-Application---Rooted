@@ -182,7 +182,7 @@ function EventElements() {
                         className="mb-0 fw-bold"
                         style={{ color: "var(--color-white)" }}
                       >
-                        {user?.data.username}
+                        {user?.data.username || "Deleted account"}
                       </h5>
                       <div className="d-flex gap-1 ms-3">
                         {sdgs.map((id) => (
@@ -204,7 +204,7 @@ function EventElements() {
                         color: "var(--color-white)",
                       }}
                     >
-                      {user?.data.email || "example@gmail.com"}
+                      {user?.data.email || "Deleted account"}
                     </small>
                   </div>
 

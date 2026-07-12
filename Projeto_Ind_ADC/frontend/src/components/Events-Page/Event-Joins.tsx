@@ -2,11 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../NavBar/NavBar";
 import type {
+  Attendee,
+  EventAttendeesResponse,
   JoinRequests,
   JoinRequestsResponse,
   RespondJoinResponse,
 } from "../../utils/types";
-import { requestsJoinEvent, respondJoinEvent } from "../../api/auth";
+import {
+  attendeesEvent,
+  requestsJoinEvent,
+  respondJoinEvent,
+} from "../../api/auth";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
 import check_w from "../../assets/icons/check_w.svg";
 import close_w from "../../assets/icons/close_white.svg";
@@ -15,6 +21,7 @@ function EventJoins() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [requests, setRequests] = useState<JoinRequests[]>([]);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [managedUser, setManagedUser] = useState<JoinRequests | null>(null);
 
   const loadUsers = async () => {
@@ -62,6 +69,27 @@ function EventJoins() {
       if (fetchedRequests && fetchedRequests.length > 0) {
         setManagedUser(fetchedRequests[0]);
       }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadAttends = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token || !id) {
+        console.log("User is not authenticated");
+        return;
+      }
+
+      const res: EventAttendeesResponse = await attendeesEvent({
+        token: { jwt: token },
+        input: { eventId: id },
+      });
+
+      const fetchedAttendees = res.data.attendees;
+
+      setAttendees(fetchedAttendees);
     } catch (err) {
       console.error(err);
     }
@@ -218,6 +246,60 @@ function EventJoins() {
               </div>
               <div className="col-4">
                 <h4>Users Joined:</h4>
+                <div
+                  className="container border rounded p-3"
+                  style={{
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {attendees.length === 0 && (
+                    <div
+                      className="alert alert-light"
+                      style={{ color: "var(--color-green)" }}
+                      role="alert"
+                    >
+                      No attendees.
+                    </div>
+                  )}
+                  {attendees.length !== 0 &&
+                    attendees.map((attendee) => (
+                      <div
+                        className="d-flex justify-content-between align-items-start p-4 rounded mt-2"
+                        style={{
+                          maxWidth: "500px",
+                          width: "100%",
+                          backgroundColor: "var(--color-green2)",
+                          color: "var(--color-white)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div>
+                          <span className="fw-semibold">Username: </span>
+                          <span>{attendee.username}</span>
+
+                          <div>
+                            <span className="fw-semibold">Email: </span>
+                            <span>{formatDate(attendee.joinedAt)}</span>
+                          </div>
+                        </div>
+
+                        <div
+                          className="d-flex flex-column justify-content-between align-items-end"
+                          style={{ height: "100%" }}
+                        >
+                          <img
+                            src={personPin_w}
+                            alt="View Profile"
+                            onClick={() =>
+                              navigate("/profile/" + attendee.username)
+                            }
+                            style={{ cursor: "pointer" }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
               <div className="col-4">
                 <h4>User Information:</h4>
