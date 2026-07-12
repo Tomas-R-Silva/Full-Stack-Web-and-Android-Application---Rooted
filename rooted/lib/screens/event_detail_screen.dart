@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
+import '../widgets/full_screen_image.dart';
+import '../widgets/sdg_badge.dart';
 import 'create_screen.dart';
+import 'user_profile_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final Map<String, dynamic> event;
@@ -326,11 +329,27 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (firstImage != null)
-            Image.network(
-              firstImage,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImage(
+                      imageUrl: firstImage,
+                      tag: 'event_image_${_event['eventId']}',
+                    ),
+                  ),
+                );
+              },
+              child: Hero(
+                tag: 'event_image_${_event['eventId']}',
+                child: Image.network(
+                  firstImage,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -382,8 +401,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       color: AppTheme.textPrimary),
                 ),
                 const SizedBox(height: 10),
-                _infoRow(Icons.person_outline_rounded,
-                    'Organised by ${_event['organizerUsername'] ?? ''}'),
+                _infoRow(
+                  Icons.person_outline_rounded,
+                  'Organised by ',
+                  linkText: _event['organizerUsername'] ?? '',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => UserProfileScreen(username: _event['organizerUsername']),
+                      ),
+                    );
+                  },
+                ),
                 _infoRow(Icons.calendar_today_outlined,
                     _formatDate(_event['startDate'])),
                 _infoRow(Icons.location_on_outlined,
@@ -401,28 +431,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: (_event['sdg'] as List).map((s) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-                        ),
-                        child: Text(
-                          'SDG $s',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                  SdgDetailList(sdgs: _event['sdg']),
                 ],
 
                 if ((_event['description'] as String? ?? '').isNotEmpty) ...[
@@ -525,7 +534,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 
-  Widget _infoRow(IconData icon, String text) {
+  Widget _infoRow(IconData icon, String text, {String? linkText, VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -533,9 +542,30 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           Icon(icon, size: 14, color: AppTheme.textSecondary),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(text,
-                style: const TextStyle(
-                    fontSize: 13, color: AppTheme.textSecondary)),
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontFamily: 'PlusJakartaSans'),
+                children: [
+                  TextSpan(text: text),
+                  if (linkText != null)
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: GestureDetector(
+                        onTap: onTap,
+                        child: Text(
+                          linkText,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -596,12 +626,23 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               if (!isMe)
-                Text(
-                  post['authorUsername'] as String? ?? '',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isMe ? Colors.white70 : AppTheme.primary,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => UserProfileScreen(username: post['authorUsername']),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    post['authorUsername'] as String? ?? '',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primary,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               Text(

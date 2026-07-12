@@ -74,7 +74,7 @@ class _CreatePageState extends State<CreatePage> {
       _minAttendeesController.text = (e['minAttendees'] ?? 0).toString();
       _isPublic = e['public'] ?? e['isPublic'] ?? true;
       _isAccessible = e['accessible'] ?? e['isAccessible'] ?? false;
-      _selectedSDGs = (e['sdg'] as List<dynamic>?)?.cast<int>() ?? 
+      _selectedSDGs = (e['sdg'] as List<dynamic>?)?.cast<int>() ??
                       (e['sdgs'] as List<dynamic>?)?.cast<int>() ?? [];
     }
   }

@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'login_screen.dart';
+import 'user_profile_screen.dart';
 
 class ConnectionsScreen extends StatefulWidget {
   const ConnectionsScreen({super.key});
@@ -354,7 +355,12 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           leading: const Icon(Icons.person_add_alt_1, color: AppTheme.primary, size: 20),
           title: Text(uname, style: const TextStyle(fontWeight: FontWeight.w600)),
           trailing: const Icon(Icons.chevron_right, size: 16),
-          onTap: () => _addFriend(targetUsername: uname),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => UserProfileScreen(username: uname)),
+            );
+          },
         )).toList(),
       ),
     );
@@ -379,6 +385,12 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         ],
       ),
       child: ListTile(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => UserProfileScreen(username: uname)),
+          );
+        },
         leading: CircleAvatar(
           backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
           child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
@@ -419,16 +431,32 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         children: [
           CircleAvatar(
             backgroundColor: AppTheme.primary,
-            child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white)),
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UserProfileScreen(username: uname)),
+                );
+              },
+              child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(uname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const Text('Friend Request', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-              ],
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UserProfileScreen(username: uname)),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(uname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('Friend Request', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                ],
+              ),
             ),
           ),
           if (isProcessing)

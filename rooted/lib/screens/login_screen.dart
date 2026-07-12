@@ -40,11 +40,30 @@ class _LoginScreenState extends State<LoginScreen> {
       final data = (result['data'] as Map<String, dynamic>?) ?? {};
       final token = (data['token'] as Map<String, dynamic>?) ?? {};
 
+      final jwt = token['jwt']?.toString() ?? '';
+      final username = token['username']?.toString() ?? _usernameController.text.trim();
+      final role = token['role']?.toString() ?? '';
+
+      // After login, fetch the full user account to get the bio and latest email
+      String bio = '';
+      String email = token['email']?.toString() ?? '';
+      String displayName = username;
+      try {
+        final profile = await ApiService.getUserAccount(jwt: jwt, username: username);
+        bio = profile['bio']?.toString() ?? '';
+        email = profile['email']?.toString() ?? email;
+        displayName = profile['display']?.toString() ?? username;
+      } catch (_) {
+        // Fallback to defaults if profile fetch fails
+      }
+
       await SessionStorage.save(
-        jwt: token['jwt']?.toString() ?? '',
-        username: token['username']?.toString() ?? _usernameController.text.trim(),
-        email: token['email']?.toString() ?? '',
-        role: token['role']?.toString() ?? '',
+        jwt: jwt,
+        username: username,
+        displayName: displayName,
+        email: email,
+        role: role,
+        bio: bio,
       );
       if (mounted) {
         setState(() => _isLoading = false);

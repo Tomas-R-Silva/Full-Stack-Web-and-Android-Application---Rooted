@@ -58,13 +58,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
-      print('DEBUG: Registration auto-login Response: $result');
       final token = (result['token'] as Map<String, dynamic>?) ?? {};
+
+      final jwt = token['jwt']?.toString() ?? '';
+      final username = token['username']?.toString() ?? _usernameController.text.trim();
+      final role = token['role']?.toString() ?? '';
+
+      // After login, fetch the full user account to be consistent with LoginScreen
+      String bio = '';
+      String email = token['email']?.toString() ?? _emailController.text.trim();
+      String displayName = username;
+      try {
+        final profile = await ApiService.getUserAccount(jwt: jwt, username: username);
+        bio = profile['bio']?.toString() ?? '';
+        email = profile['email']?.toString() ?? email;
+        displayName = profile['display']?.toString() ?? username;
+      } catch (_) {
+        // Fallback to defaults if profile fetch fails
+      }
+
       await SessionStorage.save(
-        jwt: token['jwt']?.toString() ?? '',
-        username: token['username']?.toString() ?? _usernameController.text.trim(),
-        email: token['email']?.toString() ?? _emailController.text.trim(),
-        role: token['role']?.toString() ?? '',
+        jwt: jwt,
+        username: username,
+        displayName: displayName,
+        email: email,
+        role: role,
+        bio: bio,
       );
 
       if (mounted) {

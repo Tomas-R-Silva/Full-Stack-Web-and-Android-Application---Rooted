@@ -283,10 +283,26 @@ class _EventsMapsState extends State<EventsMaps> {
             const SizedBox(height: 8),
             Text(ev['location']?.toString() ?? ''),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            )
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => EventDetailScreen(event: ev)),
+                      );
+                    },
+                    child: const Text('View Details'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

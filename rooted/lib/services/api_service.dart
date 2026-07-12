@@ -301,6 +301,7 @@ class ApiService {
           'startDate': startDate,
           'durationMinutes': durationMinutes,
           'maxAttendees': maxAttendees,
+          'minAttendees': minAttendees,
           'public': public,
           'accessible': isAccessible,
           'sdg': sdg,
@@ -334,6 +335,7 @@ class ApiService {
     required String jwt,
     required String username,
     required String email,
+    String bio = '',
   }) async {
     final uri = Uri.parse('$baseUrl/rest/modaccount');
 
@@ -347,8 +349,8 @@ class ApiService {
         'input': {
           'username': username,
           'email': email,
+          'bio': bio,
         },
-
       }),
     );
 
@@ -393,6 +395,43 @@ class ApiService {
     return body;
   }
 
+  /// Workaround for the current backend: EventResources#entityToMap puts the
+  /// SDG list under the key "SDG" (all caps) instead of "sdg", so every
+  /// screen that reads event['sdg'] gets nothing. This copies whichever
+  /// case-insensitive "sdg" key is present into a normalized 'sdg' entry,
+  /// without touching anything else. Safe to remove once the backend is
+  /// fixed to emit 'sdg' directly.
+  static Map<String, dynamic> _normalizeEvent(Map<String, dynamic> event) {
+    final current = event['sdg'];
+    if (current is List && current.isNotEmpty) return event;
+    for (final key in event.keys) {
+      if (key != 'sdg' && key.toLowerCase() == 'sdg') {
+        final value = event[key];
+        if (value is List) {
+          event['sdg'] = value;
+        }
+        break;
+      }
+    }
+    return event;
+  }
+
+  /// Applies [_normalizeEvent] to a single event map or to every event
+  /// inside a `{'events': [...]}` list payload; leaves anything else as-is.
+  static Map<String, dynamic> _normalizeEventPayload(Map<String, dynamic> data) {
+    final event = data['event'];
+    if (event is Map<String, dynamic>) {
+      _normalizeEvent(event);
+    }
+    final events = data['events'];
+    if (events is List) {
+      for (final e in events) {
+        if (e is Map<String, dynamic>) _normalizeEvent(e);
+      }
+    }
+    return data;
+  }
+
   /// Calls POST /rest/events/get.
   static Future<Map<String, dynamic>> getEvent({
     required String eventId,
@@ -409,7 +448,7 @@ class ApiService {
     );
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
+      return _normalizeEventPayload(_extractData(body));
     }
     throw ApiException(_errorMessage(body, 'Failed to load event'));
   }
@@ -439,7 +478,13 @@ class ApiService {
           'status': status,
           'category': category,
           'isAccessible': isAccessible,
-          'sdg': sdg,
+          // NOTE: 'sdg' is deliberately NOT sent here. The current backend's
+          // SDG filter (EventResources#listEvents) checks
+          // current.contains(null) instead of current.contains("SDG"), so it
+          // always evaluates the goal list as empty and silently returns
+          // zero events whenever an sdg filter is present. Until that's
+          // fixed server-side, we always fetch the unfiltered page and do
+          // the SDG filtering ourselves (see _loadEvents' client-side pass).
           'pageSize': pageSize,
           'cursor': cursor,
         }..removeWhere((k, v) => v == null)
@@ -447,7 +492,7 @@ class ApiService {
     );
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
+      return _normalizeEventPayload(_extractData(body));
     }
     throw ApiException(_errorMessage(body, 'Failed to list events'));
   }
@@ -718,6 +763,27 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
     throw ApiException(_errorMessage(body, 'Failed to upload images (Status ${response.statusCode})'));
+  }
+
+  /// Calls POST /rest/user.
+  static Future<Map<String, dynamic>> getUserAccount({
+    required String jwt,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/user');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'username': username},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return _extractData(body);
+    }
+    throw ApiException(_errorMessage(body, 'Failed to load user profile'));
   }
 
   //Friend Endpoints

@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/welcome_screen.dart';
+import 'screens/home_screen.dart';
+import 'services/session_storage.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  runApp(const RootedApp());
+  final jwt = await SessionStorage.getJwt();
+  runApp(RootedApp(isLoggedIn: jwt != null));
 }
 class RootedApp extends StatelessWidget {
-  const RootedApp({super.key});
+  final bool isLoggedIn;
+
+  const RootedApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const WelcomeScreen(),
+      home: isLoggedIn ? const HomeScreen() : const WelcomeScreen(),
     );
   }
 }
