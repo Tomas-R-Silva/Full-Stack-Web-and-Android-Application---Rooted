@@ -142,8 +142,13 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	}
 
 	public static EventFull newevent(Datastore datastore, EventAtributs input,String username) throws ErrorException {
-		String ID=UUID.randomUUID().toString();
-		EventFull event=new EventFull(datastore.newKeyFactory().setKind("Event").newKey(ID));
+		String ID;
+		Key key;
+		do {
+			ID=UUID.randomUUID().toString();
+			key=datastore.newKeyFactory().setKind("Event").newKey(ID);
+		}while(datastore.get(key)!=null);
+		EventFull event=new EventFull(key);
 		event.setEventId(ID);
 		event.setTitle(input.getTitle());
 		event.setDescription(input.getDescription());

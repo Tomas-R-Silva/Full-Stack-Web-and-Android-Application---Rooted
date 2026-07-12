@@ -71,8 +71,13 @@ public class ForumFull implements Full,EventInputInterface{
 	}
 
 	private static ForumFull newforum(Datastore datastore,TokenFull token,PostMessageRequest.PostMessageinput input) throws ErrorException {
-		String ID=UUID.randomUUID().toString();
-		ForumFull post = new ForumFull(datastore.newKeyFactory().setKind("ForumPost").newKey(ID));
+		String ID;
+		Key key;
+		do {
+			ID=UUID.randomUUID().toString();
+			key=datastore.newKeyFactory().setKind("ForumPost").newKey(ID);
+		}while(datastore.get(key)!=null);
+		ForumFull post = new ForumFull(key);
 		post.setPostId(ID);
 		post.setAuthorUsername(token.getUsername());
 		post.setText(input.getText());
