@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:rooted/screens/event_detail_screen.dart';
 
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
