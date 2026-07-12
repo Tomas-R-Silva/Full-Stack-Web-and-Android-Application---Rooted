@@ -202,7 +202,7 @@ class _EventsMapsState extends State<EventsMaps> {
     }
 
     final location = event['location']?.toString();
-    if (widget.mapsApiKey == null || location == null || location.trim().isEmpty) {
+    if (location == null || location.trim().isEmpty) {
       return null;
     }
 

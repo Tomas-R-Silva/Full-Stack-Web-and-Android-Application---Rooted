@@ -7,6 +7,7 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   final jwt = await SessionStorage.getJwt();
   runApp(RootedApp(isLoggedIn: jwt != null));
 }
