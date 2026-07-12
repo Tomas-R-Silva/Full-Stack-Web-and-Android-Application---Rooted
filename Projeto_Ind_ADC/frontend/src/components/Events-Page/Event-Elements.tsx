@@ -43,7 +43,7 @@ function EventElements() {
         console.log("User is not authenticated");
         return;
       }
-      if (!username) {
+      if (!organizer) {
         console.log("Invalid username");
         return;
       }
