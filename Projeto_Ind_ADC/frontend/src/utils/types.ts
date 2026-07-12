@@ -262,7 +262,7 @@ export type EventItem = {
   isPublic: boolean;
   status: string;
   createdAt: number;
-  imageUrls: string[];
+  imageUrls: Image[];
   isAccessible: boolean,
   SDG: number[]
 };
@@ -474,7 +474,7 @@ export type RequestImageUpload = {
 export type ImageUploadResponse = {
   status: number,
   data:{
-    imageUrls: string[],
+    imageUrls: Image[],
     message: string
   },
 }
@@ -489,15 +489,20 @@ export type RequestImageUploadURL = {
 export type ImageUploadURLResponse = {
   status: number,
   data:{
-    imageUrls: string[],
+    imageUrls: Image[],
     message: string
   },
+}
+
+export type Image = {
+  id: string,
+  url: string,
 }
 
 export type RequestImageDelete = {
   token?: {jwt:string;}
   input: {eventId:string,
-    images: string[],
+    imageIds: string[],
   },
 }
 

@@ -99,7 +99,10 @@ function EventElements() {
       <div className="hero-wrapper">
         <div className="top-image">
           {event && (
-            <img src={event.imageUrls[0] || placeholder} alt={event.title} />
+            <img
+              src={event.imageUrls[0].url || placeholder}
+              alt={event.title}
+            />
           )}
         </div>
         {isAuthenticated && event && event.organizerUsername === username && (
@@ -229,8 +232,12 @@ function EventElements() {
                 </h2>
 
                 <div className="photo-collection">
-                  {event?.imageUrls?.map((url, index) => (
-                    <img key={index} src={url} alt={`Event ${index + 1}`} />
+                  {event?.imageUrls?.map((image, index) => (
+                    <img
+                      key={image.id}
+                      src={image.url}
+                      alt={`Event ${index + 1}`}
+                    />
                   ))}
                 </div>
               </div>

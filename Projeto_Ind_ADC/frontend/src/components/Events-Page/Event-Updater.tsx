@@ -24,6 +24,7 @@ import {
   uploadImageURL,
 } from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
+import type { Image } from "../../utils/types";
 
 type ErrorState = {
   [K in keyof RequestEventUpdate["input"]]: string;
@@ -47,7 +48,7 @@ function EventUpdater() {
   const navigate = useNavigate();
   const [event, setEvent] = useState<EventItem>();
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = useState<(Image | string)[]>([]);
   const [formData, setFormData] = useState<RequestEventUpdate>({
     token: { jwt: "" },
     input: {
@@ -116,22 +117,41 @@ function EventUpdater() {
     const reader = new FileReader();
 
     reader.onload = () => {
-      const image = reader.result as string;
-
-      setSelectedImages((prev) => [...prev, image]);
+      setSelectedImages((prev) => [...prev, reader.result as string]);
     };
 
     reader.readAsDataURL(file);
   };
 
-  const handleDeleteImage = (url: string) => {
-    setSelectedImages((prev) => prev.filter((img) => img !== url));
+  const handleDeleteImage = (image: Image | string) => {
+    setSelectedImages((prev) =>
+      prev.filter((img) => {
+        if (typeof img === "string" && typeof image === "string") {
+          return img !== image;
+        }
+
+        if (typeof img !== "string" && typeof image !== "string") {
+          return img.id !== image.id;
+        }
+
+        return img !== image;
+      }),
+    );
   };
 
-  const selectCover = (url: string) => {
+  const selectCover = (image: Image | string) => {
     setSelectedImages((prev) => {
-      const rest = prev.filter((img) => img !== url);
-      return [url, ...rest];
+      const rest = prev.filter((img) => {
+        if (typeof img === "string" && typeof image === "string")
+          return img !== image;
+
+        if (typeof img !== "string" && typeof image !== "string")
+          return img.id !== image.id;
+
+        return img !== image;
+      });
+
+      return [image, ...rest];
     });
   };
 
@@ -161,38 +181,46 @@ function EventUpdater() {
 
       const cover = selectedImages[0];
 
-      console.log(cover);
-
-      if (cover.startsWith("data:image/")) {
-        const res = await uploadImage({
+      if (typeof cover === "string") {
+        if (cover.startsWith("data:image/")) {
+          await uploadImage({
+            token: { jwt: token },
+            input: {
+              eventId: event.eventId,
+              images: [cover],
+            },
+          });
+        } else {
+          await uploadImageURL({
+            token: { jwt: token },
+            input: {
+              eventId: event.eventId,
+              images: [cover],
+            },
+          });
+        }
+      } else {
+        await uploadImageURL({
           token: { jwt: token },
           input: {
             eventId: event.eventId,
-            images: [cover],
+            images: [cover.url],
           },
         });
-
-        console.log("Cover:", res.data.message);
-      } else if (cover.startsWith("http")) {
-        const res = await uploadImageURL({
-          token: { jwt: token },
-          input: {
-            eventId: event.eventId,
-            images: [cover],
-          },
-        });
-
-        console.log("Cover:", res.data.message);
       }
 
       const remaining = selectedImages.slice(1);
-      console.log(remaining);
 
-      const remaining64 = remaining.filter((img) =>
-        img.startsWith("data:image/"),
+      const remaining64 = remaining.filter(
+        (img): img is string =>
+          typeof img === "string" && img.startsWith("data:image/"),
       );
 
-      const remainingURL = remaining.filter((img) => img.startsWith("http"));
+      const remainingURL = remaining
+        .filter((img) =>
+          typeof img === "string" ? img.startsWith("http") : true,
+        )
+        .map((img) => (typeof img === "string" ? img : img.url));
 
       if (remaining64.length > 0) {
         const res = await uploadImage({
@@ -233,7 +261,7 @@ function EventUpdater() {
         token: { jwt: token },
         input: {
           eventId: event.eventId,
-          images: event.imageUrls ?? [],
+          imageIds: event.imageUrls.map((image) => image.id),
         },
       });
       console.log(res.data.message);
@@ -751,50 +779,55 @@ function EventUpdater() {
               }}
             />
 
-            {selectedImages.map((image) => (
-              <div key={image} className="col-6 col-md-3 col-lg-2">
-                <div
-                  className="card h-100 text-center"
-                  style={{
-                    cursor: "pointer",
-                    transition: "0.2s",
-                    backgroundColor:
-                      selectedImages[0] === image
+            {selectedImages.map((image) => {
+              const src = typeof image === "string" ? image : image.url;
+              const key = typeof image === "string" ? image : image.id;
+              const isCover = selectedImages[0] === image;
+
+              return (
+                <div key={key} className="col-6 col-md-3 col-lg-2">
+                  <div
+                    className="card h-100 text-center"
+                    style={{
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      backgroundColor: isCover
                         ? "var(--color-green2)"
                         : "white",
-                  }}
-                >
-                  <img
-                    src={image}
-                    alt="event"
-                    className="card-img-top p-2"
-                    style={{
-                      height: "70px",
-                      width: "100%",
-                      objectFit: "contain",
                     }}
-                  />
-
-                  <div
-                    className="card-body p-2"
-                    onClick={() => selectCover(image)}
                   >
-                    <small style={{ color: "var(--color-gold)" }}>
-                      {selectedImages[0] === image
-                        ? "Cover image"
-                        : "Select as cover"}
-                    </small>
-                  </div>
+                    <img
+                      src={src}
+                      alt="event"
+                      className="card-img-top p-2"
+                      style={{
+                        height: "70px",
+                        width: "100%",
+                        objectFit: "contain",
+                      }}
+                    />
 
-                  <div
-                    className="card-body p-2"
-                    onClick={() => handleDeleteImage(image)}
-                  >
-                    <small style={{ color: "var(--color-ods1)" }}>Delete</small>
+                    <div
+                      className="card-body p-2"
+                      onClick={() => selectCover(image)}
+                    >
+                      <small style={{ color: "var(--color-gold)" }}>
+                        {isCover ? "Cover image" : "Select as cover"}
+                      </small>
+                    </div>
+
+                    <div
+                      className="card-body p-2"
+                      onClick={() => handleDeleteImage(image)}
+                    >
+                      <small style={{ color: "var(--color-ods1)" }}>
+                        Delete
+                      </small>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="row g-3 mt-2">
             <button
