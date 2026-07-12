@@ -326,9 +326,9 @@ public class EventResources {
 			Key key = datastore.newKeyFactory().setKind("Event").newKey(req.getInput().getEventId());
 			datastore.delete(key);
 			
-			querydelete("EventJoinRequest","event_id",existing.getEventId());
-			querydelete("Attendance","event_id",existing.getEventId());
-			querydelete("ForumPost","event_id",existing.getEventId());
+			AuthHelper.querydelete("EventJoinRequest","event_id",existing.getEventId());
+			AuthHelper.querydelete("Attendance","event_id",existing.getEventId());
+			AuthHelper.querydelete("ForumPost","event_id",existing.getEventId());
 
 			return ok(Map.of("message", "Event deleted successfully"));
 
@@ -749,15 +749,6 @@ public class EventResources {
 
 	private boolean isAttending(EventInputInterface eventId, UserFull user) {
 		return datastore.get(AttendanceFull.makekey(eventId, user)) != null;
-	}
-	
-	private void querydelete(String kind,String type,String name) {
-		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
-				.setKind(kind)
-				.setFilter(PropertyFilter.eq(type, name))
-				.build());
-		while (results.hasNext())
-			datastore.delete(results.next().getKey());
 	}
 
 	private static Response ok(Map<String, Object> data) {

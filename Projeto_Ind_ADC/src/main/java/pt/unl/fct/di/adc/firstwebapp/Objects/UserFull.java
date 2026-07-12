@@ -10,7 +10,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.StringValue;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Category;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;

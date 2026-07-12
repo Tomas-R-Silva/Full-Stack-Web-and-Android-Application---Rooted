@@ -142,20 +142,20 @@ public class UserResources {
 			if(!user.isme(token))
 				Validator.unauthorized(token, new Role []{Role.ADMIN});
 			datastore.delete(user.getKey());
-			querydelete("Session","user_name",user.getUsername());
-			
-			querydelete("EventJoinRequest","requester",user.getUsername());
-			querydelete("EventJoinRequest","organizer",user.getUsername());
-			
-			querydelete("Event","organizer_username",user.getUsername());
-			
-			querydelete("Attendance","username",user.getUsername());
-			
+			AuthHelper.querydelete("Session","user_name",user.getUsername());
+
+			AuthHelper.querydelete("EventJoinRequest","requester",user.getUsername());
+			AuthHelper.querydelete("EventJoinRequest","organizer",user.getUsername());
+
+			AuthHelper.querydelete("Event","organizer_username",user.getUsername());
+
+			AuthHelper.querydelete("Attendance","username",user.getUsername());
+
 			becomeloner(user.getUsername());
-						
-			querydelete("ForumPost","author_username",user.getUsername());
-			
-			
+
+			AuthHelper.querydelete("ForumPost","author_username",user.getUsername());
+
+
 			return buildresponse(Map.of("message", "Account deleted successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -270,7 +270,7 @@ public class UserResources {
 			if(!user.isme(token))
 				Validator.unauthorized(token, new Role [] {Role.ADMIN});
 
-			querydelete("Session","user_name",user.getUsername());
+			AuthHelper.querydelete("Session","user_name",user.getUsername());
 			return buildresponse(Map.of("message", "Logout successful"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -291,7 +291,7 @@ public class UserResources {
 			user.setRole(newRole);
 			datastore.put(user.toentity());
 			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
-			querydelete("Session","user_name",user.getUsername());
+			AuthHelper.querydelete("Session","user_name",user.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -365,7 +365,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response endFriend() throws ErrorException{
 		QueryResults<Entity> sessions = datastore.run(Query.newEntityQueryBuilder().setKind("Friend").build());
-		querydelete("ForumPost","type","FRIEND");
+		AuthHelper.querydelete("ForumPost","type","FRIEND");
 		while(sessions.hasNext())
 			datastore.delete(sessions.next().getKey());
 		return buildresponse(Map.of("message", "ALL UNFRIEND"));
@@ -444,7 +444,7 @@ public class UserResources {
 				ErrorException.trow(9934);
 			datastore.delete(friend.getKey());
 			String str= friend.formatkey();
-			querydelete("ForumPost","friend_id",str);
+			AuthHelper.querydelete("ForumPost","friend_id",str);
 			return buildresponse(Map.of("message", "Friendship Ended"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -511,16 +511,7 @@ public class UserResources {
 		return tokensOutput;
 
 	}
-	
-	private void querydelete(String kind,String type,String name) {
-		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
-				.setKind(kind)
-				.setFilter(PropertyFilter.eq(type, name))
-				.build());
-		while (results.hasNext())
-			datastore.delete(results.next().getKey());
-	}
-	
+
 	private void becomeloner(String name) {
 		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
 				.setKind("Friend")
@@ -528,7 +519,7 @@ public class UserResources {
 				.build());
 		while (results.hasNext()) {
 			FriendFull friend = FriendFull.fromdatabase(results.next());
-			querydelete("ForumPost","friend_id",friend.formatkey());
+			AuthHelper.querydelete("ForumPost","friend_id",friend.formatkey());
 			datastore.delete(friend.getKey());
 		}
 		results = datastore.run(Query.newEntityQueryBuilder()
@@ -537,11 +528,11 @@ public class UserResources {
 				.build());
 		while (results.hasNext()) {
 			FriendFull friend = FriendFull.fromdatabase(results.next());
-			querydelete("ForumPost","friend_id",friend.formatkey());
+			AuthHelper.querydelete("ForumPost","friend_id",friend.formatkey());
 			datastore.delete(friend.getKey());
 		}
 	}
-	
+
 
 
 

@@ -52,10 +52,8 @@ public class ForumResources {
 			.getService();
 
 	private static final Logger Log = Logger.getLogger(ForumResources.class.getName());
-
 	private static final int DEFAULT_PAGE_SIZE = 50;
 	private static final int MAX_PAGE_SIZE = 100;
-	private static final int DELETE_BATCH = 500;
 
 	public ForumResources() {}
 
@@ -155,8 +153,8 @@ public class ForumResources {
 				String organizer = eventEntity.getOrganizerUsername();
 
 				if (!token.getUsername().equals(author)
-					&& !token.getUsername().equals(organizer)
-					&& token.getRole() != Role.ADMIN)
+						&& !token.getUsername().equals(organizer)
+						&& token.getRole() != Role.ADMIN)
 					ErrorException.trow(9905);
 			}
 			datastore.delete(key);
@@ -187,10 +185,12 @@ public class ForumResources {
 
 			while (events.hasNext()) {
 				EventFull event = EventFull.fromdatabase(events.next());
+				if(event.getStarted() && event.isStatus(Status.UPCOMING))
+					event.setStatus(event.inLimit()?Status.ONGOING:Status.CANCELLED);
 				if(event.isStatus(Status.CANCELLED)) 
-					postsDeleted += deleteForum(event.getEventId());
+					postsDeleted += AuthHelper.querydelete("ForumPost", "event_id", event.getEventId());
 				else if (event.getEnded() && !event.isStatus(Status.COMPLETED)){
-					postsDeleted += deleteForum(event.getEventId());
+					postsDeleted += AuthHelper.querydelete("ForumPost", "event_id", event.getEventId());
 					event.setStatus(Status.COMPLETED);
 					datastore.put(event.toentity());
 					eventsClosed++;
@@ -198,7 +198,6 @@ public class ForumResources {
 			}
 			Log.info("Forum cleanup: closed " + eventsClosed + " events, deleted " + postsDeleted + " posts");
 			return ok(Map.of("eventsClosed", eventsClosed, "postsDeleted", postsDeleted));
-
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -219,32 +218,6 @@ public class ForumResources {
 		Entity entity = datastore.get(key);
 		if (entity == null) ErrorException.trow(9902);
 		return EventFull.fromdatabase(entity);
-	}
-
-
-	/** Deletes every ForumPost for an event in batches; returns how many were deleted. */
-	private int deleteForum(String eventId) {
-		Query<Key> query = Query.newKeyQueryBuilder()
-				.setKind("ForumPost")
-				.setFilter(PropertyFilter.eq("event_id", eventId))
-				.build();
-		QueryResults<Key> keys = datastore.run(query);
-
-		int deleted = 0;
-		List<Key> batch = new ArrayList<>(DELETE_BATCH);
-		while (keys.hasNext()) {
-			batch.add(keys.next());
-			if (batch.size() == DELETE_BATCH) {
-				datastore.delete(batch.toArray(new Key[0]));
-				deleted += batch.size();
-				batch.clear();
-			}
-		}
-		if (!batch.isEmpty()) {
-			datastore.delete(batch.toArray(new Key[0]));
-			deleted += batch.size();
-		}
-		return deleted;
 	}
 
 	private static Response ok(Map<String, Object> data) {

@@ -19,14 +19,12 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 
 	public enum Category {
 		MUSIC, SPORTS, TECH, ART, FOOD, BUSINESS, COMMUNITY, OTHER;
-		public static Category valueof(String v) {
-			try{return Category.valueOf(v);}catch (Exception e) {return null;}}
+		public static Category valueof(String v) {try{return Category.valueOf(v);}catch (Exception e) {return null;}}
 	}
 
 	public enum Status {
 		UPCOMING, ONGOING, CANCELLED, COMPLETED;
-		public static Status valueof(String v) {
-			try{return Status.valueOf(v);}catch (Exception e) {return null;}}
+		public static Status valueof(String v) {try{return Status.valueOf(v);}catch (Exception e) {return null;}}
 	}
 
 	private String organizerUsername;
@@ -192,6 +190,9 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 	public long getEnd() { return getStartDate() + getDurationMinutes() * 60L; }
 	public boolean getEnded() {return System.currentTimeMillis()>=getEnd(); }
+	public boolean getStarted() {return System.currentTimeMillis()>=getStartDate(); }
+	public boolean inLimit() {return (maxAttendees==0||maxAttendees>=attendee)&&(minAttendees<=attendee); }
+	
 	public boolean isOwner(TokenFull token) {return organizerUsername.equals(token.getUsername());}
 	@Override
 	public Map<String, Object> tomap(Entity e) {return fromdatabase(e).tomap();}
