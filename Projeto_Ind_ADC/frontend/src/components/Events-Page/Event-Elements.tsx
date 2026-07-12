@@ -17,6 +17,11 @@ import manageAccounts_w from "../../assets/icons/manage_accounts_w.svg";
 import EventUpdater from "./Event-Updater";
 import Chat from "../Forum-elements/Chat";
 import { useMapsPage } from "../../api/maps";
+import { getUser } from "../../api/auth";
+import type { UserInformationResponse } from "../../utils/types";
+import account_circle from "../../assets/icons/account_circle_green2.svg";
+import border_all from "../../assets/images/border_all.png";
+import person_pin from "../../assets/icons/person_pin_w.svg";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +32,34 @@ function EventElements() {
   const { renderEventMap } = useMapsPage(import.meta.env.VITE_API_KEY);
   type UpdateField = keyof RequestEventUpdate["input"];
   const [field, setField] = useState<UpdateField>("title");
+  const [user, setUser] = useState<UserInformationResponse>();
   const navigate = useNavigate();
+  const sdgs = [1, 10, 17];
+
+  const loadUser = async (organizer: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: organizer,
+        },
+      });
+      console.log(res);
+      setUser(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const loadEvents = async (id: string) => {
     const token = sessionStorage.getItem("token");
@@ -45,7 +77,9 @@ function EventElements() {
 
     setEvent(res.data.event);
 
-    console.log(event);
+    loadUser(res.data.event.organizerUsername);
+
+    console.log(res.data.event);
   };
 
   useEffect(() => {
@@ -105,9 +139,87 @@ function EventElements() {
                 <h2 style={{ color: "var(--color-white)" }}>
                   Event Organizer:
                 </h2>
-                <p style={{ color: "var(--color-white)" }}>
-                  {event?.organizerUsername}
-                </p>
+                <div
+                  className="rounded-3 px-3 py-3 d-flex align-items-center justify-content-between"
+                  style={{ background: "var(--color-green2)" }}
+                >
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "80px",
+                      height: "80px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={account_circle}
+                      alt="Avatar"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
+
+                    <img
+                      src={border_all}
+                      alt=""
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        pointerEvents: "none",
+                        userSelect: "none",
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex-grow-1 ms-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <h5
+                        className="mb-0 fw-bold"
+                        style={{ color: "var(--color-white)" }}
+                      >
+                        {user?.data.username}
+                      </h5>
+                      <div className="d-flex gap-1 ms-3">
+                        {sdgs.map((id) => (
+                          <div
+                            key={id}
+                            style={{
+                              width: "12px",
+                              height: "12px",
+                              borderRadius: "50%",
+                              backgroundColor: `var(--color-ods${id})`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <small
+                      style={{
+                        color: "var(--color-white)",
+                      }}
+                    >
+                      {user?.data.email || "example@gmail.com"}
+                    </small>
+                  </div>
+
+                  <img
+                    src={person_pin}
+                    alt="Action"
+                    onClick={() => navigate("/profile/" + user?.data.username)}
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                  />
+                </div>
               </div>
             </div>
             <div className="row mt-5">

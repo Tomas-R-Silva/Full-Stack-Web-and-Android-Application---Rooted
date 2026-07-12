@@ -159,8 +159,9 @@ function EventUpdater() {
       const token = sessionStorage.getItem("token");
       if (!token || !event || selectedImages.length === 0) return;
 
-      // Cover image
       const cover = selectedImages[0];
+
+      console.log(cover);
 
       if (cover.startsWith("data:image/")) {
         const res = await uploadImage({
@@ -184,8 +185,8 @@ function EventUpdater() {
         console.log("Cover:", res.data.message);
       }
 
-      // Remaining images
       const remaining = selectedImages.slice(1);
+      console.log(remaining);
 
       const remaining64 = remaining.filter((img) =>
         img.startsWith("data:image/"),
@@ -226,7 +227,7 @@ function EventUpdater() {
       const token = sessionStorage.getItem("token");
       if (!token || !event) return;
 
-      console.log("Deleting...");
+      console.log(event.imageUrls);
 
       const res: ImageDeleteResponse = await deleteImage({
         token: { jwt: token },
