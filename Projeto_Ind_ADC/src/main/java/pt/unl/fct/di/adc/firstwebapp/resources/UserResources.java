@@ -15,7 +15,6 @@ import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
-import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Transaction;
@@ -143,7 +142,20 @@ public class UserResources {
 			if(!user.isme(token))
 				Validator.unauthorized(token, new Role []{Role.ADMIN});
 			datastore.delete(user.getKey());
-			deleteAllSessionsForUser(user.getUsername());
+			querydelete("Session","user_name",user.getUsername());
+			
+			querydelete("EventJoinRequest","requester",user.getUsername());
+			querydelete("EventJoinRequest","organizer",user.getUsername());
+			
+			querydelete("Event","organizer_username",user.getUsername());
+			
+			querydelete("Attendance","username",user.getUsername());
+			
+			becomeloner(user.getUsername());
+						
+			querydelete("ForumPost","author_username",user.getUsername());
+			
+			
 			return buildresponse(Map.of("message", "Account deleted successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -258,7 +270,7 @@ public class UserResources {
 			if(!user.isme(token))
 				Validator.unauthorized(token, new Role [] {Role.ADMIN});
 
-			deleteAllSessionsForUser(user.getUsername());
+			querydelete("Session","user_name",user.getUsername());
 			return buildresponse(Map.of("message", "Logout successful"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -279,7 +291,7 @@ public class UserResources {
 			user.setRole(newRole);
 			datastore.put(user.toentity());
 			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
-			deleteAllSessionsForUser(input.getUsername());
+			querydelete("Session","user_name",user.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -353,6 +365,7 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response endFriend() throws ErrorException{
 		QueryResults<Entity> sessions = datastore.run(Query.newEntityQueryBuilder().setKind("Friend").build());
+		querydelete("ForumPost","type","FRIEND");
 		while(sessions.hasNext())
 			datastore.delete(sessions.next().getKey());
 		return buildresponse(Map.of("message", "ALL UNFRIEND"));
@@ -426,10 +439,12 @@ public class UserResources {
 		try {
 			UserFull user = AuthHelper.getUser(request.getInput());
 			TokenFull token = AuthHelper.verifyToken(request);
-			Key key=FriendFull.getFriendKey(token,user);
-			if(datastore.get(key)==null)
+			FriendFull friend = FriendFull.fromdatabase(token, user);
+			if(friend==null)
 				ErrorException.trow(9934);
-			datastore.delete(key);
+			datastore.delete(friend.getKey());
+			String str= friend.formatkey();
+			querydelete("ForumPost","friend_id",str);
 			return buildresponse(Map.of("message", "Friendship Ended"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -496,20 +511,39 @@ public class UserResources {
 		return tokensOutput;
 
 	}
-
-	private void deleteAllSessionsForUser(String username) {
-		Query<Entity> query = Query.newEntityQueryBuilder()
-				.setKind("Session")
-				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
-				.build();
-
-		QueryResults<Entity> sessions = datastore.run(query);
-
-		while (sessions.hasNext()) {
-			Entity session = sessions.next();
-			datastore.delete(session.getKey());
+	
+	private void querydelete(String kind,String type,String name) {
+		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
+				.setKind(kind)
+				.setFilter(PropertyFilter.eq(type, name))
+				.build());
+		while (results.hasNext())
+			datastore.delete(results.next().getKey());
+	}
+	
+	private void becomeloner(String name) {
+		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
+				.setKind("Friend")
+				.setFilter(PropertyFilter.eq("username_1", name))
+				.build());
+		while (results.hasNext()) {
+			FriendFull friend = FriendFull.fromdatabase(results.next());
+			querydelete("ForumPost","friend_id",friend.formatkey());
+			datastore.delete(friend.getKey());
+		}
+		results = datastore.run(Query.newEntityQueryBuilder()
+				.setKind("Friend")
+				.setFilter(PropertyFilter.eq("username_2", name))
+				.build());
+		while (results.hasNext()) {
+			FriendFull friend = FriendFull.fromdatabase(results.next());
+			querydelete("ForumPost","friend_id",friend.formatkey());
+			datastore.delete(friend.getKey());
 		}
 	}
+	
+
+
 
 	private static Response buildresponse(Map<String,Object> map) {
 		return ResponceBuilder.constructorsuccess(map);
