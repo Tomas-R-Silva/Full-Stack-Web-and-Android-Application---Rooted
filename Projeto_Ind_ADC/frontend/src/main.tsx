@@ -19,6 +19,7 @@ import DashboardADM from "./components/Dashboard-Page/Dashboard-Admin.tsx";
 import DashboardBO from "./components/Dashboard-Page/Dashboard-Backoffice.tsx";
 import PublicPage from "./components/Account-Page/Public-Page.tsx";
 import EventUpdater from "./components/Events-Page/Event-Updater.tsx";
+import EventJoins from "./components/Events-Page/Event-Joins.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -53,6 +54,14 @@ createRoot(document.getElementById("root")!).render(
             element={
               <ProtectedRoute>
                 <EventUpdater />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/:id/joins"
+            element={
+              <ProtectedRoute>
+                <EventJoins />
               </ProtectedRoute>
             }
           />

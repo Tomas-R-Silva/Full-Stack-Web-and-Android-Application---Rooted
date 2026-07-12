@@ -13,6 +13,7 @@ import placeholder from "../../assets/images/placeholder.png";
 import "./Event-Elements.css";
 import { useAuth } from "../AuthContext";
 import editSquare_w from "../../assets/icons/edit_square_white.svg";
+import manageAccounts_w from "../../assets/icons/manage_accounts_w.svg";
 import EventUpdater from "./Event-Updater";
 import Chat from "../Forum-elements/Chat";
 import { useMapsPage } from "../../api/maps";
@@ -72,6 +73,14 @@ function EventElements() {
             className="edit-icon"
             src={editSquare_w}
             onClick={() => navigate("/events/" + id + "/edit")}
+            style={{ cursor: "pointer" }}
+          />
+        )}
+        {isAuthenticated && event && event.organizerUsername === username && (
+          <img
+            className="edit-icon mt-4"
+            src={manageAccounts_w}
+            onClick={() => navigate("/events/" + id + "/joins")}
             style={{ cursor: "pointer" }}
           />
         )}

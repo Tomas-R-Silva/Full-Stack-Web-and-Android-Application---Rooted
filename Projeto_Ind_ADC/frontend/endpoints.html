@@ -707,6 +707,35 @@
 <div class="endpoint">
   <div class="endpoint-header">
     <span class="method">POST</span>
+    <span class="path">/events/uploadimageurls</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN · max 5 total</span>
+  </div>
+  <p class="desc">Attaches images that are <b>already hosted URLs</b> to the event — no Base64 decode, no GCS upload, just stored directly. Same 5-image cap as <code>/events/uploadimages</code>; blank URLs are ignored.</p>
+  <div class="label">Request</div>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>,
+    <span class="key-str">"images"</span>: [
+      <span class="val-str">"https://storage.googleapis.com/adc-final-events/foto1.jpg"</span>,
+      <span class="val-str">"https://exemplo.com/foto2.png"</span>
+    ]
+  }
+}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
+  <span class="key-str">"imageUrls"</span>: [
+    <span class="val-str">"https://storage.googleapis.com/adc-final-events/foto1.jpg"</span>,
+    <span class="val-str">"https://exemplo.com/foto2.png"</span>
+  ],
+  <span class="key-str">"message"</span>: <span class="val-str">"Image URLs added successfully"</span>
+}}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
     <span class="path">/events/deleteimage</span>
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>

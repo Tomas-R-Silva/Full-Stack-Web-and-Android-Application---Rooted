@@ -26,6 +26,7 @@ import type { RequestEventAttendees, EventAttendeesResponse} from "../utils/type
 import type { RequestIsAttendee, IsAttendeeResponse} from "../utils/types";
 import type { RequestUserAttends, UserAttendsResponse } from "../utils/types";
 import type { RequestImageUpload, ImageUploadResponse} from "../utils/types";
+import type { RequestImageUploadURL, ImageUploadURLResponse} from "../utils/types";
 import type { RequestImageDelete, ImageDeleteResponse} from "../utils/types";
 import type { RequestPostMessage, PostMessageResponse} from "../utils/types";
 import type { RequestMessageDelete, MessageDeleteResponse} from "../utils/types";
@@ -152,7 +153,7 @@ export const deleteEvent = (data: RequestEventDelete) =>
 export const attendEvent = (data: RequestEventAttend) =>
   apiRequest<EventAttendResponse>("/events/attend", data);
 
-export const requestJoinEvent = (data: RequestJoinRequests) =>
+export const requestsJoinEvent = (data: RequestJoinRequests) =>
   apiRequest<JoinRequestsResponse>("/events/joinrequests", data);
 
 export const respondJoinEvent = (data: RequestRespondJoin) =>
@@ -172,6 +173,9 @@ export const UserAttends = (data: RequestUserAttends) =>
 
 export const uploadImage = (data: RequestImageUpload) =>
   apiRequest<ImageUploadResponse>("/events/uploadimages", data);
+
+export const uploadImageURL = (data: RequestImageUploadURL) =>
+  apiRequest<ImageUploadURLResponse>("/events/uploadimageurls", data);
 
 export const deleteImage = (data: RequestImageDelete) =>
   apiRequest<ImageDeleteResponse>("/events/deleteimage", data);

@@ -479,6 +479,21 @@ export type ImageUploadResponse = {
   },
 }
 
+export type RequestImageUploadURL = {
+  token?: {jwt:string;}
+  input: {eventId:string,
+    images: string[],
+  },
+}
+
+export type ImageUploadURLResponse = {
+  status: number,
+  data:{
+    imageUrls: string[],
+    message: string
+  },
+}
+
 export type RequestImageDelete = {
   token?: {jwt:string;}
   input: {eventId:string,

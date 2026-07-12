@@ -1,6 +1,7 @@
 import type {
   ImageDeleteResponse,
   ImageUploadResponse,
+  ImageUploadURLResponse,
   RequestEventCancel,
   RequestEventDelete,
 } from "../../utils/types";
@@ -20,6 +21,7 @@ import {
   deleteImage,
   cancelEvent,
   deleteEvent,
+  uploadImageURL,
 } from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
 
@@ -155,18 +157,65 @@ function EventUpdater() {
   const handleImagesUpload = async () => {
     try {
       const token = sessionStorage.getItem("token");
-      if (!token || !event) return;
+      if (!token || !event || selectedImages.length === 0) return;
 
-      console.log("Uploading..." + selectedImages);
+      // Cover image
+      const cover = selectedImages[0];
 
-      const res: ImageUploadResponse = await uploadImage({
-        token: { jwt: token },
-        input: {
-          eventId: event.eventId,
-          images: selectedImages,
-        },
-      });
-      console.log(res.data.message);
+      if (cover.startsWith("data:image/")) {
+        const res = await uploadImage({
+          token: { jwt: token },
+          input: {
+            eventId: event.eventId,
+            images: [cover],
+          },
+        });
+
+        console.log("Cover:", res.data.message);
+      } else if (cover.startsWith("http")) {
+        const res = await uploadImageURL({
+          token: { jwt: token },
+          input: {
+            eventId: event.eventId,
+            images: [cover],
+          },
+        });
+
+        console.log("Cover:", res.data.message);
+      }
+
+      // Remaining images
+      const remaining = selectedImages.slice(1);
+
+      const remaining64 = remaining.filter((img) =>
+        img.startsWith("data:image/"),
+      );
+
+      const remainingURL = remaining.filter((img) => img.startsWith("http"));
+
+      if (remaining64.length > 0) {
+        const res = await uploadImage({
+          token: { jwt: token },
+          input: {
+            eventId: event.eventId,
+            images: remaining64,
+          },
+        });
+
+        console.log("Base64:", res.data.message);
+      }
+
+      if (remainingURL.length > 0) {
+        const res = await uploadImageURL({
+          token: { jwt: token },
+          input: {
+            eventId: event.eventId,
+            images: remainingURL,
+          },
+        });
+
+        console.log("URLs:", res.data.message);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -254,10 +303,11 @@ function EventUpdater() {
     const hasErrors = Object.values(newErrors).some((error) => error !== "");
     if (hasErrors) return;
 
-    if (event?.imageUrls && event.imageUrls.length > 0) {
+    if (event?.imageUrls?.length) {
       await handleImagesDelete();
     }
-    if (selectedImages.length > 0) {
+
+    if (selectedImages.length) {
       await handleImagesUpload();
     }
 

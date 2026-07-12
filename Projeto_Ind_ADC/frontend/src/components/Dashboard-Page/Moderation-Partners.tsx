@@ -90,7 +90,7 @@ function ModerationPartners() {
                         >
                           TokenId:{" "}
                         </span>
-                        <span>{session.tokenID}</span>
+                        <span>{session.jwt}</span>
                       </div>
 
                       <div>
