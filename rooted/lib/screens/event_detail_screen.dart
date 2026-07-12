@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import '../widgets/full_screen_image.dart';
+import '../widgets/sdg_badge.dart';
 import 'create_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -430,28 +431,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: (_event['sdg'] as List).map((s) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-                        ),
-                        child: Text(
-                          'SDG $s',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                  SdgDetailList(sdgs: _event['sdg']),
                 ],
 
                 if ((_event['description'] as String? ?? '').isNotEmpty) ...[

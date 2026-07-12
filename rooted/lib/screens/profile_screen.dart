@@ -25,8 +25,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isDeletingAccount = false;
 
   String _username = '';
+  String _displayName = '';
   String _email = '';
   String _role = '';
+  String _bio = '';
 
   @override
   void initState() {
@@ -36,13 +38,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadSession() async {
     final username = await SessionStorage.getUsername();
+    final display  = await SessionStorage.getDisplayName();
     final email    = await SessionStorage.getEmail();
     final role     = await SessionStorage.getRole();
+    final bio      = await SessionStorage.getBio();
     if (mounted) {
       setState(() {
-        _username = username ?? '';
-        _email    = email    ?? '';
-        _role     = role     ?? '';
+        _username    = username ?? '';
+        _displayName = display  ?? '';
+        _email       = email    ?? '';
+        _role        = role     ?? '';
+        _bio         = bio      ?? '';
       });
       await _loadSavedImage();
     } else {
@@ -89,7 +95,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => _EditProfileSheet(
         username: _username,
+        displayName: _displayName,
         email: _email,
+        bio: _bio,
         onSaved: () {
           _loadSession(); // reload data after saving
           ScaffoldMessenger.of(context).showSnackBar(
@@ -270,7 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Username + role badge
             Text(
-              _username.isEmpty ? '—' : _username,
+              _displayName.isEmpty ? '—' : _displayName,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -304,6 +312,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _InfoRow(icon: Icons.alternate_email_rounded, label: 'Username', value: _username),
               const Divider(height: 1),
               _InfoRow(icon: Icons.email_outlined, label: 'Email', value: _email.isEmpty ? '—' : _email),
+              const Divider(height: 1),
+              _InfoRow(icon: Icons.info_outline, label: 'Bio', value: _bio.isEmpty ? 'No bio provided' : _bio),
             ]),
 
             const SizedBox(height: 24),
@@ -464,12 +474,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 class _EditProfileSheet extends StatefulWidget {
   final String username;
+  final String displayName;
   final String email;
+  final String bio;
   final VoidCallback onSaved;
 
   const _EditProfileSheet({
     required this.username,
+    required this.displayName,
     required this.email,
+    required this.bio,
     required this.onSaved,
   });
 
@@ -481,19 +495,22 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _displayController;
   late final TextEditingController _emailController;
+  late final TextEditingController _bioController;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _displayController = TextEditingController(text: widget.username);
+    _displayController = TextEditingController(text: widget.displayName);
     _emailController = TextEditingController(text: widget.email);
+    _bioController = TextEditingController(text: widget.bio);
   }
 
   @override
   void dispose() {
     _displayController.dispose();
     _emailController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -502,17 +519,34 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     setState(() => _isSaving = true);
 
     final jwt = await SessionStorage.getJwt();
+    final role = await SessionStorage.getRole();
     if (jwt == null) {
       setState(() => _isSaving = false);
       return;
     }
 
     try {
+      final newDisplayName = _displayController.text.trim();
+      final newEmail = _emailController.text.trim();
+      final newBio = _bioController.text.trim();
+
       await ApiService.modifyAccount(
         jwt: jwt,
-        username: _displayController.text.trim(),
-        email: _emailController.text.trim(),
+        username: newDisplayName,
+        email: newEmail,
+        bio: newBio,
       );
+
+      // Persist changes locally so they are visible immediately
+      await SessionStorage.save(
+        jwt: jwt,
+        username: widget.username,
+        displayName: newDisplayName,
+        email: newEmail,
+        role: role ?? '',
+        bio: newBio,
+      );
+
       if (mounted) {
         Navigator.pop(context);
         widget.onSaved();
@@ -609,6 +643,18 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _bioController,
+                  maxLines: 3,
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(
+                    labelText: 'Bio',
+                    prefixIcon: Icon(Icons.info_outline_rounded, size: 20),
+                    hintText: 'Tell us a bit about yourself...',
+                  ),
+                  onFieldSubmitted: (_) => _save(),
                 ),
               ],
             ),

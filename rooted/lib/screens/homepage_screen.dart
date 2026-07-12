@@ -3,6 +3,8 @@ import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import '../widgets/filter_dialog.dart';
+import '../widgets/full_screen_image.dart';
+import '../widgets/sdg_badge.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
 import 'user_profile_screen.dart';
@@ -267,13 +269,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  }
-
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -281,8 +276,7 @@ class _HomePageState extends State<HomePage> {
     return SafeArea(
       child: Column(
         children: [
-          _buildHeader(),
-          _buildToggle(),
+          _buildTopBar(),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadEvents,
@@ -295,38 +289,31 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+  Widget _buildTopBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${_greeting()}, ${_username ?? 'Guest'} 👋',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _jwt == null
-                      ? 'Login to join events.'
-                      : 'Find what\'s happening.',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-                ),
-              ],
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  _tabItem('Feed', HomeViewType.feed),
+                  _tabItem('Discover', HomeViewType.discover),
+                ],
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary),
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary, size: 22),
             onPressed: _loadEvents,
+            visualDensity: VisualDensity.compact,
           ),
           IconButton(
             icon: Icon(
@@ -334,34 +321,17 @@ class _HomePageState extends State<HomePage> {
               color: (_selectedCategory != null || _selectedSDGs.isNotEmpty || _selectedAccessible)
                   ? AppTheme.primary
                   : AppTheme.textSecondary,
+              size: 22,
             ),
             onPressed: _showFilterDialog,
+            visualDensity: VisualDensity.compact,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildToggle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Container(
-        height: 45,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            _toggleItem('Feed', HomeViewType.feed),
-            _toggleItem('Discover', HomeViewType.discover),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _toggleItem(String label, HomeViewType type) {
+  Widget _tabItem(String label, HomeViewType type) {
     final isSelected = _viewType == type;
     return Expanded(
       child: GestureDetector(
@@ -374,10 +344,10 @@ class _HomePageState extends State<HomePage> {
           }
         },
         child: Container(
-          margin: const EdgeInsets.all(4),
+          margin: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
@@ -392,8 +362,8 @@ class _HomePageState extends State<HomePage> {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
               color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
             ),
           ),
@@ -489,6 +459,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildTinderCard(Map<String, dynamic> event) {
     final imageUrls = event['imageUrls'] as List<dynamic>?;
     final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+    final sdgs = event['sdg'] as List<dynamic>? ?? [];
 
     return Container(
       width: double.infinity,
@@ -517,12 +488,25 @@ class _HomePageState extends State<HomePage> {
               child: firstImage != null
                   ? ClipRRect(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                      child: Hero(
-                        tag: 'event_image_${event['eventId']}',
-                        child: Image.network(
-                          firstImage,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullScreenImage(
+                                imageUrl: firstImage,
+                                tag: 'event_image_${event['eventId']}',
+                              ),
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: 'event_image_${event['eventId']}',
+                          child: Image.network(
+                            firstImage,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
                         ),
                       ),
                     )
@@ -568,6 +552,10 @@ class _HomePageState extends State<HomePage> {
                   _metaRow(Icons.calendar_today_rounded, _formatDate(event['startDate'])),
                   const SizedBox(height: 4),
                   _metaRow(Icons.location_on_rounded, event['location'] as String? ?? 'No location'),
+                  if (sdgs.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    SdgChipRow(sdgs: sdgs, compact: true),
+                  ],
                   const Spacer(),
                   Text(
                     event['description'] as String? ?? 'No description provided.',
@@ -734,15 +722,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   if (sdgs.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: sdgs.map((s) => _badge(
-                        'SDG $s',
-                        Colors.green.shade50,
-                        Colors.green.shade700,
-                      )).toList(),
-                    ),
+                    SdgChipRow(sdgs: sdgs, compact: true),
                   ],
                   const SizedBox(height: 12),
                   if (!isOwn)
