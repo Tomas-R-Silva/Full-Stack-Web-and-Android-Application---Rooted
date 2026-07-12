@@ -461,7 +461,7 @@
     <span class="key-str">"isPublic"</span>:          <span class="val-bool">true</span>,
     <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,
     <span class="key-str">"createdAt"</span>:         <span class="val-num">1759000000</span>,
-    <span class="key-str">"imageUrls"</span>:         [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> ],
+    <span class="key-str">"imageUrls"</span>:         [ { <span class="key-str">"id"</span>: <span class="val-str">"a1b2c3"</span>, <span class="key-str">"url"</span>: <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> } ],
     <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
     <span class="key-str">"sdq"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
@@ -683,7 +683,7 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN · max 5 total</span>
   </div>
-  <p class="desc">Uploads images to Google Cloud Storage and stores their URLs on the event. Images are sent as Base64 data URLs.</p>
+  <p class="desc">Uploads images to Google Cloud Storage and stores them on the event. Images are sent as Base64 data URLs. Each stored image is an <code>{ id, url }</code> object — the <code>id</code> is unique (even for identical images) and is what you pass to <code>/events/deleteimage</code>.</p>
   <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
@@ -698,8 +698,8 @@
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"imageUrls"</span>: [
-    <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid1"</span>,
-    <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span>
+    { <span class="key-str">"id"</span>: <span class="val-str">"a1b2c3"</span>, <span class="key-str">"url"</span>: <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid1"</span> },
+    { <span class="key-str">"id"</span>: <span class="val-str">"d4e5f6"</span>, <span class="key-str">"url"</span>: <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> }
   ],
   <span class="key-str">"message"</span>: <span class="val-str">"Images uploaded successfully"</span>
 }}</pre>
@@ -727,8 +727,8 @@
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"imageUrls"</span>: [
-    <span class="val-str">"https://storage.googleapis.com/adc-final-events/foto1.jpg"</span>,
-    <span class="val-str">"https://exemplo.com/foto2.png"</span>
+    { <span class="key-str">"id"</span>: <span class="val-str">"a1b2c3"</span>, <span class="key-str">"url"</span>: <span class="val-str">"https://storage.googleapis.com/adc-final-events/foto1.jpg"</span> },
+    { <span class="key-str">"id"</span>: <span class="val-str">"d4e5f6"</span>, <span class="key-str">"url"</span>: <span class="val-str">"https://exemplo.com/foto2.png"</span> }
   ],
   <span class="key-str">"message"</span>: <span class="val-str">"Image URLs added successfully"</span>
 }}</pre>
@@ -741,18 +741,18 @@
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>
   </div>
-  <p class="desc">Removes one or more images from the event and from Cloud Storage.</p>
+  <p class="desc">Removes one or more images from the event <b>by their id</b>. The Cloud Storage file is deleted only if no other image entry still references the same URL — so removing one duplicate keeps the shared file for the others.</p>
   <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
     <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>,
-    <span class="key-str">"images"</span>:  [ <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid"</span> ]   
-    <span class="comment">// one or more image URLs to remove</span>
+    <span class="key-str">"imageIds"</span>: [ <span class="val-str">"a1b2c3"</span> ]
+    <span class="comment">// one or more image ids to remove (each is an imageUrls[].id)</span>
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Image deleted successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Image(s) deleted successfully"</span> }}</pre>
 </div>
 
 <!-- ===================== FORUM ===================== -->

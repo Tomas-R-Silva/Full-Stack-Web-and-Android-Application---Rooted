@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,8 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery;
+import com.google.cloud.datastore.EntityValue;
+import com.google.cloud.datastore.FullEntity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.Query;
@@ -676,22 +679,13 @@ public class EventResources {
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<Value<?>> existing;
-			if (eventEntity.contains("image_urls")) {
-				existing = eventEntity.getList("image_urls");
-			} else {
-				existing = Collections.emptyList();
-			}
+			List<Map<String, String>> images = readImages(eventEntity);
 
-			int slots = 5 - existing.size();
+			int slots = 5 - images.size();
 			if (slots <= 0)
 				return Error.invalid_input();
 
-			List<StringValue> updatedList = existing.stream()
-					.map(v -> StringValue.of((String) v.get()))
-					.collect(Collectors.toList());
-
-			List<String> uploadedUrls = new ArrayList<>();
+			List<Map<String, Object>> uploaded = new ArrayList<>();
 			List<String> toUpload = input.getImages().subList(0, Math.min(input.getImages().size(), slots));
 			for (String dataUrl : toUpload) {
 				// Parse Base64 data URL: "data:<type>;base64,<data>"
@@ -699,16 +693,20 @@ public class EventResources {
 				String contentType = parts[0].replace("data:", "").replace(";base64", "");
 				byte[] bytes = java.util.Base64.getDecoder().decode(parts[1]);
 				String imageUrl = GCSUploader.uploadImage(bytes, contentType);
-				updatedList.add(StringValue.of(imageUrl));
-				uploadedUrls.add(imageUrl);
+				String id = UUID.randomUUID().toString();
+				Map<String, String> img = new HashMap<>();
+				img.put("id", id);
+				img.put("url", imageUrl);
+				images.add(img);
+				uploaded.add(Map.of("id", id, "url", imageUrl));
 			}
 
 			Entity updated = Entity.newBuilder(eventEntity)
-					.set("image_urls", updatedList)
+					.set("image_urls", toImageValues(images))
 					.build();
 			datastore.put(updated);
 
-			return ok(Map.of("imageUrls", uploadedUrls, "message", "Images uploaded successfully"));
+			return ok(Map.of("imageUrls", uploaded, "message", "Images uploaded successfully"));
 
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -732,38 +730,33 @@ public class EventResources {
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<Value<?>> existing;
-			if (eventEntity.contains("image_urls")) {
-				existing = eventEntity.getList("image_urls");
-			} else {
-				existing = Collections.emptyList();
-			}
+			List<Map<String, String>> images = readImages(eventEntity);
 
-			int slots = 5 - existing.size();
+			int slots = 5 - images.size();
 			if (slots <= 0)
 				return Error.invalid_input();
 
-			List<StringValue> updatedList = existing.stream()
-					.map(v -> StringValue.of((String) v.get()))
-					.collect(Collectors.toList());
-
 			// Unlike /uploadimages, these are already hosted URLs, so no Base64 decode
 			// or GCS upload just attach them directly (respecting the 5-image limit).
-			List<String> addedUrls = new ArrayList<>();
+			List<Map<String, Object>> added = new ArrayList<>();
 			List<String> toAdd = input.getImages().subList(0, Math.min(input.getImages().size(), slots));
 			for (String url : toAdd) {
 				if (url == null || url.isBlank())
 					continue;
-				updatedList.add(StringValue.of(url));
-				addedUrls.add(url);
+				String id = UUID.randomUUID().toString();
+				Map<String, String> img = new HashMap<>();
+				img.put("id", id);
+				img.put("url", url);
+				images.add(img);
+				added.add(Map.of("id", id, "url", url));
 			}
 
 			Entity updated = Entity.newBuilder(eventEntity)
-					.set("image_urls", updatedList)
+					.set("image_urls", toImageValues(images))
 					.build();
 			datastore.put(updated);
 
-			return ok(Map.of("imageUrls", addedUrls, "message", "Image URLs added successfully"));
+			return ok(Map.of("imageUrls", added, "message", "Image URLs added successfully"));
 
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -782,7 +775,8 @@ public class EventResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			ImageRequestInput input=req.getInput();
-			if (input.getImages().isEmpty())
+			List<String> idsToDelete = input.getImageIds();
+			if (idsToDelete.isEmpty())
 				ErrorException.trow(9906);
 			Entity eventEntity = getEventEntity(input);
 			String organizer = eventEntity.getString("organizer_username");
@@ -791,26 +785,36 @@ public class EventResources {
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<Value<?>> existing=(eventEntity.contains("image_urls"))?eventEntity.getList("image_urls"):Collections.emptyList();
+			List<Map<String, String>> images = readImages(eventEntity);
+			int before = images.size();
 
-			for(String imageUrl:input.getImages()) {
-				List<StringValue> updatedList = existing.stream()
-						.filter(v -> !imageUrl.equals(v.get()))
-						.map(v -> StringValue.of((String) v.get()))
-						.collect(Collectors.toList());
+			// Remove the entries whose id was requested, collecting their URLs.
+			List<String> removedUrls = new ArrayList<>();
+			images.removeIf(img -> {
+				if (idsToDelete.contains(img.get("id"))) {
+					removedUrls.add(img.get("url"));
+					return true;
+				}
+				return false;
+			});
 
-				if (updatedList.size() == existing.size())
-					return Error.invalid_input(); // image not found in this event
+			if (images.size() == before)
+				return Error.invalid_input(); // no matching image id in this event
 
-				GCSUploader.deleteImage(imageUrl);
-
-				Entity updated = Entity.newBuilder(eventEntity)
-						.set("image_urls", updatedList)
-						.build();
-				txn.put(updated);
+			// Delete the GCS object only if no remaining entry still references that URL,
+			// so removing one duplicate keeps the shared file for the others.
+			for (String url : removedUrls) {
+				boolean stillUsed = images.stream().anyMatch(img -> url.equals(img.get("url")));
+				if (!stillUsed)
+					GCSUploader.deleteImage(url);
 			}
+
+			Entity updated = Entity.newBuilder(eventEntity)
+					.set("image_urls", toImageValues(images))
+					.build();
+			txn.put(updated);
 			txn.commit();
-			return ok(Map.of("message", "Image deleted successfully"));
+			return ok(Map.of("message", "Image(s) deleted successfully"));
 
 		} catch (Exception e) {
 			txn.rollback();
@@ -820,6 +824,43 @@ public class EventResources {
 
 	// Helpers
 
+	// Images are stored as embedded { id, url } entities so duplicates are
+	// distinguishable and can be deleted individually.
+	private static EntityValue imageValue(String id, String url) {
+		return EntityValue.of(FullEntity.newBuilder().set("id", id).set("url", url).build());
+	}
+
+	// Reads the event's images as a mutable list of { id, url } maps. Also works with the
+	// legacy format where each entry was a plain URL string (id defaults to the url).
+	private static List<Map<String, String>> readImages(Entity e) {
+		List<Map<String, String>> images = new ArrayList<>();
+		if (!e.contains("image_urls")) return images;
+		for (Value<?> v : e.<Value<?>>getList("image_urls")) {
+			Object raw = v.get();
+			String id, url;
+			if (raw instanceof FullEntity<?>) {
+				FullEntity<?> fe = (FullEntity<?>) raw;
+				url = fe.contains("url") ? fe.getString("url") : null;
+				id = fe.contains("id") ? fe.getString("id") : url;
+			} else { // legacy plain URL string
+				url = (String) raw;
+				id = url;
+			}
+			Map<String, String> m = new HashMap<>();
+			m.put("id", id);
+			m.put("url", url);
+			images.add(m);
+		}
+		return images;
+	}
+
+	// Converts { id, url } maps back into the Datastore list value.
+	private static List<EntityValue> toImageValues(List<Map<String, String>> images) {
+		List<EntityValue> list = new ArrayList<>(images.size());
+		for (Map<String, String> m : images)
+			list.add(imageValue(m.get("id"), m.get("url")));
+		return list;
+	}
 
 	private Entity getEventEntity(EventInputInterface event) throws ErrorException {
 		if (event.getEventId() == null || event.getEventId().isBlank())
@@ -870,12 +911,8 @@ public class EventResources {
 		}
 		map.put("SDG", sdg);
 
-		List<String> imageUrls = e.contains("image_urls")
-				? e.<Value<?>>getList("image_urls").stream()
-						.map(v -> (String) v.get())
-						.collect(Collectors.toList())
-						: Collections.emptyList();
-		map.put("imageUrls", imageUrls);
+		// Each image is returned as { id, url } (legacy plain-URL entries are tolerated).
+		map.put("imageUrls", readImages(e));
 		return map;
 	}
 
