@@ -1,10 +1,13 @@
-import type { MessageProps } from "../../utils/types";
+import type { MessageDeleteResponse, MessageProps } from "../../utils/types";
 import replyAll from "../../assets/icons/reply_all.svg";
-import { getUser } from "../../api/auth";
+import close_w from "../../assets/icons/close_white.svg";
+import { DeleteMessage, getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
 import { useState, useEffect } from "react";
+import { useAuth } from "../AuthContext";
 
 function MessageRight(texts: MessageProps) {
+  const { username, role } = useAuth();
   const [user, setUser] = useState<UserInformationResponse>();
   const sdgs = [1, 10, 17];
 
@@ -23,6 +26,21 @@ function MessageRight(texts: MessageProps) {
   const handleSetParent = (parentText: string | undefined) => {
     if (parentText) texts.setParentText(parentText);
     if (texts.postId) texts.setParentId(texts.postId);
+  };
+
+  const handleDeleteMsg = async (postId: string | undefined) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token || !postId) return;
+
+      const res: MessageDeleteResponse = await DeleteMessage({
+        token: { jwt: token },
+        input: postId,
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const loadUser = async (organizer: string) => {
@@ -125,6 +143,16 @@ function MessageRight(texts: MessageProps) {
             onClick={() => handleSetParent(texts.text)}
             style={{ cursor: "pointer" }}
           />
+          {(role === "ADMIN" ||
+            username === texts.authorUsername ||
+            username === texts.eventOrganizer) && (
+            <img
+              className=""
+              src={close_w}
+              onClick={() => handleDeleteMsg(texts.postId)}
+              style={{ cursor: "pointer" }}
+            />
+          )}
         </div>
       </div>
     </>
