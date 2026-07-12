@@ -3,8 +3,10 @@ import type {
   RequestChangePassword,
   RequestModAccount,
 } from "../../utils/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { changePassword, modAccount } from "../../api/auth";
+import { getUser } from "../../api/auth";
+import type { UserInformationResponse } from "../../utils/types";
 
 type ErrorState = {
   [K in keyof RequestModAccount["input"]]: string;
@@ -12,6 +14,7 @@ type ErrorState = {
 
 function AccountInformation() {
   const { username, role } = useAuth();
+  const [user, setUser] = useState<UserInformationResponse>();
   const [changingPassword, setChangingPassword] = useState(false);
   const [formData, setFormData] = useState<RequestModAccount>({
     token: { jwt: "" },
@@ -119,6 +122,36 @@ function AccountInformation() {
     }
   };
 
+  const loadUser = async (organizer: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!organizer) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: organizer,
+        },
+      });
+      console.log(res);
+      setUser(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!username) return;
+    loadUser(username);
+  }, [username]);
+
   return (
     <>
       <div className="container">
@@ -138,15 +171,31 @@ function AccountInformation() {
               <input
                 type="text"
                 name="username"
-                value={username ?? ""}
                 readOnly
+                className="form-control border-0"
+                style={{
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+                placeholder={user?.data.username + " (Not editable)"}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label text-white fw-semibold">
+                Display Name
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={username ?? ""}
                 onChange={handleChange}
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-                placeholder={username ?? "No username"}
+                placeholder={user?.data.display ?? "No username"}
               />
               {errors.username && (
                 <small className="text-danger">{errors.username}</small>
@@ -168,7 +217,8 @@ function AccountInformation() {
                   color: "var(--color-white)",
                 }}
                 placeholder={
-                  "Change your email here. Current: " + (username ?? "No email")
+                  "Change your email here. Current: " +
+                  (user?.data.email ?? "No email")
                 }
               />
               {errors.email && (
@@ -247,7 +297,9 @@ function AccountInformation() {
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-                placeholder={"Change your description here."}
+                placeholder={
+                  "Change your description here. Current: " + user?.data.bio
+                }
               />
             </div>
 

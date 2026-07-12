@@ -8,6 +8,7 @@ import type {RequestChangePassword, ChangePasswordResponse} from "../utils/types
 import type {RequestChangeRole, ChangeRoleResponse} from "../utils/types";
 import type {RequestDeleteAccount, DeleteAccountResponse} from "../utils/types";
 import type {RequestAddFriend, AddFriendResponse} from "../utils/types";
+import type {RequestAddNickname, AddNicknameResponse} from "../utils/types";
 import type {RequestUnfriend, UnfriendResponse} from "../utils/types";
 import type {RequestFriendsList, FriendsListResponse} from "../utils/types";
 import type {RequestFriendsRequests, FriendsRequestsResponse} from "../utils/types";
@@ -117,6 +118,9 @@ export const deleteAccount = (data: RequestDeleteAccount) =>
 
 export const addFriend = (data: RequestAddFriend) =>
   apiRequest<AddFriendResponse>("/addfriend", data);
+
+export const addNickName = (data: RequestAddNickname) =>
+  apiRequest<AddNicknameResponse>("/addnickname", data);
 
 export const unfriend = (data: RequestUnfriend) =>
   apiRequest<UnfriendResponse>("/unfriend", data);
