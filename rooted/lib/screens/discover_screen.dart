@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 import '../widgets/events_maps.dart';
 
@@ -10,19 +11,19 @@ class DiscoverPage extends StatefulWidget {
 }
 
 class _DiscoverPageState extends State<DiscoverPage> {
-  final List<String> _filters = ['For you', 'Near you'];
-  final List<String> _categories = [
+  final List<String> _categoryOptions = [
     'Music',
     'Sports',
     'Tech',
     'Food',
     'Art',
-    'Culture',
+    'Business',
+    'Community',
+    'Other',
   ];
 
-  String _selectedFilter = 'For you';
-  String _selectedCategory = 'Music';
-
+  final Set<String> _selectedCategories = <String>{};
+  final Set<int> _selectedSdgs = <int>{};
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -35,102 +36,61 @@ class _DiscoverPageState extends State<DiscoverPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: AppTheme.background,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
                 'Discover Events',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: AppTheme.textPrimary),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search events...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {});
-                    },
-                  ),
-                  filled: true,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                onSubmitted: (_) => setState(() {}),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
-                children: _filters.map((filter) {
-                  final selected = filter == _selectedFilter;
-                  return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: filter == _filters.last ? 0 : 8,
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              selected ? AppTheme.primary : Colors.grey.shade200,
-                          foregroundColor:
-                              selected ? Colors.white : Colors.black87,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () => setState(() {
-                          _selectedFilter = filter;
-                        }),
-                        child: Text(filter),
-                      ),
+                children: [
+                  Expanded(
+                    child: _buildFilterDropdown<String>(
+                      label: 'Category',
+                      options: _categoryOptions,
+                      selectedValues: _selectedCategories,
+                      valueLabel: (value) => value,
+                      onChanged: (values) {
+                        setState(() {
+                          _selectedCategories.clear();
+                          _selectedCategories.addAll(values);
+                        });
+                      },
                     ),
-                  );
-                }).toList(),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildFilterDropdown<int>(
+                      label: 'SDGs',
+                      options: List.generate(17, (index) => index + 1),
+                      selectedValues: _selectedSdgs,
+                      valueLabel: (value) => 'SDG $value',
+                      onChanged: (values) {
+                        setState(() {
+                          _selectedSdgs.clear();
+                          _selectedSdgs.addAll(values);
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-            if (_selectedFilter == 'Near you') ...[
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _categories
-                      .map((category) => DropdownMenuItem(
-                            value: category,
-                            child: Text(category),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedCategory = value);
-                    }
-                  },
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: EventsMaps(
-                  server: '',
-                  mapsApiKey: null,
-                  categoryFilter: _selectedFilter == 'Near you' ? _selectedCategory.toUpperCase() : null,
+                  categoryFilters: _selectedCategories.isEmpty ? null : _selectedCategories.toList(),
+                  sdgFilters: _selectedSdgs.isEmpty ? null : _selectedSdgs.toList(),
                   searchQuery: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
                 ),
               ),
@@ -138,6 +98,65 @@ class _DiscoverPageState extends State<DiscoverPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterDropdown<T>({
+    required String label,
+    required List<T> options,
+    required Set<T> selectedValues,
+    required String Function(T) valueLabel,
+    required ValueChanged<Set<T>> onChanged,
+  }) {
+    final labelText = selectedValues.isEmpty
+        ? label
+        : selectedValues.length == 1
+            ? valueLabel(selectedValues.first)
+            : '${selectedValues.length} selected';
+
+    return PopupMenuButton<T>(
+      tooltip: label,
+      offset: const Offset(0, 48),
+      child: Container(
+        height: 54,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.inputBorder),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                labelText,
+                style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_drop_down, color: AppTheme.primary),
+          ],
+        ),
+      ),
+      itemBuilder: (context) => options
+          .map(
+            (option) => CheckedPopupMenuItem<T>(
+              value: option,
+              checked: selectedValues.contains(option),
+              child: Text(valueLabel(option)),
+            ),
+          )
+          .toList(),
+      onSelected: (value) {
+        final nextSelection = Set<T>.from(selectedValues);
+        if (nextSelection.contains(value)) {
+          nextSelection.remove(value);
+        } else {
+          nextSelection.add(value);
+        }
+        onChanged(nextSelection);
+      },
     );
   }
 }

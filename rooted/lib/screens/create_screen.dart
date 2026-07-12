@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import '../theme/app_theme.dart';
@@ -8,6 +10,7 @@ import '../widgets/location_autocomplete.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'home_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 class CreatePage extends StatefulWidget {
@@ -95,7 +98,7 @@ class _CreatePageState extends State<CreatePage> {
     'Other',
   ];
 
-  final String _placesApiKey = 'AIzaSyAmYzNozAPQB27PHT4uP00qoBOg-cz7jdk';
+  final String _placesApiKey = dotenv.env['MAPS_API_KEY'] ?? '';
 
   Future<void> _pickEventImage() async {
     final picker = ImagePicker();
@@ -135,6 +138,33 @@ class _CreatePageState extends State<CreatePage> {
     _timeController.dispose();
     _eventImage?.delete().ignore();
     super.dispose();
+  }
+
+  //Usado para atribuir lat e lng aos eventos através da sua location
+  Future<LatLng?> _geocodeLocation(String address) async {
+    try {
+      final uri = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=${_placesApiKey}',
+      );
+      final response = await http.get(uri);
+      if (response.statusCode != 200) {
+        return null;
+      }
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final results = body['results'] as List<dynamic>?;
+      if (results == null || results.isEmpty) {
+        return null;
+      }
+
+      final location = results.first['geometry']['location'];
+      return LatLng(
+        (location['lat'] as num).toDouble(),
+        (location['lng'] as num).toDouble(),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _submitEvent() async {
