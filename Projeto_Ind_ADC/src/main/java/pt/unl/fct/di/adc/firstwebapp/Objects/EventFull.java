@@ -20,6 +20,7 @@ import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 
 public class EventFull extends EventAtributsid implements Full,EventInputInterface {
+	private static final int MIN_SDG=1;
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
 			.setProjectId("adc-final")
 			.build()
@@ -66,11 +67,15 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 			list.add(Error.createmap(9917));
 		if(minAttendees<0||(maxAttendees!=0&&minAttendees>maxAttendees))
 			list.add(Error.createmap(9918));
+		if(sdg.size()<MIN_SDG)
+			list.add(Error.createmap(9938));
+		
 		boolean found=false;
 		Iterator<Long> it=sdg.iterator();
 		while(!found && it.hasNext()) found=SDGcheck(it.next());
 		if(found)
 			list.add(Error.createmap(9933));
+		
 		if(!list.isEmpty())
 			Error.invalid_input(list);
 	}
