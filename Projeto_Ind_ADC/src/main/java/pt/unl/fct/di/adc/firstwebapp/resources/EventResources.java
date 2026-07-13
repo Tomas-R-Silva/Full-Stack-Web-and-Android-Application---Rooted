@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.google.cloud.datastore.Cursor;
@@ -18,6 +19,7 @@ import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
+import com.google.cloud.datastore.Transaction;
 import com.google.cloud.datastore.Value;
 
 import jakarta.ws.rs.Consumes;
@@ -635,12 +637,14 @@ public class EventResources {
 			if (!eventEntity.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<String> existing=eventEntity.getImageUrls();
+			List<Map<String, String>> images = eventEntity.getImageUrls();
 
-			int slots = 5 - existing.size();
+			int slots = 5 - images.size();
 			if (slots <= 0)
 				return Error.invalid_input();
-			List<String> uploadedUrls=new ArrayList<>(Math.min(input.getImages().size(), slots));
+
+			List<Map<String, String>> uploaded = new ArrayList<>(Math.min(input.getImages().size(), slots));
+
 			List<String> toUpload = input.getImages().subList(0, Math.min(input.getImages().size(), slots));
 			for (String dataUrl : toUpload) {
 				// Parse Base64 data URL: "data:<type>;base64,<data>"
@@ -648,14 +652,17 @@ public class EventResources {
 				String contentType = parts[0].replace("data:", "").replace(";base64", "");
 				byte[] bytes = java.util.Base64.getDecoder().decode(parts[1]);
 				String imageUrl = GCSUploader.uploadImage(bytes, contentType);
-				existing.add(imageUrl);
-				uploadedUrls.add(imageUrl);
+
+				String id = UUID.randomUUID().toString();
+				Map<String, String> img = Map.of("id", id,"url", imageUrl);
+				images.add(img);
+				uploaded.add(img);
 			}
 
-			eventEntity.setImageUrls(existing);
+			eventEntity.setImageUrls(images);
 			datastore.put(eventEntity.toentity());
-			return ok(Map.of("imageUrls", uploadedUrls, "message", "Images uploaded successfully"));
 
+			return ok(Map.of("imageUrls", uploaded, "message", "Images uploaded successfully"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -677,29 +684,32 @@ public class EventResources {
 			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<String> updatedList = event.getImageUrls();
 
-			int slots = 5 - updatedList.size();
+			List<Map<String, String>> images = event.getImageUrls();
+
+			int slots = 5 - images.size();
+
 			if (slots <= 0)
 				return Error.invalid_input();
 
 			// Unlike /uploadimages, these are already hosted URLs, so no Base64 decode
 			// or GCS upload just attach them directly (respecting the 5-image limit).
-			List<String> addedUrls = new ArrayList<>();
+			List<Map<String, String>> added = new ArrayList<>();
 			List<String> toAdd = input.getImages().subList(0, Math.min(input.getImages().size(), slots));
 			for (String url : toAdd) {
 				if (url == null || url.isBlank())
 					continue;
-				updatedList.add(url);
-				addedUrls.add(url);
+				String id = UUID.randomUUID().toString();
+				Map<String, String> img = Map.of("id", id, "url", url);
+				images.add(img);
+				added.add(img);
 			}
-			event.setImageUrls(updatedList);
+			
+			event.setImageUrls(images);
 			datastore.put(event.toentity());
-			return ok(Map.of("imageUrls", addedUrls, "message", "Image URLs added successfully"));
 
-		} catch (Exception e) {
-			return Error.fromexception(e);
-		}
+			return ok(Map.of("imageUrls", added, "message", "Image URLs added successfully"));
+		} catch (Exception e) {return Error.fromexception(e);}
 	}
 
 	// -------------------------------------------------------------------------
@@ -710,33 +720,47 @@ public class EventResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteImage(ImageRequest req) {
+		Transaction txn = datastore.newTransaction();
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			ImageRequestInput input=req.getInput();
-			if (input.getImages().isEmpty())
+			List<String> idsToDelete = input.getImageIds();
+			if (idsToDelete.isEmpty())
 				ErrorException.trow(9906);
 			EventFull eventEntity = getEventEntity(input);
 
 			if (!eventEntity.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			List<String> existing = eventEntity.getImageUrls();
-			for(String imageUrl:input.getImages()) 
-				if(existing.contains(imageUrl)) {
-					existing.remove(imageUrl);
-					GCSUploader.deleteImage(imageUrl);
+			List<Map<String, String>> images = eventEntity.getImageUrls();
+			int before = images.size();
+			// Remove the entries whose id was requested, collecting their URLs.
+			List<String> removedUrls = new ArrayList<>();
+			images.removeIf(img -> {
+				if (idsToDelete.contains(img.get("id"))) {
+					removedUrls.add(img.get("url"));
+					return true;
 				}
-			eventEntity.setImageUrls(existing);
-			datastore.put(eventEntity.toentity());
-			return ok(Map.of("message", "Image deleted successfully"));
+				return false;
+			});
+			if (images.size() == before)
+				return Error.invalid_input(); // no matching image id in this event
+			// Delete the GCS object only if no remaining entry still references that URL,
+			// so removing one duplicate keeps the shared file for the others.
+			for (String url : removedUrls) 
+				if (!images.stream().anyMatch(img -> url.equals(img.get("url"))))
+					GCSUploader.deleteImage(url);
 
+			eventEntity.setImageUrls(images);
+			txn.put(eventEntity.toentity());
+			txn.commit();
+			return ok(Map.of("message", "Image(s) deleted successfully"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
 
 	// Helpers
-
 
 	private EventFull getEventEntity(EventInputInterface event) throws ErrorException {
 		if (event.getEventId() == null || event.getEventId().isBlank())

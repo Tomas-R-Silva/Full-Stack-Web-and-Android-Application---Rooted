@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -9,7 +10,10 @@ import java.util.UUID;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.EntityValue;
+import com.google.cloud.datastore.FullEntity;
 import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.Value;
 
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
@@ -30,7 +34,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private String organizerUsername;
 	private Status status;
 	private long createdAt;  // epoch seconds
-	private List<String> imageUrls;
+	private List<Map<String, String>> imageUrls;
 	private List<String> partners;
 	private String eventId;
 	private long attendee;
@@ -84,7 +88,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setPublic(Full.getBoolean(entity,"is_public"));
 		event.setStatus(Status.valueof(Full.getString(entity,"status")));
 		event.setCreatedAt(Full.getLong(entity,"created_at") * TIME_DIVIDER);
-		event.setImageUrls(Full.getStringList(entity,"image_urls"));
+		event.setImageUrls(readImages(entity));
 		event.setpartner(Full.getStringList(entity,"partners"));
 		event.setAccessible(Full.getBoolean(entity,"is_accessible"));
 		event.setSDG(Full.getLongList(entity,"SDG"));
@@ -131,7 +135,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("is_public", this.isPublic())
 				.set("status", this.getStatus().name())
 				.set("created_at", this.getCreatedAt() / TIME_DIVIDER)
-				.set("image_urls", Full.makeStringValueList(imageUrls))
+				.set("image_urls", toImageValues(imageUrls))
 				.set("partners", Full.makeStringValueList(partners))
 				.set("is_accessible", this.isAccessible())
 				.set("SDG", this.getSDG())
@@ -186,8 +190,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public void incAttendee() { attendee++; }
 	public void decAttendee() { attendee--; }
 	public void setAttendee(long attendee) { this.attendee = attendee;}
-	public List<String> getImageUrls() { return imageUrls; }
-	public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
+	public List<Map<String, String>> getImageUrls() { return imageUrls; }
+	public void setImageUrls(List<Map<String, String>> imageUrls) { this.imageUrls = imageUrls; }
 	public long getEnd() { return getStartDate() + getDurationMinutes() * 60L; }
 	public boolean getEnded() {return System.currentTimeMillis()>=getEnd(); }
 	public boolean getStarted() {return System.currentTimeMillis()>=getStartDate(); }
@@ -209,6 +213,42 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		if(partners.contains(user.getUsername()))
 			ErrorException.trow(9936);
 		partners.remove(user.getUsername());
-
 	}
+	
+	// Reads the event's images as a mutable list of { id, url } maps. Also works with the
+	// legacy format where each entry was a plain URL string (id defaults to the url).
+	public static List<Map<String, String>> readImages(Entity e) {
+		List<Map<String, String>> images = new ArrayList<>();
+		if (!e.contains("image_urls")) return images;
+		for (Value<?> v : e.<Value<?>>getList("image_urls")) {
+			Object raw = v.get();
+			String id, url;
+			if (raw instanceof FullEntity<?>) {
+				FullEntity<?> fe = (FullEntity<?>) raw;
+				url = fe.contains("url") ? fe.getString("url") : null;
+				id = fe.contains("id") ? fe.getString("id") : url;
+			} else { // legacy plain URL string
+				url = (String) raw;
+				id = url;
+			}
+			images.add(Map.of("id", id,"url", url));
+		}
+		return images;
+	}
+	
+	// Converts { id, url } maps back into the Datastore list value.
+	private static List<EntityValue> toImageValues(List<Map<String, String>> images) {
+		List<EntityValue> list = new ArrayList<>(images.size());
+		for (Map<String, String> m : images)
+			list.add(imageValue(m.get("id"), m.get("url")));
+		return list;
+	}
+	
+	// Images are stored as embedded { id, url } entities so duplicates are
+	// distinguishable and can be deleted individually.
+	private static EntityValue imageValue(String id, String url) {
+		return EntityValue.of(FullEntity.newBuilder().set("id", id).set("url", url).build());
+	}
+	
 }
+
