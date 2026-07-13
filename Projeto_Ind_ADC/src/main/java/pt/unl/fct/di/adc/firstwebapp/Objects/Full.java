@@ -30,6 +30,10 @@ public interface Full {
 		return e.contains(name)?e.getLong(name):0;
 	}
 	
+	public static double getDouble(Entity e,String name) {
+		return e.contains(name)?e.getDouble(name):0;
+	}
+	
 	public static boolean getBoolean(Entity e,String name) {
 		return e.contains(name)?e.getBoolean(name):false;
 	}

@@ -242,6 +242,10 @@ public class EventResources {
 				existing.setCategory(input.getCategory());
 			if (input.getLocation() != null && !input.getLocation().isBlank())
 				existing.setLocation(input.getLocation());
+			if (input.getLatitudenull() != null && !input.getLocation().isBlank())
+				existing.setLatitude(input.getLatitude());
+			if (input.getLongitudenull() != null && !input.getLocation().isBlank())
+				existing.setLongitude(input.getLongitude());
 			if (input.getStartDatenull() != null && input.getStartDate() > 0)
 				existing.setStartDate(input.getStartDate());
 			if (input.getDurationMinutesnull() != null && input.getDurationMinutes() > 0)
