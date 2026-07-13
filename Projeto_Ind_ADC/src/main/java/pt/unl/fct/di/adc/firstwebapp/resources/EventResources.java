@@ -88,6 +88,8 @@ public class EventResources {
 					.set("description", event.getDescription())
 					.set("category", event.getCategory().name())
 					.set("location", event.getLocation())
+					.set("latitude", event.getLatitude())
+					.set("longitude", event.getLongitude())
 					.set("start_date", event.getStartDate())
 					.set("duration_minutes", event.getDurationMinutes())
 					.set("organizer_username", event.getOrganizerUsername())
@@ -273,6 +275,10 @@ public class EventResources {
 				builder.set("category", input.getCategory().toString());
 			if (input.getLocation() != null && !input.getLocation().isBlank())
 				builder.set("location", input.getLocation());
+			if (input.getLatitudenull() != null)
+				builder.set("latitude", input.getLatitude());
+			if (input.getLongitudenull() != null)
+				builder.set("longitude", input.getLongitude());
 			if (input.getStartDatenull() != null && input.getStartDate() > 0)
 				builder.set("start_date", input.getStartDate());
 			if (input.getDurationMinutesnull() != null && input.getDurationMinutes() > 0)
@@ -893,6 +899,8 @@ public class EventResources {
 		map.put("description", e.contains("description")?e.getString("description"):null);
 		map.put("category", e.contains("category")?e.getString("category"):null);
 		map.put("location", e.contains("location")?e.getString("location"):null);
+		map.put("latitude", e.contains("latitude")?e.getDouble("latitude"):null);
+		map.put("longitude", e.contains("longitude")?e.getDouble("longitude"):null);
 		map.put("startDate", e.contains("start_date")?e.getLong("start_date"):null);
 		map.put("durationMinutes", e.contains("duration_minutes")?e.getLong("duration_minutes"):null);
 		map.put("organizerUsername", e.contains("organizer_username")?e.getString("organizer_username"):null);

@@ -224,8 +224,8 @@
       <secure>false</secure>
       <max-age>-1</max-age>
     </cookie-config>
-    <tracking-mode>URL</tracking-mode>
     <tracking-mode>COOKIE</tracking-mode>
+    <tracking-mode>URL</tracking-mode>
   </session-config>
   <error-page origin="WebDescriptor(file:///home/tom-s-silva/Uni/Year%203/ADC/ADC-Final/Projeto_Ind_ADC/target/appengine-staging/WEB-INF/web.xml):46">
     <error-code>404</error-code>

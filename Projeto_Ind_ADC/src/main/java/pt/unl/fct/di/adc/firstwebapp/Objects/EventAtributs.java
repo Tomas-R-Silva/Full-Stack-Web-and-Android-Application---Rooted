@@ -13,6 +13,8 @@ public class EventAtributs{
 	protected String description;
 	protected String category;
 	protected String location;
+	protected Double latitude;
+	protected Double longitude;
 	protected Long startDate;// epoch seconds
 	protected Long durationMinutes;// how long the event lasts
 	protected Integer maxAttendees;// 0 = unlimited
@@ -36,6 +38,14 @@ public class EventAtributs{
 
 	public String getLocation() { return location; }
 	public void setLocation(String location) { this.location = location; }
+
+	public double getLatitude() { return zeroifnull(latitude); }
+	public Double getLatitudenull() { return latitude; }
+	public void setLatitude(double latitude) { this.latitude = latitude; }
+
+	public double getLongitude() { return zeroifnull(longitude); }
+	public Double getLongitudenull() { return longitude; }
+	public void setLongitude(double longitude) { this.longitude = longitude; }
 
 	public long getStartDate() { return zeroifnull(startDate); }
 	public Long getStartDatenull() { return startDate; }
@@ -75,6 +85,9 @@ public class EventAtributs{
 		return(n==null)?0:n;
 	}
 	private static long zeroifnull(Long n) {
+		return(n==null)?0:n;
+	}
+	private static double zeroifnull(Double n) {
 		return(n==null)?0:n;
 	}
 	private static boolean zeroifnull(Boolean n) {

@@ -37,6 +37,8 @@ public class Event extends EventAtributsid {
 		this.setDescription(input.getDescription());
 		this.setCategory(input.getCategory());
 		this.setLocation(input.getLocation());
+		this.setLatitude(input.getLatitude());
+		this.setLongitude(input.getLongitude());
 		this.setStartDate(input.getStartDate());
 		this.setDurationMinutes(input.getDurationMinutes());
 		this.setOrganizerUsername(username);
