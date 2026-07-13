@@ -228,13 +228,16 @@
     <span class="method">POST</span>
     <span class="path">/find</span>
     <span class="tag tag-auth">auth required</span>
-    <span class="note">USER</span>
   </div>
-  <p class="desc">Finds a user by username or display name.(not implemented)</p>
+  <p class="desc">Finds a user by username or display name.</p>
   <div class="label">Request</div>
- <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
+  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"found"</span>: [<span class="val-str">"alice"</span>, <span class="val-str">"alice42"</span> ]}}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"found"</span>: [
+    { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"display"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> },
+    { <span class="key-str">"username"</span>: <span class="val-str">"alice42"</span>, <span class="key-str">"display"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice42@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"ADMIN"</span> }
+  ]
+}}</pre>
 </div>
 
 <div class="endpoint">

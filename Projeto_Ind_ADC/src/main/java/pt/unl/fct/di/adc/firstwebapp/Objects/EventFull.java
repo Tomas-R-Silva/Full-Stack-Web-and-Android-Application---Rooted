@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityValue;
 import com.google.cloud.datastore.FullEntity;
@@ -19,7 +20,10 @@ import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 
 public class EventFull extends EventAtributsid implements Full,EventInputInterface {
-
+	private static final Datastore datastore = DatastoreOptions.newBuilder()
+			.setProjectId("adc-final")
+			.build()
+			.getService();
 
 	public enum Category {
 		MUSIC, SPORTS, TECH, ART, FOOD, BUSINESS, COMMUNITY, OTHER;
@@ -70,7 +74,10 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		if(!list.isEmpty())
 			Error.invalid_input(list);
 	}
-
+	public static EventFull fromdatabase(String eventid) {
+		return fromdatabase(datastore.get(datastore.newKeyFactory().setKind("Event").newKey(eventid)));
+	}
+	
 	public static EventFull fromdatabase(Entity entity) {
 		if(entity==null)return null;
 		EventFull event=new EventFull(entity.getKey());
@@ -149,7 +156,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		return entity;
 	}
 
-	public static EventFull newevent(Datastore datastore, EventAtributs input,String username) throws ErrorException {
+	public static EventFull newevent(EventAtributs input,String username) throws ErrorException {
 		String ID;
 		Key key;
 		do {
@@ -246,7 +253,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	
 	// Converts { id, url } maps back into the Datastore list value.
 	private static List<EntityValue> toImageValues(List<Map<String, String>> images) {
-		List<EntityValue> list = new ArrayList<>(images.size());
+		List<EntityValue> list = new ArrayList<>(images.size());		
 		for (Map<String, String> m : images)
 			list.add(imageValue(m.get("id"), m.get("url")));
 		return list;

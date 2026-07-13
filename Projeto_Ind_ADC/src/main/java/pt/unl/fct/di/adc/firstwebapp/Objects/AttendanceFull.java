@@ -18,6 +18,8 @@ public class AttendanceFull implements Full{
 	private String event;
 	private long joined;
 	
+	public String getEvent() {return event;}
+	
 	public AttendanceFull(Key key) {this.key=key;}
 
 	public static AttendanceFull fromdatabase(Entity entity) {

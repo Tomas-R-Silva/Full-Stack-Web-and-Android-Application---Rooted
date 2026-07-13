@@ -25,6 +25,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.AttendanceFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.FriendFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User;
@@ -149,7 +151,7 @@ public class UserResources {
 
 			AuthHelper.querydelete("Event","organizer_username",user.getUsername());
 
-			AuthHelper.querydelete("Attendance","username",user.getUsername());
+			unattendevents(user.getUsername());
 
 			becomeloner(user.getUsername());
 
@@ -228,17 +230,21 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response findAccount(ShortUserTokenRequest request) {
 		try {
-			TokenFull token = AuthHelper.verifyToken(request);
-			//Entity user = AuthHelper.getUser(request.getInput());
-			//TODO
-
+			AuthHelper.verifyToken(request);
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
 			queryBuilder.setFilter(PropertyFilter.eq("user_display", request.getInput().getUsername()));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
-
-
-			return null;
-		}catch(Exception e) {
+			List<Map<String,Object>> list=new LinkedList<>();
+			while(sessions.hasNext()) 
+				list.add(UserFull.fromdatabase(sessions.next()).tomap());
+			try {
+				list.add(AuthHelper.getUser(request.getInput()).tomap());
+			}catch(ErrorException e) {
+				if(e.getStatus()!=9902)
+					throw e;
+			}
+			return buildresponse(Map.of("found",list));
+		} catch (Exception e){
 			return Error.fromexception(e);
 		}
 	}
@@ -533,8 +539,19 @@ public class UserResources {
 		}
 	}
 
-
-
+	public static void unattendevents(String username){
+		QueryResults<Entity> entitys = datastore.run(Query.newEntityQueryBuilder()
+				.setKind("Attendance")
+				.setFilter(PropertyFilter.eq("username", username))
+				.build());
+		while(entitys.hasNext()) {
+			AttendanceFull attendace = AttendanceFull.fromdatabase(entitys.next());
+			EventFull event = EventFull.fromdatabase(attendace.getEvent());
+			event.decAttendee();
+			datastore.put(event.toentity());
+			datastore.delete(attendace.getKey());
+		}
+	}
 
 	private static Response buildresponse(Map<String,Object> map) {
 		return ResponceBuilder.constructorsuccess(map);
