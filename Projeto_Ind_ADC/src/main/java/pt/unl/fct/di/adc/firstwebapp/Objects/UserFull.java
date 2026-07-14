@@ -66,8 +66,8 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setEmail(user.getEmail());
 		newuser.setPassword(user.getPassword());
 		newuser.setRole(user.getRole());
-		newuser.setDisplay(user.getUsername());
 		newuser.setOld(List.of(user.getUsername()));
+		newuser.setDisplay(user.getUsername());
 		newuser.setbaseCreation(System.currentTimeMillis());
 		newuser.setbaseCategorystr(user.getCategory());
 		newuser.setPublic(user.isPublic());
@@ -93,7 +93,7 @@ public class UserFull extends ShortUser implements Full{
 		map.put("friendship",friendshipstatus.toString());
 		map.put("display",Full.string(display));//may be friend nickname or user display name
 		map.put("creation_time",creation);
-		map.put("oldnames",old);
+		map.put("oldnames",Full.list(old));
 		map.put("isPublic", isPublic);
 		map.put("bio",Full.string(bio));
 		map.put("category",Full.makeStringEnumList(category));

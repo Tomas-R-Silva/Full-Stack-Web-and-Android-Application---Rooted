@@ -50,6 +50,10 @@ public interface Full {
 		return (list!=null)?list.stream().map(v -> StringValue.of(v)).collect(Collectors.toList()):Collections.emptyList();
 	}
 	
+	public static List<?> list(List<?> list) {
+		return (list!=null)?list:Collections.emptyList();
+	}
+	
 	public static List<LongValue> makeLongValueList(List<Long> list) {
 		return (list!=null)?list.stream().map(v -> LongValue.of(v)).collect(Collectors.toList()):Collections.emptyList();
 	}
