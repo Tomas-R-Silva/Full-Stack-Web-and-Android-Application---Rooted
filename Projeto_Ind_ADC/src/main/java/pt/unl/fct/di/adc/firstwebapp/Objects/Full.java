@@ -9,6 +9,8 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.StringValue;
+import com.google.cloud.datastore.TimestampValue;
+import com.google.cloud.datastore.Value;
 
 public interface Full {
 	public static final long TIME_DIVIDER = 1000L;
@@ -27,7 +29,14 @@ public interface Full {
 	}
 	
 	public static long getLong(Entity e,String name) {
-		return e.contains(name)?e.getLong(name):0;
+		if(!e.contains(name)) return 0;
+		Value<?> v = e.getValue(name);
+		// Legacy data stored some date fields as Timestamp instead of a long of
+		// epoch seconds. Read those as epoch seconds so callers that later multiply
+		// by TIME_DIVIDER still get the right millis.
+		if(v instanceof TimestampValue)
+			return ((TimestampValue) v).get().getSeconds();
+		return e.getLong(name);
 	}
 	
 	public static double getDouble(Entity e,String name) {
