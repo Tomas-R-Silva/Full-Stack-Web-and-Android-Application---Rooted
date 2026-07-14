@@ -2,6 +2,7 @@ package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -111,7 +112,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 
 	@Override
 	public Map<String, Object> tomap() {
-		Map<String, Object> map = Map.of();
+		Map<String, Object> map = new HashMap<>();
 		map.put("eventId",Full.string(this.eventId));
 		map.put("title",Full.string(this.title));		
 		map.put("description",Full.string(this.description));
