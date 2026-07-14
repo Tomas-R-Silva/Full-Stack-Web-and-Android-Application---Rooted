@@ -100,7 +100,7 @@ function EventElements() {
         <div className="top-image">
           {event && (
             <img
-              src={event.imageUrls[0].url || placeholder}
+              src={event.imageUrls?.[0]?.url ?? placeholder}
               alt={event.title}
             />
           )}
@@ -232,6 +232,12 @@ function EventElements() {
                 </h2>
 
                 <div className="photo-collection">
+                  {event?.imageUrls?.length === 0 && (
+                    <p style={{ color: "var(--color-white)" }}>
+                      No images available.
+                    </p>
+                  )}
+
                   {event?.imageUrls?.map((image, index) => (
                     <img
                       key={image.id}
