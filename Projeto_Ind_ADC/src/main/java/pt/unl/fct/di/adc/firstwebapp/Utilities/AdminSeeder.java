@@ -77,7 +77,7 @@ public class AdminSeeder implements ServletContextListener {
 					.set("user_role", Role.ADMIN.name())
 					.set("user_display", username)
 					.set("old_display", displayHistory)
-					.set("user_creation_time", Timestamp.now())
+					.set("user_creation_time", System.currentTimeMillis())
 					.set("tokens", new ArrayList<StringValue>())
 					.set("category", new ArrayList<StringValue>())
 					.set("must_change_password", true)
