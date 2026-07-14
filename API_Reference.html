@@ -898,7 +898,8 @@
   </div>
   <p class="desc">Deletes a single forum post.</p>
   <div class="label">Request</div>
-  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: <span class="val-str">"9c2b-...-uuid"</span> }   <span class="comment">// input = the postId to delete</span></pre>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: {<span class="key-str">"forumKey"</span>: <span class="val-str">"9c2b-...-uuid"</span>} }  
+  <span class="comment">// input = the postId to delete</span></pre>
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Post deleted successfully"</span> }}</pre>
 </div>

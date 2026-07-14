@@ -231,8 +231,10 @@ public class UserResources {
 	public Response findAccount(ShortUserTokenRequest request) {
 		try {
 			AuthHelper.verifyToken(request);
-			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
-			queryBuilder.setFilter(PropertyFilter.eq("user_display", request.getInput().getUsername()));
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User").
+					setFilter(CompositeFilter.and(
+							PropertyFilter.eq("user_display", request.getInput().getUsername())
+							,PropertyFilter.eq("is_public", true)));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
 			List<Map<String,Object>> list=new LinkedList<>();
 			while(sessions.hasNext()) 

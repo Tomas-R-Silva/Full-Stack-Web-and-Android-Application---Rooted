@@ -35,7 +35,7 @@ public interface Full {
 	}
 	
 	public static boolean getBoolean(Entity e,String name) {
-		return e.contains(name)?e.getBoolean(name):false;
+		return e.contains(name)?e.getBoolean(name):true;
 	}
 	
 	public static List<StringValue> getStringValueList(Entity e,String name) {
