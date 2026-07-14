@@ -57,9 +57,25 @@ function NavBar() {
           <a
             className="navbar-brand fw-bold m-0"
             style={{ color: "var(--color-bege)" }}
+            href="/social"
+          >
+            Social
+          </a>
+
+          <a
+            className="navbar-brand fw-bold m-0"
+            style={{ color: "var(--color-bege)" }}
             href="/faq"
           >
             FAQ
+          </a>
+
+          <a
+            className="navbar-brand fw-bold m-0"
+            style={{ color: "var(--color-bege)" }}
+            href="/aboutus"
+          >
+            About Us
           </a>
         </div>
 

@@ -7,13 +7,15 @@ import type {
 } from "../../utils/types";
 import type { Friend } from "../../utils/types";
 import { useAuth } from "../AuthContext";
-import { getFriendsList } from "../../api/auth";
+import { getFriendsList, unfriend } from "../../api/auth";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
 import personRemove_w from "../../assets/icons/person_remove_w.svg";
+import { useNavigate } from "react-router-dom";
 
 function FriendsList() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const { username } = useAuth();
+  const navigate = useNavigate();
 
   const loadFriends = async () => {
     try {
@@ -39,9 +41,27 @@ function FriendsList() {
     }
   };
 
-  const handleFriendProfile = () => {};
+  const handleUnfriend = async (friendToDelete: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
 
-  const handleUnfriend = () => {};
+      const res: UnfriendResponse = await unfriend({
+        token: { jwt: token },
+        input: { username: friendToDelete },
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     loadFriends();
@@ -65,35 +85,36 @@ function FriendsList() {
                 No friends.
               </div>
             )}
-            {friends.length !== 0 && (
-              <div
-                className="d-flex justify-content-between align-items-center p-4 rounded mt-1"
-                style={{
-                  maxWidth: "500px",
-                  width: "100%",
-                  backgroundColor: "var(--color-green2)",
-                  color: "var(--color-white)",
-                }}
-              >
-                <span className="fw-semibold">Ti zé Taxista</span>
+            {friends.length !== 0 &&
+              friends.map((friend) => (
+                <div
+                  className="d-flex justify-content-between align-items-center p-4 rounded mt-1"
+                  style={{
+                    maxWidth: "500px",
+                    width: "100%",
+                    backgroundColor: "var(--color-green2)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  <span className="fw-semibold">Ti zé Taxista</span>
 
-                <div className="d-flex gap-3">
-                  <img
-                    src={personPin_w}
-                    alt="Add friend"
-                    onClick={handleFriendProfile}
-                    style={{ cursor: "pointer" }}
-                  />
+                  <div className="d-flex gap-3">
+                    <img
+                      src={personPin_w}
+                      alt="Add friend"
+                      onClick={() => navigate("/profile/" + friend.From)}
+                      style={{ cursor: "pointer" }}
+                    />
 
-                  <img
-                    src={personRemove_w}
-                    alt="Remove friend"
-                    onClick={handleUnfriend}
-                    style={{ cursor: "pointer" }}
-                  />
+                    <img
+                      src={personRemove_w}
+                      alt="Remove friend"
+                      onClick={() => handleUnfriend(friend.From)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
           </div>
         </div>
       </div>
