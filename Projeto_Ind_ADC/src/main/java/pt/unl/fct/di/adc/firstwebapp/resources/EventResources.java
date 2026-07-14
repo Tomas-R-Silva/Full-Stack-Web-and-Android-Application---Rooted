@@ -1,6 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -203,8 +204,9 @@ public class EventResources {
 					events.add(EventFull.fromdatabase(current).tomap());
 			}
 
-			Map<String, Object> response = Map.of("events", events,"count", events.size());
-
+			Map<String, Object> response = new HashMap<>();
+			response.put("events", events);
+			response.put("count", events.size());
 			if (results.getCursorAfter() != null)
 				response.put("nextCursor", results.getCursorAfter().toUrlSafe());
 

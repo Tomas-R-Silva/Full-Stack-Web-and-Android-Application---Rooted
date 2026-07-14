@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -120,13 +121,13 @@ public class ForumFull implements Full,EventInputInterface{
 	public boolean isType(ForumType type) { return this.type.equals(type); }
 	@Override
 	public Map<String, Object> tomap() {
-		Map<String, Object> map = Map.of(
-				"postId", Full.string(this.postId),
-				"type",Full.string(this.type.name()),
-				"authorUsername", Full.string(this.authorUsername),
-				"text", Full.string(this.text),
-				"createdAt", this.createdAt,
-				"parentPostId", Full.string(this.parentPostId));
+		Map<String, Object> map = new HashMap<>();
+		map.put("postId", Full.string(this.postId));
+		map.put("type", Full.string(this.type.name()));
+		map.put("authorUsername", Full.string(this.authorUsername));
+		map.put("text", Full.string(this.text));
+		map.put("createdAt", this.createdAt);
+		map.put("parentPostId", Full.string(this.parentPostId));
 		if(this.type.equals(ForumType.EVENT)) 
 			map.put("eventId", Full.string(this.eventId));
 		else if(this.type.equals(ForumType.FRIEND)) 
