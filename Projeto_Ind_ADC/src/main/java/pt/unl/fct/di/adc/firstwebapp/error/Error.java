@@ -47,7 +47,8 @@ public class Error {
 			NOT_ENOUGH_SDG="NOT_ENOUGH_SDG",
 			CLEANUP_FORBIDDEN="CLEANUP_FORBIDDEN",
 			CANT_EDIT_CANCELLED_EVENT="CANT_EDIT_CANCELLED_EVENT",
-			WRONG_PASSWORD="WRONG_PASSWORD";
+			WRONG_PASSWORD="WRONG_PASSWORD",
+			NOT_PARTNER="NOT_PARTNER";
 
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
@@ -134,6 +135,8 @@ public class Error {
 		case 9939->data=CLEANUP_FORBIDDEN;
 		case 9940->data=CANT_EDIT_CANCELLED_EVENT;
 		case 9941->data=WRONG_PASSWORD;
+		case 9942->data=NOT_PARTNER;
+		
 
 		default->data="";
 		}

@@ -273,6 +273,8 @@ public class EventResources {
 			TokenFull token = AuthHelper.verifyToken(req);
 			UserFull user = AuthHelper.getUser(req.getInput());
 			EventFull event = getEventEntity(req.getInput());
+			if (!user.isRole(new Role[] {Role.PARTNER}))
+				ErrorException.trow(9942);
 			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 			if (event.getStatus().equals(Status.CANCELLED))

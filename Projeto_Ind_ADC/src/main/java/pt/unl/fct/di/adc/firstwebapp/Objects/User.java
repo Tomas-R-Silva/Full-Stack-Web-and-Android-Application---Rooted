@@ -25,6 +25,7 @@ public class User extends ShortUser{
 
 	public enum Role {
 		USER,
+		PARTNER,
 		BOFFICER,
 		ADMIN;
 		public static Role valueof(String v) {
