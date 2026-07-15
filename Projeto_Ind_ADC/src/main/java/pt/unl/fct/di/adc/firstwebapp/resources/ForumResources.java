@@ -56,7 +56,8 @@ public class ForumResources {
     private static final int MAX_PAGE_SIZE = 100;
     private static final int DELETE_BATCH = 500;
 
-    public ForumResources() {}
+    public ForumResources() {
+    }
 
     // -------------------------------------------------------------------------
     // POST /rest/forum/post
@@ -68,8 +69,8 @@ public class ForumResources {
     public Response postMessage(PostMessageRequest req) {
         try {
             TokenFull token = AuthHelper.verifyToken(req);
-            PostMessageinput input =req.getInput();
-            
+            PostMessageinput input = req.getInput();
+
             Entity eventEntity = getEventEntity(input);
 
             String status = eventEntity.getString("status");
@@ -129,28 +130,42 @@ public class ForumResources {
                     .setOrderBy(OrderBy.asc("created_at"))
                     .setLimit(pageSize);
 
-            if (input.getCursor() != null && !input.getCursor().isBlank())
-                queryBuilder.setStartCursor(Cursor.fromUrlSafe(input.getCursor()));
+	// -------------------------------------------------------------------------
+	// GET /rest/forum/cleanup  (called by App Engine cron — see cron.xml)
+	// Finds events whose time has passed, marks them COMPLETED, and deletes
+	// their forum. Also clears the forum of any CANCELLED event.
+	// -------------------------------------------------------------------------
+    @GET
+    @Path("/cleanup")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response cleanup(@Context HttpServletRequest request) {
+        // App Engine strips this header from external requests, so its presence
+        // proves the call came from the cron service (or an admin).
+        if (request.getHeader("X-AppEngine-Cron") == null)
+            return Error.forbidden();
 
-            QueryResults<Entity> results = datastore.run(queryBuilder.build());
+        QueryResults<Entity> results = datastore.run(queryBuilder.build());
 
-            List<Map<String, Object>> posts = new ArrayList<>();
-            while (results.hasNext())
-                posts.add(postToMap(results.next()));
+        List<Map<String, Object>> posts = new ArrayList<>();
+        while (results.hasNext())
+            posts.add(postToMap(results.next()));
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("posts", posts);
-            response.put("count", posts.size());
-            // Only hand back a cursor when the page was full — otherwise the
-            // client already has everything and should keep reusing its last cursor.
-            if (posts.size() == pageSize && results.getCursorAfter() != null)
-                response.put("nextCursor", results.getCursorAfter().toUrlSafe());
+        Map<String, Object> response = new HashMap<>();
+        response.put("posts", posts);
+        response.put("count", posts.size());
+        // Only hand back a cursor when the page was full — otherwise the
+        // client already has everything and should keep reusing its last cursor.
+        if (posts.size() == pageSize && results.getCursorAfter() != null)
+            response.put("nextCursor", results.getCursorAfter().toUrlSafe());
 
-            return ok(response);
+        return ok(response);
 
-        } catch (Exception e) {
-            return Error.fromexception(e);
-        }
+    }catch(
+
+    Exception e)
+    {
+        return Error.fromexception(e);
+    }
     }
 
     // -------------------------------------------------------------------------
@@ -187,7 +202,7 @@ public class ForumResources {
     }
 
     // -------------------------------------------------------------------------
-    // GET /rest/forum/cleanup  (called by App Engine cron — see cron.xml)
+    // GET /rest/forum/cleanup (called by App Engine cron — see cron.xml)
     // Finds events whose time has passed, marks them COMPLETED, and deletes
     // their forum. Also clears the forum of any CANCELLED event.
     // -------------------------------------------------------------------------
@@ -240,20 +255,24 @@ public class ForumResources {
     // Helpers
     // -------------------------------------------------------------------------
 
-	private Entity getEventEntity(EventInputInterface event) throws ErrorException {
-		if (event.getEventId() == null || event.getEventId().isBlank())
-			ErrorException.trow(9906);
-		return getEventEntity(event.getEventId());
-	}
-	private Entity getEventEntity(String event) throws ErrorException {
-		Key key = datastore.newKeyFactory().setKind("Event").newKey(event);
-		Entity entity = datastore.get(key);
-		if (entity == null) ErrorException.trow(9902);
-		return entity;
-	}
-	
-	
-    /** Deletes every ForumPost for an event in batches; returns how many were deleted. */
+    private Entity getEventEntity(EventInputInterface event) throws ErrorException {
+        if (event.getEventId() == null || event.getEventId().isBlank())
+            ErrorException.trow(9906);
+        return getEventEntity(event.getEventId());
+    }
+
+    private Entity getEventEntity(String event) throws ErrorException {
+        Key key = datastore.newKeyFactory().setKind("Event").newKey(event);
+        Entity entity = datastore.get(key);
+        if (entity == null)
+            ErrorException.trow(9902);
+        return entity;
+    }
+
+    /**
+     * Deletes every ForumPost for an event in batches; returns how many were
+     * deleted.
+     */
     private int deleteForum(String eventId) {
         Query<Key> query = Query.newKeyQueryBuilder()
                 .setKind("ForumPost")

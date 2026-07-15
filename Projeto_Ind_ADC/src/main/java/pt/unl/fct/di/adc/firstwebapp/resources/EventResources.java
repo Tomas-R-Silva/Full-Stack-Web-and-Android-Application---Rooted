@@ -66,7 +66,8 @@ public class EventResources {
 
 	private static final Logger Log = Logger.getLogger(EventResources.class.getName());
 
-	public EventResources() {}
+	public EventResources() {
+	}
 
 	// -------------------------------------------------------------------------
 	// POST /rest/events/create
@@ -79,7 +80,7 @@ public class EventResources {
 		try {
 			TokenFull tokenObj = AuthHelper.verifyToken(req);
 
-			Event event = new Event(req.getInput(),tokenObj.getUsername());
+			Event event = new Event(req.getInput(), tokenObj.getUsername());
 
 			Key key = datastore.newKeyFactory().setKind("Event").newKey(event.getEventId());
 			Entity entity = Entity.newBuilder(key)
@@ -155,14 +156,14 @@ public class EventResources {
 		try {
 			boolean authenticated = false;
 			Role requesterRole = null;
-			ListEventsInput input =req.getInput();
+			ListEventsInput input = req.getInput();
 			if (req.getToken() != null && req.getToken().getJwt() != null) {
 				try {
 					TokenFull token = AuthHelper.verifyToken(req);
 					authenticated = true;
 					requesterRole = token.getRole();
 				} catch (ErrorException ignored) {
-					// Token invalid  treat as unauthenticated
+					// Token invalid treat as unauthenticated
 				}
 			}
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Event");
@@ -177,7 +178,7 @@ public class EventResources {
 				// Regular users see public events and their own private events
 				filters.add(PropertyFilter.eq("is_public", true));
 			}
-			
+
 			if (input.isAccessible() != null && input.isAccessible())
 				filters.add(PropertyFilter.eq("is_accessible", input.isAccessible()));
 
@@ -216,19 +217,19 @@ public class EventResources {
 			boolean filterBySdg = sdg != null && !sdg.isEmpty();
 			List<LongValue> sdglist = new ArrayList<>(filterBySdg ? sdg.size() : 0);
 			if (filterBySdg)
-				for(Integer n:sdg) sdglist.add(LongValue.of(n));
+				for (Integer n : sdg)
+					sdglist.add(LongValue.of(n));
 
 			while (results.hasNext()) {
 				Entity current = results.next();
-				if(filterBySdg) {
-					boolean b=false;
-					List<Value<?>> list = current.contains(null)?current.getList("SDG"):new ArrayList<>(0);
-					for(LongValue n:sdglist)
-						b|=list.contains(n);
-					if(b)
+				if (filterBySdg) {
+					boolean b = false;
+					List<Value<?>> list = current.contains(null) ? current.getList("SDG") : new ArrayList<>(0);
+					for (LongValue n : sdglist)
+						b |= list.contains(n);
+					if (b)
 						events.add(entityToMap(current));
-				}
-				else
+				} else
 					events.add(entityToMap(current));
 			}
 
@@ -255,17 +256,15 @@ public class EventResources {
 	public Response updateEvent(UpdateEventRequest req) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			EventAtributsid input=req.getInput();
+			EventAtributsid input = req.getInput();
 			Entity existing = getEventEntity(input);
 			String organizer = existing.getString("organizer_username");
 
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 
-			if (existing.getString("status").equals(Status.CANCELLED.name()))
+			if (existing.getStatus().equals(Status.CANCELLED))
 				ErrorException.trow(9907); // can't edit a cancelled event
-
-			Entity.Builder builder = Entity.newBuilder(existing);
 
 			if (input.getTitle() != null && !input.getTitle().isBlank())
 				builder.set("title", input.getTitle());
@@ -293,11 +292,55 @@ public class EventResources {
 				builder.set("is_accessible", input.isAccessible());
 			if (input.isAccessiblenull() != null)
 				builder.set("is_accessible", input.isAccessible());
-			if(input.getSDGint()!= null)
+			if (input.getSDGint() != null)
 				builder.set("SDG", input.getSDG());
 			datastore.put(builder.build());
 			return ok(Map.of("message", "Event updated successfully"));
 
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/addpartner")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addpartner(EventShortUserTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			UserFull user = AuthHelper.getUser(req.getInput());
+			EventFull event = getEventEntity(req.getInput());
+			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
+				ErrorException.trow(9905);
+			if (event.getStatus().equals(Status.CANCELLED))
+				ErrorException.trow(9907); // can't edit a cancelled event
+			if (user != null)
+				event.addpartner(user);
+			datastore.put(event.toentity());
+			return ok(Map.of("message", "Partner added to event"));
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/removepartner")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response removepartner(EventShortUserTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			UserFull user = AuthHelper.getUser(req.getInput());
+			EventFull event = getEventEntity(req.getInput());
+			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
+				ErrorException.trow(9905);
+			if (event.getStatus().equals(Status.CANCELLED))
+				ErrorException.trow(9907); // can't edit a cancelled event
+			if (user != null)
+				event.removepartner(user);
+			datastore.put(event.toentity());
+			return ok(Map.of("message", "Partner removed to event"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -372,12 +415,12 @@ public class EventResources {
 			String username = token.getUsername();
 			String eventId = req.getInput().getEventId();
 
-			String status = event.getString("status");
-			if (status.equals(Status.CANCELLED.name()) || status.equals(Status.COMPLETED.name()))
+			if (event.isStatuss(new Status[] { Status.CANCELLED, Status.COMPLETED }))
 				ErrorException.trow(9907);
 
 			// PRIVATE event: joining needs the organizer's approval. Like following a
-			// private account, the same action creates a pending request instead of joining.
+			// private account, the same action creates a pending request instead of
+			// joining.
 			if (!event.getBoolean("is_public")) {
 				if (username.equals(event.getString("organizer_username")))
 					ErrorException.trow(9905); // organizer can't request their own event
@@ -463,7 +506,7 @@ public class EventResources {
 	}
 
 	// -------------------------------------------------------------------------
-	// POST /rest/events/joinrequests  — organizer lists the PENDING join requests
+	// POST /rest/events/joinrequests — organizer lists the PENDING join requests
 	// -------------------------------------------------------------------------
 	@POST
 	@Path("/joinrequests")
@@ -475,7 +518,7 @@ public class EventResources {
 			Entity event = getEventEntity(req.getInput());
 
 			if (!token.getUsername().equals(event.getString("organizer_username")))
-				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+				Validator.unauthorized(token, new Role[] { Role.ADMIN, Role.BOFFICER });
 
 			Query<Entity> query = Query.newEntityQueryBuilder()
 					.setKind("EventJoinRequest")
@@ -500,7 +543,7 @@ public class EventResources {
 	}
 
 	// -------------------------------------------------------------------------
-	// POST /rest/events/respondjoin  — organizer accepts/rejects a join request
+	// POST /rest/events/respondjoin — organizer accepts/rejects a join request
 	// -------------------------------------------------------------------------
 	@POST
 	@Path("/respondjoin")
@@ -518,11 +561,12 @@ public class EventResources {
 
 			Key eventKey = datastore.newKeyFactory().setKind("Event").newKey(eventId);
 			Entity event = datastore.get(eventKey);
-			if (event == null) ErrorException.trow(9902);
+			if (event == null)
+				ErrorException.trow(9902);
 
 			// Only the organizer (or a moderator) can answer requests for the event.
 			if (!token.getUsername().equals(event.getString("organizer_username")))
-				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+				Validator.unauthorized(token, new Role[] { Role.ADMIN, Role.BOFFICER });
 
 			Key reqKey = joinRequestKey(eventId, requester);
 			Entity joinRequest = datastore.get(reqKey);
@@ -562,7 +606,8 @@ public class EventResources {
 		}
 	}
 
-	// Key for a join request: one per (event, requester) so a user can't spam requests.
+	// Key for a join request: one per (event, requester) so a user can't spam
+	// requests.
 	private Key joinRequestKey(String eventId, String requester) {
 		return datastore.newKeyFactory().setKind("EventJoinRequest").newKey(eventId + "@@@" + requester);
 	}
@@ -581,7 +626,7 @@ public class EventResources {
 			String organizer = eventEntity.getString("organizer_username");
 
 			if (!token.getUsername().equals(organizer))
-				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+				Validator.unauthorized(token, new Role[] { Role.ADMIN, Role.BOFFICER });
 
 			Query<Entity> query = Query.newEntityQueryBuilder()
 					.setKind("Attendance")
@@ -618,7 +663,7 @@ public class EventResources {
 			Entity user = AuthHelper.getUser(req.getInput());
 
 			if (!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+				Validator.unauthorized(token, new Role[] { Role.ADMIN, Role.BOFFICER });
 
 			Query<Entity> query = Query.newEntityQueryBuilder()
 					.setKind("Attendance")
@@ -651,12 +696,12 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getIsAttendee(EventShortUserTokenRequest req) {
 		try {
-			//Token token = 
+			// Token token =
 			AuthHelper.verifyToken(req);
 			Entity user = AuthHelper.getUser(req.getInput());
 
-			//if (!token.getUsername().equals(user.getString("user_name")))
-			//	Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+			// if (!token.getUsername().equals(user.getString("user_name")))
+			// Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
 			Key attendanceKey = datastore.newKeyFactory().setKind("Attendance")
 					.newKey(req.getInput().getEventId() + "_" + user.getString("user_name"));
@@ -677,7 +722,7 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response uploadImages(ImageRequest req) {
 		try {
-			ImageRequestInput input=req.getInput();
+			ImageRequestInput input = req.getInput();
 			TokenFull token = AuthHelper.verifyToken(req);
 
 			Entity eventEntity = getEventEntity(input);
@@ -720,7 +765,7 @@ public class EventResources {
 	}
 
 	// -------------------------------------------------------------------------
-	// POST /rest/events/uploadimageurls   attach images that are ALREADY hosted URLs
+	// POST /rest/events/uploadimageurls attach images that are ALREADY hosted URLs
 	// -------------------------------------------------------------------------
 	@POST
 	@Path("/uploadimageurls")
@@ -780,13 +825,12 @@ public class EventResources {
 		Transaction txn = datastore.newTransaction();
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
-			ImageRequestInput input=req.getInput();
+			ImageRequestInput input = req.getInput();
 			List<String> idsToDelete = input.getImageIds();
 			if (idsToDelete.isEmpty())
 				ErrorException.trow(9906);
 			Entity eventEntity = getEventEntity(input);
 			String organizer = eventEntity.getString("organizer_username");
-
 
 			if (!token.getUsername().equals(organizer) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
@@ -836,11 +880,14 @@ public class EventResources {
 		return EntityValue.of(FullEntity.newBuilder().set("id", id).set("url", url).build());
 	}
 
-	// Reads the event's images as a mutable list of { id, url } maps. Also works with the
-	// legacy format where each entry was a plain URL string (id defaults to the url).
+	// Reads the event's images as a mutable list of { id, url } maps. Also works
+	// with the
+	// legacy format where each entry was a plain URL string (id defaults to the
+	// url).
 	private static List<Map<String, String>> readImages(Entity e) {
 		List<Map<String, String>> images = new ArrayList<>();
-		if (!e.contains("image_urls")) return images;
+		if (!e.contains("image_urls"))
+			return images;
 		for (Value<?> v : e.<Value<?>>getList("image_urls")) {
 			Object raw = v.get();
 			String id, url;
@@ -873,7 +920,8 @@ public class EventResources {
 			ErrorException.trow(9906);
 		Key key = datastore.newKeyFactory().setKind("Event").newKey(event.getEventId());
 		Entity entity = datastore.get(key);
-		if (entity == null) ErrorException.trow(9902);
+		if (entity == null)
+			ErrorException.trow(9902);
 		return entity;
 	}
 
@@ -894,22 +942,22 @@ public class EventResources {
 
 	private Map<String, Object> entityToMap(Entity e) {
 		Map<String, Object> map = new HashMap<>();
-		map.put("eventId", e.contains("event_id")?e.getString("event_id"):null);
-		map.put("title", e.contains("title")?e.getString("title"):null);
-		map.put("description", e.contains("description")?e.getString("description"):null);
-		map.put("category", e.contains("category")?e.getString("category"):null);
-		map.put("location", e.contains("location")?e.getString("location"):null);
-		map.put("latitude", e.contains("latitude")?e.getDouble("latitude"):null);
-		map.put("longitude", e.contains("longitude")?e.getDouble("longitude"):null);
-		map.put("startDate", e.contains("start_date")?e.getLong("start_date"):null);
-		map.put("durationMinutes", e.contains("duration_minutes")?e.getLong("duration_minutes"):null);
-		map.put("organizerUsername", e.contains("organizer_username")?e.getString("organizer_username"):null);
-		map.put("maxAttendees", e.contains("max_attendees")?e.getLong("max_attendees"):null);
-		map.put("attendeeCount",e.contains("attendee_count")?e.getLong("attendee_count"):null);
-		map.put("isPublic", e.contains("is_public")?e.getBoolean("is_public"):null);
-		map.put("status", e.contains("status")?e.getString("status"):null);
-		map.put("createdAt", e.contains("created_at")?e.getLong("created_at"):null);
-		map.put("isAccessible", e.contains("is_accessible")?e.getBoolean("is_accessible"):null);
+		map.put("eventId", e.contains("event_id") ? e.getString("event_id") : null);
+		map.put("title", e.contains("title") ? e.getString("title") : null);
+		map.put("description", e.contains("description") ? e.getString("description") : null);
+		map.put("category", e.contains("category") ? e.getString("category") : null);
+		map.put("location", e.contains("location") ? e.getString("location") : null);
+		map.put("latitude", e.contains("latitude") ? e.getDouble("latitude") : null);
+		map.put("longitude", e.contains("longitude") ? e.getDouble("longitude") : null);
+		map.put("startDate", e.contains("start_date") ? e.getLong("start_date") : null);
+		map.put("durationMinutes", e.contains("duration_minutes") ? e.getLong("duration_minutes") : null);
+		map.put("organizerUsername", e.contains("organizer_username") ? e.getString("organizer_username") : null);
+		map.put("maxAttendees", e.contains("max_attendees") ? e.getLong("max_attendees") : null);
+		map.put("attendeeCount", e.contains("attendee_count") ? e.getLong("attendee_count") : null);
+		map.put("isPublic", e.contains("is_public") ? e.getBoolean("is_public") : null);
+		map.put("status", e.contains("status") ? e.getString("status") : null);
+		map.put("createdAt", e.contains("created_at") ? e.getLong("created_at") : null);
+		map.put("isAccessible", e.contains("is_accessible") ? e.getBoolean("is_accessible") : null);
 		List<Integer> sdg = new ArrayList<>();
 		if (e.contains("SDG")) {
 			for (Value<?> v : e.<Value<?>>getList("SDG")) {
@@ -919,7 +967,8 @@ public class EventResources {
 		}
 		map.put("SDG", sdg);
 
-		// Each image is returned as { id, url } (legacy plain-URL entries are tolerated).
+		// Each image is returned as { id, url } (legacy plain-URL entries are
+		// tolerated).
 		map.put("imageUrls", readImages(e));
 		return map;
 	}

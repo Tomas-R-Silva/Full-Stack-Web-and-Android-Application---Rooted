@@ -27,7 +27,7 @@ import com.google.cloud.datastore.Transaction;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;   // <-- THIS ONE
+import jakarta.ws.rs.Produces; // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
@@ -54,7 +54,6 @@ import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.TwoNameTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
 
-
 @Path("/")
 public class UserResources {
 	private static final long TIME_DIVIDER = 1000L;
@@ -65,7 +64,8 @@ public class UserResources {
 
 	private static Logger Log = Logger.getLogger(UserResources.class.getName());
 
-	public UserResources() {}
+	public UserResources() {
+	}
 
 	@POST
 	@Path("/createaccount")
@@ -77,32 +77,12 @@ public class UserResources {
 
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-
-			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
-			Entity existingUser = txn.get(userKey);
-
-			if (existingUser != null) ErrorException.trow(9901);
-
-			List<StringValue> listnames = new ArrayList<>(1),
-					listtokens = new ArrayList<>(0),
-					listcategory = new ArrayList<>(0);
-			listnames.add(StringValue.of(user.getUsername()));
-
-
 			user.userValidation();
-			Entity newUser = Entity.newBuilder(userKey)
-					.set("user_name", user.getUsername())
-					.set("user_email", user.getEmail())
-					.set("user_pwd", DigestUtils.sha512Hex(user.getPassword()))
-					.set("user_role", user.getRole().name())
-					.set("user_display", user.getUsername())
-					.set("old_display", listnames)
-					.set("user_creation_time", Timestamp.now())
-					.set("tokens", listtokens)
-					.set("category", listcategory)
-					.build();
+			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
 
-			txn.put(newUser);
+			if (txn.get(userKey) != null)
+				ErrorException.trow(9901);
+			txn.put(UserFull.newuser(user, userKey).toentity());
 			txn.commit();
 
 			Log.info("User registered: " + user.getUsername());
@@ -131,21 +111,22 @@ public class UserResources {
 
 			Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
 
-			String jwtString = JWTToken.createJWT(user.getString("user_name"), Map.of("role", Role.valueof(user.getString("user_role")).name()));
+			String jwtString = JWTToken.createJWT(user.getString("user_name"),
+					Map.of("role", Role.valueof(user.getString("user_role")).name()));
 			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
 
-			TokenFull token =JWTToken.filltoken(jwtString,decoded);
+			TokenFull token = JWTToken.filltoken(jwtString, decoded);
 			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(jwtString);
 			Entity sessionEntity = Entity.newBuilder(sessionKey)
 					.set("jwt", jwtString)
 					.set("user_name", token.getUsername())
 					.set("role", token.getRoleString())
-					.set("issued_at", token.getIssuedAt()/TIME_DIVIDER)
-					.set("expires_at", token.getExpiresAt()/TIME_DIVIDER)
+					.set("issued_at", token.getIssuedAt() / TIME_DIVIDER)
+					.set("expires_at", token.getExpiresAt() / TIME_DIVIDER)
 					.build();
 			datastore.put(sessionEntity);
 			return buildresponse(Map.of("token", TokenFull.getfromcloud(sessionEntity).tomap()));
-		}catch(Exception e) {
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 
@@ -159,7 +140,7 @@ public class UserResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(request);
 
-			Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+			Validator.unauthorized(token, new Role[] { Role.ADMIN, Role.BOFFICER });
 
 			Query<Entity> query = Query.newEntityQueryBuilder().setKind("User").build();
 
@@ -177,7 +158,7 @@ public class UserResources {
 				users.add(u);
 			}
 			return buildresponse(Map.of("users", users));
-		}catch(Exception e) {
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -186,19 +167,19 @@ public class UserResources {
 	@Path("/deleteaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteAccount(ShortUserTokenRequest request){
+	public Response deleteAccount(ShortUserTokenRequest request) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
-			Key userKeyToBeDeleted = user.getKey();	
+			Key userKeyToBeDeleted = user.getKey();
 
-			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(token, new Role []{Role.ADMIN});
+			if (!token.getUsername().equals(user.getString("user_name")))
+				Validator.unauthorized(token, new Role[] { Role.ADMIN });
 
 			datastore.delete(userKeyToBeDeleted);
 			deleteAllSessionsForUser(user.getString("user_name"));
 			return buildresponse(Map.of("message", "Account deleted successfully"));
-		}catch(Exception e) {
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -213,24 +194,26 @@ public class UserResources {
 			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(token);
 			Builder updatedUser = Entity.newBuilder(user);
-			if(input.getUsername()!=null&&(user.contains("user_display")||!user.getString("user_display").equals(input.getUsername()))) {
+			if (input.getUsername() != null
+					&& (user.contains("user_display") || !user.getString("user_display").equals(input.getUsername()))) {
 				updatedUser.set("user_display", input.getUsername());
-				List<StringValue> list = (user.contains("old_display"))?user.getList("old_display"):new ArrayList<>(1);
-				if(!user.contains("old_display"))
+				List<StringValue> list = (user.contains("old_display")) ? user.getList("old_display")
+						: new ArrayList<>(1);
+				if (!user.contains("old_display"))
 					list.add(StringValue.of(user.getString("user_name")));
-				StringValue news=StringValue.of(input.getUsername());
-				if(!list.contains(news)) {
+				StringValue news = StringValue.of(input.getUsername());
+				if (!list.contains(news)) {
 					list.add(news);
 					updatedUser.set("old_display", list);
 				}
 			}
-			if(input.getEmail()!=null&&!user.getString("user_email").equals(input.getEmail()))
+			if (input.getEmail() != null && !user.getString("user_email").equals(input.getEmail()))
 				updatedUser.set("user_email", input.getEmail());
-			if(input.getBio()!=null)
+			if (input.getBio() != null)
 				updatedUser.set("user_bio", input.getBio());
 			datastore.put(updatedUser.build());
 			return buildresponse(Map.of("message", "Updated successfully"));
-		}catch(Exception e) {
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -243,40 +226,42 @@ public class UserResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
-			String displayname=(user.contains("user_display"))?user.getString("user_display"):user.getString("user_name");
+			String displayname = (user.contains("user_display")) ? user.getString("user_display")
+					: user.getString("user_name");
 			Friendstatus friendshipstatus;
-			if(user.getString("user_name").equals(token.getUsername())) 
-				friendshipstatus=Friendstatus.SELF;
+			if (user.getString("user_name").equals(token.getUsername()))
+				friendshipstatus = Friendstatus.SELF;
 			else {
-				Entity friend=datastore.get(getFriendKey(token,user));
-				if(friend==null) 
-					friendshipstatus=Friendstatus.NOT_FRIENDS;
-				else if(friend.getBoolean("accepted")) {
-					friendshipstatus=Friendstatus.FRIENDS;
-					String ke=(friend.getString("username_1").equals(user.getString("user_name")))?"nickname_1":"nickname_2";
-					if(friend.contains(ke)) 
-						displayname=friend.getString(ke);	
-				}
-				else if(friend.getString("username_1").equals(token.getUsername()))
-					friendshipstatus=Friendstatus.REQUEST_SENT;
+				Entity friend = datastore.get(getFriendKey(token, user));
+				if (friend == null)
+					friendshipstatus = Friendstatus.NOT_FRIENDS;
+				else if (friend.getBoolean("accepted")) {
+					friendshipstatus = Friendstatus.FRIENDS;
+					String ke = (friend.getString("username_1").equals(user.getString("user_name"))) ? "nickname_1"
+							: "nickname_2";
+					if (friend.contains(ke))
+						displayname = friend.getString(ke);
+				} else if (friend.getString("username_1").equals(token.getUsername()))
+					friendshipstatus = Friendstatus.REQUEST_SENT;
 				else
-					friendshipstatus=Friendstatus.REQUEST_RECIVED;
+					friendshipstatus = Friendstatus.REQUEST_RECIVED;
 			}
-			List<StringValue> list =user.contains("old_display")?user.getList("old_display"):new ArrayList<>(0);
-			List<String> newlist=new ArrayList<>(list.size());
-			for(StringValue v:list) newlist.add(v.get());
+			List<StringValue> list = user.contains("old_display") ? user.getList("old_display") : new ArrayList<>(0);
+			List<String> newlist = new ArrayList<>(list.size());
+			for (StringValue v : list)
+				newlist.add(v.get());
 			return buildresponse(
 					Map.of("username", user.getString("user_name"),
 							"email", user.getString("user_email"),
 							"role", user.getString("user_role"),
 							"creation_time", user.contains("user_creation_time")
-								? user.getTimestamp("user_creation_time").getSeconds() : 0L,
-							"display",displayname,
-							"oldnames",newlist,
-							"friendship",friendshipstatus.toString(),
-							"bio", user.contains("user_bio") ? user.getString("user_bio") : ""
-							));
-		}catch(Exception e) {
+									? user.getTimestamp("user_creation_time").getSeconds()
+									: 0L,
+							"display", displayname,
+							"oldnames", newlist,
+							"friendship", friendshipstatus.toString(),
+							"bio", user.contains("user_bio") ? user.getString("user_bio") : ""));
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -288,16 +273,15 @@ public class UserResources {
 	public Response findAccount(ShortUserTokenRequest request) {
 		try {
 			TokenFull token = AuthHelper.verifyToken(request);
-			//Entity user = AuthHelper.getUser(request.getInput());
-			//TODO
+			// Entity user = AuthHelper.getUser(request.getInput());
+			// TODO
 
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
 			queryBuilder.setFilter(PropertyFilter.eq("user_display", request.getInput().getUsername()));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
 
-
 			return null;
-		}catch(Exception e) {
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -306,17 +290,16 @@ public class UserResources {
 	@Path("/showuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUserRole(ShortUserTokenRequest request){
-		try{
+	public Response showUserRole(ShortUserTokenRequest request) {
+		try {
 			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
-			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
+			Validator.unauthorized(token, new Role[] { Role.ADMIN, Role.BOFFICER });
 			return buildresponse(Map.of(
 					"username", user.getString("user_name"),
 					"display", user.getString("user_display"),
 					"email", user.contains("user_email") ? user.getString("user_email") : "",
-							"role", user.getString("user_role")
-					));
+					"role", user.getString("user_role")));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -326,19 +309,19 @@ public class UserResources {
 	@Path("/logout")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response logOut(ShortUserTokenRequest request){
-		try{
+	public Response logOut(ShortUserTokenRequest request) {
+		try {
 			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
 
-			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(token, new Role [] {Role.ADMIN});
+			if (!token.getUsername().equals(user.getString("user_name")))
+				Validator.unauthorized(token, new Role[] { Role.ADMIN });
 
 			deleteAllSessionsForUser(user.getString("user_name"));
 			return buildresponse(Map.of("message", "Logout successful"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
-		}	
+		}
 	}
 
 	@POST
@@ -346,18 +329,19 @@ public class UserResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response changeUserRole(ChangeUserRole request) {
-		try{
+		try {
 			ChangeUserRoleInput input = request.getInput();
 			Entity user = AuthHelper.getUser(input);
 			TokenFull token = AuthHelper.verifyToken(request);
-			Validator.unauthorized(token, new Role[] {Role.ADMIN});
+			Validator.unauthorized(token, new Role[] { Role.ADMIN });
 			Role newRole = Role.valueof(input.getNewrole());
 			Entity updatedUser = Entity.newBuilder(user)
 					.set("user_role", newRole.name())
 					.build();
 
 			datastore.put(updatedUser);
-			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
+			// JWT role is embedded in the token — invalidate all sessions so user re-logs
+			// with new role
 			deleteAllSessionsForUser(input.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
 		} catch (Exception e) {
@@ -370,22 +354,19 @@ public class UserResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response changeUserPassword(ChangeUserPasswordRequest request) {
-		try{
+		try {
 			PasswordInput input = request.getInput();
 			Entity user = AuthHelper.getUser(input.getUsername());
 			TokenFull token = AuthHelper.verifyToken(request);
 
-			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(token, new Role[] {Role.ADMIN});
+			if (!token.getUsername().equals(user.getString("user_name")))
+				Validator.unauthorized(token, new Role[] { Role.ADMIN });
 
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
-			if (!oldPwdHash.equals(user.getString("user_pwd"))) 
+			if (!oldPwdHash.equals(user.getPassword()))
 				ErrorException.trow(9907);
-
-			Entity updatedUser = Entity.newBuilder(user)
-					.set("user_pwd", DigestUtils.sha512Hex(input.getNewpassword()))
-					.build();
-			datastore.put(updatedUser);
+			user.setPassword(input.getNewpassword());
+			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
 
 		} catch (Exception e) {
@@ -398,23 +379,20 @@ public class UserResources {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response forgotUserPassword(ChangeUserPasswordRequest request) {
-		try{//TODO
+		try {// TODO
 			PasswordInput input = request.getInput();
 
 			Entity user = AuthHelper.getUser(input);
 			TokenFull token = AuthHelper.verifyToken(request);
 
-			if(!token.getUsername().equals(user.getString("user_name")))
-				Validator.unauthorized(token, new Role[] {Role.ADMIN});
+			if (!token.getUsername().equals(user.getString("user_name")))
+				Validator.unauthorized(token, new Role[] { Role.ADMIN });
 
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
-			if (!oldPwdHash.equals(user.getString("user_pwd"))) 
+			if (!oldPwdHash.equals(user.getPassword()))
 				ErrorException.trow(9907);
-
-			Entity updatedUser = Entity.newBuilder(user)
-					.set("user_pwd", DigestUtils.sha512Hex(input.getNewpassword()))
-					.build();
-			datastore.put(updatedUser);
+			user.setPassword(input.getNewpassword());
+			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
 
 		} catch (Exception e) {
@@ -426,23 +404,23 @@ public class UserResources {
 	@Path("/showauthsessions")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showAuthsessions(TokenRequest request){
-		try{
+	public Response showAuthsessions(TokenRequest request) {
+		try {
 			TokenFull token = AuthHelper.verifyToken(request);
-			Validator.unauthorized(token, new Role[] {Role.ADMIN});
+			Validator.unauthorized(token, new Role[] { Role.ADMIN });
 			return buildresponse(Map.of("tokens", getAllSessions()));
 
-		} catch (Exception e){
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
-	}	
+	}
 
 	@POST
 	@Path("/endfriend")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response endFriend() throws ErrorException{
+	public Response endFriend() throws ErrorException {
 		QueryResults<Entity> sessions = datastore.run(Query.newEntityQueryBuilder().setKind("Friend").build());
-		while(sessions.hasNext())
+		while (sessions.hasNext())
 			datastore.delete(sessions.next().getKey());
 		return buildresponse(Map.of("message", "ALL UNFRIEND"));
 	}
@@ -451,36 +429,33 @@ public class UserResources {
 	@Path("/addfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response addFriend(ShortUserTokenRequest request) throws ErrorException{
+	public Response addFriend(ShortUserTokenRequest request) throws ErrorException {
 		Transaction txn = datastore.newTransaction();
-		try{
+		try {
 			TokenFull token = AuthHelper.verifyToken(request);
-			Entity user = AuthHelper.getUser(request.getInput());
-			Key friendKey = getFriendKey(token,user);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			Key friendKey = FriendFull.getFriendKey(token, user);
 			Entity existingfriend = txn.get(friendKey);
+
 			if (existingfriend == null) {
-				Entity friendrequest = Entity.newBuilder(friendKey)
-						.set("username_1", token.getUsername())
-						.set("username_2", user.getString("user_name"))
-						.set("accepted", false)
-						.set("issued_at", System.currentTimeMillis()/TIME_DIVIDER)
-						.build();
-				txn.put(friendrequest);
+				FriendFull friend = FriendFull.newfriends(token, user);
+				txn.put(friend.toentity());
 				txn.commit();
 				return buildresponse(Map.of("message", "Friend Request Sent"));
-			}
-			else {
-				if(existingfriend.getBoolean("accepted")) 
+			} else {
+				FriendFull friend = FriendFull.fromdatabase(existingfriend);
+				if (friend.getAccepted())
 					ErrorException.trow(9926);
 				else {
-					if(existingfriend.getString("username_1").equals(token.getUsername()))
+					if (existingfriend.getString("username_1").equals(token.getUsername()))
 						ErrorException.trow(9927);
 					else
-						datastore.put(Entity.newBuilder(existingfriend).set("accepted", true).set("issued_at", System.currentTimeMillis()/TIME_DIVIDER).build());
+						datastore.put(Entity.newBuilder(existingfriend).set("accepted", true)
+								.set("issued_at", System.currentTimeMillis() / TIME_DIVIDER).build());
 				}
 			}
 			return buildresponse(Map.of("message", "Friend Request Accepted"));
-		} catch (Exception e){
+		} catch (Exception e) {
 			txn.rollback();
 			return Error.fromexception(e);
 		}
@@ -490,17 +465,18 @@ public class UserResources {
 	@Path("/addnickname")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response addnickname(TwoNameTokenRequest request) throws ErrorException{
-		try{
+	public Response addnickname(TwoNameTokenRequest request) throws ErrorException {
+		try {
 			TokenFull token = AuthHelper.verifyToken(request);
 			Entity user = AuthHelper.getUser(request.getInput());
-			Entity existingfriend = datastore.get(getFriendKey(token,user));
-			if(existingfriend == null || !existingfriend.getBoolean("accepted"))
+			Entity existingfriend = datastore.get(getFriendKey(token, user));
+			if (existingfriend == null || !existingfriend.getBoolean("accepted"))
 				ErrorException.trow(9934);
-			String friend=existingfriend.getString("username_1").equals(token.getUsername())?"nickname_1":"nickname_2";
-			datastore.put(Entity.newBuilder(existingfriend).set(friend,request.getInput().getNewName()).build());
+			String friend = existingfriend.getString("username_1").equals(token.getUsername()) ? "nickname_1"
+					: "nickname_2";
+			datastore.put(Entity.newBuilder(existingfriend).set(friend, request.getInput().getNewName()).build());
 			return buildresponse(Map.of("message", "Friend Nickname Set"));
-		} catch (Exception e){
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -509,13 +485,13 @@ public class UserResources {
 	@Path("/unfriend")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response unfriend(ShortUserTokenRequest request){
+	public Response unfriend(ShortUserTokenRequest request) {
 		try {
 			Entity user = AuthHelper.getUser(request.getInput());
 			TokenFull token = AuthHelper.verifyToken(request);
-			datastore.delete(getFriendKey(token,user));
+			datastore.delete(getFriendKey(token, user));
 			return buildresponse(Map.of("message", "Friendship Ended"));
-		}catch(Exception e) {
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -524,26 +500,26 @@ public class UserResources {
 	@Path("/showfriends")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriends(ShortUserTokenRequest request){
-		final String friend="Friend",start="Start";	
-		try{
-			String username=AuthHelper.getUser(request.getInput()).getString("user_name");
+	public Response showFriends(ShortUserTokenRequest request) {
+		final String friend = "Friend", start = "Start";
+		try {
+			String username = AuthHelper.getUser(request.getInput()).getString("user_name");
 			AuthHelper.verifyToken(request);
 			List<Map<String, Object>> friends = new LinkedList<>();
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
 			queryBuilder.setFilter(PropertyFilter.eq("accepted", true));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
-			while(sessions.hasNext()){
+			while (sessions.hasNext()) {
 				Entity session = sessions.next();
-				String friend1=session.getString("username_1"),
-						friend2=session.getString("username_2");
-				if(friend1.equals(username))
-					friends.add(Map.of(friend, friend2,start, session.getLong("issued_at")*TIME_DIVIDER));
-				else if(friend2.equals(username))
-					friends.add(Map.of(friend, friend1,start, session.getLong("issued_at")*TIME_DIVIDER));
+				String friend1 = session.getString("username_1"),
+						friend2 = session.getString("username_2");
+				if (friend1.equals(username))
+					friends.add(Map.of(friend, friend2, start, session.getLong("issued_at") * TIME_DIVIDER));
+				else if (friend2.equals(username))
+					friends.add(Map.of(friend, friend1, start, session.getLong("issued_at") * TIME_DIVIDER));
 			}
 			return buildresponse(Map.of("friends", friends));
-		} catch (Exception e){
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -552,8 +528,8 @@ public class UserResources {
 	@Path("/showfriendrequests")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showFriendRequests(TokenRequest request){
-		try{
+	public Response showFriendRequests(TokenRequest request) {
+		try {
 			TokenFull token = AuthHelper.verifyToken(request);
 			List<Map<String, Object>> friends = new LinkedList<>();
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
@@ -561,17 +537,18 @@ public class UserResources {
 					PropertyFilter.eq("accepted", false),
 					PropertyFilter.eq("username_2", token.getUsername())));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
-			while(sessions.hasNext()) {
+			while (sessions.hasNext()) {
 				Entity session = sessions.next();
-				friends.add(Map.of("From", session.getString("username_1"),"Sent at", session.getLong("issued_at")*TIME_DIVIDER));
+				friends.add(Map.of("From", session.getString("username_1"), "Sent at",
+						session.getLong("issued_at") * TIME_DIVIDER));
 			}
 			return buildresponse(Map.of("friends", friends));
-		} catch (Exception e){
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
 
-	private List<Map<String, Object>> getAllSessions(){
+	private List<Map<String, Object>> getAllSessions() {
 		Query<Entity> query = Query.newEntityQueryBuilder()
 				.setKind("Session")
 				.build();
@@ -579,10 +556,10 @@ public class UserResources {
 		QueryResults<Entity> sessions = datastore.run(query);
 		List<Map<String, Object>> tokensOutput = new LinkedList<>();
 
-		while(sessions.hasNext()) {
-			Entity session=sessions.next();
-			TokenFull token=TokenFull.getfromcloud(session);
-			if(token.isexpierd())
+		while (sessions.hasNext()) {
+			Entity session = sessions.next();
+			TokenFull token = TokenFull.getfromcloud(session);
+			if (token.isexpierd())
 				datastore.delete(session.getKey());
 			else
 				tokensOutput.add(token.tomap());
@@ -613,7 +590,7 @@ public class UserResources {
 
 		QueryResults<Entity> sessions = datastore.run(query);
 
-		//List<Entity> updatedSessions = new ArrayList<>();
+		// List<Entity> updatedSessions = new ArrayList<>();
 
 		while (sessions.hasNext()) {
 			Entity session = sessions.next();
@@ -624,26 +601,24 @@ public class UserResources {
 		}
 	}
 
-	private static Response buildresponse(Map<String,Object> map) {
+	private static Response buildresponse(Map<String, Object> map) {
 		return ResponceBuilder.constructorsuccess(map);
 	}
 
-	private Key getFriendKey(TokenFull token,Entity user) throws ErrorException{
-		int compare=user.getString("user_name").compareTo(token.getUsername());
-		if(compare==0)
+	private Key getFriendKey(TokenFull token, Entity user) throws ErrorException {
+		int compare = user.getString("user_name").compareTo(token.getUsername());
+		if (compare == 0)
 			ErrorException.trow(9925);
-		String f1,f2;
-		if((compare>0)) {
-			f1=user.getString("user_name");
-			f2=token.getUsername();
-		}else{
-			f2=user.getString("user_name");
-			f1=token.getUsername();
+		String f1, f2;
+		if ((compare > 0)) {
+			f1 = user.getString("user_name");
+			f2 = token.getUsername();
+		} else {
+			f2 = user.getString("user_name");
+			f1 = token.getUsername();
 		}
-		return datastore.newKeyFactory().setKind("Friend").newKey(String.format("%s@@@%s", f1,f2));
+		return datastore.newKeyFactory().setKind("Friend").newKey(String.format("%s@@@%s", f1, f2));
 
 	}
-
-
 
 }
