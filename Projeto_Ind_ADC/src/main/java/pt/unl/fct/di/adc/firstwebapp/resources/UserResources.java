@@ -74,13 +74,10 @@ public class UserResources {
 
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-
-			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
-
 			user.userValidation();
-
+			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
+			
 			if(txn.get(userKey) != null) ErrorException.trow(9901);
-
 			txn.put(UserFull.newuser(user,userKey).toentity());
 			txn.commit();
 

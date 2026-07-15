@@ -129,7 +129,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		map.put("status", this.status.name());
 		map.put("createdAt", this.createdAt);
 		map.put("isAccessible", this.isAccessible);
-		map.put("SDG", this.sdg);
+		map.put("SDG", (sdg!=null)?this.sdg:Collections.emptyList());
 		map.put("imageUrls", imageUrls);
 		map.put("partners", partners);
 		return map;
@@ -157,7 +157,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("image_urls", toImageValues(imageUrls))
 				.set("partners", Full.makeStringValueList(partners))
 				.set("is_accessible", this.isAccessible())
-				.set("SDG", this.getSDG())
+				.set("SDG", Full.makeLongValueList(this.getSDGint()))
 				.build();
 		return entity;
 	}

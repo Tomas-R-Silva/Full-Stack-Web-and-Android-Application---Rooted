@@ -143,20 +143,21 @@ public class EventResources {
 			List<StructuredQuery.Filter> filters = new ArrayList<>(7);
 
 			// Unauthenticated users see only public events
-			if (!authenticated) {
+			
+			if (!authenticated) 
 				filters.add(PropertyFilter.eq("is_public", true));
-			} else if (requesterRole != Role.ADMIN && requesterRole != Role.BOFFICER) {
+			 else if (requesterRole != Role.ADMIN && requesterRole != Role.BOFFICER) 
 				// Regular users see public events and their own private events
 				filters.add(PropertyFilter.eq("is_public", true));
-			}
+			
 
 			if (input.isAccessible() != null && input.isAccessible())
-				filters.add(PropertyFilter.eq("is_accessible", input.isAccessible()));
+				filters.add(PropertyFilter.eq("is_accessible", true));
 
-			if (input.getCategory() != null)
+			if (input.getCategory() != null && !input.getCategory().isBlank())
 				filters.add(PropertyFilter.eq("category", input.getCategory()));
 
-			if (input.getStatus() != null)
+			if (input.getStatus() != null && !input.getStatus().isBlank())
 				filters.add(PropertyFilter.eq("status", input.getStatus()));
 
 			if (input.getOrganizerUsername() != null && !input.getOrganizerUsername().isBlank())
