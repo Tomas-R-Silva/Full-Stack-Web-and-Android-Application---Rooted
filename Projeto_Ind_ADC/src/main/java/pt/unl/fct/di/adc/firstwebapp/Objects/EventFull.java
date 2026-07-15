@@ -4,8 +4,116 @@ import java.util.Map;
 
 public class EventFull extends Event implements Full {
 
-	public EventFull() {
-		// TODO Auto-generated constructor stub
+import pt.unl.fct.di.adc.firstwebapp.error.Error;
+import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+
+public class EventFull extends EventAtributsid implements Full, EventInputInterface {
+	private static final int MIN_SDG = 1;
+	private static final Datastore datastore = DatastoreOptions.newBuilder()
+			.setProjectId("adc-final")
+			.build()
+			.getService();
+
+	public enum Category {
+		MUSIC, SPORTS, TECH, ART, FOOD, BUSINESS, COMMUNITY, OTHER;
+
+		public static Category valueof(String v) {
+			try {
+				return Category.valueOf(v);
+			} catch (Exception e) {
+				return null;
+			}
+		}
+	}
+
+	public enum Status {
+		UPCOMING, ONGOING, CANCELLED, COMPLETED;
+
+		public static Status valueof(String v) {
+			try {
+				return Status.valueOf(v);
+			} catch (Exception e) {
+				return null;
+			}
+		}
+	}
+
+	private String organizerUsername;
+	private Status status;
+	private long createdAt; // epoch seconds
+	private List<Map<String, String>> imageUrls;
+	private List<String> partners;
+	private String eventId;
+	private long attendee;
+	private final Key key;
+
+	public EventFull(Key key) {
+		this.key = key;
+	}
+
+	public void isValid() throws ErrorException {
+		List<Map<String, Object>> list = new LinkedList<>();
+		if (!validVariable(title))
+			list.add(Error.createmap(9921));
+		if (!(validVariable(description)))
+			list.add(Error.createmap(9922));
+		if (getCategory() == null)
+			list.add(Error.createmap(9911));
+		if (!(validVariable(location)))
+			list.add(Error.createmap(9912));
+		if (!(validVariable(organizerUsername)))
+			list.add(Error.createmap(9923));
+		if (startDate <= 0)
+			list.add(Error.createmap(9914));
+		if (durationMinutes <= 0)
+			list.add(Error.createmap(9916));
+		if (maxAttendees < 0)
+			list.add(Error.createmap(9917));
+		if (minAttendees < 0 || (maxAttendees != 0 && minAttendees > maxAttendees))
+			list.add(Error.createmap(9918));
+		if (sdg.size() < MIN_SDG)
+			list.add(Error.createmap(9938));
+
+		boolean found = false;
+		Iterator<Long> it = sdg.iterator();
+		while (!found && it.hasNext())
+			found = SDGcheck(it.next());
+		if (found)
+			list.add(Error.createmap(9933));
+
+		if (!list.isEmpty())
+			Error.invalid_input(list);
+	}
+
+	public static EventFull fromdatabase(String eventid) {
+		return fromdatabase(datastore.get(datastore.newKeyFactory().setKind("Event").newKey(eventid)));
+	}
+
+	public static EventFull fromdatabase(Entity entity) {
+		if (entity == null)
+			return null;
+		EventFull event = new EventFull(entity.getKey());
+		event.setEventId(Full.getString(entity, "event_id"));
+		event.setTitle(Full.getString(entity, "title"));
+		event.setDescription(Full.getString(entity, "description"));
+		event.setCategory(Full.getString(entity, "category"));
+		event.setLocation(Full.getString(entity, "location"));
+		event.setLatitude(Full.getDouble(entity, "latitude"));
+		event.setLongitude(Full.getDouble(entity, "longitude"));
+		event.setStartDate(Full.getLong(entity, "start_date") * TIME_DIVIDER);
+		event.setDurationMinutes(Full.getLong(entity, "duration_minutes"));
+		event.setOrganizerUsername(Full.getString(entity, "organizer_username"));
+		event.setMaxAttendees(Full.getLong(entity, "max_attendees"));
+		event.setMinAttendees(Full.getLong(entity, "min_attendees"));
+		event.setAttendee(Full.getLong(entity, "attendee_count"));
+		event.setPublic(Full.getBoolean(entity, "is_public"));
+		event.setStatus(Status.valueof(Full.getString(entity, "status")));
+		event.setCreatedAt(Full.getLong(entity, "created_at") * TIME_DIVIDER);
+		event.setImageUrls(readImages(entity));
+		event.setpartner(Full.getStringList(entity, "partners"));
+		event.setAccessible(Full.getBoolean(entity, "is_accessible"));
+		event.setSDG(Full.getLongList(entity, "SDG"));
+		return event;
 	}
 
 	@Override

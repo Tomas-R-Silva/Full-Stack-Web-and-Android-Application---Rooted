@@ -228,9 +228,9 @@ public class EventResources {
 					for (LongValue n : sdglist)
 						b |= list.contains(n);
 					if (b)
-						events.add(entityToMap(current));
+						events.add(EventFull.fromdatabase(current).tomap());
 				} else
-					events.add(entityToMap(current));
+					events.add(EventFull.fromdatabase(current).tomap());
 			}
 
 			Map<String, Object> response = new HashMap<>();

@@ -14,6 +14,11 @@ import pt.unl.fct.di.adc.firstwebapp.error.Validator;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequestInterface;
 
 public class AuthHelper {
+	private static final int DELETE_BATCH = 500;
+	private static final Datastore datastore = DatastoreOptions.newBuilder()
+			.setProjectId("adc-final")
+			.build()
+			.getService();
 
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
 			.setProjectId("adc-final")
