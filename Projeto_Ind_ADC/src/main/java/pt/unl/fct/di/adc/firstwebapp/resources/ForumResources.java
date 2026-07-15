@@ -174,7 +174,7 @@ public class ForumResources {
 		// App Engine strips this header from external requests, so its presence
 		// proves the call came from the cron service (or an admin).
 		if (request.getHeader("X-AppEngine-Cron") == null)
-			return Error.forbidden();
+			return Error.errorswitch(9939);
 
 		try {
 			int eventsClosed = 0,postsDeleted = 0;

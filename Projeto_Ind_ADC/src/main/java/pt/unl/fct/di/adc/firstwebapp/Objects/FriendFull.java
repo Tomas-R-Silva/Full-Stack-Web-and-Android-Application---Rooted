@@ -54,13 +54,13 @@ public class FriendFull implements Full{
 		return ke.isBlank()?user.getDisplay():ke;
 	}
 
-	public static FriendFull newfriends(TokenFull token,UserFull user) throws ErrorException {
-		FriendFull friends = new FriendFull(getFriendKey(token,user));
+	public static FriendFull newfriends(TokenFull token,UserFull user,Key key) throws ErrorException {
+		FriendFull friends = new FriendFull(key);
 		friends.setUsername1(token.getUsername());
-		friends.setUsername1(user.getUsername());
+		friends.setUsername2(user.getUsername());
 		friends.setAccepted(false);
-		friends.setNickname1(null);
-		friends.setNickname2(null);
+		friends.setNickname1("");
+		friends.setNickname2("");
 		friends.setStart(System.currentTimeMillis());
 		return friends;
 	}
@@ -70,6 +70,10 @@ public class FriendFull implements Full{
 			ErrorException.trow(9926);
 		setAccepted(true);
 		setStart(System.currentTimeMillis());
+	}
+	
+	public String toString() {
+		return username1+"|"+username2+"|"+nickname1+"|"+nickname2+"|"+accepted+"|"+start;
 	}
 
 	@Override

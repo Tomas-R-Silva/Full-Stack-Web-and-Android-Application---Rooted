@@ -14,14 +14,12 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Transaction;
-import com.google.cloud.datastore.Value;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -229,7 +227,7 @@ public class EventResources {
 				ErrorException.trow(9905);
 
 			if (existing.getStatus().equals(Status.CANCELLED))
-				ErrorException.trow(9907); // can't edit a cancelled event
+				ErrorException.trow(9940); // can't edit a cancelled event
 
 			if (input.getTitle() != null && !input.getTitle().isBlank())
 				existing.setTitle(input.getTitle());
@@ -279,7 +277,7 @@ public class EventResources {
 			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 			if (event.getStatus().equals(Status.CANCELLED))
-				ErrorException.trow(9907); // can't edit a cancelled event
+				ErrorException.trow(9940); // can't edit a cancelled event
 			if(user != null)
 				event.addpartner(user);			
 			datastore.put(event.toentity());
@@ -301,7 +299,7 @@ public class EventResources {
 			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 			if (event.getStatus().equals(Status.CANCELLED))
-				ErrorException.trow(9907); // can't edit a cancelled event
+				ErrorException.trow(9940); // can't edit a cancelled event
 			if(user != null)
 				event.removepartner(user);			
 			datastore.put(event.toentity());
@@ -376,7 +374,7 @@ public class EventResources {
 			UserFull user = AuthHelper.getUser(token);
 
 			if (event.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
-				ErrorException.trow(9907);
+				ErrorException.trow(9940);
 
 			// PRIVATE event: joining needs the organizer's approval. Like following a
 			// private account, the same action creates a pending request instead of joining.

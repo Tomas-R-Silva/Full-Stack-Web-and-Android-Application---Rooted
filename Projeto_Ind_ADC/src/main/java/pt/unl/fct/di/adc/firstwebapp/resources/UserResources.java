@@ -73,7 +73,7 @@ public class UserResources {
 			Log.info("Attempt to register user: " + user.getUsername());
 			user.userValidation();
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
-			
+
 			if(txn.get(userKey) != null) ErrorException.trow(9901);
 			txn.put(UserFull.newuser(user,userKey).toentity());
 			txn.commit();
@@ -313,7 +313,7 @@ public class UserResources {
 				Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
 			if (!oldPwdHash.equals(user.getPassword())) 
-				ErrorException.trow(9907);
+				ErrorException.trow(9941);
 			user.setPassword(input.getNewpassword());
 			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
@@ -337,7 +337,7 @@ public class UserResources {
 				Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
 			if (!oldPwdHash.equals(user.getPassword())) 
-				ErrorException.trow(9907);
+				ErrorException.trow(9941);
 			user.setPassword(input.getNewpassword());
 			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
@@ -383,15 +383,15 @@ public class UserResources {
 			TokenFull token = AuthHelper.verifyToken(request);
 			UserFull user = AuthHelper.getUser(request.getInput());
 			Key friendKey = FriendFull.getFriendKey(token,user);
-			Entity existingfriend = txn.get(friendKey);
-
+			Entity existingfriend = datastore.get(friendKey);
 			if (existingfriend == null) {
-				FriendFull friend=FriendFull.newfriends(token,user);
+				FriendFull friend=FriendFull.newfriends(token,user,friendKey);
+				Log.info(friend.toString());				
 				txn.put(friend.toentity());
 				txn.commit();
 				return buildresponse(Map.of("message", "Friend Request Sent"));
 			}
-			else {
+			else {Log.info("key name6: " + friendKey.getName());
 				FriendFull friend=FriendFull.fromdatabase(existingfriend);
 				if(friend.getAccepted()) 
 					ErrorException.trow(9926);
