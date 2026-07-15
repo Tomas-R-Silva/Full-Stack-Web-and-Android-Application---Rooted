@@ -155,7 +155,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("image_urls", toImageValues(imageUrls))
 				.set("partners", Full.makeStringValueList(partners))
 				.set("is_accessible", this.isAccessible())
-				.set("SDG", this.getSDG())
+				.set("SDG", Full.makeLongValueList(this.getSDGint()))
 				.build();
 		return entity;
 	}

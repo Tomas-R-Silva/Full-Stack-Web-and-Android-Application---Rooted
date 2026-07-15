@@ -19,15 +19,15 @@ public interface Full {
 	public Key getKey();
 
 	public Entity toentity();
-	
+
 	public static String getString(Entity e,String name) {
 		return e.contains(name)?e.getString(name):"";
 	}
-	
+
 	public static String string(String str) {
 		return str!=null?str:"";
 	}
-	
+
 	public static long getLong(Entity e,String name) {
 		if(!e.contains(name)) return 0;
 		Value<?> v = e.getValue(name);
@@ -38,47 +38,51 @@ public interface Full {
 			return ((TimestampValue) v).get().getSeconds();
 		return e.getLong(name);
 	}
-	
+
 	public static double getDouble(Entity e,String name) {
 		return e.contains(name)?e.getDouble(name):0;
 	}
-	
+
 	public static boolean getBoolean(Entity e,String name) {
 		return e.contains(name)?e.getBoolean(name):true;
 	}
-	
+
 	public static List<StringValue> getStringValueList(Entity e,String name) {
 		return e.contains(name)?e.getList(name):Collections.emptyList();
 	}
-	
+
 	public static List<String> getStringList(Entity e,String name){
 		return Full.getStringValueList(e,name).stream().map(v -> v.get()).collect(Collectors.toList());
 	}
-	
+
 	public static List<StringValue> makeStringValueList(List<String> list) {
 		return (list!=null)?list.stream().map(v -> StringValue.of(v)).collect(Collectors.toList()):Collections.emptyList();
 	}
-	
+
 	public static List<?> list(List<?> list) {
 		return (list!=null)?list:Collections.emptyList();
 	}
-	
+
 	public static List<LongValue> makeLongValueList(List<Long> list) {
 		return (list!=null)?list.stream().map(v -> LongValue.of(v)).collect(Collectors.toList()):Collections.emptyList();
 	}
-	
+
 	public static List<Long> getLongList(Entity e,String name){
-		List<LongValue> l=e.getList(name);
-		return e.contains(name)?l.stream().map(v -> v.get()).collect(Collectors.toList()):Collections.emptyList();
+		if(e.contains(name)) {
+			List<LongValue> l=e.getList(name);
+			List<Long> l2= l.stream().map(v -> v.get()).collect(Collectors.toList());
+			return l2;
+		}
+		return Collections.emptyList();
 	}
-	
+
 	public static <E extends Enum<?>> List<StringValue> makeStringValueEnumList(List<E> list) {
 		return (list!=null)?list.stream().map(v -> StringValue.of(v.name())).collect(Collectors.toList()):Collections.emptyList();
 	}
-	
+
 	public static <E extends Enum<?>> List<String> makeStringEnumList(List<E> list) {
 		return (list!=null)?list.stream().map(v -> v.name()).collect(Collectors.toList()):Collections.emptyList();
 	}
-	
-	
+
+
 }
