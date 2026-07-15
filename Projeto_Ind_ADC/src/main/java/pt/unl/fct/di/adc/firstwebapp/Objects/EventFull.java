@@ -17,15 +17,13 @@ import com.google.cloud.datastore.FullEntity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Value;
 
+import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 
 public class EventFull extends EventAtributsid implements Full,EventInputInterface {
 	private static final int MIN_SDG=1;
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-final")
-			.build()
-			.getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 
 	public enum Category {
 		MUSIC, SPORTS, TECH, ART, FOOD, BUSINESS, COMMUNITY, OTHER;

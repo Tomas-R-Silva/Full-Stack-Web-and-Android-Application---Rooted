@@ -7,12 +7,11 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 
+import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
+
 public class AttendanceFull implements Full{
 	private static final long TIME_DIVIDER = 1000L;
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-final")
-			.build()
-			.getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 	private final Key key;
 	private String username;
 	private String event;

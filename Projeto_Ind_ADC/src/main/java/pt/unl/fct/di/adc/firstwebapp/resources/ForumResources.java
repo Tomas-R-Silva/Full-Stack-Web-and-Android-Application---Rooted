@@ -46,10 +46,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.PostMessageRequest;
 @Path("/forum")
 public class ForumResources {
 
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-final")
-			.build()
-			.getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 
 	private static final Logger Log = Logger.getLogger(ForumResources.class.getName());
 	private static final int DEFAULT_PAGE_SIZE = 50;
