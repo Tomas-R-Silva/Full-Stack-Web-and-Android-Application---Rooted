@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
 public class EventShortUserTokenRequest extends AbstractTokenInputRequest<EventShortUserTokenRequest.EventShortUser>implements TokenRequestInterface{
@@ -16,7 +17,7 @@ public class EventShortUserTokenRequest extends AbstractTokenInputRequest<EventS
 	public EventShortUserTokenRequest(){}
 
 
-	public class EventShortUser extends ShortUser{
+	public class EventShortUser extends ShortUser implements EventInputInterface{
 		private String eventId;
 
 		public EventShortUser() {}

@@ -12,6 +12,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.cloud.datastore.Datastore;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
@@ -68,8 +69,10 @@ public class JWTToken {
 		} catch (Exception e) {return null;}
 	}
 
-	public static TokenFull filltoken(String jwt,DecodedJWT decoded) throws TokenExpiredException, Exception {
-		TokenFull token=new TokenFull(jwt, 
+	public static TokenFull filltoken(Datastore datastore,String jwt,DecodedJWT decoded) throws TokenExpiredException, Exception {
+		TokenFull token=new TokenFull(
+				datastore.newKeyFactory().setKind("Session").newKey(jwt)
+				,jwt, 
 				decoded.getSubject(), 
 				Role.valueof(decoded.getClaim("role").asString()),
 				decoded.getIssuedAt().getTime(),
@@ -77,8 +80,8 @@ public class JWTToken {
 		return token;
 	}
 
-	public static TokenFull filltoken(String jwt) throws TokenExpiredException, Exception {
-		return filltoken(jwt,JWTToken.decodeUnsafe(jwt));
+	public static TokenFull filltoken(Datastore datastore,String jwt) throws TokenExpiredException, Exception {
+		return filltoken(datastore,jwt,JWTToken.decodeUnsafe(jwt));
 	}
 
 

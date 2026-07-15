@@ -34,10 +34,6 @@ public class Validator {
 		ErrorException.trow(9906);
 	}
 
-	public static void forbidden() throws ErrorException {
-		ErrorException.trow(9907);
-	}
-
 	// With JWT, signature and expiry are verified by JwtUtils.verify().
 	// This method just confirms the session entity exists (not revoked).
 	public static void invalidToken(Entity entity, TokenFull tokenJson) throws ErrorException {
