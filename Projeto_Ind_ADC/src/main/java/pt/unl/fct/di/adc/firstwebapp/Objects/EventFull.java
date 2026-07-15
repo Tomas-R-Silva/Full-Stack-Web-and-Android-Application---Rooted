@@ -2,6 +2,7 @@ package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +21,7 @@ import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 
 public class EventFull extends EventAtributsid implements Full,EventInputInterface {
+	private static final int MIN_SDG=1;
 	private static final Datastore datastore = DatastoreOptions.newBuilder()
 			.setProjectId("adc-final")
 			.build()
@@ -66,11 +68,15 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 			list.add(Error.createmap(9917));
 		if(minAttendees<0||(maxAttendees!=0&&minAttendees>maxAttendees))
 			list.add(Error.createmap(9918));
+		if(sdg.size()<MIN_SDG)
+			list.add(Error.createmap(9938));
+		
 		boolean found=false;
 		Iterator<Long> it=sdg.iterator();
 		while(!found && it.hasNext()) found=SDGcheck(it.next());
 		if(found)
 			list.add(Error.createmap(9933));
+		
 		if(!list.isEmpty())
 			Error.invalid_input(list);
 	}
@@ -106,7 +112,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 
 	@Override
 	public Map<String, Object> tomap() {
-		Map<String, Object> map = Map.of();
+		Map<String, Object> map = new HashMap<>();
 		map.put("eventId",Full.string(this.eventId));
 		map.put("title",Full.string(this.title));		
 		map.put("description",Full.string(this.description));
@@ -123,7 +129,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		map.put("status", this.status.name());
 		map.put("createdAt", this.createdAt);
 		map.put("isAccessible", this.isAccessible);
-		map.put("SDG", this.sdg);
+		map.put("SDG", (sdg!=null)?this.sdg:Collections.emptyList());
 		map.put("imageUrls", imageUrls);
 		map.put("partners", partners);
 		return map;
@@ -151,7 +157,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("image_urls", toImageValues(imageUrls))
 				.set("partners", Full.makeStringValueList(partners))
 				.set("is_accessible", this.isAccessible())
-				.set("SDG", this.getSDG())
+				.set("SDG", Full.makeLongValueList(this.getSDGint()))
 				.build();
 		return entity;
 	}

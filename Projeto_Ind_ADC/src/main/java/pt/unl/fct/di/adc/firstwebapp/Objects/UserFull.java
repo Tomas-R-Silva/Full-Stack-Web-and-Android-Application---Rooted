@@ -26,7 +26,9 @@ public class UserFull extends ShortUser implements Full{
 	private long birth;
 	private String country;
 	private String bio;
+	private boolean isPublic;
 	private final Key key;
+	
 
 	@Override
 	public Key getKey() {return key;}
@@ -48,6 +50,8 @@ public class UserFull extends ShortUser implements Full{
 	private void setbaseBirth(long birth) {this.birth=birth*TIME_DIVIDER;}
 	public void setBirth(long birth) {this.birth=birth;}
 	public long getBirth() {return birth;}
+	public boolean isPublic() { return isPublic; }
+	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 	private void setbaseCategory(List<Category> category) {this.category=category;}
 	public void setbaseCategorystr(List<String> category) {this.category= (category!=null)?category.stream().map(v -> Category.valueof(v)).collect(Collectors.toList()):Collections.emptyList();}
 	public void setOld(List<String> old){this.old=old;}
@@ -62,11 +66,11 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setEmail(user.getEmail());
 		newuser.setPassword(user.getPassword());
 		newuser.setRole(user.getRole());
-		newuser.setDisplay(user.getUsername());
 		newuser.setOld(List.of(user.getUsername()));
+		newuser.setDisplay(user.getUsername());
 		newuser.setbaseCreation(System.currentTimeMillis());
 		newuser.setbaseCategorystr(user.getCategory());
-		
+		newuser.setPublic(user.isPublic());
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
 		newuser.setBio("");
@@ -89,7 +93,8 @@ public class UserFull extends ShortUser implements Full{
 		map.put("friendship",friendshipstatus.toString());
 		map.put("display",Full.string(display));//may be friend nickname or user display name
 		map.put("creation_time",creation);
-		map.put("oldnames",old);
+		map.put("oldnames",Full.list(old));
+		map.put("isPublic", isPublic);
 		map.put("bio",Full.string(bio));
 		map.put("category",Full.makeStringEnumList(category));
 		map.put("country",Full.string(country));
@@ -115,6 +120,7 @@ public class UserFull extends ShortUser implements Full{
 		newUser.set("user_creation_time", creation / TIME_DIVIDER);
 		newUser.set("birth_time", birth / TIME_DIVIDER);
 		newUser.set("country", country);
+		newUser.set("is_public", isPublic);
 		newUser.set("user_bio", bio);
 		newUser.set("old_display", Full.makeStringValueList(old));
 		newUser.set("category", Full.makeStringValueEnumList(category));
@@ -129,6 +135,7 @@ public class UserFull extends ShortUser implements Full{
 		user.setbasePassword(Full.getString(entity,"user_pwd"));
 		user.setRole(Full.getString(entity,"user_role"));
 		user.setBio(Full.getString(entity,"user_bio"));
+		user.setPublic(Full.getBoolean(entity,"is_public"));
 		user.setbaseDisplay(Full.getString(entity,"user_display"));
 		user.setCountry(Full.getString(entity,"country"));
 		user.setbaseCreation(Full.getLong(entity,"user_creation_time")*TIME_DIVIDER);

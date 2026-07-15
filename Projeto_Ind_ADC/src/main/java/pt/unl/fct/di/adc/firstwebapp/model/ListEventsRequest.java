@@ -30,7 +30,6 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	    private String organizerUsername;
 	    private Integer pageSize;
 	    private String cursor;
-	   // @JsonProperty("SDG")
 	    private List<Integer> sdg;
 	    private Boolean isAccessible;
 

@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;

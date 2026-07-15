@@ -47,6 +47,7 @@ public class User extends ShortUser{
 	private String confirmation;
 	private String role;
 	private String email;
+	private Boolean isPublic;
 	private List<String> category;
 
 	public User() {}
@@ -75,6 +76,9 @@ public class User extends ShortUser{
 	public void setRole(String role) {this.role = role;}
 	public void setCategory(List<String> category) {this.category=category;}
 	public List<String> getCategory() {return category;}
+	public boolean isPublic() { return zeroifnull(isPublic); }
+	public Boolean isPublicnull() { return isPublic; }
+	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 	public void userValidation() throws ErrorException{
 		List<Map<String,Object>> list=new LinkedList<>();
 		if(!validVariable(getUsername()))
@@ -104,5 +108,8 @@ public class User extends ShortUser{
 	public String toString() {
 		final String str="User{userName=%s, password=%s, confirmation=%s, role=%s}";
 		return String.format(str, username,password,confirmation,role);
+	}
+	private static boolean zeroifnull(Boolean n) {
+		return(n==null)?false:n;
 	}
 }

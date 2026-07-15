@@ -1,6 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -142,20 +143,21 @@ public class EventResources {
 			List<StructuredQuery.Filter> filters = new ArrayList<>(7);
 
 			// Unauthenticated users see only public events
-			if (!authenticated) {
+			
+			if (!authenticated) 
 				filters.add(PropertyFilter.eq("is_public", true));
-			} else if (requesterRole != Role.ADMIN && requesterRole != Role.BOFFICER) {
+			 else if (requesterRole != Role.ADMIN && requesterRole != Role.BOFFICER) 
 				// Regular users see public events and their own private events
 				filters.add(PropertyFilter.eq("is_public", true));
-			}
+			
 
 			if (input.isAccessible() != null && input.isAccessible())
-				filters.add(PropertyFilter.eq("is_accessible", input.isAccessible()));
+				filters.add(PropertyFilter.eq("is_accessible", true));
 
-			if (input.getCategory() != null)
+			if (input.getCategory() != null && !input.getCategory().isBlank())
 				filters.add(PropertyFilter.eq("category", input.getCategory()));
 
-			if (input.getStatus() != null)
+			if (input.getStatus() != null && !input.getStatus().isBlank())
 				filters.add(PropertyFilter.eq("status", input.getStatus()));
 
 			if (input.getOrganizerUsername() != null && !input.getOrganizerUsername().isBlank())
@@ -203,8 +205,9 @@ public class EventResources {
 					events.add(EventFull.fromdatabase(current).tomap());
 			}
 
-			Map<String, Object> response = Map.of("events", events,"count", events.size());
-
+			Map<String, Object> response = new HashMap<>();
+			response.put("events", events);
+			response.put("count", events.size());
 			if (results.getCursorAfter() != null)
 				response.put("nextCursor", results.getCursorAfter().toUrlSafe());
 

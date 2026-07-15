@@ -74,13 +74,10 @@ public class UserResources {
 
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-
-			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
-
 			user.userValidation();
-
+			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
+			
 			if(txn.get(userKey) != null) ErrorException.trow(9901);
-
 			txn.put(UserFull.newuser(user,userKey).toentity());
 			txn.commit();
 
@@ -231,8 +228,10 @@ public class UserResources {
 	public Response findAccount(ShortUserTokenRequest request) {
 		try {
 			AuthHelper.verifyToken(request);
-			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
-			queryBuilder.setFilter(PropertyFilter.eq("user_display", request.getInput().getUsername()));
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User").
+					setFilter(CompositeFilter.and(
+							PropertyFilter.eq("user_display", request.getInput().getUsername())
+							,PropertyFilter.eq("is_public", true)));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
 			List<Map<String,Object>> list=new LinkedList<>();
 			while(sessions.hasNext()) 

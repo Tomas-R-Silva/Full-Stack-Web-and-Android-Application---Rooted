@@ -35,7 +35,7 @@ public interface Full {
 	}
 	
 	public static boolean getBoolean(Entity e,String name) {
-		return e.contains(name)?e.getBoolean(name):false;
+		return e.contains(name)?e.getBoolean(name):true;
 	}
 	
 	public static List<StringValue> getStringValueList(Entity e,String name) {
@@ -48,6 +48,10 @@ public interface Full {
 	
 	public static List<StringValue> makeStringValueList(List<String> list) {
 		return (list!=null)?list.stream().map(v -> StringValue.of(v)).collect(Collectors.toList()):Collections.emptyList();
+	}
+	
+	public static List<?> list(List<?> list) {
+		return (list!=null)?list:Collections.emptyList();
 	}
 	
 	public static List<LongValue> makeLongValueList(List<Long> list) {
