@@ -120,18 +120,15 @@ public class ForumFull implements Full,EventInputInterface{
 	public boolean isType(ForumType type) { return this.type.equals(type); }
 	@Override
 	public Map<String, Object> tomap() {
-		Map<String, Object> map = Map.of(
+		return Map.of(
 				"postId", Full.string(this.postId),
+				"eventId", Full.string(this.eventId),
+				"friendId", Full.string(this.friendId),
 				"type",Full.string(this.type.name()),
 				"authorUsername", Full.string(this.authorUsername),
 				"text", Full.string(this.text),
 				"createdAt", this.createdAt,
 				"parentPostId", Full.string(this.parentPostId));
-		if(this.type.equals(ForumType.EVENT)) 
-			map.put("eventId", Full.string(this.eventId));
-		else if(this.type.equals(ForumType.FRIEND)) 
-			map.put("friendId", Full.string(this.friendId));
-		return map;
 	}
 
 	@Override
