@@ -275,6 +275,8 @@ class ApiService {
     String? description,
     String? category,
     String? location,
+    double? latitude,
+    double? longitude,
     int? startDate,
     int? durationMinutes,
     int? maxAttendees,
@@ -298,6 +300,8 @@ class ApiService {
           'description': description,
           'category': category,
           'location': location,
+          'latitude': latitude,
+          'longitude': longitude,
           'startDate': startDate,
           'durationMinutes': durationMinutes,
           'maxAttendees': maxAttendees,
@@ -388,11 +392,20 @@ class ApiService {
   /// but if `data` is missing, null, or not actually a Map (e.g. a plain
   /// string message), this falls back to the whole body instead of
   /// crashing with "type 'String' is not a subtype of type
-  /// 'FutureOr<Map<String, dynamic>>'".
   static Map<String, dynamic> _extractData(Map<String, dynamic> body) {
     final data = body['data'];
     if (data is Map<String, dynamic>) return data;
     return body;
+  }
+
+  static int _normalizeTimestamp(dynamic value) {
+    if (value == null) return 0;
+    // Backend might return seconds, milliseconds, or nanoseconds (10^9, 10^12, or 10^18)
+    // We normalize everything to SECONDS because the UI does value * 1000.
+    int ts = (value as num).toInt();
+    if (ts > 1000000000000000) return ts ~/ 1000000000; // Nanoseconds -> Seconds
+    if (ts > 1000000000000) return ts ~/ 1000;       // Milliseconds -> Seconds
+    return ts;
   }
 
   /// Workaround for the current backend: EventResources#entityToMap puts the
@@ -402,17 +415,40 @@ class ApiService {
   /// without touching anything else. Safe to remove once the backend is
   /// fixed to emit 'sdg' directly.
   static Map<String, dynamic> _normalizeEvent(Map<String, dynamic> event) {
-    final current = event['sdg'];
-    if (current is List && current.isNotEmpty) return event;
-    for (final key in event.keys) {
-      if (key != 'sdg' && key.toLowerCase() == 'sdg') {
-        final value = event[key];
-        if (value is List) {
-          event['sdg'] = value;
+    // 1. Normalize SDG key: backend often returns "SDG" instead of "sdg"
+    final currentSdg = event['sdg'];
+    if (!(currentSdg is List && currentSdg.isNotEmpty)) {
+      for (final key in event.keys) {
+        if (key != 'sdg' && key.toLowerCase() == 'sdg') {
+          final value = event[key];
+          if (value is List) {
+            event['sdg'] = value;
+          }
+          break;
         }
-        break;
       }
     }
+
+    // 2. Normalize timestamps
+    if (event['startDate'] != null) {
+      event['startDate'] = _normalizeTimestamp(event['startDate']);
+    }
+
+    // 2. Normalize imageUrls: backend returns List<Map<String, String>> with {id, url}
+    final imgs = event['imageUrls'];
+    if (imgs is List) {
+      event['imageUrls'] = imgs.map<String>((img) {
+        if (img is Map) {
+          // Extract just the URL for backward compatibility with UI that expects List<String>
+          return img['url']?.toString() ?? '';
+        }
+        return img.toString();
+      }).toList();
+      
+      // Also keep the full objects in a separate key if needed for deletion later
+      event['_imageObjects'] = imgs;
+    }
+
     return event;
   }
 
@@ -430,6 +466,20 @@ class ApiService {
       }
     }
     return data;
+  }
+
+  static Map<String, dynamic> _normalizeForumPost(Map<String, dynamic> post) {
+    if (post['createdAt'] != null) {
+      post['createdAt'] = _normalizeTimestamp(post['createdAt']);
+    }
+    return post;
+  }
+
+  static Map<String, dynamic> _normalizeUser(Map<String, dynamic> user) {
+    if (user['creation_time'] != null) {
+      user['creation_time'] = _normalizeTimestamp(user['creation_time']);
+    }
+    return user;
   }
 
   /// Calls POST /rest/events/get.
@@ -478,13 +528,7 @@ class ApiService {
           'status': status,
           'category': category,
           'isAccessible': isAccessible,
-          // NOTE: 'sdg' is deliberately NOT sent here. The current backend's
-          // SDG filter (EventResources#listEvents) checks
-          // current.contains(null) instead of current.contains("SDG"), so it
-          // always evaluates the goal list as empty and silently returns
-          // zero events whenever an sdg filter is present. Until that's
-          // fixed server-side, we always fetch the unfiltered page and do
-          // the SDG filtering ourselves (see _loadEvents' client-side pass).
+          'sdg': sdg,
           'pageSize': pageSize,
           'cursor': cursor,
         }..removeWhere((k, v) => v == null)
@@ -495,6 +539,52 @@ class ApiService {
       return _normalizeEventPayload(_extractData(body));
     }
     throw ApiException(_errorMessage(body, 'Failed to list events'));
+  }
+
+  /// Calls POST /rest/events/addpartner.
+  static Future<void> addPartner({
+    required String jwt,
+    required String eventId,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/addpartner');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'eventId': eventId,
+          'username': username,
+        },
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to add partner'));
+  }
+
+  /// Calls POST /rest/events/removepartner.
+  static Future<void> removePartner({
+    required String jwt,
+    required String eventId,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/removepartner');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'eventId': eventId,
+          'username': username,
+        },
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to remove partner'));
   }
 
   /// Calls POST /rest/events/cancel.
@@ -556,6 +646,52 @@ class ApiService {
     throw ApiException(_errorMessage(body, 'Failed to get attendees'));
   }
 
+  /// Calls POST /rest/events/joinrequests.
+  static Future<Map<String, dynamic>> listJoinRequests({
+    required String jwt,
+    required String eventId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/joinrequests');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'eventId': eventId},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return _extractData(body);
+    }
+    throw ApiException(_errorMessage(body, 'Failed to list join requests'));
+  }
+
+  /// Calls POST /rest/events/respondjoin.
+  static Future<void> respondJoinRequest({
+    required String jwt,
+    required String eventId,
+    required String username,
+    required bool accept,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/respondjoin');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'eventId': eventId,
+          'username': username,
+          'accept': accept,
+        },
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to respond to join request'));
+  }
+
   /// Calls POST /rest/events/myattends.
   static Future<Map<String, dynamic>> getMyAttends({
     required String jwt,
@@ -609,7 +745,9 @@ class ApiService {
 
   static Future<Map<String, dynamic>> postForumMessage({
     required String jwt,
-    required String eventId,
+    String? eventId,
+    String? id,
+    String type = 'EVENT',
     required String text,
     String? username,
     String? parentPostId,
@@ -624,7 +762,9 @@ class ApiService {
           'jwt': jwt,
         },
         'input': {
-          'eventId': eventId,
+          'type': type,
+          if (type == 'EVENT') 'eventId': eventId,
+          if (type == 'FRIEND') 'id': id,
           'text': text,
           'parentPostId': parentPostId,
         }..removeWhere((k, v) => v == null)
@@ -634,7 +774,9 @@ class ApiService {
     final body = _parseBody(response.body);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
+      final data = _extractData(body);
+      _normalizeForumPost(data);
+      return data;
     }
 
     throw ApiException(_errorMessage(body, 'Failed to post message'));
@@ -646,7 +788,9 @@ class ApiService {
   /// Calls POST /rest/forum/list.
   static Future<Map<String, dynamic>> listForumMessages({
     required String jwt,
-    required String eventId,
+    String? eventId,
+    String? id,
+    String type = 'EVENT',
     String? username,
     int pageSize = 50,
     String? cursor,
@@ -660,7 +804,9 @@ class ApiService {
           'jwt': jwt,
         },
         'input': {
-          'eventId': eventId,
+          'type': type,
+          if (type == 'EVENT') 'eventId': eventId,
+          if (type == 'FRIEND') 'id': id,
           'pageSize': pageSize,
           'cursor': cursor,
         }..removeWhere((k, v) => v == null)
@@ -668,7 +814,14 @@ class ApiService {
     );
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
+      final data = _extractData(body);
+      final posts = data['posts'];
+      if (posts is List) {
+        for (final p in posts) {
+          if (p is Map<String, dynamic>) _normalizeForumPost(p);
+        }
+      }
+      return data;
     }
     throw ApiException(_errorMessage(body, 'Failed to load messages'));
   }
@@ -765,6 +918,52 @@ class ApiService {
     throw ApiException(_errorMessage(body, 'Failed to upload images (Status ${response.statusCode})'));
   }
 
+  /// Calls POST /rest/events/uploadimageurls.
+  static Future<void> uploadImageUrls({
+    required String jwt,
+    required String eventId,
+    required List<String> imageUrls,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/uploadimageurls');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'eventId': eventId,
+          'images': imageUrls,
+        },
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to upload image URLs'));
+  }
+
+  /// Calls POST /rest/events/deleteimage.
+  static Future<void> deleteImages({
+    required String jwt,
+    required String eventId,
+    required List<String> imageIds,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/deleteimage');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'eventId': eventId,
+          'imageIds': imageIds,
+        },
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to delete images'));
+  }
+
   /// Calls POST /rest/user.
   static Future<Map<String, dynamic>> getUserAccount({
     required String jwt,
@@ -781,7 +980,7 @@ class ApiService {
     );
     final body = _parseBody(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
+      return _normalizeUser(_extractData(body));
     }
     throw ApiException(_errorMessage(body, 'Failed to load user profile'));
   }

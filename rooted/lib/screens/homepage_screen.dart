@@ -494,14 +494,15 @@ class _HomePageState extends State<HomePage> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => FullScreenImage(
-                                imageUrl: firstImage,
-                                tag: 'event_image_${event['eventId']}',
+                                imageUrls: imageUrls != null ? imageUrls.cast<String>() : [firstImage],
+                                initialIndex: 0,
+                                tagBase: 'event_image_${event['eventId']}',
                               ),
                             ),
                           );
                         },
                         child: Hero(
-                          tag: 'event_image_${event['eventId']}',
+                          tag: 'event_image_${event['eventId']}_0',
                           child: Image.network(
                             firstImage,
                             fit: BoxFit.cover,
@@ -658,21 +659,48 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (firstImage != null)
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Hero(
-                  tag: 'event_image_${event['eventId']}',
-                  child: Image.network(
-                    firstImage,
-                    height: 140,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 4,
-                      color: AppTheme.primary.withValues(alpha: 0.7),
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Hero(
+                      tag: 'event_image_${event['eventId']}_0',
+                      child: Image.network(
+                        firstImage,
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 4,
+                          color: AppTheme.primary.withValues(alpha: 0.7),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (imageUrls != null && imageUrls.length > 1)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.collections, color: Colors.white, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${imageUrls.length}',
+                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               )
             else
               Container(

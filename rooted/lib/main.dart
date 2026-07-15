@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/session_storage.dart';
 import 'theme/app_theme.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
   final jwt = await SessionStorage.getJwt();
   runApp(RootedApp(isLoggedIn: jwt != null));
 }
+
 class RootedApp extends StatelessWidget {
   final bool isLoggedIn;
 

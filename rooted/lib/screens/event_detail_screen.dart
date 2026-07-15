@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import '../widgets/full_screen_image.dart';
 import '../widgets/sdg_badge.dart';
+import '../widgets/attendees_bottom_sheet.dart';
 import 'create_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -25,6 +26,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   final List<Map<String, dynamic>> _posts = [];
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final PageController _imagePageController = PageController();
+  int _currentImageIndex = 0;
   bool _loadingMessages = true;
   bool _sendingMessage = false;
   String? _nextCursor;
@@ -82,6 +85,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     try {
       final result = await ApiService.listForumMessages(
         jwt: _jwt!,
+        type: 'EVENT',
         eventId: _event['eventId'] as String,
         username: _username,
         pageSize: 50,
@@ -110,6 +114,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     try {
       final result = await ApiService.listForumMessages(
         jwt: _jwt!,
+        type: 'EVENT',
         eventId: _event['eventId'] as String,
         username: _username,
         pageSize: 50,
@@ -146,6 +151,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     });
   }
 
+  void _showAttendees() {
+    if (_jwt == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AttendeesBottomSheet(
+        eventId: _event['eventId'] as String,
+        jwt: _jwt!,
+      ),
+    );
+  }
+
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty || _jwt == null) return;
@@ -156,6 +174,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     try {
       final post = await ApiService.postForumMessage(
         jwt: _jwt!,
+        type: 'EVENT',
         eventId: _event['eventId'] as String,
         text: text,
         username: _username,
@@ -319,8 +338,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildEventInfo() {
-    final imageUrls = _event['imageUrls'] as List<dynamic>?;
-    final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+    final imageUrls = (_event['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [];
 
     return Container(
       width: double.infinity,
@@ -328,27 +346,90 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (firstImage != null)
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FullScreenImage(
-                      imageUrl: firstImage,
-                      tag: 'event_image_${_event['eventId']}',
-                    ),
+          if (imageUrls.isNotEmpty)
+            SizedBox(
+              height: 250,
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: _imagePageController,
+                    itemCount: imageUrls.length,
+                    onPageChanged: (index) => setState(() => _currentImageIndex = index),
+                    itemBuilder: (context, index) {
+                      final url = imageUrls[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullScreenImage(
+                                imageUrls: imageUrls,
+                                initialIndex: index,
+                                tagBase: 'event_image_${_event['eventId']}',
+                              ),
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: 'event_image_${_event['eventId']}_$index',
+                          child: Image.network(
+                            url,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-              child: Hero(
-                tag: 'event_image_${_event['eventId']}',
-                child: Image.network(
-                  firstImage,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                  if (imageUrls.length > 1) ...[
+                    // Navigation arrows
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _carouselButton(Icons.chevron_left, () {
+                              _imagePageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }),
+                            _carouselButton(Icons.chevron_right, () {
+                              _imagePageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Page indicator
+                    Positioned(
+                      bottom: 12,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          imageUrls.length,
+                          (index) => Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _currentImageIndex == index
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           Padding(
@@ -420,8 +501,29 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     _event['location'] as String? ?? ''),
                 _infoRow(Icons.timer_outlined,
                     '${_event['durationMinutes'] ?? 0} minutes'),
-                _infoRow(Icons.people_outline,
-                    '${_event['attendeeCount'] ?? 0} / ${_event['maxAttendees'] ?? '∞'} attendees'),
+                
+                GestureDetector(
+                  onTap: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? _showAttendees : null,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.people_outline, size: 14, color: AppTheme.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${_event['attendeeCount'] ?? 0} / ${_event['maxAttendees'] ?? '∞'} attendees',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? AppTheme.primary : AppTheme.textSecondary,
+                          fontWeight: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? FontWeight.w600 : FontWeight.normal,
+                          decoration: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? TextDecoration.underline : null,
+                        ),
+                      ),
+                      if (_event['organizerUsername'] == _username || _role == 'ADMIN') ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppTheme.primary),
+                      ],
+                    ],
+                  ),
+                ),
                 
                 // SDG Display
                 if (_event['sdg'] != null && (_event['sdg'] as List).isNotEmpty) ...[
@@ -532,6 +634,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         );
       }
     }
+  }
+
+  Widget _carouselButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 24),
+        onPressed: onPressed,
+      ),
+    );
   }
 
   Widget _infoRow(IconData icon, String text, {String? linkText, VoidCallback? onTap}) {
