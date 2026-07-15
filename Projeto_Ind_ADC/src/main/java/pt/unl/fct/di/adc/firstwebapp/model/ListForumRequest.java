@@ -18,7 +18,7 @@ public class ListForumRequest extends AbstractTokenInputRequest<ListForumRequest
 	public class ListForumInput extends ForumModel{
 
 		private String cursor;
-		private int pageSize;
+		private Integer pageSize;
 
 		public ListForumInput() {}
 

@@ -160,12 +160,12 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	}
 
 	public static EventFull newevent(EventAtributs input,String username) throws ErrorException {
-		String ID;
-		Key key;
-		do {
+		String ID=UUID.randomUUID().toString();
+		Key key=datastore.newKeyFactory().setKind("Event").newKey(ID);
+		while(datastore.get(key)!=null){
 			ID=UUID.randomUUID().toString();
 			key=datastore.newKeyFactory().setKind("Event").newKey(ID);
-		}while(datastore.get(key)!=null);
+		}
 		EventFull event=new EventFull(key);
 		event.setEventId(ID);
 		event.setTitle(input.getTitle());

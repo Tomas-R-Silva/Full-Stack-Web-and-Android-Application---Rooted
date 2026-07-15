@@ -37,9 +37,9 @@ public class ForumFull implements Full,EventInputInterface{
 		List<Map<String,Object>> list = new LinkedList<>();
 		if (!validVariable(text) || text.length() > MAX_TEXT_LENGTH)
 			list.add(Error.createmap(9930));
-		if (!(validVariable(eventId)&&type.equals(ForumType.EVENT)))
+		if (!validVariable(eventId)&&type.equals(ForumType.EVENT))
 			list.add(Error.createmap(9937));
-		if (!(validVariable(postId)&&type.equals(ForumType.FRIEND)))
+		if (!validVariable(postId)&&type.equals(ForumType.FRIEND))
 			list.add(Error.createmap(9937));
 		if (!list.isEmpty())
 			Error.invalid_input(list);
@@ -73,19 +73,18 @@ public class ForumFull implements Full,EventInputInterface{
 	}
 
 	private static ForumFull newforum(Datastore datastore,TokenFull token,PostMessageRequest.PostMessageinput input) throws ErrorException {
-		String ID;
-		Key key;
-		do {
+		String ID=UUID.randomUUID().toString();
+		Key key=datastore.newKeyFactory().setKind("ForumPost").newKey(ID);
+		while(datastore.get(key)!=null){
 			ID=UUID.randomUUID().toString();
 			key=datastore.newKeyFactory().setKind("ForumPost").newKey(ID);
-		}while(datastore.get(key)!=null);
+		}
 		ForumFull post = new ForumFull(key);
 		post.setPostId(ID);
 		post.setAuthorUsername(token.getUsername());
 		post.setText(input.getText());
 		post.setParentPostId(input.getParentPostId());
 		post.setCreatedAt(System.currentTimeMillis());
-		post.isValid();
 		return post;
 	}
 
@@ -144,14 +143,14 @@ public class ForumFull implements Full,EventInputInterface{
 	@Override
 	public Entity toentity() {
 		return Entity.newBuilder(key)
-				.set("post_id", this.getPostId())
-				.set("type", this.type.name())
-				.set("author_username", this.getAuthorUsername())
-				.set("text", this.getText())
+				.set("post_id", Full.string(this.getPostId()))
+				.set("type", Full.string(this.type.name()))
+				.set("author_username", Full.string(this.getAuthorUsername()))
+				.set("text", Full.string(this.getText()))
 				.set("created_at", this.getCreatedAt()/TIME_DIVIDER)
-				.set("parent_post_id", this.getParentPostId())
-				.set("event_id", this.getEventId())
-				.set("friend_id", this.getFriendId()).build();
+				.set("parent_post_id", Full.string(this.getParentPostId()))
+				.set("event_id", Full.string(this.getEventId()))
+				.set("friend_id", Full.string(this.getFriendId())).build();
 	}
 
 
