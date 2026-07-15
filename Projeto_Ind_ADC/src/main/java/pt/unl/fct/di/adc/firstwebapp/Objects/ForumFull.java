@@ -28,7 +28,7 @@ public class ForumFull implements Full,EventInputInterface{
 
 	public enum ForumType{
 		EVENT,FRIEND;		
-		public static ForumType valueof(String v) {try{return ForumType.valueOf(v);}catch (Exception e) {return null;}}
+		public static ForumType valueof(String v) {try{return ForumType.valueOf(v);}catch (Exception e) {return EVENT;}}
 	}
 
 	private ForumFull(Key key) {this.key=key;}
@@ -51,8 +51,8 @@ public class ForumFull implements Full,EventInputInterface{
 		post.setPostId(Full.getString(entity, "post_id"));
 		post.setEventId(Full.getString(entity, "event_id"));
 
-		post.setEventId(Full.getString(entity, "type"));
-		post.setEventId(Full.getString(entity, "friend_id"));
+		post.setType(ForumType.valueof(Full.getString(entity, "type")));
+		post.setFriendId(Full.getString(entity, "friend_id"));
 
 		post.setAuthorUsername(Full.getString(entity, "author_username"));
 		post.setText(Full.getString(entity, "text"));

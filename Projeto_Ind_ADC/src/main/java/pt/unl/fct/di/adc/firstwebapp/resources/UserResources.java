@@ -316,7 +316,7 @@ public class UserResources {
 				Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
 			if (!oldPwdHash.equals(user.getPassword())) 
-				ErrorException.trow(9907);
+				ErrorException.trow(9941);
 			user.setPassword(input.getNewpassword());
 			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
@@ -340,7 +340,7 @@ public class UserResources {
 				Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
 			if (!oldPwdHash.equals(user.getPassword())) 
-				ErrorException.trow(9907);
+				ErrorException.trow(9941);
 			user.setPassword(input.getNewpassword());
 			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
