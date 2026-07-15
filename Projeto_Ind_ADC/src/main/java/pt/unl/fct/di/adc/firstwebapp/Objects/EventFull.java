@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
@@ -20,11 +21,12 @@ import com.google.cloud.datastore.Value;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
+import pt.unl.fct.di.adc.firstwebapp.resources.UserResources;
 
 public class EventFull extends EventAtributsid implements Full,EventInputInterface {
 	private static final int MIN_SDG=1;
 	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
-
+	private static Logger Log = Logger.getLogger(UserResources.class.getName());
 	public enum Category {
 		MUSIC, SPORTS, TECH, ART, FOOD, BUSINESS, COMMUNITY, OTHER;
 		public static Category valueof(String v) {try{return Category.valueOf(v);}catch (Exception e) {return null;}}
@@ -40,10 +42,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private long createdAt;  // epoch seconds
 	private List<Map<String, String>> imageUrls;
 	private List<String> partners;
-	private String eventId;
 	private long attendee;
 	private final Key key;
-
 	public EventFull(Key key) {this.key=key;}
 
 	public void isValid() throws ErrorException{
@@ -111,7 +111,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	@Override
 	public Map<String, Object> tomap() {
 		Map<String, Object> map = new HashMap<>();
-		map.put("eventId",Full.string(this.eventId));
+		Log.info("eventId: " + eventId+" "+title);
+		map.put("eventId",Full.string(this.getEventId()));
 		map.put("title",Full.string(this.title));		
 		map.put("description",Full.string(this.description));
 		map.put("category", Full.string(this.category));
@@ -135,7 +136,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 
 	@Override
 	public Entity toentity() {
-		Entity entity = Entity.newBuilder(key)
+		return Entity.newBuilder(key)
 				.set("event_id", this.getEventId())
 				.set("title", this.getTitle())
 				.set("description", this.getDescription())
@@ -157,7 +158,6 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("is_accessible", this.isAccessible())
 				.set("SDG", Full.makeLongValueList(this.getSDGint()))
 				.build();
-		return entity;
 	}
 
 	public static EventFull newevent(EventAtributs input,String username) throws ErrorException {
