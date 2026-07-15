@@ -7,13 +7,11 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 
+import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 
 public class FriendFull implements Full{
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-final")
-			.build()
-			.getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 
 	private String username1;
 	private String username2;

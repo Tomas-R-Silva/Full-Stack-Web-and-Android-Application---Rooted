@@ -1,54 +1,54 @@
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\JWTConfig.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\PostMessageRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ForumFull.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\ResponceBuilder.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\UserRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ChangeUserRole.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventInputInterface.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\RespondJoinRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\TokenRequestInterface.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ForumModel.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\AbstractTokenInputRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\ApplicationConfig.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\AuthHelper.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\AdminSeeder.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ListForumRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ModAccountRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventJoinRequestFull.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventAtributsid.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ChangeUserPasswordRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ListEventsRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\AbstractInputRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\resources\ForumResources.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventInput.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\resources\EventResources.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\AttendanceFull.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\UserFull.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\EventTokenRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\LoginRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\UpdateEventRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventFull.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\GCSUploader.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\JWTToken.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\error\Error.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\Event.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\endlocal.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\error\Validator.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ShortUserTokenRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\error\ErrorException.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ModelToken.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\TwoNameTokenRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\FriendFull.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ForumKeyTokenRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\resources\UserResources.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\EventShortUserTokenRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\CORSFilter.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\User.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventAtributs.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\TokenFull.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ForumPost.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ImageRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\TokenRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ShortUser.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\CreateEventRequest.java
-C:\Users\galve\OneDrive\Ambiente de Trabalho\github-local\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\Full.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\EventShortUserTokenRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventJoinRequestFull.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\CreateEventRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\User.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\AdminSeeder.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\AbstractInputRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\resources\EventResources.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ImageRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ChangeUserRole.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\resources\ForumResources.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\error\Error.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\error\Validator.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ShortUser.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\CORSFilter.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventInput.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\endlocal.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\GCSUploader.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ForumPost.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\TokenFull.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventInputInterface.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\LoginRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\AbstractTokenInputRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\UpdateEventRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ShortUserTokenRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\Full.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\ResponceBuilder.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\resources\UserResources.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\TokenRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ForumModel.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventAtributs.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ChangeUserPasswordRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ForumFull.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\RespondJoinRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\JWTConfig.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\TwoNameTokenRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\UserRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\Event.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ListForumRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ForumKeyTokenRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\FriendFull.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\JWTToken.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\ModelToken.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\TokenRequestInterface.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\error\ErrorException.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ListEventsRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\PostMessageRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Utilities\AuthHelper.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\AttendanceFull.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventAtributsid.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\ApplicationConfig.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\EventTokenRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\model\ModAccountRequest.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\EventFull.java
+C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC\src\main\java\pt\unl\fct\di\adc\firstwebapp\Objects\UserFull.java

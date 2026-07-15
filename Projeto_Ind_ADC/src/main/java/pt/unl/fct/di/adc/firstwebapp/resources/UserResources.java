@@ -55,10 +55,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
 
 @Path("/")
 public class UserResources {
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-final")
-			.build()
-			.getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 
 	private static Logger Log = Logger.getLogger(UserResources.class.getName());
 

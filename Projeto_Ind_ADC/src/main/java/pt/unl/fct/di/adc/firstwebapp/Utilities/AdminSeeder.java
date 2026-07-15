@@ -31,10 +31,7 @@ public class AdminSeeder implements ServletContextListener {
 
 	private static final Logger Log = Logger.getLogger(AdminSeeder.class.getName());
 
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-final")
-			.build()
-			.getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {

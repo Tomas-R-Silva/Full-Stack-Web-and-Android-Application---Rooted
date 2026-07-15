@@ -59,10 +59,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.UpdateEventRequest;
 @Path("/events")
 public class EventResources {
 
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-final")
-			.build()
-			.getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 
 	private static final Logger Log = Logger.getLogger(EventResources.class.getName());
 

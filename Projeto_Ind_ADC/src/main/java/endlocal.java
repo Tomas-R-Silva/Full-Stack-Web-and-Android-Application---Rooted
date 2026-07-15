@@ -5,17 +5,18 @@ import java.util.regex.Pattern;
 
 public class endlocal {
 	public endlocal() {}
-	private enum AC{START,STARTQUICK,END,BASE;}
+	private enum AC{START,STARTQUICK,END,BASE,BASE2;}
 
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		//Process p;
 		//Runtime.getRuntime().
 		//Thread.
-		AC a=AC.BASE;
+		AC a=AC.BASE2;
 		switch(a) {
 		case END->{findandkill(8080);findandkill(8081);System.out.println("DONE");}
 		case START->{new endlocal.Startdatabase().start();new endlocal.Startprogram().start();}
+		case BASE2->{findandkill(8080);findandkill(8081);System.out.println("KILLED");new endlocal.Startdatabase().start();}
 		case BASE->{new endlocal.Startdatabase().start();}
 		case STARTQUICK->{new endlocal.Startdatabase().start();new endlocal.StartprogramQuick().start();}
 		}
@@ -59,11 +60,13 @@ public class endlocal {
 		byte[] bytes = new byte[1024];
 		while ((bytesRead = process.getInputStream().read(bytes)) > -1) 
 			out = out+ new String(bytes, 0, bytesRead);
+		for(String str:out.split("\n")) {
 		Pattern pattern = Pattern.compile("([0-9]{1,5}$)");
-		Matcher matcher = pattern.matcher(out);
+		Matcher matcher = pattern.matcher(str);
 		while (matcher.find())
 			//System.out.println(matcher.group(1));
 			killProcess(String.valueOf(matcher.group(1)));
+		}
 	}
 
 	@SuppressWarnings("deprecation")
