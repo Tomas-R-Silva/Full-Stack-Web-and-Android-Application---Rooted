@@ -67,6 +67,7 @@ public class ForumFull implements Full,EventInputInterface{
 		ForumFull post = ForumFull.newforum(datastore,token,input);
 		post.setType(ForumType.EVENT);
 		post.setEventId(event.getEventId());
+		post.setFriendId("");
 		post.isValid();
 		return post;
 	}
@@ -93,6 +94,7 @@ public class ForumFull implements Full,EventInputInterface{
 			ErrorException.trow(9937);
 		ForumFull post = ForumFull.newforum(datastore,token,input);
 		post.setType(ForumType.FRIEND);
+		post.setEventId("");
 		post.setFriendId(friend.formatkey());	
 		post.isValid();
 		return post;
@@ -141,18 +143,15 @@ public class ForumFull implements Full,EventInputInterface{
 
 	@Override
 	public Entity toentity() {
-		Entity.Builder entity= Entity.newBuilder(key)
+		return Entity.newBuilder(key)
 				.set("post_id", this.getPostId())
 				.set("type", this.type.name())
 				.set("author_username", this.getAuthorUsername())
 				.set("text", this.getText())
 				.set("created_at", this.getCreatedAt()/TIME_DIVIDER)
-				.set("parent_post_id", this.getParentPostId());
-		if(type.equals(ForumType.EVENT)) 
-			entity.set("event_id", this.getEventId());
-		else if(type.equals(ForumType.FRIEND)) 
-			entity.set("friend_id", this.getFriendId());
-		return entity.build();
+				.set("parent_post_id", this.getParentPostId())
+				.set("event_id", this.getEventId())
+				.set("friend_id", this.getFriendId()).build();
 	}
 
 
