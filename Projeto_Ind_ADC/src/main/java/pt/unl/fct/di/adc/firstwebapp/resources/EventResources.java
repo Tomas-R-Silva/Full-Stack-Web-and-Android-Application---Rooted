@@ -184,24 +184,21 @@ public class EventResources {
 			// SDG is optional in the request: getSDG() is null when the client omits it
 			// (the events page sends only pageSize + cursor). Guard against null/empty so
 			// we don't NPE on sdg.size() and so "no SDG filter" means "return all events".
-			List<Integer> sdg = input.getSDG();
+			List<Long> sdg = input.getSDG();
 			boolean filterBySdg = sdg != null && !sdg.isEmpty();
-			List<LongValue> sdglist = new ArrayList<>(filterBySdg ? sdg.size() : 0);
-			if (filterBySdg)
-				for(Integer n:sdg) sdglist.add(LongValue.of(n));
 
 			while (results.hasNext()) {
-				Entity current = results.next();
+				EventFull current = EventFull.fromdatabase(results.next());
 				if(filterBySdg) {
 					boolean b=false;
-					List<Value<?>> list = current.contains(null)?current.getList("SDG"):new ArrayList<>(0);
-					for(LongValue n:sdglist)
+					List<Long> list = current.getSDGint();
+					for(Long n:sdg)
 						b|=list.contains(n);
 					if(b)
-						events.add(EventFull.fromdatabase(current).tomap());
+						events.add(current.tomap());
 				}
 				else
-					events.add(EventFull.fromdatabase(current).tomap());
+					events.add(current.tomap());
 			}
 
 			Map<String, Object> response = new HashMap<>();
