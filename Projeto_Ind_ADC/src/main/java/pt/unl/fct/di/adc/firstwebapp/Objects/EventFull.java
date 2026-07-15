@@ -40,7 +40,6 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	private long createdAt;  // epoch seconds
 	private List<Map<String, String>> imageUrls;
 	private List<String> partners;
-	private String eventId;
 	private long attendee;
 	private final Key key;
 
@@ -111,7 +110,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	@Override
 	public Map<String, Object> tomap() {
 		Map<String, Object> map = new HashMap<>();
-		map.put("eventId",Full.string(this.eventId));
+		map.put("eventId",Full.string(this.getEventId()));
 		map.put("title",Full.string(this.title));		
 		map.put("description",Full.string(this.description));
 		map.put("category", Full.string(this.category));
