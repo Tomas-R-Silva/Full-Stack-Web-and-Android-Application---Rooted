@@ -216,9 +216,7 @@ public class UserResources {
 				}
 			}
 			return buildresponse(user.tobigmap(displayname,friendshipstatus));
-		}catch(Exception e) {
-			return Error.fromexception(e);
-		}
+		}catch(Exception e) {return Error.fromexception(e);}
 	}
 
 	@POST

@@ -1,6 +1,7 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,7 +29,6 @@ public class UserFull extends ShortUser implements Full{
 	private String bio;
 	private boolean isPublic;
 	private final Key key;
-	
 
 	@Override
 	public Key getKey() {return key;}
@@ -81,12 +81,12 @@ public class UserFull extends ShortUser implements Full{
 	
 	@Override
 	public Map<String,Object> tomap(){
-		return Map.of(
-				"username", Full.string(username),
-				"display", Full.string(display),
-				"email", Full.string(email),
-				"role", Full.string(role.name())
-				);
+		Map<String,Object> map=new HashMap<>();
+		map.put("username",Full.string(username));
+		map.put("display",Full.string(display));
+		map.put("email",Full.string(email));
+		map.put("role",Full.string(role.name()));
+		return map;
 	}
 	public Map<String,Object> tobigmap(String display,Friendstatus friendshipstatus){
 		Map<String,Object> map=this.tomap();
