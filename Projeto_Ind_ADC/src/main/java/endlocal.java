@@ -12,7 +12,7 @@ public class endlocal {
 		//Process p;
 		//Runtime.getRuntime().
 		//Thread.
-		AC a=AC.END;
+		AC a=AC.BASE2;
 		switch(a) {
 		case END->{findandkill(8080);findandkill(8081);System.out.println("DONE");}
 		case START->{new endlocal.Startdatabase().start();new endlocal.Startprogram().start();}

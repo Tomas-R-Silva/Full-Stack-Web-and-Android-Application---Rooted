@@ -13,7 +13,7 @@ import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
-import com.google.cloud.datastore.StructuredQuery.OrderBy;
+import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,7 +65,7 @@ public class ForumResources {
 		try {
 			TokenFull token = AuthHelper.verifyToken(req);
 			ForumFull post;
-			if(req.getInput().getType().equals(ForumType.EVENT)) {
+			if(ForumType.EVENT.name().equals(req.getInput().getType())) {
 				EventFull eventEntity = getEventEntity(req.getInput());
 				if (eventEntity.isStatuss(new Status[] {Status.CANCELLED,Status.COMPLETED}))
 					ErrorException.trow(9931); // event is closed, forum no longer accepts posts
@@ -99,31 +99,25 @@ public class ForumResources {
 			ListForumInput input=req.getInput();
 			if (input.getType() == null || input.getId() == null || input.getId().isBlank())
 				return Error.invalid_input();
-
 			int pageSize = input.getPageSize() > 0 ? Math.min(input.getPageSize(), MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
-
-			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder()
-					.setKind("ForumPost").setOrderBy(OrderBy.asc("created_at"))
-					.setLimit(pageSize);
-			if(input.getType().equals(ForumType.EVENT))
-				queryBuilder.setFilter(PropertyFilter.eq("event_id", input.getEventId()));
-			else if(input.getType().equals(ForumType.FRIEND))
-				queryBuilder.setFilter(PropertyFilter.eq("friend_id", input.getId()));
-
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("ForumPost");
+			if(input.getType().equals(ForumType.EVENT.name()))queryBuilder.setFilter(
+					CompositeFilter.and(PropertyFilter.eq("event_id", input.getEventId()),PropertyFilter.eq("type", input.getType())));
+			else if(input.getType().equals(ForumType.FRIEND.name()))queryBuilder.setFilter(
+					CompositeFilter.and(PropertyFilter.eq("friend_id", input.getId()),PropertyFilter.eq("type", input.getType())));
 			if (input.getCursor() != null && !input.getCursor().isBlank())
 				queryBuilder.setStartCursor(Cursor.fromUrlSafe(input.getCursor()));
-
-			QueryResults<Entity> results = datastore.run(queryBuilder.build());
-
+			QueryResults<Entity> results = datastore.run(queryBuilder
+					//.setOrderBy(OrderBy.asc("created_at"))
+					.setLimit(pageSize).build());
 			List<Map<String, Object>> posts = new ArrayList<>();
 			while (results.hasNext())
 				posts.add(ForumFull.fromdatabase(results.next()).tomap());
-
 			// Only hand back a cursor when the page was full — otherwise the
 			// client already has everything and should keep reusing its last cursor.
 			return ok(Map.of("posts", posts,"count", posts.size(),"nextCursor",
 					(posts.size() == pageSize && results.getCursorAfter() != null)?
-							results.getCursorAfter().toUrlSafe():null));
+							results.getCursorAfter().toUrlSafe():""));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}

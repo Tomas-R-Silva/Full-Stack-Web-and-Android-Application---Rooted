@@ -211,8 +211,9 @@ public class UserResources {
 						friendshipstatus = Friendstatus.FRIENDS;
 						displayname = friend.getnickname(user);
 					}
-					friendshipstatus=(friend.getUsername1().equals(token.getUsername()))?
-							Friendstatus.REQUEST_SENT:Friendstatus.REQUEST_RECIVED;
+					else
+						friendshipstatus=(friend.getUsername1().equals(token.getUsername()))?
+								Friendstatus.REQUEST_SENT:Friendstatus.REQUEST_RECIVED;
 				}
 			}
 			return buildresponse(user.tobigmap(displayname,friendshipstatus));
@@ -396,13 +397,13 @@ public class UserResources {
 				FriendFull friend=FriendFull.fromdatabase(existingfriend);
 				if(friend.getAccepted()) 
 					ErrorException.trow(9926);
+				else if(friend.getUsername1().equals(token.getUsername()))
+					ErrorException.trow(9927);
 				else {
-					if(friend.getUsername1().equals(token.getUsername()))
-						ErrorException.trow(9927);
-					else {
-						friend.acceptrecquest();
-						datastore.put(friend.toentity());
-					}
+					friend.acceptrecquest();
+					txn.put(friend.toentity());
+					txn.commit();
+
 				}
 			}
 			return buildresponse(Map.of("message", "Friend Request Accepted"));
