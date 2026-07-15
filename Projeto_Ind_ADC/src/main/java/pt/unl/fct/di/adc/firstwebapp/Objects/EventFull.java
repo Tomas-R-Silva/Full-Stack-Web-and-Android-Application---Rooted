@@ -115,8 +115,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		map.put("description",Full.string(this.description));
 		map.put("category", Full.string(this.category));
 		map.put("location", Full.string(this.location));
-		map.put("latitude", this.latitude);
-		map.put("longitude", this.longitude);
+		map.put("lat", this.lat);
+		map.put("lng", this.lng);
 		map.put("startDate", this.startDate);
 		map.put("durationMinutes", this.durationMinutes);
 		map.put("organizerUsername", Full.string(this.organizerUsername));
