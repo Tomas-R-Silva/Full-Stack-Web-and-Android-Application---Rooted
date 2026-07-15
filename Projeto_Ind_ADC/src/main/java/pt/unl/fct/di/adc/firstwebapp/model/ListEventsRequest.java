@@ -30,7 +30,8 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	    private String organizerUsername;
 	    private Integer pageSize;
 	    private String cursor;
-	    private List<Long> sdg;
+	   // @JsonProperty("SDG")
+	    private List<Integer> sdg;
 	    private Boolean isAccessible;
 
 	    public ListEventsInput() {}
@@ -50,8 +51,8 @@ public class ListEventsRequest extends AbstractTokenInputRequest<ListEventsReque
 	    public String getCursor() { return cursor; }
 	    public void setCursor(String cursor) { this.cursor = cursor; }
 	    
-	    public List<Long> getSDG() { return sdg; }
-	    public void setSDG(List<Long> sdg) { this.sdg = sdg; }
+	    public List<Integer> getSDG() { return sdg; }
+	    public void setSDG(List<Integer> sdg) { this.sdg = sdg; }
 	    
 	    public Boolean isAccessible() { return isAccessible; }
 	    public void setisAccessible(Boolean isAccessible) { this.isAccessible = isAccessible; }

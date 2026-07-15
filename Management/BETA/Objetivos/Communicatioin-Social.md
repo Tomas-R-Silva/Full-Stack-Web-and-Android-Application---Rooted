@@ -5,8 +5,10 @@
 - Event chat (Way that the organizer have to communicate to the participants, ask & answer chat)✅
 
 ### Should Have Operation:
-- Private chat and/or community chat✅
+- Private chat and/or community chat
 
 ### Could Have Operation:
 - 
 
+### Feito
+ community chat

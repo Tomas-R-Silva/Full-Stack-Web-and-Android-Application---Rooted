@@ -1,5 +1,5 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
-import pt.unl.fct.di.adc.firstwebapp.Objects.ForumModel;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventInput;
 
 public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageRequest.PostMessageinput>{
 
@@ -15,7 +15,7 @@ public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageReq
 
 	public PostMessageRequest() {}
 
-	public class PostMessageinput extends ForumModel{
+	public class PostMessageinput extends EventInput{
 
 		private String text;
 		private String parentPostId;
@@ -27,7 +27,5 @@ public class PostMessageRequest extends AbstractTokenInputRequest<PostMessageReq
 
 		public String getParentPostId() { return parentPostId; }
 		public void setParentPostId(String parentPostId) { this.parentPostId = parentPostId; }
-		
-
 	}
 }

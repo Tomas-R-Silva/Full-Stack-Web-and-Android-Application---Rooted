@@ -40,14 +40,7 @@ public class Error {
 			FRIEND_REQUEST_ALREADY_SENT="FRIEND_REQUEST_ALREADY_SENT",
 			WRONG_JSON_STRUCTURE="WRONG_JSON_STRUCTURE",
 			SDG_DOESNT_EXIST="SDG_DOESNT_EXIST",
-			PARTNER_NOT_IN_EVENT="PARTNER_NOT_IN_EVENT",
-			PARTNER_ALLREDY_IN_EVENT="PARTNER_ALLREDY_IN_EVENT",
-			NOT_FRIEND="NOT_FRIEND",
-			FORUM_ORIGEN_INVALID="FORUM_ORIGEN_INVALID",
-			NOT_ENOUGH_SDG="NOT_ENOUGH_SDG",
-			CLEANUP_FORBIDDEN="CLEANUP_FORBIDDEN",
-			CANT_EDIT_CANCELLED_EVENT="CANT_EDIT_CANCELLED_EVENT",
-			WRONG_PASSWORD="WRONG_PASSWORD";
+			NOT_FRIEND="NOT_FRIEND";
 
 
 	public static void invalid_input(List<Map<String,Object>> list) throws ErrorException{
@@ -78,6 +71,10 @@ public class Error {
 		return errorswitch(9900);
 	}
 
+	public static Response forbidden(){
+		return errorswitch(9907);
+	}
+
 	public static Response invalid_token(){
 		return errorswitch(9903);
 	}
@@ -86,7 +83,7 @@ public class Error {
 		return Map.of("status", status, "data", errorswitchstr(status));
 	}
 
-	public static Response errorswitch(int status) {
+	private static Response errorswitch(int status) {
 		return ResponceBuilder.constructor(status,errorswitchstr(status));
 	}
 
@@ -127,14 +124,6 @@ public class Error {
 		case 9932->data=POST_NOT_FOUND;
 		case 9933->data=SDG_DOESNT_EXIST;
 		case 9934->data=NOT_FRIEND;
-		case 9935->data=PARTNER_NOT_IN_EVENT;
-		case 9936->data=PARTNER_ALLREDY_IN_EVENT;
-		case 9937->data=FORUM_ORIGEN_INVALID;
-		case 9938->data=NOT_ENOUGH_SDG;
-		case 9939->data=CLEANUP_FORBIDDEN;
-		case 9940->data=CANT_EDIT_CANCELLED_EVENT;
-		case 9941->data=WRONG_PASSWORD;
-
 		default->data="";
 		}
 		return data;
@@ -148,9 +137,11 @@ public class Error {
 					ResponceBuilder.constructor(status,ex.getdata()):
 						errorswitch(status));
 		}
-		//try {
+		try {
 			return ResponceBuilder.constructor(9907,e.getMessage());
-		//}catch (Exception e1) {return errorswitch(9907);}
+		}catch (Exception e1) {
+			return errorswitch(9907);	
+		}
 	}	
 }
 

@@ -384,9 +384,7 @@ export type FilterProps = {
 
 export type RequestPostMessage = {
   token?: {jwt:string}
-  input: {
-    type: string,
-    id:string,
+  input: {eventId:string,
     text: string,
     parentPostId: string,
   },
@@ -395,8 +393,6 @@ export type RequestPostMessage = {
 export type PostMessageResponse = {
   postId: string,
   eventId: string,
- friendId: string,
-  type: string,
   authorUsername: string,
   text: string,
   createdAt: number,
@@ -405,9 +401,7 @@ export type PostMessageResponse = {
 
 export type RequestListMessages = {
   token?: {jwt:string},
-  input:{
-  type: string,
-  id: string,
+  input:{eventId: string,
   pageSize?: number,
   cursor?: string,}
 }
@@ -421,8 +415,6 @@ export type ListMessagesResponse = {
 export type Post = {
   postId: string,
   eventId: string,
-  friendId: string,
-  type: string,
   authorUsername: string,
   text: string,
   createdAt: number,

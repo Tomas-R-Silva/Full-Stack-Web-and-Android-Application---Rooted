@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
@@ -30,7 +31,10 @@ public class AdminSeeder implements ServletContextListener {
 
 	private static final Logger Log = Logger.getLogger(AdminSeeder.class.getName());
 
-	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
+	private static final Datastore datastore = DatastoreOptions.newBuilder()
+			.setProjectId("adc-final")
+			.build()
+			.getService();
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
@@ -73,7 +77,7 @@ public class AdminSeeder implements ServletContextListener {
 					.set("user_role", Role.ADMIN.name())
 					.set("user_display", username)
 					.set("old_display", displayHistory)
-					.set("user_creation_time", System.currentTimeMillis())
+					.set("user_creation_time", Timestamp.now())
 					.set("tokens", new ArrayList<StringValue>())
 					.set("category", new ArrayList<StringValue>())
 					.set("must_change_password", true)

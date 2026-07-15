@@ -1,8 +1,8 @@
 # IAM and Account Management
 
 ### Must Have Operations:
-- Account Creation✅, Modification✅, Authentication (Java Tokens)✅, Delete✅
-- Different Roles (EndUser, ActivityManager, Partner, Bofficer, Admin,...)✅
+- Account Creation✅, Modification, Authentication (Java Tokens)✅, Delete✅
+- Different Roles (EndUser✅, ActivityManager, Partner, Bofficer✅, Admin✅,...)
 - Creation and Activation Partner Accounts (by Bofficers p.e.)
 - Password Recovery
 
@@ -14,3 +14,8 @@
 - Login using external accounts (google)
 
 
+
+
+### Feito
+- Account Creation, Authentication (Java Tokens), Delete
+- Different Roles (EndUser, Bofficer, Admin)

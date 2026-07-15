@@ -1,6 +1,5 @@
 package pt.unl.fct.di.adc.firstwebapp.model;
 
-import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
 
 /**
@@ -19,14 +18,13 @@ public class RespondJoinRequest extends AbstractTokenInputRequest<RespondJoinReq
 
     public RespondJoinRequest() {}
 
-    public static class RespondJoinInput extends ShortUser implements EventInputInterface{
+    public static class RespondJoinInput extends ShortUser{
         private String eventId;
         private boolean accept;
 
         public RespondJoinInput() {}
-        @Override
+
         public String getEventId() { return eventId; }
-        @Override
         public void setEventId(String eventId) { this.eventId = eventId; }
 
         public boolean isAccept() { return accept; }

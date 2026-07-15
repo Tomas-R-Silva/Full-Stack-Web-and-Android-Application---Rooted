@@ -10,8 +10,11 @@ import java.util.UUID;
 public class GCSUploader {
 
     public static final String BUCKET_NAME = "adc-final-events";
-    private static final Storage storage = StorageOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
- 
+
+    private static final Storage storage = StorageOptions.newBuilder()
+            .setProjectId("adc-final")
+            .build()
+            .getService();
 
     private GCSUploader() {}
 
