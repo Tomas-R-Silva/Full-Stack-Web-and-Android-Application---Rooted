@@ -20,7 +20,8 @@ public class AuthHelper {
 			.build()
 			.getService();
 
-	private AuthHelper() {}
+	private AuthHelper() {
+	}
 
 	public static TokenFull verifyToken(TokenRequestInterface token) throws ErrorException {
 		return verifyToken(token.getToken());
@@ -36,7 +37,7 @@ public class AuthHelper {
 		if (jwt == null)
 			ErrorException.trow(9903);
 		Key key = datastore.newKeyFactory().setKind("Session").newKey(jwt);
-		if(datastore.get(key)==null)
+		if (datastore.get(key) == null)
 			ErrorException.trow(9904);
 		try {
 			return JWTToken.filltoken(jwt);
@@ -49,14 +50,14 @@ public class AuthHelper {
 		return null;
 	}
 
-	public static Entity getUser(ShortUser user) throws ErrorException{
+	public static Entity getUser(ShortUser user) throws ErrorException {
 		return getUser(user.getUsername());
 	}
 
-	public static Entity getUser(String username) throws ErrorException{
+	public static Entity getUser(String username) throws ErrorException {
 		Key userKey = datastore.newKeyFactory().setKind("User").newKey(username);
 		Entity user = datastore.get(userKey);
-		Validator.userNotFound(new Entity[]{user});
+		Validator.userNotFound(new Entity[] { user });
 		return user;
 	}
 }
