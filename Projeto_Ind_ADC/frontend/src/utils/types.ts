@@ -462,9 +462,9 @@ export type RequestUserAttends = {
 export type UserAttendsResponse = {
   status: number,
   data:{
-    myAttends: Attends[],
+    myattends: Attends[],
+    count: number,
   },
-  count: number,
 }
 
 export type Attends = {

@@ -39,7 +39,8 @@ function AccountAttends() {
         },
       });
 
-      console.log(res.data.myAttends);
+      setAttends(res.data.myattends);
+      console.log(res.data.myattends);
     } catch (err) {
       console.error(err);
       setError("Could not load the events.");
@@ -101,6 +102,7 @@ function AccountAttends() {
                 <>
                   {attends.map((attend) => (
                     <div
+                      key={attend.eventId}
                       className="d-flex justify-content-between align-items-center p-4 rounded"
                       style={{
                         maxWidth: "500px",
