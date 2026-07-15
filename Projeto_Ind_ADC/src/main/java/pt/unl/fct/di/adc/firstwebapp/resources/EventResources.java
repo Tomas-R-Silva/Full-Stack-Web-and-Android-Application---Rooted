@@ -188,11 +188,12 @@ public class EventResources {
 				if(filterBySdg) {
 					boolean b=false;
 					List<Long> list = current.getSDGint();
-					for(Long n:sdg) b|=list.contains(n);
-					if(b) 
+					for(Long n:sdg)
+						b|=list.contains(n);
+					if(b)
 						events.add(current.tomap());
 				}
-				else 
+				else
 					events.add(current.tomap());
 			}
 
