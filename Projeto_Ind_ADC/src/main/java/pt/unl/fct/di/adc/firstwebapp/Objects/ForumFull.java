@@ -128,10 +128,8 @@ public class ForumFull implements Full,EventInputInterface{
 		map.put("text", Full.string(this.text));
 		map.put("createdAt", this.createdAt);
 		map.put("parentPostId", Full.string(this.parentPostId));
-		if(this.type.equals(ForumType.EVENT)) 
-			map.put("eventId", Full.string(this.eventId));
-		else if(this.type.equals(ForumType.FRIEND)) 
-			map.put("friendId", Full.string(this.friendId));
+		map.put("eventId", Full.string(this.eventId));
+		map.put("friendId", Full.string(this.friendId));
 		return map;
 	}
 

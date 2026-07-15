@@ -57,10 +57,10 @@ public class FriendFull implements Full{
 	public static FriendFull newfriends(TokenFull token,UserFull user) throws ErrorException {
 		FriendFull friends = new FriendFull(getFriendKey(token,user));
 		friends.setUsername1(token.getUsername());
-		friends.setUsername1(user.getUsername());
+		friends.setUsername2(user.getUsername());
 		friends.setAccepted(false);
-		friends.setNickname1(null);
-		friends.setNickname2(null);
+		friends.setNickname1("");
+		friends.setNickname2("");
 		friends.setStart(System.currentTimeMillis());
 		return friends;
 	}
