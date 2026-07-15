@@ -129,7 +129,15 @@ export type RequestFindUser = {
 
 export type FindUserResponse = {
   status: number,
-  data: {found:string[];}
+  data: {
+    oldnames: string[],
+    display: string,
+    username: string,
+    role: string,
+    bio: string,
+    friendship: string,
+    email: string,
+    creation_time: number}
 }
 
 export type RequestChangePassword = {

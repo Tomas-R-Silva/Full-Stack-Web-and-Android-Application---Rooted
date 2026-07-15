@@ -4,6 +4,7 @@ import type {RequestLogOut, LogOutResponse} from "../utils/types";
 import type {RequestShowUsers, ShowUsersResponse} from "../utils/types";
 import type {RequestModAccount, ModAccountResponse} from "../utils/types";
 import type {RequestUserInformation, UserInformationResponse} from "../utils/types";
+import type {RequestFindUser, FindUserResponse} from "../utils/types";
 import type {RequestChangePassword, ChangePasswordResponse} from "../utils/types";
 import type {RequestChangeRole, ChangeRoleResponse} from "../utils/types";
 import type {RequestDeleteAccount, DeleteAccountResponse} from "../utils/types";
@@ -57,7 +58,7 @@ const apiRequest = async <T>(
 
   handleTokenExpiration(json.status);
 
-  if (!res.ok || json.status !== 200) {
+  if (!res.ok) {
     throw new Error(json.message);
   }
 
@@ -106,6 +107,9 @@ export const modAccount = (data: RequestModAccount) =>
 
 export const getUser = (data: RequestUserInformation) =>
   apiRequest<UserInformationResponse>("/user", data);
+
+export const findUser = (data: RequestFindUser) =>
+  apiRequest<FindUserResponse>("/user", data);
 
 export const changePassword = (data: RequestChangePassword) =>
   apiRequest<ChangePasswordResponse>("/changeuserpwd", data);
