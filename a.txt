@@ -8,4 +8,4 @@ mvn appengine:run
 mvn clean package appengine:run
 
 
-gcloud beta emulators datastore start
+gcloud beta emulators datastore start No newline at end of file
