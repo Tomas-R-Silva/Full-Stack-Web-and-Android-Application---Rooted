@@ -185,28 +185,10 @@ export const useMapsPage = (mapsApiKey: string) => {
   const getHasGeolocation = () => hasGeolocation;
 
   const getFilteredEvents = (
-    filter: FilterProps,
     nearYouEnabled: boolean,
     nearYouRadiusKm: number,
   ) => {
     return sortedEvents.filter((event) => {
-      const matchesCategory =
-        !filter.category || event.category === filter.category;
-      const matchesStatus = !filter.status || event.status === filter.status;
-      const matchesOrganizer =
-        !filter.organizerUsername ||
-        event.organizerUsername
-          ?.toLowerCase()
-          .includes(filter.organizerUsername.toLowerCase());
-      const matchesAccessibility =
-        filter.isAccessible === undefined ||
-        filter.isAccessible === false ||
-        event.isAccessible === filter.isAccessible;
-      const matchesSdg =
-        filter.sdg === undefined ||
-        (Array.isArray(event.sdg)
-          ? event.sdg.includes(filter.sdg)
-          : event.sdg === filter.sdg);
       const matchesNearYou =
         !nearYouEnabled ||
         !hasGeolocation ||
@@ -215,21 +197,23 @@ export const useMapsPage = (mapsApiKey: string) => {
           event.distance <= nearYouRadiusKm / 1000);
 
       return (
-        matchesCategory &&
-        matchesStatus &&
-        matchesOrganizer &&
-        matchesAccessibility &&
-        matchesSdg &&
         matchesNearYou
       );
     });
   };
 
-  const renderEventMap = (event: EventItem, container?: HTMLDivElement | null) => {
+  const renderEventMap = async (event: EventItem, container?: HTMLDivElement | null) => {
     const mapContainer = container ?? mapRef.current;
     if (!mapContainer || !window.google || !hasValidCoords(event)) return;
 
-    const position = { lat: event.lat, lng: event.lng };
+    let position: { lat: number; lng: number } | null = null;
+
+    if (hasValidCoords(event)) {
+      position = { lat: event.lat, lng: event.lng };
+    } else if (event.location) {
+      position = await geocodeAddress(event.location);
+    }
+    
 
     if (!mapInstanceRef.current) {
       mapInstanceRef.current = new window.google.maps.Map(mapContainer, {
@@ -356,8 +340,21 @@ export const useMapsPage = (mapsApiKey: string) => {
           Array.isArray(res.data.events) && res.data.events.length > 0
             ? res.data.events
             : [];
-        setEvents(eventsData);
-        eventsData.forEach((event) => {
+
+        const resolvedEvents = await Promise.all(
+          eventsData.map(async (event) => {
+            if (event.lat === 0 && event.lng === 0 && event.location) {
+              const coords = await geocodeAddress(event.location);
+              if (coords) {
+                return { ...event, lat: coords.lat, lng: coords.lng };
+              }
+            }
+            return event;
+          }),
+        );
+
+        setEvents(resolvedEvents);
+        resolvedEvents.forEach((event) => {
           if (hasValidCoords(event)) {
             addMarkerToMap(map, event);
           }
@@ -413,5 +410,6 @@ export const useMapsPage = (mapsApiKey: string) => {
     renderEventMap,
     renderVisibleMarkers,
     geocodeAddress,
+    hasValidCoords,
   };
 };
