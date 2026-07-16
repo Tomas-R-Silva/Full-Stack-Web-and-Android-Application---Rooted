@@ -302,9 +302,9 @@ function PublicPage() {
             </div>
           </div>
 
-          <div className="p-4">
+          <div className="px-4 pt-3 pb-2">
             <h5
-              className="fw-bold mb-3"
+              className="fw-bold mb-1"
               style={{ color: "var(--color-green)" }}
             >
               Biography
@@ -312,9 +312,9 @@ function PublicPage() {
 
             <p className="mb-0">{user && user.data.bio}</p>
           </div>
-          <div className="p-4">
+          <div className="px-4 py-2">
             <h5
-              className="fw-bold mb-3"
+              className="fw-bold mb-1"
               style={{ color: "var(--color-green)" }}
             >
               Old Names:
@@ -328,6 +328,23 @@ function PublicPage() {
               </p>
             )}
           </div>
+          <div className="px-4 py-2">
+            <h5
+              className="fw-bold mb-1"
+              style={{ color: "var(--color-green)" }}
+            >
+              Interests:
+            </h5>
+
+            {user && user.data.category && (
+              <p className="mb-0">
+                {user.data.category.length === 0
+                  ? "This user hasn't interests."
+                  : user.data.category}
+              </p>
+            )}
+          </div>
+          <div className="mb-2"></div>
         </div>
 
         <div
