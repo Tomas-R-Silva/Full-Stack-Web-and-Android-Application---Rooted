@@ -202,7 +202,7 @@ export type RequestAddNickname = {
   token: {jwt:string;}
   input: {
     username:string;
-    newusername:string;
+    newname:string;
    }
 }
 
@@ -233,8 +233,8 @@ export type FriendsListResponse = {
 }
 
 export type Friend = {
-  From: string,
-  "Sent At": number,
+  Friend: string,
+  Start: number,
 }
 
 export type RequestFriendsRequests = {
@@ -243,7 +243,12 @@ export type RequestFriendsRequests = {
 
 export type FriendsRequestsResponse = {
   status: number,
-  data: {friends:Friend[];}
+  data: {friends:Requester[];}
+}
+
+export type Requester = {
+  From: string,
+  "Sent At": number,
 }
 
 export type RequestAuthSessions = {

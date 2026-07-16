@@ -103,7 +103,7 @@ function AccountAttends() {
                   {attends.map((attend) => (
                     <div
                       key={attend.eventId}
-                      className="d-flex justify-content-between align-items-center p-4 rounded"
+                      className="d-flex justify-content-between align-items-center p-4 rounded mt-1"
                       style={{
                         maxWidth: "500px",
                         width: "100%",

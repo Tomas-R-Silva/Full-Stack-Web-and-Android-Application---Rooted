@@ -1,6 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { getUser } from "../../api/auth";
-import type { UserInformationResponse } from "../../utils/types";
+import { addNickName, getUser } from "../../api/auth";
+import type {
+  AddNicknameResponse,
+  UserInformationResponse,
+} from "../../utils/types";
 import NavBar from "../NavBar/NavBar";
 import { useState, useEffect } from "react";
 import settings_w from "../../assets/icons/settings_w.svg";
@@ -18,6 +21,8 @@ import { addFriend, unfriend } from "../../api/auth";
 
 function PublicPage() {
   const { username } = useParams<{ username: string }>();
+  const [nickname, setNickname] = useState<string>("");
+  const [showNicknameInput, setShowNicknameInput] = useState<boolean>(false);
   const [user, setUser] = useState<UserInformationResponse>();
   const navigate = useNavigate();
   const sdgs = [1, 10, 17];
@@ -43,6 +48,31 @@ function PublicPage() {
       });
       console.log(res);
       setUser(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddNickname = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: AddNicknameResponse = await addNickName({
+        token: { jwt: token },
+        input: {
+          username: username,
+          newname: nickname,
+        },
+      });
+      console.log(res.data.message);
     } catch (err) {
       console.error(err);
     }
@@ -266,16 +296,54 @@ function PublicPage() {
                   </button>
                 )}
                 {user && user.data.friendship === "FRIENDS" && (
-                  <button
-                    className="btn px-4"
-                    style={{
-                      background: "var(--color-green)",
-                      color: "var(--color-white)",
-                    }}
-                    onClick={() => handleUnfriend(user.data.username)}
-                  >
-                    Unfriend
-                  </button>
+                  <div className="d-flex gap-2 align-items-center">
+                    <button
+                      className="btn px-4"
+                      style={{
+                        background: "var(--color-green)",
+                        color: "var(--color-white)",
+                      }}
+                      onClick={() => handleUnfriend(user.data.username)}
+                    >
+                      Unfriend
+                    </button>
+
+                    <button
+                      className="btn px-4"
+                      style={{
+                        background: "var(--color-white)",
+                        color: "var(--color-green)",
+                        border: "1px solid var(--color-green)",
+                      }}
+                      onClick={() => setShowNicknameInput((prev) => !prev)}
+                    >
+                      Nickname
+                    </button>
+
+                    {showNicknameInput && (
+                      <>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Nickname"
+                          value={nickname}
+                          onChange={(e) => setNickname(e.target.value)}
+                          style={{ width: "180px" }}
+                        />
+
+                        <button
+                          className="btn"
+                          style={{
+                            background: "var(--color-green)",
+                            color: "var(--color-white)",
+                          }}
+                          onClick={handleAddNickname}
+                        >
+                          Save
+                        </button>
+                      </>
+                    )}
+                  </div>
                 )}
                 {user && user.data.friendship === "REQUEST_RECIVED" && (
                   <button

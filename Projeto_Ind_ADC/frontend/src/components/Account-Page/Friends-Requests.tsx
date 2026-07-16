@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import type { RequestAddFriend, AddFriendResponse } from "../../utils/types";
+import type {
+  RequestAddFriend,
+  AddFriendResponse,
+  Requester,
+} from "../../utils/types";
 import type { RequestUnfriend, UnfriendResponse } from "../../utils/types";
 import type {
   RequestFriendsRequests,
@@ -12,7 +16,7 @@ import personAdd_w from "../../assets/icons/person_add_w.svg";
 import personRemove_w from "../../assets/icons/person_remove_w.svg";
 
 function FriendsRequests() {
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friends, setFriends] = useState<Requester[]>([]);
   const { username } = useAuth();
 
   const loadRequests = async () => {

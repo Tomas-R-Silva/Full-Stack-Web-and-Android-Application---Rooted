@@ -74,13 +74,13 @@ function FriendsRoom() {
                         color: "var(--color-white)",
                       }}
                     >
-                      <span className="fw-semibold">Ti zé Taxista</span>
+                      <span className="fw-semibold">{friend.Friend}</span>
 
                       <div className="d-flex gap-3">
                         <img
                           src={personPin_w}
                           alt="Add friend"
-                          onClick={() => navigate("/profile/" + friend.From)}
+                          onClick={() => navigate("/profile/" + friend.Friend)}
                           style={{ cursor: "pointer" }}
                         />
                       </div>
