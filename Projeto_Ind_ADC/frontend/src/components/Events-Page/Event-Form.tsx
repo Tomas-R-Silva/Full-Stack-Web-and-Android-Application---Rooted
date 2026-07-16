@@ -7,12 +7,15 @@ import { createEvent, uploadImage } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import { usePlacesAutocomplete } from "../../api/places";
 import { sdgInfos } from "../../utils/sdgInfo";
+import { useMapsPage } from "../../api/maps";
 
 type ErrorState = {
   [K in keyof RequestEventCreation["input"]]: string;
 };
 
 function EventForm() {
+  const mapsApiKey = import.meta.env.VITE_API_KEY;
+  const {geocodeAddress} = useMapsPage(mapsApiKey);
   //========== Hook ==========
   const [startDateInput, setStartDateInput] = useState("");
   const categories = [
@@ -42,6 +45,8 @@ function EventForm() {
       public: false,
       accessible: false,
       sdg: [],
+      lat: null,
+      lng: null,
     },
   });
   const [errors, setErrors] = useState<ErrorState>({
@@ -56,6 +61,8 @@ function EventForm() {
     public: "",
     accessible: "",
     sdg: "",
+    lat: "",
+    lng: "",
   });
 
   //========== Receber Input e Limpar erros ==========
@@ -180,6 +187,8 @@ function EventForm() {
       public: "",
       accessible: "",
       sdg: "",
+      lat: "",
+      lng: "",
     };
 
     if (!formData.input.title) {
@@ -230,8 +239,23 @@ function EventForm() {
         console.log("User is not authenticated");
         return;
       }
+
+      const position = await geocodeAddress(formData.input.location);
+      if (!position) {
+        setErrors((prev) => ({
+          ...prev,
+          location: "Could not find this location, please pick a different address",
+        }));
+        return;
+      }
+
       const payload: RequestEventCreation = {
         ...formData,
+        input: {
+          ...formData.input,
+          lat: position.lat,
+          lng: position.lng,
+        },
         token: {
           jwt: token,
         },
@@ -247,12 +271,9 @@ function EventForm() {
     }
   };
 
-  const mapsApiKey = import.meta.env.VITE_API_KEY;
-
   const {
     inputValue: locationInputValue,
     predictions: locationPredictions,
-    loading: locationLoading,
     handleInputChange: handleLocationInputChange,
     handleSelect: handleLocationSelect,
   } = usePlacesAutocomplete({
@@ -347,10 +368,6 @@ function EventForm() {
                 placeholder="Enter the event location..."
                 autoComplete="off"
               />
-
-              {locationLoading && (
-                <div className="form-text mt-1">Searching...</div>
-              )}
 
               {errors.location && (
                 <div className="invalid-feedback d-block">
@@ -487,7 +504,7 @@ function EventForm() {
                 color: "var(--color-white)",
               }}
             >
-              persons
+              people
             </span>
           </div>
 

@@ -20,11 +20,11 @@ const MapsPage = () => {
   const hasGeolocation = getHasGeolocation();
 
   const [filter, setFilter] = useState<FilterProps>({
-    category: undefined,
-    status: undefined,
-    organizerUsername: undefined,
-    isAccessible: undefined,
-    sdg: undefined,
+    category: null,
+    status: null,
+    organizerUsername: null,
+    isAccessible: null,
+    sdg: [],
   });
   const [nearYouEnabled, setNearYouEnabled] = useState(false);
   const [nearYouRadiusKm, setNearYouRadiusKm] = useState(10);
@@ -107,7 +107,7 @@ const MapsPage = () => {
                 onChange={(e) =>
                   setFilter((prev) => ({
                     ...prev,
-                    category: e.target.value || undefined,
+                    category: e.target.value || null,
                   }))
                 }
               >
@@ -127,23 +127,54 @@ const MapsPage = () => {
               <label className="form-label fw-semibold" style={{ color: "var(--color-white)" }}>
                 SDG's
               </label>
-              <select
-                className="form-select"
-                value={filter.sdg ?? ""}
-                onChange={(e) =>
-                  setFilter((prev) => ({
-                    ...prev,
-                    sdg: e.target.value === "" ? undefined : Number(e.target.value),
-                  }))
-                }
-              >
-                <option value="">All</option>
-                {sdgInfos.map((sdg) => (
-                  <option key={sdg.id} value={sdg.id}>
-                    {sdg.id} - {sdg.title}
-                  </option>
-                ))}
-              </select>
+              <div className="dropdown w-100">
+                <button
+                  className="btn dropdown-toggle w-100 text-start"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  style={{ background: "var(--color-white)" }}
+                >
+                  {filter.sdg?.length
+                    ? `${filter.sdg.length} selected`
+                    : "Select SDGs"}
+                </button>
+
+                <ul
+                  className="dropdown-menu w-100 p-2"
+                  style={{ maxHeight: "300px", overflowY: "auto" }}
+                >
+                  {sdgInfos.map((sdg) => (
+                    <li key={sdg.id}>
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`sdg-${sdg.id}`}
+                          checked={filter.sdg?.includes(sdg.id) ?? false}
+                          onChange={(e) => {
+                            setFilter((prev) => ({
+                              ...prev,
+                              sdg: e.target.checked
+                                ? [...(prev.sdg ?? []), sdg.id]
+                                : (prev.sdg ?? []).filter(
+                                    (id) => id !== sdg.id,
+                                  ),
+                            }));
+                          }}
+                        />
+
+                        <label
+                          className="form-check-label"
+                          htmlFor={`sdg-${sdg.id}`}
+                        >
+                          {sdg.id} - {sdg.title}
+                        </label>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <div className="col-lg-2 col-md-6">
@@ -159,7 +190,7 @@ const MapsPage = () => {
                   onChange={(e) =>
                     setFilter((prev) => ({
                       ...prev,
-                      isAccessible: e.target.checked || undefined,
+                      isAccessible: e.target.checked || null,
                     }))
                   }
                 />
@@ -179,11 +210,11 @@ const MapsPage = () => {
                 style={{ color: "var(--color-green)", background: "var(--color-white)" }}
                 onClick={() => {
                   setFilter({
-                    category: undefined,
-                    status: undefined,
-                    organizerUsername: undefined,
-                    isAccessible: undefined,
-                    sdg: undefined,
+                    category: null,
+                    status: null,
+                    organizerUsername: null,
+                    isAccessible: null,
+                    sdg: null,
                   });
                   setNearYouEnabled(false);
                   setNearYouRadiusKm(10);
@@ -215,7 +246,7 @@ const MapsPage = () => {
                           }`}
                           style={{
                             minHeight: "120px",
-                            backgroundImage: `url(${event.coverImageUrl || event.imageUrls?.[0] || placeholder})`,
+                            backgroundImage: `url(${event.coverImageUrl || event.imageUrls?.[0]?.url || placeholder})`,
                             backgroundSize: "cover",
                             backgroundPosition: "center",
                             backgroundRepeat: "no-repeat",

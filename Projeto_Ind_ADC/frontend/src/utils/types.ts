@@ -276,8 +276,6 @@ export type EventItem = {
   description: string;
   category: string;
   location: string;
-  lat: number;
-  lng: number;
   startDate: number;
   durationMinutes: number;
   organizerUsername: string;
@@ -289,8 +287,10 @@ export type EventItem = {
   createdAt: number;
   partners: string[];
   imageUrls: Image[];
-  isAccessible: boolean,
-  SDG: number[]
+  isAccessible: boolean;
+  sdg: number[];
+  lat: number;
+  lng: number,
 };
 
 export type EventProps = {
@@ -311,6 +311,8 @@ export type RequestEventCreation = {
   public: boolean,
   accessible: boolean,
   sdg: number[]
+  lat: number | null,
+  lng: number | null,
   }
 };
 
@@ -365,6 +367,8 @@ export type RequestEventUpdate = {
     public: boolean,
     isAccessible?: boolean,
     sdg?: number[]
+    lat: number | null,
+    lng: number | null,
   }
 }
 

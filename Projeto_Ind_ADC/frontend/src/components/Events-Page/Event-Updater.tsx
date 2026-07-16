@@ -25,12 +25,16 @@ import {
 } from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
 import type { Image } from "../../utils/types";
+import { useMapsPage } from "../../api/maps";
+import { usePlacesAutocomplete } from "../../api/places";
 
 type ErrorState = {
   [K in keyof RequestEventUpdate["input"]]: string;
 };
 
 function EventUpdater() {
+  const mapsApiKey = import.meta.env.VITE_API_KEY;
+  const {geocodeAddress} = useMapsPage(mapsApiKey);
   //========== Hooks ==========
   const categories = [
     "MUSIC",
@@ -47,6 +51,7 @@ function EventUpdater() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const navigate = useNavigate();
   const [event, setEvent] = useState<EventItem>();
+  const [originalLocation, setOriginalLocation] = useState<string>("");
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
   const [selectedImages, setSelectedImages] = useState<(Image | string)[]>([]);
   const [formData, setFormData] = useState<RequestEventUpdate>({
@@ -64,6 +69,8 @@ function EventUpdater() {
       public: false,
       isAccessible: false,
       sdg: [],
+      lat: null,
+      lng: null,
     },
   });
   const [errors, setErrors] = useState<ErrorState>({
@@ -79,6 +86,8 @@ function EventUpdater() {
     public: "",
     isAccessible: "",
     sdg: "",
+    lat: "",
+    lng: "",
   });
 
   //========== Handles: Receber Input e Limpar erros ==========
@@ -286,6 +295,8 @@ function EventUpdater() {
       public: "",
       isAccessible: "",
       SDG: "",
+      lat: "",
+      lng: "",
     };
 
     if (formData.input.title && formData.input.title.length > 100) {
@@ -346,8 +357,30 @@ function EventUpdater() {
         console.log("User is not authenticated");
         return;
       }
+
+      let lat = formData.input.lat;
+      let lng = formData.input.lng;
+
+      if (formData.input.location && formData.input.location !== originalLocation) {
+        const position = await geocodeAddress(formData.input.location);
+        if (!position) {
+          setErrors((prev) => ({
+            ...prev,
+            location: "Could not find this location, please pick a different address",
+          }));
+          return;
+        }
+        lat = position.lat;
+        lng = position.lng;
+      }
+
       const payload: RequestEventUpdate = {
         ...formData,
+        input: {
+          ...formData.input,
+          lat,
+          lng,
+        },
         token: {
           jwt: token,
         },
@@ -468,13 +501,54 @@ function EventUpdater() {
         minAttendees: event.minAttendees,
         public: event.isPublic,
         isAccessible: event.isAccessible ?? false,
-        sdg: event.SDG ?? [],
+        sdg: event.sdg ?? [],
+        lat: event.lat,
+        lng: event.lng,
       },
     });
 
-    setSelectedSDGs(event.SDG ?? []);
+    setOriginalLocation(event.location);
+    setSelectedSDGs(event.sdg ?? []);
     setSelectedImages(event.imageUrls ?? []);
   }, [event]);
+
+  const {
+      inputValue: locationInputValue,
+      predictions: locationPredictions,
+      handleInputChange: handleLocationInputChange,
+      handleSelect: handleLocationSelect,
+    } = usePlacesAutocomplete({
+      apiKey: mapsApiKey,
+      value: formData.input.location,
+      onChange: (value) => {
+        setFormData((prev) => ({
+          ...prev,
+          input: {
+            ...prev.input,
+            location: value,
+          },
+        }));
+  
+        setErrors((prev) => ({
+          ...prev,
+          location: "",
+        }));
+      },
+      onSelect: (prediction) => {
+        setFormData((prev) => ({
+          ...prev,
+          input: {
+            ...prev.input,
+            location: prediction.description,
+          },
+        }));
+  
+        setErrors((prev) => ({
+          ...prev,
+          location: "",
+        }));
+      },
+    });
 
   return (
     <>
@@ -531,13 +605,36 @@ function EventUpdater() {
             >
               Location
             </span>
-            <input
-              type="text"
-              name="location"
-              className="form-control"
-              value={formData.input.location ?? ""}
-              onChange={handleChange}
-            />
+            <div className="position-relative">
+              <input
+                type="text"
+                name="location"
+                className="form-control"
+                value={locationInputValue}
+                onChange={handleLocationInputChange}
+              />
+              {locationPredictions.length > 0 && (
+                <ul
+                  className="list-group position-absolute w-100 mt-1 shadow-sm"
+                  style={{ zIndex: 1050 }}
+                >
+                  {locationPredictions.map((prediction) => (
+                    <li
+                      key={prediction.placeId}
+                      className="list-group-item list-group-item-action"
+                    >
+                      <button
+                        type="button"
+                        className="btn p-0 text-start w-100"
+                        onClick={() => handleLocationSelect(prediction)}
+                      >
+                        {prediction.description}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <div className="input-group mb-3">
