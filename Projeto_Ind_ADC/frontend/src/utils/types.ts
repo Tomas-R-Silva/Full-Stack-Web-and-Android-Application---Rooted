@@ -237,6 +237,10 @@ export type Friend = {
   Start: number,
 }
 
+export interface FriendProps {
+ friend: Friend;
+}
+
 export type RequestFriendsRequests = {
   token: {jwt:string;}
 }

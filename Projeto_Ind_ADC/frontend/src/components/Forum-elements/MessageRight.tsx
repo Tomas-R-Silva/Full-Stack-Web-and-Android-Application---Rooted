@@ -38,6 +38,7 @@ function MessageRight(texts: MessageProps) {
         input: postId,
       });
       console.log(res.data.message);
+      window.location.reload();
     } catch (err) {
       console.error(err);
     }

@@ -9,9 +9,11 @@ import { useAuth } from "../AuthContext";
 import { getFriendsList, unfriend } from "../../api/auth";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
 import { useNavigate } from "react-router-dom";
+import FriendsChat from "./Friends-Chat";
 
 function FriendsRoom() {
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [managedFriend, setManagedFriend] = useState<Friend>();
   const { username } = useAuth();
   const navigate = useNavigate();
 
@@ -34,6 +36,9 @@ function FriendsRoom() {
 
       console.log(res.data);
       setFriends(res.data.friends);
+      if (res.data.friends.length > 0) {
+        setManagedFriend(res.data.friends[0]);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -70,9 +75,13 @@ function FriendsRoom() {
                       style={{
                         maxWidth: "500px",
                         width: "100%",
-                        backgroundColor: "var(--color-green2)",
+                        backgroundColor:
+                          managedFriend?.Friend === friend.Friend
+                            ? "var(--color-green)"
+                            : "var(--color-green2)",
                         color: "var(--color-white)",
                       }}
+                      onClick={() => setManagedFriend(friend)}
                     >
                       <span className="fw-semibold">{friend.Friend}</span>
 
@@ -88,6 +97,9 @@ function FriendsRoom() {
                   ))}
               </div>
             </div>
+          </div>
+          <div className="col-md-9">
+            {managedFriend && <FriendsChat friend={managedFriend} />}
           </div>
         </div>
       </div>
