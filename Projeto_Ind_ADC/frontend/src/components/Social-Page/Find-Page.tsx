@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { findUser } from "../../api/auth";
-import type { FindUserResponse } from "../../utils/types";
+import type { FindUserResponse, User } from "../../utils/types";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
@@ -9,7 +9,7 @@ function FindPage() {
   const { isAuthenticated } = useAuth();
   const [userToFind, setUserToFind] = useState("");
   const [notFound, setNotFound] = useState<boolean>(false);
-  const [found, setFound] = useState<FindUserResponse["data"] | null>(null);
+  const [found, setFound] = useState<User[]>([]);
   const navigate = useNavigate();
 
   const handleFindUser = async (e: React.FormEvent) => {
@@ -30,7 +30,8 @@ function FindPage() {
         setNotFound(true);
       } else {
         setNotFound(false);
-        setFound(res.data);
+        setFound(res.data.found);
+        console.log(res.data);
       }
     } catch (err) {
       console.error(err);
@@ -70,7 +71,7 @@ function FindPage() {
         </button>
       </form>
 
-      {!found && notFound && (
+      {(!found || found.length === 0) && notFound && (
         <div
           className="alert mt-4 text-center"
           style={{
@@ -85,26 +86,30 @@ function FindPage() {
         </div>
       )}
 
-      {found && !notFound && (
-        <div
-          className="d-flex justify-content-between align-items-center p-3 rounded mt-4"
-          style={{
-            maxWidth: "300px",
-            width: "100%",
-            backgroundColor: "var(--color-green2)",
-            color: "var(--color-white)",
-          }}
-        >
-          <span className="fw-semibold">{found.username}</span>
+      {found &&
+        found.length !== 0 &&
+        !notFound &&
+        found.map((user) => (
+          <div
+            key={user.username}
+            className="d-flex justify-content-between p-3 rounded mt-4"
+            style={{
+              maxWidth: "300px",
+              width: "100%",
+              backgroundColor: "var(--color-green2)",
+              color: "var(--color-white)",
+            }}
+          >
+            <span className="fw-semibold">{user.display}</span>
 
-          <img
-            src={personPin_w}
-            alt="View profile"
-            onClick={() => navigate("/profile/" + found.username)}
-            style={{ cursor: "pointer", width: "24px", height: "24px" }}
-          />
-        </div>
-      )}
+            <img
+              src={personPin_w}
+              alt="View profile"
+              onClick={() => navigate("/profile/" + user.username)}
+              style={{ cursor: "pointer", width: "24px", height: "24px" }}
+            />
+          </div>
+        ))}
     </div>
   );
 }

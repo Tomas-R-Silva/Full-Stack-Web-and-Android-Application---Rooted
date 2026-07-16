@@ -113,7 +113,7 @@ export const getUser = (data: RequestUserInformation) =>
   apiRequest<UserInformationResponse>("/user", data);
 
 export const findUser = (data: RequestFindUser) =>
-  apiRequest<FindUserResponse>("/user", data);
+  apiRequest<FindUserResponse>("/find", data);
 
 export const changePassword = (data: RequestChangePassword) =>
   apiRequest<ChangePasswordResponse>("/changeuserpwd", data);
