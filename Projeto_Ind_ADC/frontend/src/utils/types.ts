@@ -74,8 +74,19 @@ export type ShowUsersResponse = {
   data: {users:User[]}
 }
 
+export type RequestShowUserRole = {
+   token: {jwt:string},
+   input: {username:string,}
+}
+
+export type ShowUserRoleResponse = {
+  status: number,
+  data: User,
+}
+
 export type User = {
   username: string,
+  display: string,
   email: string,
   role: string,
 }
@@ -87,11 +98,11 @@ export interface UserProps {
 export type RequestModAccount = {
   token: {jwt:string;}
   input: {
-    username:string;
-    email:string,
+    username:string,
+    country: string,
+    birth: number,
     bio:string,
-    country?: string,
-    birth?: number,
+    email:string,
   }
 }
 
@@ -110,14 +121,18 @@ export type RequestUserInformation = {
 
 export type UserInformationResponse = {
   status: number,
-  data: {username: string,
-  email: string,
-  role: string,
-  creation_time: number,
-  display: string,
-  oldnames: String[],
-  friendship: string,
-  bio: string,
+  data: {
+    username: string,
+    email: string,
+    role: string,
+    creation_time: number,
+    birth: number,
+    display: string,
+    bio: string,
+    country: string,
+    category: string[],
+    oldnames: string[],
+    friendship: string,
   }
 }
 
@@ -131,14 +146,7 @@ export type RequestFindUser = {
 export type FindUserResponse = {
   status: number,
   data: {
-    oldnames: string[],
-    display: string,
-    username: string,
-    role: string,
-    bio: string,
-    friendship: string,
-    email: string,
-    creation_time: number}
+    found: User[]}
 }
 
 export type RequestChangePassword = {
