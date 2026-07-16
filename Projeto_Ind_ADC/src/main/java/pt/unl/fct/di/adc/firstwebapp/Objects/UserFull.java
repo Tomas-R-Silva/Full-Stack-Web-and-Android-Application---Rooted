@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.Objects;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,12 @@ public class UserFull extends ShortUser implements Full{
 	private String country;
 	private String bio;
 	private boolean isPublic;
+	private List<Long> ods;
+	private String borderID;
+	private long points;
 	private final Key key;
+
+	private static final int ODS_COUNT = 17;
 
 	@Override
 	public Key getKey() {return key;}
@@ -57,6 +63,24 @@ public class UserFull extends ShortUser implements Full{
 	public void setOld(List<String> old){this.old=old;}
     public String getBio() {return bio;}
     public void setBio(String bio) {this.bio = bio;}
+	public List<Long> getOds() {return ods;}
+	// ods is kept as a fixed-size list of 17 counts (index i = SDG i+1).
+	public void setOds(List<Long> ods) {this.ods = (ods==null||ods.isEmpty())?new ArrayList<>(Collections.nCopies(ODS_COUNT, 0L)):ods;}
+	public String getBorderID() {return borderID;}
+	public void setBorderID(String borderID) {this.borderID = (borderID!=null)?borderID:"";}
+	public long getPoints() {return points;}
+	private void setbasePoints(long points) {this.points = points;}
+
+	// Registers participation in an event: +1 in the count of each of its SDGs and +1 point per SDG.
+	public void addParticipation(List<Long> sdgs) {
+		if(sdgs==null) return;
+		for(Long s:sdgs)
+			if(s!=null && s>=1 && s<=ODS_COUNT) {
+				int i=(int)(s-1);
+				ods.set(i, ods.get(i)+1);
+				points++;
+			}
+	}
 
 	private UserFull(Key key) {this.key=key;}
 
@@ -74,7 +98,10 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
 		newuser.setBio("");
-		
+		newuser.setOds(null);
+		newuser.setBorderID("");
+		newuser.setbasePoints(0);
+
 		return newuser;
 		
 	}
@@ -99,6 +126,9 @@ public class UserFull extends ShortUser implements Full{
 		map.put("category",Full.makeStringEnumList(category));
 		map.put("country",Full.string(country));
 		map.put("birth",birth);
+		map.put("ods",Full.list(ods));
+		map.put("borderID",Full.string(borderID));
+		map.put("points",points);
 		return map;
 	}
 
@@ -124,6 +154,9 @@ public class UserFull extends ShortUser implements Full{
 		newUser.set("user_bio", bio);
 		newUser.set("old_display", Full.makeStringValueList(old));
 		newUser.set("category", Full.makeStringValueEnumList(category));
+		newUser.set("user_ods", Full.makeLongValueList(ods));
+		newUser.set("user_border", (borderID!=null)?borderID:"");
+		newUser.set("user_points", points);
 		return newUser.build();
 	}
 	
@@ -142,6 +175,9 @@ public class UserFull extends ShortUser implements Full{
 		user.setbaseBirth(Full.getLong(entity,"birth_time")*TIME_DIVIDER);
 		user.setOld(Full.getStringList(entity,"old_display"));
 		user.setbaseCategory(Full.getStringValueList(entity,"category").stream().map(v -> Category.valueof(v.get())).collect(Collectors.toList()));
+		user.setOds(Full.getLongList(entity,"user_ods"));
+		user.setBorderID(Full.getString(entity,"user_border"));
+		user.setbasePoints(Full.getLong(entity,"user_points"));
 		return user;
 	}
 

@@ -406,6 +406,9 @@ public class EventResources {
 			datastore.put(attendance.toentity());
 			event.incAttendee();
 			datastore.put(event.toentity());
+			// Gamification: joining awards +1 point per SDG of the event and bumps the per-SDG counts.
+			user.addParticipation(event.getSDGint());
+			datastore.put(user.toentity());
 			return ok(Map.of("message", "Successfully registered for the event", "status", "JOINED"));
 
 		} catch (Exception e) {
@@ -492,7 +495,8 @@ public class EventResources {
 			RespondJoinRequest.RespondJoinInput input = req.getInput();
 
 			EventFull event = getEventEntity(req.getInput());
-			UserFull user = AuthHelper.getUser(token);
+			// The requester (input.username) is the user being answered, NOT the organizer 
+			UserFull requester = AuthHelper.getUser(req.getInput());
 
 			if (event == null) ErrorException.trow(9902);
 
@@ -500,7 +504,7 @@ public class EventResources {
 			if (!event.isOwner(token))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
-			EventJoinRequestFull joinRequest = EventJoinRequestFull.fromdatabase(event,user);
+			EventJoinRequestFull joinRequest = EventJoinRequestFull.fromdatabase(event,requester);
 			if (joinRequest == null || !joinRequest.isStatus(RequestStatus.PENDING))
 				ErrorException.trow(9902); // no pending request for this user/event
 
@@ -516,9 +520,12 @@ public class EventResources {
 			if (maxAttendees > 0 && currentCount >= maxAttendees)
 				ErrorException.trow(9928);
 
-			datastore.put(AttendanceFull.newattendance(event,user).toentity());
+			datastore.put(AttendanceFull.newattendance(event,requester).toentity());
 			event.incAttendee();
 			datastore.put(event.toentity());
+			// Gamification: same as the public join — the accepted requester gets points per SDG.
+			requester.addParticipation(event.getSDGint());
+			datastore.put(requester.toentity());
 
 			// The request is resolved: once accepted the attendance is the source of truth,
 			// so the pending request is deleted.

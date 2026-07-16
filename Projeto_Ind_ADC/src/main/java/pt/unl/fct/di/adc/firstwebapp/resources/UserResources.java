@@ -39,6 +39,7 @@ import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeBorderRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest.PasswordInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole;
@@ -297,6 +298,22 @@ public class UserResources {
 			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
 			AuthHelper.querydelete("Session","user_name",user.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/changeborder")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response changeBorder(ChangeBorderRequest request) {
+		try{
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(token);
+			user.setBorderID(request.getInput().getBorderID());
+			datastore.put(user.toentity());
+			return buildresponse(Map.of("message", "Border updated successfully", "borderID", user.getBorderID()));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
