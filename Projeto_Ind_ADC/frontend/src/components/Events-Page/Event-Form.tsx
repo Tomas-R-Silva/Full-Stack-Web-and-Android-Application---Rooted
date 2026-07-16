@@ -15,7 +15,7 @@ type ErrorState = {
 
 function EventForm() {
   const mapsApiKey = import.meta.env.VITE_API_KEY;
-  const {geocodeAddress} = useMapsPage(mapsApiKey);
+  const { geocodeAddress } = useMapsPage(mapsApiKey);
   //========== Hook ==========
   const [startDateInput, setStartDateInput] = useState("");
   const categories = [
@@ -230,6 +230,8 @@ function EventForm() {
 
     setErrors(newErrors);
 
+    console.log(errors);
+
     const hasErrors = Object.values(newErrors).some((error) => error !== "");
     if (hasErrors) return;
 
@@ -240,11 +242,14 @@ function EventForm() {
         return;
       }
 
+      console.log("a");
+
       const position = await geocodeAddress(formData.input.location);
       if (!position) {
         setErrors((prev) => ({
           ...prev,
-          location: "Could not find this location, please pick a different address",
+          location:
+            "Could not find this location, please pick a different address",
         }));
         return;
       }
@@ -264,8 +269,8 @@ function EventForm() {
       const response = await createEvent(payload);
       console.log(response);
       handleImagesUpload(response.data.eventId);
-      navigate("/events/" + response.data.eventId);
-      window.location.reload();
+      //navigate("/events/" + response.data.eventId);
+      //window.location.reload();
     } catch (err) {
       console.log("Something went wrong!");
     }
