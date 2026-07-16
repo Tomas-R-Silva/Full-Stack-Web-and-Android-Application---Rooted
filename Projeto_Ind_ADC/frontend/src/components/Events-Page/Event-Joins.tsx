@@ -4,12 +4,18 @@ import NavBar from "../NavBar/NavBar";
 import type {
   Attendee,
   EventAttendeesResponse,
+  EventGetterResponse,
+  EventItem,
   JoinRequests,
   JoinRequestsResponse,
+  RequestEventGetter,
   RespondJoinResponse,
+  UserInformationResponse,
 } from "../../utils/types";
 import {
   attendeesEvent,
+  getEvent,
+  getUser,
   requestsJoinEvent,
   respondJoinEvent,
 } from "../../api/auth";
@@ -20,34 +26,12 @@ import close_w from "../../assets/icons/close_white.svg";
 function EventJoins() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [event, setEvent] = useState<EventItem>();
   const [requests, setRequests] = useState<JoinRequests[]>([]);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
-  const [managedUser, setManagedUser] = useState<JoinRequests | null>(null);
-
-  const loadUsers = async () => {
-    try {
-      const token = sessionStorage.getItem("token");
-      if (!token || !id) {
-        console.log("User is not authenticated");
-        return;
-      }
-
-      const res: JoinRequestsResponse = await requestsJoinEvent({
-        token: { jwt: token },
-        input: { eventId: id },
-      });
-
-      const fetchedRequests = res.data.requests;
-
-      setRequests(fetchedRequests);
-
-      if (fetchedRequests && fetchedRequests.length > 0) {
-        setManagedUser(fetchedRequests[0]);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const [managedUser, setManagedUser] = useState<Attendee | null>(null);
+  const [user, setUser] = useState<UserInformationResponse>();
+  const [confirmKick, setConfirmKick] = useState(false);
 
   const loadRequests = async () => {
     try {
@@ -65,10 +49,6 @@ function EventJoins() {
       const fetchedRequests = res.data.requests;
 
       setRequests(fetchedRequests);
-
-      if (fetchedRequests && fetchedRequests.length > 0) {
-        setManagedUser(fetchedRequests[0]);
-      }
     } catch (err) {
       console.error(err);
     }
@@ -89,14 +69,64 @@ function EventJoins() {
 
       const fetchedAttendees = res.data.attendees;
 
+      if (fetchedAttendees && fetchedAttendees.length > 0) {
+        handleManagedUser(fetchedAttendees[0]);
+      }
+
       setAttendees(fetchedAttendees);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleManagedUser = (user: JoinRequests) => {
+  const loadEvents = async (id: string) => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      console.log("User is not authenticated");
+    }
+
+    const request: RequestEventGetter = {
+      token: { jwt: token ?? "" },
+      input: { eventId: id },
+    };
+    const res: EventGetterResponse = await getEvent(request);
+
+    console.log(res);
+
+    setEvent(res.data.event);
+
+    console.log(res.data.event);
+  };
+
+  const loadUser = async (user: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!user) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: user,
+        },
+      });
+      console.log(res);
+      setUser(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleManagedUser = (user: Attendee) => {
+    if (!user) return;
     setManagedUser(user);
+    loadUser(user.username);
   };
 
   const formatDate = (timestamp: number) => {
@@ -139,9 +169,11 @@ function EventJoins() {
   };
 
   useEffect(() => {
-    loadUsers();
     loadRequests();
-  }, []);
+    loadAttends();
+    if (!id) return;
+    loadEvents(id);
+  }, [id]);
 
   return (
     <>
@@ -171,80 +203,80 @@ function EventJoins() {
           </h1>
           <div className="container py-3">
             <div className="row">
-              <div className="col-4">
-                <h4>Users Join Requests:</h4>
-                <div
-                  className="container border rounded p-3"
-                  style={{
-                    maxHeight: "500px",
-                    overflowY: "auto",
-                  }}
-                >
-                  {requests.length === 0 && (
-                    <div
-                      className="alert alert-light"
-                      style={{ color: "var(--color-green)" }}
-                      role="alert"
-                    >
-                      No requests.
-                    </div>
-                  )}
-                  {requests.length !== 0 &&
-                    requests.map((req) => (
+              {event && !event.isPublic && (
+                <div className="col-4">
+                  <h4>Users Join Requests:</h4>
+                  <div
+                    className="container border rounded p-3"
+                    style={{
+                      maxHeight: "500px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {requests.length === 0 && (
                       <div
-                        className="d-flex justify-content-between align-items-start p-4 rounded mt-2"
-                        style={{
-                          maxWidth: "500px",
-                          width: "100%",
-                          backgroundColor:
-                            managedUser?.requester === req.requester
-                              ? "var(--color-green)"
-                              : "var(--color-green2)",
-                          color: "var(--color-white)",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => handleManagedUser(req)}
+                        className="alert alert-light"
+                        style={{ color: "var(--color-green)" }}
+                        role="alert"
                       >
-                        <div>
-                          <span className="fw-semibold">Username: </span>
-                          <span>{req.requester}</span>
-
+                        No requests.
+                      </div>
+                    )}
+                    {requests.length !== 0 &&
+                      requests.map((req) => (
+                        <div
+                          className="d-flex justify-content-between align-items-start p-4 rounded mt-2"
+                          style={{
+                            maxWidth: "500px",
+                            width: "100%",
+                            backgroundColor: "var(--color-green2)",
+                            color: "var(--color-white)",
+                            cursor: "pointer",
+                          }}
+                        >
                           <div>
-                            <span className="fw-semibold">Email: </span>
-                            <span>{formatDate(req.requestedAt)}</span>
+                            <span className="fw-semibold">Username: </span>
+                            <span>{req.requester}</span>
+
+                            <div>
+                              <span className="fw-semibold">Email: </span>
+                              <span>{formatDate(req.requestedAt)}</span>
+                            </div>
+                          </div>
+
+                          <div
+                            className="d-flex flex-column justify-content-between align-items-end"
+                            style={{ height: "100%" }}
+                          >
+                            <img
+                              src={personPin_w}
+                              alt="View Profile"
+                              onClick={() =>
+                                navigate("/profile/" + req.requester)
+                              }
+                              style={{ cursor: "pointer" }}
+                            />
+                            <img
+                              src={check_w}
+                              alt="Aceept"
+                              onClick={() => handleRespond(req.requester, true)}
+                              style={{ cursor: "pointer" }}
+                            />
+                            <img
+                              src={close_w}
+                              alt="Decline"
+                              onClick={() =>
+                                handleRespond(req.requester, false)
+                              }
+                              style={{ cursor: "pointer" }}
+                            />
                           </div>
                         </div>
-
-                        <div
-                          className="d-flex flex-column justify-content-between align-items-end"
-                          style={{ height: "100%" }}
-                        >
-                          <img
-                            src={personPin_w}
-                            alt="View Profile"
-                            onClick={() =>
-                              navigate("/profile/" + req.requester)
-                            }
-                            style={{ cursor: "pointer" }}
-                          />
-                          <img
-                            src={check_w}
-                            alt="Aceept"
-                            onClick={() => handleRespond(req.requester, true)}
-                            style={{ cursor: "pointer" }}
-                          />
-                          <img
-                            src={close_w}
-                            alt="Decline"
-                            onClick={() => handleRespond(req.requester, false)}
-                            style={{ cursor: "pointer" }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </div>
-              </div>
-              <div className="col-4">
+              )}
+              <div className={event && !event.isPublic ? "col-4" : "col-6"}>
                 <h4>Users Joined:</h4>
                 <div
                   className="container border rounded p-3"
@@ -265,21 +297,26 @@ function EventJoins() {
                   {attendees.length !== 0 &&
                     attendees.map((attendee) => (
                       <div
+                        key={attendee.username}
                         className="d-flex justify-content-between align-items-start p-4 rounded mt-2"
                         style={{
                           maxWidth: "500px",
                           width: "100%",
-                          backgroundColor: "var(--color-green2)",
+                          backgroundColor:
+                            managedUser?.username === attendee.username
+                              ? "var(--color-green)"
+                              : "var(--color-green2)",
                           color: "var(--color-white)",
                           cursor: "pointer",
                         }}
+                        onClick={() => handleManagedUser(attendee)}
                       >
                         <div>
                           <span className="fw-semibold">Username: </span>
                           <span>{attendee.username}</span>
 
                           <div>
-                            <span className="fw-semibold">Email: </span>
+                            <span className="fw-semibold">Joined At: </span>
                             <span>{formatDate(attendee.joinedAt)}</span>
                           </div>
                         </div>
@@ -301,8 +338,87 @@ function EventJoins() {
                     ))}
                 </div>
               </div>
-              <div className="col-4">
-                <h4>User Information:</h4>
+              <div className={event && !event.isPublic ? "col-4" : "col-6"}>
+                <h4>User Manage:</h4>
+                {!user && (
+                  <div
+                    className="alert alert-light"
+                    style={{ color: "var(--color-green)" }}
+                    role="alert"
+                  >
+                    No users to manage.
+                  </div>
+                )}
+                {user && (
+                  <div
+                    className="rounded-3 p-3"
+                    style={{ background: "var(--color-green2)" }}
+                  >
+                    <div>
+                      <span className="fw-semibold text-white">Username: </span>
+                      <span className="text-white">
+                        {user.data.username || "No username"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="fw-semibold text-white">
+                        Displayed Name:{" "}
+                      </span>
+                      <span className="text-white">
+                        {user.data.display || "No displayed username"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="fw-semibold text-white">Email: </span>
+                      <span className="text-white">
+                        {user.data.email || "No email"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="fw-semibold text-white">Role: </span>
+                      <span className="text-white">
+                        {user.data.role || "No role"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="fw-semibold text-white">From: </span>
+                      <span className="text-white">
+                        {user.data.country || "No country"}
+                      </span>
+                    </div>
+                    <div className="row g-3 mt-2">
+                      <div>
+                        {!confirmKick && (
+                          <button
+                            className="btn btn-danger fw-bold px-4"
+                            onClick={() => setConfirmKick(true)}
+                          >
+                            Kick {user.data.username}
+                          </button>
+                        )}
+                        {confirmKick && (
+                          <>
+                            <button
+                              className="btn btn-danger fw-bold"
+                              onClick={() => setConfirmKick(false)}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              className="btn fw-bold ms-1"
+                              style={{
+                                background: "var(--color-green2)",
+                                color: "var(--color-white)",
+                              }}
+                            >
+                              Confirm
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
