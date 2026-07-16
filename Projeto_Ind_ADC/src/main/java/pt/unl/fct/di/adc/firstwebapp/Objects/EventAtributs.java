@@ -2,7 +2,6 @@ package pt.unl.fct.di.adc.firstwebapp.Objects;
 
 import java.util.List;
 
-import com.google.cloud.datastore.LongValue;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Category;
 
@@ -70,11 +69,7 @@ public class EventAtributs{
 	public Boolean isAccessiblenull() { return isAccessible; }
 	public void setAccessible(boolean isAccessible) { this.isAccessible = isAccessible; }
 
-	public List<LongValue> getSDG() {
-		if(sdg==null||sdg.isEmpty())return null;
-		return Full.makeLongValueList(sdg);
-	}
-	public List<Long> getSDGint() { return sdg; }
+	public List<Long> getSDG() { return sdg; }
 	public void setSDG(List<Long> sdg) { this.sdg = sdg; }
 
 	private static long zeroifnull(Long n) {

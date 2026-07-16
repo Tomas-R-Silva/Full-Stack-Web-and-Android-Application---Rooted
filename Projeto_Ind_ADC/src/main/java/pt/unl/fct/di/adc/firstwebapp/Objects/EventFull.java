@@ -154,7 +154,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("image_urls", toImageValues(imageUrls))
 				.set("partners", Full.makeStringValueList(partners))
 				.set("is_accessible", this.isAccessible())
-				.set("SDG", Full.makeLongValueList(this.getSDGint()))
+				.set("SDG", Full.makeLongValueList(this.getSDG()))
 				.build();
 		return entity;
 	}
@@ -182,7 +182,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setPublic(input.isPublic());
 		event.setStatus(Status.UPCOMING);
 		event.setCreatedAt(System.currentTimeMillis());
-		event.setSDG(input.getSDGint());
+		event.setSDG(input.getSDG());
 		event.setAccessible(input.isAccessible());
 		event.setpartner(Collections.emptyList());
 		event.setImageUrls(Collections.emptyList());

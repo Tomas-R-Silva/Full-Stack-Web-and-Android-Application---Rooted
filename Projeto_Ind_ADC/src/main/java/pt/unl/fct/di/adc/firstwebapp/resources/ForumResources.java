@@ -187,7 +187,7 @@ public class ForumResources {
 					datastore.put(event.toentity());
 					eventsClosed++;
 					// Gamification: on completion, award +1 point per SDG to every user still enrolled.
-					List<Long> sdgs = event.getSDGint();
+					List<Long> sdgs = event.getSDG();
 					QueryResults<Entity> attendees = datastore.run(Query.newEntityQueryBuilder()
 							.setKind("Attendance")
 							.setFilter(PropertyFilter.eq("event_id", event.getEventId()))
