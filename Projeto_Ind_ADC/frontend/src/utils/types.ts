@@ -6,6 +6,7 @@ export type RequestSignIn = {
     password: string;
     email: string;
     confirmation: string;
+    category: string[];
     role: string;
   }
 };
