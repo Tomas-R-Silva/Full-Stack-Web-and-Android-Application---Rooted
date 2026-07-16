@@ -263,8 +263,10 @@ export type EventItem = {
   status: string;
   createdAt: number;
   imageUrls: Image[];
-  isAccessible: boolean,
-  SDG: number[]
+  isAccessible: boolean;
+  SDG: number[];
+  lat: number;
+  lng: number,
 };
 
 export type EventProps = {
@@ -285,6 +287,8 @@ export type RequestEventCreation = {
   public: boolean,
   accessible: boolean,
   sdg: number[]
+  lat: number | null,
+  lng: number | null,
   }
 };
 
@@ -338,6 +342,8 @@ export type RequestEventUpdate = {
     public: boolean,
     isAccessible?: boolean,
     SDG?: number[]
+    lat: number | null,
+    lng: number | null,
   }
 }
 

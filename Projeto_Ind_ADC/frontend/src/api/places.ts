@@ -98,7 +98,6 @@ export async function fetchPlacePredictions(
     return await new Promise((resolve) => {
       const request: any = {
         input,
-        types: ["geocode"],
       };
 
       if (biasLocation) {
