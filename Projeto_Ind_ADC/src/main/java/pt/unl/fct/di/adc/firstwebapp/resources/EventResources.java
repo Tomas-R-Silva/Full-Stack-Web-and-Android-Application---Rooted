@@ -362,6 +362,47 @@ public class EventResources {
 	}
 
 	// -------------------------------------------------------------------------
+	// POST /rest/events/complete  — organizer marks the event as finished. Everyone
+	// still enrolled (Attendance) is awarded the gamification points/SDG counts.
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/complete")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response completeEvent(EventTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			EventFull existing = getEventEntity(req.getInput());
+			if (!existing.isOwner(token) && token.getRole() != Role.ADMIN)
+				ErrorException.trow(9905);
+			if (existing.isStatuss(new Status[] {Status.CANCELLED, Status.COMPLETED}))
+				ErrorException.trow(9940); // already cancelled/completed 
+
+			existing.setStatus(Status.COMPLETED);
+			datastore.put(existing.toentity());
+
+			// Award participation to every user still enrolled.
+			List<Long> sdgs = existing.getSDGint();
+			QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
+					.setKind("Attendance")
+					.setFilter(PropertyFilter.eq("event_id", existing.getEventId()))
+					.build());
+			int awarded = 0;
+			while (results.hasNext()) {
+				AttendanceFull attendance = AttendanceFull.fromdatabase(results.next());
+				UserFull attendee = AuthHelper.getUser(attendance.getUsername());
+				attendee.addParticipation(sdgs);
+				datastore.put(attendee.toentity());
+				awarded++;
+			}
+			return ok(Map.of("message", "Event completed successfully", "awarded", awarded));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
 	// POST /rest/events/attend
 	// -------------------------------------------------------------------------
 	@POST
@@ -406,9 +447,6 @@ public class EventResources {
 			datastore.put(attendance.toentity());
 			event.incAttendee();
 			datastore.put(event.toentity());
-			// Gamification: joining awards +1 point per SDG of the event and bumps the per-SDG counts.
-			user.addParticipation(event.getSDGint());
-			datastore.put(user.toentity());
 			return ok(Map.of("message", "Successfully registered for the event", "status", "JOINED"));
 
 		} catch (Exception e) {
@@ -523,9 +561,6 @@ public class EventResources {
 			datastore.put(AttendanceFull.newattendance(event,requester).toentity());
 			event.incAttendee();
 			datastore.put(event.toentity());
-			// Gamification: same as the public join — the accepted requester gets points per SDG.
-			requester.addParticipation(event.getSDGint());
-			datastore.put(requester.toentity());
 
 			// The request is resolved: once accepted the attendance is the source of truth,
 			// so the pending request is deleted.
