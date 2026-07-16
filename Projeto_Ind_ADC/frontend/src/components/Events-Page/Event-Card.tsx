@@ -4,7 +4,7 @@ import placeholder from "../../assets/images/placeholder.png";
 import type { Image } from "../../utils/types";
 
 function EventCard({ event }: EventProps) {
-  const startDate = new Date(event.startDate * 1000);
+  const startDate = new Date(event.startDate / 1000);
   const Ids = event.SDG ?? [];
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {

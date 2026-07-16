@@ -18,7 +18,7 @@ import { attendEvent, unattendEvent, isAttendee } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 
 function Ticket({ event }: EventProps) {
-  const startDate = new Date(event.startDate * 1000);
+  const startDate = new Date(event.startDate / 1000);
   const Ids = event.SDG ?? [];
   const { isAuthenticated, username } = useAuth();
   const [IsAttendee, setIsAttendee] = useState(false);

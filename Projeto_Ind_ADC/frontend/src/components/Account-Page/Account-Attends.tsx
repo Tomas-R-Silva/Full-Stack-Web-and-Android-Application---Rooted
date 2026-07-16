@@ -50,7 +50,7 @@ function AccountAttends() {
   };
 
   const longToVisualDate = (date: number) => {
-    return new Date(date * 1000).toLocaleString("en-GB", {
+    return new Date(date / 1000).toLocaleString("en-GB", {
       day: "2-digit",
       month: "long",
       year: "numeric",

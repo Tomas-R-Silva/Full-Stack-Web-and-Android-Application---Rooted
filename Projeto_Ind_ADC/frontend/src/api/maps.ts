@@ -207,7 +207,7 @@ export const useMapsPage = (mapsApiKey: string) => {
         !hasGeolocation ||
         (event.distance != null &&
           event.distance >= 0 &&
-          event.distance <= nearYouRadiusKm * 1000);
+          event.distance <= nearYouRadiusKm / 1000);
 
       return (
         matchesCategory &&
