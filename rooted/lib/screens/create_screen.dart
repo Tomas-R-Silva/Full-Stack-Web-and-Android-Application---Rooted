@@ -50,7 +50,7 @@ class _CreatePageState extends State<CreatePage> {
       _createdEventId = e['eventId']?.toString();
       _titleController.text = e['title']?.toString() ?? '';
       _descriptionController.text = e['description']?.toString() ?? '';
-      _selectedCategory = _categories.firstWhere(
+      _selectedCategory = ApiService.categories.firstWhere(
         (c) => c.toUpperCase() == (e['category']?.toString().toUpperCase()),
         orElse: () => 'Other',
       );
@@ -82,17 +82,6 @@ class _CreatePageState extends State<CreatePage> {
     'Industry & Innovation', 'Reduced Inequalities', 'Sustainable Cities',
     'Responsible Consumption', 'Climate Action', 'Life Below Water',
     'Life on Land', 'Peace & Justice', 'Partnerships'
-  ];
-
-  final List<String> _categories = [
-    'Music',
-    'Sports',
-    'Tech',
-    'Food',
-    'Art',
-    'Business',
-    'Community',
-    'Other',
   ];
 
   final String _placesApiKey = 'AIzaSyAmYzNozAPQB27PHT4uP00qoBOg-cz7jdk';
@@ -381,7 +370,7 @@ class _CreatePageState extends State<CreatePage> {
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                 ),
-                items: _categories
+                items: ApiService.categories
                     .map(
                       (category) => DropdownMenuItem(
                     value: category,

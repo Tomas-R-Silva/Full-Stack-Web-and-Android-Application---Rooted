@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/events_maps.dart';
+import '../services/api_service.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
@@ -11,17 +12,9 @@ class DiscoverPage extends StatefulWidget {
 
 class _DiscoverPageState extends State<DiscoverPage> {
   final List<String> _filters = ['For you', 'Near you'];
-  final List<String> _categories = [
-    'Music',
-    'Sports',
-    'Tech',
-    'Food',
-    'Art',
-    'Culture',
-  ];
 
   String _selectedFilter = 'For you';
-  String _selectedCategory = 'Music';
+  String _selectedCategory = ApiService.categories.first;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -109,7 +102,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     labelText: 'Category',
                     border: OutlineInputBorder(),
                   ),
-                  items: _categories
+                  items: ApiService.categories
                       .map((category) => DropdownMenuItem(
                             value: category,
                             child: Text(category),

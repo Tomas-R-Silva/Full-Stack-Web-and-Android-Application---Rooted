@@ -9,6 +9,9 @@ class SessionStorage {
   static const _emailKey = 'email';
   static const _roleKey = 'role';
   static const _bioKey = 'bio';
+  static const _categoryKey = 'category';
+  static const _countryKey = 'country';
+  static const _birthKey = 'birth';
 
   static Future<void> save({
     required String jwt,
@@ -17,6 +20,9 @@ class SessionStorage {
     String displayName = '',
     String email = '',
     String bio = '',
+    List<String> categories = const [],
+    String country = '',
+    int birth = 0,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_jwtKey, jwt);
@@ -25,6 +31,9 @@ class SessionStorage {
     await prefs.setString(_emailKey, email);
     await prefs.setString(_roleKey, role);
     await prefs.setString(_bioKey, bio);
+    await prefs.setStringList(_categoryKey, categories);
+    await prefs.setString(_countryKey, country);
+    await prefs.setInt(_birthKey, birth);
   }
 
   static Future<String?> getJwt() async {
@@ -57,6 +66,21 @@ class SessionStorage {
     return prefs.getString(_bioKey);
   }
 
+  static Future<List<String>> getCategory() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_categoryKey) ?? [];
+  }
+
+  static Future<String?> getCountry() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_countryKey);
+  }
+
+  static Future<int?> getBirth() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_birthKey);
+  }
+
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_jwtKey);
@@ -65,5 +89,8 @@ class SessionStorage {
     await prefs.remove(_emailKey);
     await prefs.remove(_roleKey);
     await prefs.remove(_bioKey);
+    await prefs.remove(_categoryKey);
+    await prefs.remove(_countryKey);
+    await prefs.remove(_birthKey);
   }
 }

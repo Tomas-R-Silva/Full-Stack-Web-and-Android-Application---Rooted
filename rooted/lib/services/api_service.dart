@@ -15,6 +15,19 @@ class ApiService {
   // Your deployed Google Cloud backend.
   static const String baseUrl = 'https://adc-final.ey.r.appspot.com';
 
+  static const List<String> categories = [
+    'Music',
+    'Sports',
+    'Tech',
+    'Food',
+    'Art',
+    'Business',
+    'Community',
+    'Health',
+    'Education',
+    'Other',
+  ];
+
   /// Notifies listeners when an event is joined or left.
   static final ValueNotifier<String?> eventUpdateNotifier = ValueNotifier(null);
 
@@ -52,6 +65,7 @@ class ApiService {
     required String email,
     required String password,
     String role = 'USER',
+    List<String> interests = const [],
   }) async {
     final uri = Uri.parse('$baseUrl/rest/createaccount');
 
@@ -64,7 +78,9 @@ class ApiService {
           'email': email,
           'password': password,
           'confirmation' : password,
+          'category': interests.map((c) => c.toUpperCase()).toList(),
           'role': role,
+          'public': true,
         }
       }),
     );
@@ -77,9 +93,9 @@ class ApiService {
     }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      _checkBodyError(body);
       return body;
     }
-
     throw ApiException(
         body['message']?.toString() ??
             body['error']?.toString() ??
@@ -118,6 +134,7 @@ class ApiService {
     }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      _checkBodyError(body);
       return body;
     }
 
@@ -254,6 +271,7 @@ class ApiService {
     final body = _parseBody(response.body);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      _checkBodyError(body);
       return _extractData(body);
     }
 
@@ -339,7 +357,10 @@ class ApiService {
     required String jwt,
     required String username,
     required String email,
-    String bio = '',
+    String? bio,
+    List<String>? categories,
+    String? country,
+    int? birth,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/modaccount');
 
@@ -353,7 +374,10 @@ class ApiService {
         'input': {
           'username': username,
           'email': email,
-          'bio': bio,
+          if (bio != null) 'bio': bio,
+          if (categories != null) 'category': categories.map((c) => c.toUpperCase()).toList(),
+          if (country != null) 'country': country,
+          if (birth != null) 'birth': birth,
         },
       }),
     );
@@ -375,6 +399,18 @@ class ApiService {
     throw ApiException(message);
   }
 
+  static void _checkBodyError(Map<String, dynamic> body) {
+    final status = body['status'];
+    // Status can be int or String from backend. Non-zero usually means error.
+    if (status != null && status != 0 && status != 200 && status != '0' && status != '200') {
+      final message = body['message']?.toString() ??
+          body['error']?.toString() ??
+          body['data']?.toString() ??
+          'Operation failed (status $status)';
+      throw ApiException(message);
+    }
+  }
+
   static Map<String, dynamic> _parseBody(String raw) {
     try {
       return jsonDecode(raw) as Map<String, dynamic>;
@@ -393,8 +429,11 @@ class ApiService {
   /// string message), this falls back to the whole body instead of
   /// crashing with "type 'String' is not a subtype of type
   static Map<String, dynamic> _extractData(Map<String, dynamic> body) {
+    _checkBodyError(body);
     final data = body['data'];
     if (data is Map<String, dynamic>) return data;
+    // If data is a String but we expected a Map, it might be an error message
+    // that should have been caught by _checkBodyError, but we'll be safe here.
     return body;
   }
 
@@ -479,6 +518,25 @@ class ApiService {
     if (user['creation_time'] != null) {
       user['creation_time'] = _normalizeTimestamp(user['creation_time']);
     }
+    if (user['birth'] != null) {
+      user['birth'] = _normalizeTimestamp(user['birth']);
+    }
+    // Normalize category (interests) to a List<String>
+    final cat = user['category'];
+    List<String> rawCats = [];
+    if (cat is String && cat.isNotEmpty) {
+      rawCats = cat.split(',').map((e) => e.trim()).toList();
+    } else if (cat is List) {
+      rawCats = cat.cast<String>();
+    }
+
+    user['category_list'] = rawCats.map((e) {
+      return categories.firstWhere(
+        (c) => c.toLowerCase() == e.toLowerCase(),
+        orElse: () => e,
+      );
+    }).toList();
+
     return user;
   }
 
@@ -983,6 +1041,130 @@ class ApiService {
       return _normalizeUser(_extractData(body));
     }
     throw ApiException(_errorMessage(body, 'Failed to load user profile'));
+  }
+
+  /// Calls POST /find.
+  static Future<Map<String, dynamic>> findUsers({
+    required String jwt,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/find');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'username': username},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return _extractData(body);
+    }
+    throw ApiException(_errorMessage(body, 'Search failed'));
+  }
+
+  /// Calls POST /showusers.
+  static Future<Map<String, dynamic>> showUsers({
+    required String jwt,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/showusers');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return _extractData(body);
+    }
+    throw ApiException(_errorMessage(body, 'Failed to show users'));
+  }
+
+  /// Calls POST /changeuserrole.
+  static Future<void> changeUserRole({
+    required String jwt,
+    required String username,
+    required String newRole,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/changeuserrole');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'username': username,
+          'newrole': newRole,
+        },
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to change role'));
+  }
+
+  /// Calls POST /changeuserpwd.
+  static Future<void> changeUserPassword({
+    required String jwt,
+    required String username,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/changeuserpwd');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'username': username,
+          'oldpassword': oldPassword,
+          'newpassword': newPassword,
+        },
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to change password'));
+  }
+
+  /// Calls POST /showauthsessions.
+  static Future<Map<String, dynamic>> showAuthSessions({
+    required String jwt,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/showauthsessions');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+      }),
+    );
+    final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return _extractData(body);
+    }
+    throw ApiException(_errorMessage(body, 'Failed to load sessions'));
+  }
+
+  /// Calls POST /endfriend.
+  static Future<void> endFriendships({
+    required String jwt,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/endfriend');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt}, // Passed even if not checked by backend currently
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = _parseBody(response.body);
+    throw ApiException(_errorMessage(body, 'Failed to reset friendships'));
   }
 
   //Friend Endpoints

@@ -43,6 +43,12 @@ class _EventsMapsState extends State<EventsMaps> {
   }
 
   @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(EventsMaps oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.categoryFilter != oldWidget.categoryFilter ||
@@ -53,7 +59,9 @@ class _EventsMapsState extends State<EventsMaps> {
 
   Future<void> _init() async {
     await _determinePosition();
+    if (!mounted) return;
     await _fetchAndShowEvents();
+    if (!mounted) return;
     setState(() => _loading = false);
     _moveCamera(_center, 12);
   }
@@ -61,12 +69,14 @@ class _EventsMapsState extends State<EventsMaps> {
   Future<void> _determinePosition() async {
     try {
       final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (!mounted) return;
       _center = LatLng(position.latitude, position.longitude);
     } catch (_) {
     }
   }
 
   Future<void> _fetchAndShowEvents() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _markers.clear();
@@ -90,7 +100,8 @@ class _EventsMapsState extends State<EventsMaps> {
         );
         if (res.statusCode == 200) {
           final data = json.decode(res.body);
-          final eventsData = data['data']?['events'] as List? ?? data['events'] as List? ?? [];
+          final d = data['data'];
+          final eventsData = (d is Map ? d['events'] : null) as List? ?? data['events'] as List? ?? [];
           for (final e in eventsData) {
             if (e is Map) {
               final evMap = Map<String, dynamic>.from(e);
@@ -136,6 +147,7 @@ class _EventsMapsState extends State<EventsMaps> {
 
       if ((lat == null || lng == null) && widget.mapsApiKey != null && ev['location'] != null) {
         final coords = await _geocode(ev['location'].toString());
+        if (!mounted) return;
         if (coords != null) {
           lat = coords.latitude;
           lng = coords.longitude;

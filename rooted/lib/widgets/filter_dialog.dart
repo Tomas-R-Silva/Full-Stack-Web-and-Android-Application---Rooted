@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
 
 class FilterDialog extends StatefulWidget {
   final String? initialCategory;
@@ -21,18 +22,6 @@ class _FilterDialogState extends State<FilterDialog> {
   String? _selectedCategory;
   late List<int> _selectedSDGs;
   late bool _selectedAccessible;
-
-  final List<String> _categories = [
-    'All',
-    'Music',
-    'Sports',
-    'Tech',
-    'Food',
-    'Art',
-    'Business',
-    'Community',
-    'Other',
-  ];
 
   final List<String> _sdgLabels = [
     'No Poverty', 'Zero Hunger', 'Good Health', 'Quality Education',
@@ -70,7 +59,7 @@ class _FilterDialogState extends State<FilterDialog> {
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              items: _categories
+              items: ['All', ...ApiService.categories]
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                   .toList(),
               onChanged: (val) => setState(() => _selectedCategory = val),

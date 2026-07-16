@@ -142,10 +142,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
     if (_userData == null) return const SizedBox.shrink();
 
-    final String display = _userData!['display'] ?? widget.username;
+    final String display = _userData!['display'] ?? _userData!['displayname'] ?? widget.username;
     final String role = _userData!['role'] ?? 'USER';
-    final String friendship = _userData!['friendship'] ?? 'NOT_FRIENDS';
+    final String friendship = _userData!['friendship'] ?? _userData!['friendshipstatus'] ?? 'NOT_FRIENDS';
     final String bio = _userData!['bio'] ?? '';
+    final List<String> interests = _userData!['category_list'] as List<String>? ?? [];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -187,6 +188,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           const SizedBox(height: 32),
           _InfoCard(children: [
             _InfoRow(icon: Icons.info_outline, label: 'Bio', value: bio.isEmpty ? 'No bio provided' : bio),
+            const Divider(height: 1),
+            _InfoRow(
+              icon: Icons.category_outlined,
+              label: 'Interests',
+              value: interests.isEmpty ? '—' : interests.join(', '),
+            ),
             const Divider(height: 1),
             _InfoRow(
               icon: Icons.calendar_today_outlined,

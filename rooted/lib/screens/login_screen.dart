@@ -37,8 +37,15 @@ class _LoginScreenState extends State<LoginScreen> {
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
-      final data = (result['data'] as Map<String, dynamic>?) ?? {};
-      final token = (data['token'] as Map<String, dynamic>?) ?? {};
+      
+      // Backend might return token at root or nested under data
+      final dataField = result['data'];
+      final token = (result['token'] as Map<String, dynamic>?) ?? 
+                    (dataField is Map<String, dynamic> ? dataField['token'] as Map<String, dynamic>? : null) ?? {};
+
+      if (token.isEmpty) {
+        throw ApiException('Login failed to return a session.');
+      }
 
       final jwt = token['jwt']?.toString() ?? '';
       final username = token['username']?.toString() ?? _usernameController.text.trim();
@@ -48,11 +55,17 @@ class _LoginScreenState extends State<LoginScreen> {
       String bio = '';
       String email = token['email']?.toString() ?? '';
       String displayName = username;
+      List<String> categories = [];
+      String country = '';
+      int birth = 0;
       try {
         final profile = await ApiService.getUserAccount(jwt: jwt, username: username);
         bio = profile['bio']?.toString() ?? '';
         email = profile['email']?.toString() ?? email;
         displayName = profile['display']?.toString() ?? username;
+        categories = profile['category_list'] as List<String>? ?? [];
+        country = profile['country']?.toString() ?? '';
+        birth = profile['birth'] as int? ?? 0;
       } catch (_) {
         // Fallback to defaults if profile fetch fails
       }
@@ -64,6 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         role: role,
         bio: bio,
+        categories: categories,
+        country: country,
+        birth: birth,
       );
       if (mounted) {
         setState(() => _isLoading = false);

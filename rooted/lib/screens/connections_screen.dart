@@ -19,7 +19,6 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
 
   List<dynamic> _friends = [];
   List<dynamic> _requests = [];
-  List<String> _suggested = [];
   List<String> _filteredSuggested = [];
   String? _processingUsername;
   
@@ -41,15 +40,29 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
 
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        _filteredSuggested = _suggested;
-      } else {
-        _filteredSuggested = _suggested
-            .where((u) => u.toLowerCase().contains(query))
-            .toList();
+    if (query.isEmpty) {
+      setState(() => _filteredSuggested = []);
+    } else {
+      _performServerSearch(query);
+    }
+  }
+
+  Future<void> _performServerSearch(String query) async {
+    if (_jwt == null) return;
+    try {
+      final result = await ApiService.findUsers(jwt: _jwt!, username: query);
+      final list = result['found'] as List<dynamic>? ?? [];
+      if (mounted) {
+        setState(() {
+          _filteredSuggested = list.map((u) {
+            if (u is Map) return u['user_name']?.toString() ?? '';
+            return u.toString();
+          }).where((name) => name != _username).toList();
+        });
       }
-    });
+    } catch (_) {
+      // Ignore search errors in background
+    }
   }
 
   Future<void> _loadData() async {
@@ -84,11 +97,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       final eventsData = eventsResult['events'] as List<dynamic>? ?? [];
       final events = eventsData.cast<Map<String, dynamic>>();
       
-      final Set<String> organizers = {};
       for (var e in events) {
         final org = e['organizerUsername'] as String?;
         if (org != null && org != _username && !currentFriendsSet.contains(org)) {
-          organizers.add(org);
+          // organizers.add(org); // No longer needed as we use server-side search
         }
       }
 
@@ -96,8 +108,6 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         setState(() {
           _friends = friendsList;
           _requests = requestsList;
-          _suggested = organizers.toList();
-          _filteredSuggested = _suggested;
           _isLoading = false;
         });
       }

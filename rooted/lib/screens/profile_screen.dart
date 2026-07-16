@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
+import 'admin_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -29,6 +30,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _email = '';
   String _role = '';
   String _bio = '';
+  List<String> _categories = [];
+  String _country = '';
+  int _birth = 0;
 
   @override
   void initState() {
@@ -42,6 +46,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email    = await SessionStorage.getEmail();
     final role     = await SessionStorage.getRole();
     final bio      = await SessionStorage.getBio();
+    final cats     = await SessionStorage.getCategory();
+    final country  = await SessionStorage.getCountry();
+    final birth    = await SessionStorage.getBirth();
     if (mounted) {
       setState(() {
         _username    = username ?? '';
@@ -49,6 +56,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _email       = email    ?? '';
         _role        = role     ?? '';
         _bio         = bio      ?? '';
+        _categories  = cats;
+        _country     = country  ?? '';
+        _birth       = birth    ?? 0;
       });
       await _loadSavedImage();
     } else {
@@ -98,6 +108,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         displayName: _displayName,
         email: _email,
         bio: _bio,
+        categories: _categories,
+        country: _country,
+        birth: _birth,
         onSaved: () {
           _loadSession(); // reload data after saving
           ScaffoldMessenger.of(context).showSnackBar(
@@ -314,6 +327,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _InfoRow(icon: Icons.email_outlined, label: 'Email', value: _email.isEmpty ? '—' : _email),
               const Divider(height: 1),
               _InfoRow(icon: Icons.info_outline, label: 'Bio', value: _bio.isEmpty ? 'No bio provided' : _bio),
+              const Divider(height: 1),
+              _InfoRow(
+                icon: Icons.category_outlined,
+                label: 'Interests',
+                value: _categories.isEmpty ? '—' : _categories.join(', '),
+              ),
+              const Divider(height: 1),
+              _InfoRow(icon: Icons.public_outlined, label: 'Country', value: _country.isEmpty ? '—' : _country),
             ]),
 
             const SizedBox(height: 24),
@@ -327,6 +348,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: const Text('Edit Profile'),
               ),
             ),
+
+            if (_role == 'ADMIN') ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminScreen()),
+                  ),
+                  icon: const Icon(Icons.admin_panel_settings_outlined, size: 18),
+                  label: const Text('Admin Dashboard'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 12),
 
@@ -477,6 +517,9 @@ class _EditProfileSheet extends StatefulWidget {
   final String displayName;
   final String email;
   final String bio;
+  final List<String> categories;
+  final String country;
+  final int birth;
   final VoidCallback onSaved;
 
   const _EditProfileSheet({
@@ -484,6 +527,9 @@ class _EditProfileSheet extends StatefulWidget {
     required this.displayName,
     required this.email,
     required this.bio,
+    required this.categories,
+    required this.country,
+    required this.birth,
     required this.onSaved,
   });
 
@@ -496,6 +542,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   late final TextEditingController _displayController;
   late final TextEditingController _emailController;
   late final TextEditingController _bioController;
+  late final List<String> _selectedCategories;
+  late final TextEditingController _countryController;
+  late int _birth;
   bool _isSaving = false;
 
   @override
@@ -504,6 +553,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     _displayController = TextEditingController(text: widget.displayName);
     _emailController = TextEditingController(text: widget.email);
     _bioController = TextEditingController(text: widget.bio);
+    _selectedCategories = List.from(widget.categories);
+    _countryController = TextEditingController(text: widget.country);
+    _birth = widget.birth;
   }
 
   @override
@@ -511,6 +563,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     _displayController.dispose();
     _emailController.dispose();
     _bioController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
 
@@ -529,12 +582,16 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       final newDisplayName = _displayController.text.trim();
       final newEmail = _emailController.text.trim();
       final newBio = _bioController.text.trim();
+      final newCountry = _countryController.text.trim();
 
       await ApiService.modifyAccount(
         jwt: jwt,
         username: newDisplayName,
         email: newEmail,
         bio: newBio,
+        categories: _selectedCategories,
+        country: newCountry,
+        birth: _birth,
       );
 
       // Persist changes locally so they are visible immediately
@@ -545,6 +602,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
         email: newEmail,
         role: role ?? '',
         bio: newBio,
+        categories: _selectedCategories,
+        country: newCountry,
+        birth: _birth,
       );
 
       if (mounted) {
@@ -648,13 +708,94 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 TextFormField(
                   controller: _bioController,
                   maxLines: 3,
-                  textInputAction: TextInputAction.done,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Bio',
                     prefixIcon: Icon(Icons.info_outline_rounded, size: 20),
                     hintText: 'Tell us a bit about yourself...',
                   ),
-                  onFieldSubmitted: (_) => _save(),
+                ),
+                const SizedBox(height: 16),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Interests',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ApiService.categories.map((category) {
+                    final isSelected = _selectedCategories.contains(category);
+                    return FilterChip(
+                      label: Text(category),
+                      selected: isSelected,
+                      onSelected: (val) {
+                        setState(() {
+                          if (val) {
+                            _selectedCategories.add(category);
+                          } else {
+                            _selectedCategories.remove(category);
+                          }
+                        });
+                      },
+                      selectedColor: AppTheme.primary.withValues(alpha: 0.1),
+                      checkmarkColor: AppTheme.primary,
+                      labelStyle: TextStyle(
+                        fontSize: 13,
+                        color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(
+                          color: isSelected ? AppTheme.primary : AppTheme.inputBorder,
+                          width: 1,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _countryController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Country',
+                    prefixIcon: Icon(Icons.public_outlined, size: 20),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_today_outlined),
+                  title: const Text('Birth Date'),
+                  subtitle: Text(_birth == 0
+                      ? 'Not set'
+                      : DateTime.fromMillisecondsSinceEpoch(_birth * 1000)
+                          .toLocal()
+                          .toString()
+                          .split(' ')[0]),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _birth == 0
+                          ? DateTime(2000)
+                          : DateTime.fromMillisecondsSinceEpoch(_birth * 1000),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() =>
+                          _birth = picked.millisecondsSinceEpoch ~/ 1000);
+                    }
+                  },
                 ),
               ],
             ),

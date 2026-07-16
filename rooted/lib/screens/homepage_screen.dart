@@ -257,7 +257,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _categoryEmoji(String? category) {
-    switch (category) {
+    switch (category?.toUpperCase()) {
       case 'MUSIC':     return '🎵';
       case 'SPORTS':    return '⚽';
       case 'TECH':      return '💻';
@@ -265,6 +265,8 @@ class _HomePageState extends State<HomePage> {
       case 'FOOD':      return '🍔';
       case 'BUSINESS':  return '💼';
       case 'COMMUNITY': return '🤝';
+      case 'HEALTH':    return '🏥';
+      case 'EDUCATION': return '📚';
       default:          return '📌';
     }
   }
