@@ -20,11 +20,11 @@ const MapsPage = () => {
   const hasGeolocation = getHasGeolocation();
 
   const [filter, setFilter] = useState<FilterProps>({
-    category: undefined,
-    status: undefined,
-    organizerUsername: undefined,
-    isAccessible: undefined,
-    sdg: undefined,
+    category: null,
+    status: null,
+    organizerUsername: null,
+    isAccessible: null,
+    sdg: [],
   });
   const [nearYouEnabled, setNearYouEnabled] = useState(false);
   const [nearYouRadiusKm, setNearYouRadiusKm] = useState(10);
@@ -107,7 +107,7 @@ const MapsPage = () => {
                 onChange={(e) =>
                   setFilter((prev) => ({
                     ...prev,
-                    category: e.target.value || undefined,
+                    category: e.target.value || null,
                   }))
                 }
               >
@@ -190,7 +190,7 @@ const MapsPage = () => {
                   onChange={(e) =>
                     setFilter((prev) => ({
                       ...prev,
-                      isAccessible: e.target.checked || undefined,
+                      isAccessible: e.target.checked || null,
                     }))
                   }
                 />
@@ -210,11 +210,11 @@ const MapsPage = () => {
                 style={{ color: "var(--color-green)", background: "var(--color-white)" }}
                 onClick={() => {
                   setFilter({
-                    category: undefined,
-                    status: undefined,
-                    organizerUsername: undefined,
-                    isAccessible: undefined,
-                    sdg: undefined,
+                    category: null,
+                    status: null,
+                    organizerUsername: null,
+                    isAccessible: null,
+                    sdg: null,
                   });
                   setNearYouEnabled(false);
                   setNearYouRadiusKm(10);

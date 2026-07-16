@@ -350,7 +350,7 @@ export const useMapsPage = (mapsApiKey: string) => {
     const addEventMarkers = async (map: any) => {
       try {
         const res = await getEventList({
-          input: { pageSize: 100, cursor: "" },
+          input: { category: null, status: null, organizerUsername: null, pageSize: 100, cursor: "", isAccessible: null, sdg: [] },
         });
         const eventsData: EventItem[] =
           Array.isArray(res.data.events) && res.data.events.length > 0
