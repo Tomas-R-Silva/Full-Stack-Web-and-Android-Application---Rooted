@@ -33,11 +33,11 @@ function EventsList({ filter }: EventsListProps) {
       //TODO change in order to have filters
       const res: EventListResponse = await getEventList({
         input: {
-          category: filter.category,
+          category: filter.category || null,
           status: filter.status,
           organizerUsername: filter.organizerUsername,
           isAccessible: filter.isAccessible,
-          SDG: filter.sdg,
+          sdg: filter.sdg || [],
           pageSize: 12,
           cursor: cursor ?? "",
         },

@@ -39,9 +39,13 @@ function AccountEvents() {
       const res: EventListResponse = await getEventList({
         token: { jwt: token },
         input: {
+          category: null,
+          status: null,
           organizerUsername: username,
           pageSize: 10,
-          cursor: cursor ?? undefined,
+          cursor: cursor ?? null,
+          isAccessible: null,
+          sdg: [],
         },
       });
 

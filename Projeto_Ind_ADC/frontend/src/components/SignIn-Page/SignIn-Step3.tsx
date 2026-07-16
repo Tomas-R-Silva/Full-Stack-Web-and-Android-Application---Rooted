@@ -6,14 +6,14 @@ import SignInModal from "./SignIn-Modal";
 
 function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   const categories = [
-    "🌳 Environment",
-    "❤️ Well-being",
-    "🤝 Inclusion",
-    "🎨 Culture",
-    "📚 Education",
-    "⚾ Sports",
-    "💻 Innovation",
-    "⛑️ Vollunteer",
+    { value: "MUSIC", label: "🎺 Music" },
+    { value: "SPORTS", label: "⚾ Sports" },
+    { value: "TECH", label: "💻 Tech" },
+    { value: "ART", label: "🎨 Art" },
+    { value: "FOOD", label: "🥗 Food" },
+    { value: "BUSINESS", label: "💼 Business" },
+    { value: "COMMUNITY", label: "🤝 Community" },
+    { value: "OTHER", label: "Other" },
   ];
 
   //========== Hook ==========
@@ -24,14 +24,17 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   const navigate = useNavigate();
   const [response, setResponse] = useState<any>(null);
 
-  //const handleChange = (category: string) => {
-  //setFormData((prev) => ({
-  //...prev,
-  //categories: prev.categories.includes(category)
-  //? prev.categories.filter((c) => c !== category)
-  //: [...prev.categories, category],
-  //}));
-  //};
+  const handleChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        category: prev.input.category.includes(value)
+          ? prev.input.category.filter((c) => c !== value)
+          : [...prev.input.category, value],
+      },
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +50,8 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
     }
   };
 
+  console.log(formData);
+
   return (
     <>
       <h5 className="text-center mb-3" style={{ color: "var(--color-green)" }}>
@@ -54,31 +59,30 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
       </h5>
       <form onSubmit={handleSubmit}>
         <div className="row g-2">
-          {categories.map((category) => (
-            <div className="col-6" key={category}>
+          {categories.map(({ value, label }) => (
+            <div className="col-6" key={value}>
               <input
                 type="checkbox"
                 className="btn-check"
-                id={`btn-${category}`}
-                //checked={formData.categories.includes(category)}
-                //onChange={() => handleChange(category)}
+                id={`btn-${value}`}
+                checked={formData.input.category.includes(value)}
+                onChange={() => handleChange(value)}
                 autoComplete="off"
               />
+
               <label
                 className="btn w-100"
-                htmlFor={`btn-${category}`}
-                style={
-                  {
-                    //background: formData.categories.includes(category)
-                    //</div>? "var(--color-green)"
-                    //: "var(--color-white)",
-                    //color: formData.categories.includes(category)
-                    //? "var(--color-white)"
-                    //: "var(--color-green)",
-                  }
-                }
+                htmlFor={`btn-${value}`}
+                style={{
+                  background: formData.input.category.includes(value)
+                    ? "var(--color-green)"
+                    : "var(--color-white)",
+                  color: formData.input.category.includes(value)
+                    ? "var(--color-white)"
+                    : "var(--color-green)",
+                }}
               >
-                {category}
+                {label}
               </label>
             </div>
           ))}

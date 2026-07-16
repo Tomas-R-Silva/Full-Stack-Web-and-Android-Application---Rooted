@@ -6,6 +6,7 @@ export type RequestSignIn = {
     password: string;
     email: string;
     confirmation: string;
+    category: string[];
     role: string;
   }
 };
@@ -73,8 +74,19 @@ export type ShowUsersResponse = {
   data: {users:User[]}
 }
 
+export type RequestShowUserRole = {
+   token: {jwt:string},
+   input: {username:string,}
+}
+
+export type ShowUserRoleResponse = {
+  status: number,
+  data: User,
+}
+
 export type User = {
   username: string,
+  display: string,
   email: string,
   role: string,
 }
@@ -86,11 +98,11 @@ export interface UserProps {
 export type RequestModAccount = {
   token: {jwt:string;}
   input: {
-    username:string;
-    email:string,
+    username:string,
+    country: string,
+    birth: number,
     bio:string,
-    country?: string,
-    birth?: number,
+    email:string,
   }
 }
 
@@ -109,14 +121,18 @@ export type RequestUserInformation = {
 
 export type UserInformationResponse = {
   status: number,
-  data: {username: string,
-  email: string,
-  role: string,
-  creation_time: number,
-  display: string,
-  oldnames: String[],
-  friendship: string,
-  bio: string,
+  data: {
+    username: string,
+    email: string,
+    role: string,
+    creation_time: number,
+    birth: number,
+    display: string,
+    bio: string,
+    country: string,
+    category: string[],
+    oldnames: string[],
+    friendship: string,
   }
 }
 
@@ -129,7 +145,8 @@ export type RequestFindUser = {
 
 export type FindUserResponse = {
   status: number,
-  data: {found:string[];}
+  data: {
+    found: User[]}
 }
 
 export type RequestChangePassword = {
@@ -258,13 +275,15 @@ export type EventItem = {
   durationMinutes: number;
   organizerUsername: string;
   maxAttendees: number;
+  minAttendees: number;
   attendeeCount: number;
   isPublic: boolean;
   status: string;
   createdAt: number;
+  partners: string[];
   imageUrls: Image[];
   isAccessible: boolean;
-  SDG: number[];
+  sdg: number[];
   lat: number;
   lng: number,
 };
@@ -310,13 +329,14 @@ export type EventGetterResponse = {
 
 export type RequestEventList = {
   token?: {jwt:string;}
-  input:{category?: string;
-  status?: string;
-  organizerUsername?: string;
-  pageSize: number;
-  cursor?: string;
-  isAccessible?: boolean,
-  SDG?: number[]},
+  input:{
+    category: string | null;
+    status: string | null;
+    organizerUsername: string | null;
+    pageSize: number | null;
+    cursor: string | null;
+    isAccessible: boolean | null,
+    sdg: number[]},
 };
 
 export type EventListResponse = {
@@ -341,7 +361,7 @@ export type RequestEventUpdate = {
     minAttendees: number,
     public: boolean,
     isAccessible?: boolean,
-    SDG?: number[]
+    sdg?: number[]
     lat: number | null,
     lng: number | null,
   }
@@ -448,7 +468,7 @@ export type RequestIsAttendee = {
 export type IsAttendeeResponse = {
   status: number,
   data:{
-    eventId: boolean,
+    isattendee: boolean,
   }
 }
 
@@ -460,9 +480,9 @@ export type RequestUserAttends = {
 export type UserAttendsResponse = {
   status: number,
   data:{
-    myAttends: Attends[],
+    myattends: Attends[],
+    count: number,
   },
-  count: number,
 }
 
 export type Attends = {
@@ -518,18 +538,20 @@ export type ImageDeleteResponse = {
 }
 
 export type FilterProps = {
-  category?: string,
-  status?: string,
-  organizerUsername?: string,
-  isAccessible?: boolean,
-  sdg?: number[]
+  category: string | null;
+  status: string | null;
+  organizerUsername: string | null;
+  isAccessible: boolean | null;
+  sdg: number[] | null;
 };
 
 //========== Forum ==========
 
 export type RequestPostMessage = {
   token?: {jwt:string}
-  input: {eventId:string,
+  input: {
+    id: string,
+    type: string,
     text: string,
     parentPostId: string,
   },
@@ -549,9 +571,12 @@ export type PostMessageResponse = {
 
 export type RequestListMessages = {
   token?: {jwt:string},
-  input:{eventId: string,
-  pageSize?: number,
-  cursor?: string,}
+  input:{
+    id: string,
+    type: string,
+    pageSize?: number,
+    cursor?: string,
+  }
 }
 
 export type ListMessagesResponse = {

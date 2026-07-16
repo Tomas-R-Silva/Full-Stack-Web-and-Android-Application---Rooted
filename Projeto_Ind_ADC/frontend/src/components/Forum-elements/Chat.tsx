@@ -54,7 +54,8 @@ function Chat({ event }: EventProps) {
           jwt: token,
         },
         input: {
-          eventId: eventId,
+          id: eventId,
+          type: "EVENT",
           pageSize: 50,
           cursor: "",
         },
@@ -101,7 +102,8 @@ function Chat({ event }: EventProps) {
           jwt: token,
         },
         input: {
-          eventId: event.eventId,
+          id: event.eventId,
+          type: "EVENT",
           text: post,
           parentPostId: parentId,
         },

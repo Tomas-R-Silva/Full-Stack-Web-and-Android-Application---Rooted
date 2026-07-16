@@ -415,7 +415,7 @@ function EventForm() {
               className={`form-control  ${errors.startDate ? "is-invalid" : ""}`}
               value={
                 formData.input.startDate
-                  ? new Date(formData.input.startDate * 1000)
+                  ? new Date(formData.input.startDate / 1000)
                       .toISOString()
                       .slice(0, 16)
                   : ""

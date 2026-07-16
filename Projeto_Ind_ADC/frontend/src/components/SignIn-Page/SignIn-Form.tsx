@@ -13,6 +13,7 @@ function SignInForm() {
       password: "",
       email: "",
       confirmation: "",
+      category: [],
       role: "USER",
     },
   });

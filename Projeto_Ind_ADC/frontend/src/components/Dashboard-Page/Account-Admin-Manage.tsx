@@ -241,6 +241,7 @@ function AccountAdminManage({ user }: UserProps) {
                 }}
               >
                 <option value="USER">USER</option>
+                <option value="PARTNER">PARTNER</option>
                 <option value="BOFFICER">BACKOFFICER</option>
                 <option value="ADMIN">ADMIN</option>
               </select>

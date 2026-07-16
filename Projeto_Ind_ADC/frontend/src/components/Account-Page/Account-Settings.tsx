@@ -106,6 +106,7 @@ function AccountSettings() {
                 />
               </div>
             ))}
+            <div className="mb-5"></div>
           </div>
           <div className="col-lg-8">
             {selected === profileItems[0] && <AccountInformation />}

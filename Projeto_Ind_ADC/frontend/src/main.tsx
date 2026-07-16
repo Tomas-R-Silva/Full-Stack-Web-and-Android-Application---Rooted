@@ -20,6 +20,8 @@ import DashboardBO from "./components/Dashboard-Page/Dashboard-Backoffice.tsx";
 import PublicPage from "./components/Account-Page/Public-Page.tsx";
 import EventUpdater from "./components/Events-Page/Event-Updater.tsx";
 import EventJoins from "./components/Events-Page/Event-Joins.tsx";
+import AboutUsPage from "./components/AboutUs-Page/AboutUs-page.tsx";
+import SocialPage from "./components/Social-Page/Social-Page.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -66,8 +68,9 @@ createRoot(document.getElementById("root")!).render(
             }
           />
           <Route path="/maps" element={<MapsPage />} />
+          <Route path="/social" element={<SocialPage />} />
           <Route path="/faq" element={<FaqPage />} />
-          <Route path="/maps" element={<MapsPage />} />
+          <Route path="/aboutus" element={<AboutUsPage />} />
           <Route path="/sdg" element={<SDGoverall />} />
           <Route path="/sdg/:id" element={<SDGelements />} />
         </Routes>

@@ -97,11 +97,12 @@
     <span class="key-str">"email"</span>:        <span class="val-str">"alice@mail.com"</span>,
     <span class="key-str">"password"</span>:     <span class="val-str">"Password123!"</span>,
     <span class="key-str">"confirmation"</span>: <span class="val-str">"Password123!"</span>,
-    <span class="key-str">"role"</span>:         <span class="val-str">"USER"</span>   <span class="comment">// USER | BOFFICER | ADMIN</span>
+    <span class="key-str">"category"</span>:     [<span class="key-str">"TECH"</span>, <span class="key-str">"COMMUNITY"</span>, <span class="key-str">"FOOD"</span>],
+    <span class="key-str">"role"</span>:         <span class="val-str">"USER"</span>   <span class="comment">// USER | PARTNER | BOFFICER | ADMIN</span>
   }
 }</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> } }</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"message"</span>: <span class="val-str">"Account created"</span>} }</pre>
 </div>
 
 <div class="endpoint">
@@ -183,6 +184,9 @@
   <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
     <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"birth"</span>:    <span class="val-num">110500600</span>,
+    <span class="key-str">"country"</span>:  <span class="val-str">"Portugal"</span>,
+    <span class="key-str">"category"</span>: [<span class="key-str">"TECH"</span>, <span class="key-str">"COMMUNITY"</span>, <span class="key-str">"FOOD"</span>],
     <span class="key-str">"bio"</span>:      <span class="val-str">"adoro gelado!"</span>,
     <span class="key-str">"email"</span>:    <span class="val-str">"alice@mail.com"</span>
   }
@@ -207,7 +211,11 @@
     <span class="key-str">"email"</span>:         <span class="val-str">"alice@mail.com"</span>,
     <span class="key-str">"role"</span>:          <span class="val-str">"USER"</span>,   <span class="comment">// USER | BOFFICER | ADMIN</span>
     <span class="key-str">"creation_time"</span>: <span class="val-num">123841841</span>,
+    <span class="key-str">"birth"</span>:         <span class="val-num">110500600</span>,
     <span class="key-str">"display"</span>:       <span class="val-str">"myfriendalice"</span>,
+    <span class="key-str">"bio"</span>:           <span class="val-str">"here to make friends"</span>,
+    <span class="key-str">"country"</span>:       <span class="val-str">"Portugal"</span>,
+    <span class="key-str">"category"</span>:      [<span class="key-str">"TECH"</span>, <span class="key-str">"COMMUNITY"</span>, <span class="key-str">"FOOD"</span>],
     <span class="key-str">"oldnames"</span>:      [<span class="key-str">"@l1c3"</span>, <span class="key-str">"Newalice"</span>],
     <span class="key-str">"friendship"</span>:    <span class="val-str">"FRIENDS"</span> 
       <span class="comment">// NOT_FRIENDS | FRIENDS | REQUEST_SENT | REQUEST_RECIVED | SELF</span>
@@ -220,13 +228,16 @@
     <span class="method">POST</span>
     <span class="path">/find</span>
     <span class="tag tag-auth">auth required</span>
-    <span class="note">USER</span>
   </div>
-  <p class="desc">Finds a user by username or display name.(not implemented)</p>
+  <p class="desc">Finds a user by username or display name.</p>
   <div class="label">Request</div>
- <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
+  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"found"</span>: [<span class="val-str">"alice"</span>, <span class="val-str">"alice42"</span> ]}}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"found"</span>: [
+    { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"display"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"USER"</span> },
+    { <span class="key-str">"username"</span>: <span class="val-str">"alice42"</span>, <span class="key-str">"display"</span>: <span class="val-str">"alice"</span>, <span class="key-str">"email"</span>: <span class="val-str">"alice42@mail.com"</span>, <span class="key-str">"role"</span>: <span class="val-str">"ADMIN"</span> }
+  ]
+}}</pre>
 </div>
 
 <div class="endpoint">
@@ -418,13 +429,15 @@
     <span class="key-str">"description"</span>:     <span class="val-str">"Uma noite incrível"</span>,
     <span class="key-str">"category"</span>:        <span class="val-str">"MUSIC"</span>,        <span class="comment">// MUSIC|SPORTS|TECH|ART|FOOD|BUSINESS|COMMUNITY|OTHER</span>
     <span class="key-str">"location"</span>:        <span class="val-str">"Lisboa"</span>,
+    <span class="key-str">"lat"</span>:             <span class="val-num">32.323</span>,
+    <span class="key-str">"lng"</span>:             <span class="val-num">32.32323</span>,
     <span class="key-str">"startDate"</span>:       <span class="val-num">1760000000</span>,    <span class="comment">// epoch seconds</span>
     <span class="key-str">"durationMinutes"</span>: <span class="val-num">120</span>,
     <span class="key-str">"maxAttendees"</span>:    <span class="val-num">50</span>,            <span class="comment">// 0 = unlimited</span>
     <span class="key-str">"minAttendees"</span>:    <span class="val-num">0</span>,
     <span class="key-str">"isPublic"</span>:        <span class="val-bool">true</span>,
     <span class="key-str">"isAccessible"</span>:    <span class="val-bool">true</span>,
-    <span class="key-str">"sdq"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
+    <span class="key-str">"sdg"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
@@ -453,17 +466,21 @@
     <span class="key-str">"description"</span>:       <span class="val-str">"Uma noite incrível"</span>,
     <span class="key-str">"category"</span>:          <span class="val-str">"MUSIC"</span>,
     <span class="key-str">"location"</span>:          <span class="val-str">"Lisboa"</span>,
+    <span class="key-str">"lat"</span>:               <span class="val-num">32.323</span>,
+    <span class="key-str">"lng"</span>:               <span class="val-num">32.32323</span>,
     <span class="key-str">"startDate"</span>:         <span class="val-num">1760000000</span>,
     <span class="key-str">"durationMinutes"</span>:   <span class="val-num">120</span>,
     <span class="key-str">"organizerUsername"</span>: <span class="val-str">"alice"</span>,
     <span class="key-str">"maxAttendees"</span>:      <span class="val-num">50</span>,
+    <span class="key-str">"minAttendees"</span>:      <span class="val-num">2</span>,
     <span class="key-str">"attendeeCount"</span>:     <span class="val-num">3</span>,
     <span class="key-str">"isPublic"</span>:          <span class="val-bool">true</span>,
     <span class="key-str">"status"</span>:            <span class="val-str">"UPCOMING"</span>,
     <span class="key-str">"createdAt"</span>:         <span class="val-num">1759000000</span>,
+    <span class="key-str">"partners"</span>:          [ <span class="val-str">"mcdonalds"</span> ],
     <span class="key-str">"imageUrls"</span>:         [ { <span class="key-str">"id"</span>: <span class="val-str">"a1b2c3"</span>, <span class="key-str">"url"</span>: <span class="val-str">"https://storage.googleapis.com/adc-final-events/uuid2"</span> } ],
     <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
-    <span class="key-str">"sdq"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
+    <span class="key-str">"sdg"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }}</pre>
 </div>
@@ -485,7 +502,7 @@
     <span class="key-str">"pageSize"</span>:          <span class="val-num">10</span>,
     <span class="key-str">"cursor"</span>:            <span class="val-bool">null</span>,            <span class="comment">// use nextCursor from a previous </span>
     <span class="key-str">"isAccessible"</span>:      <span class="val-bool">true</span>,
-    <span class="key-str">"sdq"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
+    <span class="key-str">"sdg"</span>:               [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
@@ -513,16 +530,55 @@
     <span class="key-str">"description"</span>:     <span class="val-str">"..."</span>,
     <span class="key-str">"category"</span>:        <span class="val-str">"ART"</span>,
     <span class="key-str">"location"</span>:        <span class="val-str">"Porto"</span>,
+    <span class="key-str">"lat"</span>:             <span class="val-num">32.323</span>,
+    <span class="key-str">"lng"</span>:             <span class="val-num">32.32323</span>,
     <span class="key-str">"startDate"</span>:       <span class="val-num">1760500000</span>,
     <span class="key-str">"durationMinutes"</span>: <span class="val-num">90</span>,
     <span class="key-str">"maxAttendees"</span>:    <span class="val-num">80</span>,
+    <span class="key-str">"minAttendees"</span>:    <span class="val-num">10</span>,
     <span class="key-str">"isPublic"</span>:        <span class="val-bool">false</span>,
     <span class="key-str">"isAccessible"</span>:    <span class="val-bool">true</span>,
-    <span class="key-str">"sdq"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
+    <span class="key-str">"sdg"</span>:             [ <span class="val-num">8</span>,<span class="val-num">15</span> ]
   }
 }</pre>
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event updated successfully"</span> }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/addpartner</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <p class="desc">Adds a partner to a specific event.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, 
+  <span class="key-str">"input"</span>: { 
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+  }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"message"</span>: <span class="val-str">"Partner added to event"</span>} }</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
+    <span class="path">/events/removepartner</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <p class="desc">Removes a partner from a specific event.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, 
+  <span class="key-str">"input"</span>: { 
+    <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
+    <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>
+  }}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="key-str">"message"</span>: <span class="val-str">"Partner removed to event"</span>} }</pre>
 </div>
 
 <div class="endpoint">
@@ -653,7 +709,7 @@
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"myattends"</span>: [
-    { <span class="key-str">"event_id"</span>: <span class="val-str">"uuid"</span>, <span class="key-str">"joinedAt"</span>: <span class="val-num">1759500000</span> }
+    { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span>, <span class="key-str">"joinedAt"</span>: <span class="val-num">1759500000</span> }
   ],
   <span class="key-str">"count"</span>: <span class="val-num">1</span>
 }}</pre>
@@ -765,24 +821,43 @@
     <span class="path">/forum/post</span>
     <span class="tag tag-auth">auth required</span>
   </div>
-  <p class="desc">Publishes a message in an event's forum. Any authenticated user can post (organizer not required). Blocked if the event is CANCELLED or COMPLETED.</p>
+  <p class="desc">Publishes a message in a forum. Any authenticated user can post (organizer not required). Blocked if the event is CANCELLED or COMPLETED.</p>
   <div class="label">Request</div>
-  <pre>{
-  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
-    <span class="key-str">"eventId"</span>:      <span class="val-str">"uuid"</span>,
+    <span class="key-str">"id"</span>:           <span class="val-str">"uuid"</span>,
+    <span class="key-str">"type"</span>:         <span class="val-str">"EVENT"</span>, <span class="comment">// EVENT | FRIEND </span>
     <span class="key-str">"text"</span>:         <span class="val-str">"Alguém vai de carro?"</span>,   <span class="comment">// 1..1000 chars</span>
     <span class="key-str">"parentPostId"</span>: <span class="val-bool">null</span>      <span class="comment">// optional: postId being replied to (thread)</span>
-  }
-}</pre>
+}}</pre>
+
+  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
+  <span class="key-str">"input"</span>: {
+    <span class="key-str">"id"</span>:           <span class="val-str">"joao"</span>,
+    <span class="key-str">"type"</span>:         <span class="val-str">"FRIEND"</span>, <span class="comment">// EVENT | FRIEND </span>
+    <span class="key-str">"text"</span>:         <span class="val-str">"ja vistes o novo evento de football?"</span>,   <span class="comment">// 1..1000 chars</span>
+    <span class="key-str">"parentPostId"</span>: <span class="val-bool">null</span>      <span class="comment">// optional: postId being replied to (thread)</span>
+}}</pre>
+
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"postId"</span>:         <span class="val-str">"9c2b-...-uuid"</span>,
   <span class="key-str">"eventId"</span>:        <span class="val-str">"uuid"</span>,
+  <span class="key-str">"type"</span>:           <span class="val-str">"EVENT"</span>,
   <span class="key-str">"authorUsername"</span>: <span class="val-str">"alice"</span>,
   <span class="key-str">"text"</span>:           <span class="val-str">"Alguém vai de carro?"</span>,
   <span class="key-str">"createdAt"</span>:      <span class="val-num">1750531234</span>,
-  <span class="key-str">"parentPostId"</span>:   <span class="val-bool">null</span>
+  <span class="key-str">"parentPostId"</span>:   <span class="val-str">""</span>
+}}</pre>
+
+  <pre>{<span class="key-str">"status"</span>:   <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
+  <span class="key-str">"postId"</span>:         <span class="val-str">"6t3g-...-uuid"</span>,
+  <span class="key-str">"friendId"</span>:       <span class="val-str">"joao"</span>,
+  <span class="key-str">"type"</span>:           <span class="val-str">"FRIEND"</span>,
+  <span class="key-str">"authorUsername"</span>: <span class="val-str">"alice"</span>,
+  <span class="key-str">"text"</span>:           <span class="val-str">"ja vistes o novo evento de football?"</span>,
+  <span class="key-str">"createdAt"</span>:      <span class="val-num">1750531234</span>,
+  <span class="key-str">"parentPostId"</span>:   <span class="val-str">""</span>
 }}</pre>
 </div>
 
@@ -797,25 +872,27 @@
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
-    <span class="key-str">"eventId"</span>:  <span class="val-str">"uuid"</span>,
+    <span class="key-str">"id"</span>:       <span class="val-str">"uuid"</span>,
+    <span class="key-str">"type"</span>:     <span class="val-str">"EVENT"</span>,   <span class="comment">// EVENT | FRIEND </span>
     <span class="key-str">"pageSize"</span>: <span class="val-num">50</span>,        <span class="comment">// optional, default 50, max 100</span>
-    <span class="key-str">"cursor"</span>:   <span class="val-bool">null</span>       <span class="comment">// optional, from a previous nextCursor</span>
+    <span class="key-str">"cursor"</span>:   <span class="val-bool">null</span>      <span class="comment">// optional, from a previous nextCursor</span>
   }
 }</pre>
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
-  <span class="key-str">"posts"</span>: [
+  <span class="key-str">"posts"</span>: [ {<span class="comment">/* same shape as /forum/post */</span>},
     {
-      <span class="key-str">"postId"</span>:       <span class="val-str">"9c2b-..."</span>,
-      <span class="key-str">"eventId"</span>:      <span class="val-str">"uuid"</span>,
+      <span class="key-str">"postId"</span>:         <span class="val-str">"9c2b-..."</span>,
+      <span class="key-str">"type"</span>:           <span class="val-str">"EVENT"</span>,
+      <span class="key-str">"eventId"</span>:        <span class="val-str">"uuid"</span>,   <span class="comment">// if type is "FRIEND" then the name is "friendId"</span>
       <span class="key-str">"authorUsername"</span>: <span class="val-str">"alice"</span>,
-      <span class="key-str">"text"</span>:         <span class="val-str">"Olá malta!"</span>,
-      <span class="key-str">"createdAt"</span>:    <span class="val-num">1750531234</span>,
-      <span class="key-str">"parentPostId"</span>: <span class="val-bool">null</span>
+      <span class="key-str">"text"</span>:           <span class="val-str">"Olá malta!"</span>,
+      <span class="key-str">"createdAt"</span>:      <span class="val-num">1750531234</span>,
+      <span class="key-str">"parentPostId"</span>:   <span class="val-str">""</span>
     }
   ],
-  <span class="key-str">"count"</span>:      <span class="val-num">1</span>,
-  <span class="key-str">"nextCursor"</span>: <span class="val-str">"Cj0KFR...urlsafe"</span>   <span class="comment">// present only when the page is full</span>
+  <span class="key-str">"count"</span>:      <span class="val-num">2</span>,
+  <span class="key-str">"nextCursor"</span>: <span class="val-str">"Cj0KFR...urlsafe"</span> <span class="comment">// present only when the page is full</span>
 }}</pre>
 </div>
 
@@ -828,7 +905,8 @@
   </div>
   <p class="desc">Deletes a single forum post.</p>
   <div class="label">Request</div>
-  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: <span class="val-str">"9c2b-...-uuid"</span> }   <span class="comment">// input = the postId to delete</span></pre>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: {<span class="key-str">"forumKey"</span>: <span class="val-str">"9c2b-...-uuid"</span>} }  
+  <span class="comment">// input = the postId to delete</span></pre>
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Post deleted successfully"</span> }}</pre>
 </div>
@@ -886,6 +964,14 @@
     <tr><td>9932</td><td>Forum post not found</td></tr>
     <tr><td>9933</td><td>SDG does not exist(n>17 || n<1)</td></tr>
     <tr><td>9934</td><td>You are not friends with this user</td></tr>
+    <tr><td>9935</td><td>Partner already in the event</td></tr>
+    <tr><td>9936</td><td>Partner not in the event</td></tr>
+    <tr><td>9937</td><td>Forum origen is invalid (event not found) / (not friendship)</td></tr>
+    <tr><td>9938</td><td>not enough SDGs</td></tr>
+    <tr><td>9939</td><td>Cleanup forbidden</td></tr>
+    <tr><td>9940</td><td>Cannot edit cancelled event</td></tr>
+    <tr><td>9941</td><td>Wrong password</td></tr>
+    <tr><td>9942</td><td>User is not a partner</td></tr>    
   </table>
 </div>
 

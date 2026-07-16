@@ -68,7 +68,7 @@ function EventUpdater() {
       minAttendees: -1,
       public: false,
       isAccessible: false,
-      SDG: [],
+      sdg: [],
       lat: null,
       lng: null,
     },
@@ -85,7 +85,7 @@ function EventUpdater() {
     minAttendees: "",
     public: "",
     isAccessible: "",
-    SDG: "",
+    sdg: "",
     lat: "",
     lng: "",
   });
@@ -498,17 +498,17 @@ function EventUpdater() {
         startDate: event.startDate,
         durationMinutes: event.durationMinutes,
         maxAttendees: event.maxAttendees,
-        minAttendees: 0,
+        minAttendees: event.minAttendees,
         public: event.isPublic,
         isAccessible: event.isAccessible ?? false,
-        SDG: event.SDG ?? [],
+        sdg: event.sdg ?? [],
         lat: event.lat,
         lng: event.lng,
       },
     });
 
     setOriginalLocation(event.location);
-    setSelectedSDGs(event.SDG ?? []);
+    setSelectedSDGs(event.sdg ?? []);
     setSelectedImages(event.imageUrls ?? []);
   }, [event]);
 
