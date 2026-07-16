@@ -459,7 +459,7 @@ export type RequestIsAttendee = {
 export type IsAttendeeResponse = {
   status: number,
   data:{
-    eventId: boolean,
+    isattendee: boolean,
   }
 }
 

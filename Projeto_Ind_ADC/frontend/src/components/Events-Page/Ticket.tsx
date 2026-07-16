@@ -112,7 +112,7 @@ function Ticket({ event }: EventProps) {
       };
       console.log(payload);
       const response = await isAttendee(payload);
-      setIsAttendee(response.data.eventId);
+      setIsAttendee(response.data.isattendee);
       console.log(response);
     } catch (err) {
       console.log("Something went wrong!");
