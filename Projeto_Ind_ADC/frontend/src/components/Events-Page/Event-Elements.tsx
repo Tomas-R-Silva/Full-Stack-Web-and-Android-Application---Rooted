@@ -6,7 +6,6 @@ import type {
   RequestEventGetter,
   EventGetterResponse,
   EventItem,
-  RequestEventUpdate,
 } from "../../utils/types";
 import { getEvent } from "../../api/auth";
 import placeholder from "../../assets/images/placeholder.png";
@@ -14,7 +13,6 @@ import "./Event-Elements.css";
 import { useAuth } from "../AuthContext";
 import editSquare_w from "../../assets/icons/edit_square_white.svg";
 import manageAccounts_w from "../../assets/icons/manage_accounts_w.svg";
-import EventUpdater from "./Event-Updater";
 import Chat from "../Forum-elements/Chat";
 import { useMapsPage } from "../../api/maps";
 import { getUser } from "../../api/auth";
@@ -27,11 +25,8 @@ function EventElements() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventItem | undefined>();
   const { isAuthenticated, username } = useAuth();
-  const [showModal, setShowModal] = useState(false);
   const eventMapRef = useRef<HTMLDivElement | null>(null);
   const { renderEventMap } = useMapsPage(import.meta.env.VITE_API_KEY);
-  type UpdateField = keyof RequestEventUpdate["input"];
-  const [field, setField] = useState<UpdateField>("title");
   const [user, setUser] = useState<UserInformationResponse>();
   const navigate = useNavigate();
   const sdgs = [1, 10, 17];

@@ -63,7 +63,7 @@ function EventUpdater() {
       minAttendees: -1,
       public: false,
       isAccessible: false,
-      SDG: [],
+      sdg: [],
     },
   });
   const [errors, setErrors] = useState<ErrorState>({
@@ -78,7 +78,7 @@ function EventUpdater() {
     minAttendees: "",
     public: "",
     isAccessible: "",
-    SDG: "",
+    sdg: "",
   });
 
   //========== Handles: Receber Input e Limpar erros ==========
@@ -465,10 +465,10 @@ function EventUpdater() {
         startDate: event.startDate,
         durationMinutes: event.durationMinutes,
         maxAttendees: event.maxAttendees,
-        minAttendees: 0,
+        minAttendees: event.minAttendees,
         public: event.isPublic,
         isAccessible: event.isAccessible ?? false,
-        SDG: event.SDG ?? [],
+        sdg: event.SDG ?? [],
       },
     });
 

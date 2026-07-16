@@ -271,14 +271,18 @@ export type EventItem = {
   description: string;
   category: string;
   location: string;
+  lat: number;
+  lng: number;
   startDate: number;
   durationMinutes: number;
   organizerUsername: string;
   maxAttendees: number;
+  minAttendees: number;
   attendeeCount: number;
   isPublic: boolean;
   status: string;
   createdAt: number;
+  partners: string[];
   imageUrls: Image[];
   isAccessible: boolean,
   SDG: number[]
@@ -323,13 +327,14 @@ export type EventGetterResponse = {
 
 export type RequestEventList = {
   token?: {jwt:string;}
-  input:{category?: string;
-  status?: string;
-  organizerUsername?: string;
-  pageSize: number;
-  cursor?: string;
-  isAccessible?: boolean,
-  SDG?: number[]},
+  input:{
+    category: string | null;
+    status: string | null;
+    organizerUsername: string | null;
+    pageSize: number | null;
+    cursor: string | null;
+    isAccessible: boolean | null,
+    sdg: number[]},
 };
 
 export type EventListResponse = {
@@ -354,7 +359,7 @@ export type RequestEventUpdate = {
     minAttendees: number,
     public: boolean,
     isAccessible?: boolean,
-    SDG?: number[]
+    sdg?: number[]
   }
 }
 
@@ -529,11 +534,11 @@ export type ImageDeleteResponse = {
 }
 
 export type FilterProps = {
-  category?: string,
-  status?: string,
-  organizerUsername?: string,
-  isAccessible?: boolean,
-  sdg?: number[]
+  category: string | null;
+  status: string | null;
+  organizerUsername: string | null;
+  isAccessible: boolean | null;
+  sdg: number[] | null;
 };
 
 //========== Forum ==========

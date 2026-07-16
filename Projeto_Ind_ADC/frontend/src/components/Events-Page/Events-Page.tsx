@@ -19,11 +19,11 @@ function EventsPage() {
   const [showModal, setShowModal] = useState(false);
   const { isAuthenticated } = useAuth();
   const [filter, setFilter] = useState<FilterProps>({
-    category: undefined,
-    status: undefined,
-    organizerUsername: undefined,
-    isAccessible: false,
-    sdg: undefined,
+    category: null,
+    status: null,
+    organizerUsername: null,
+    isAccessible: null,
+    sdg: [],
   });
 
   const authenticatedToModal = () => {
@@ -95,7 +95,7 @@ function EventsPage() {
                 onChange={(e) =>
                   setFilter((prev) => ({
                     ...prev,
-                    organizerUsername: e.target.value || undefined,
+                    organizerUsername: e.target.value || null,
                   }))
                 }
               />
@@ -114,7 +114,7 @@ function EventsPage() {
                 onChange={(e) =>
                   setFilter((prev) => ({
                     ...prev,
-                    category: e.target.value || undefined,
+                    category: e.target.value || null,
                   }))
                 }
               >
@@ -164,14 +164,18 @@ function EventsPage() {
                           id={`sdg-${sdg.id}`}
                           checked={filter.sdg?.includes(sdg.id) ?? false}
                           onChange={(e) => {
-                            setFilter((prev) => ({
-                              ...prev,
-                              sdg: e.target.checked
+                            setFilter((prev) => {
+                              const newArray = e.target.checked
                                 ? [...(prev.sdg ?? []), sdg.id]
                                 : (prev.sdg ?? []).filter(
                                     (id) => id !== sdg.id,
-                                  ),
-                            }));
+                                  );
+
+                              return {
+                                ...prev,
+                                sdg: newArray.length > 0 ? newArray : null,
+                              };
+                            });
                           }}
                         />
 
@@ -201,7 +205,7 @@ function EventsPage() {
                 onChange={(e) =>
                   setFilter((prev) => ({
                     ...prev,
-                    status: e.target.value || undefined,
+                    status: e.target.value || null,
                   }))
                 }
               >
@@ -225,11 +229,11 @@ function EventsPage() {
                   className="form-check-input"
                   type="checkbox"
                   id="wheelchairAccessible"
-                  checked={filter.isAccessible}
+                  checked={filter.isAccessible ?? false}
                   onChange={(e) =>
                     setFilter((prev) => ({
                       ...prev,
-                      isAccessible: e.target.checked,
+                      isAccessible: e.target.checked ? true : null,
                     }))
                   }
                 />
@@ -259,11 +263,11 @@ function EventsPage() {
                 }}
                 onClick={() =>
                   setFilter({
-                    category: undefined,
-                    status: undefined,
-                    organizerUsername: undefined,
-                    isAccessible: undefined,
-                    sdg: undefined,
+                    category: null,
+                    status: null,
+                    organizerUsername: null,
+                    isAccessible: null,
+                    sdg: null,
                   })
                 }
               >

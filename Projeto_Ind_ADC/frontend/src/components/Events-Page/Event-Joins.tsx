@@ -352,7 +352,12 @@ function EventJoins() {
                 {user && (
                   <div
                     className="rounded-3 p-3"
-                    style={{ background: "var(--color-green2)" }}
+                    style={{
+                      background:
+                        managedUser?.username === event?.organizerUsername
+                          ? "var(--color-gold)"
+                          : "var(--color-green2)",
+                    }}
                   >
                     <div>
                       <span className="fw-semibold text-white">Username: </span>
@@ -386,16 +391,26 @@ function EventJoins() {
                         {user.data.country || "No country"}
                       </span>
                     </div>
-                    <div className="row g-3 mt-2">
+                    <div className="row mt-3">
                       <div>
-                        {!confirmKick && (
-                          <button
-                            className="btn btn-danger fw-bold px-4"
-                            onClick={() => setConfirmKick(true)}
+                        {managedUser?.username === event?.organizerUsername && (
+                          <div
+                            className="rounded-3 fw-bold px-4"
+                            style={{ background: "var(--color-white)" }}
                           >
-                            Kick {user.data.username}
-                          </button>
+                            Event Organizer
+                          </div>
                         )}
+                        {!confirmKick &&
+                          managedUser?.username !==
+                            event?.organizerUsername && (
+                            <button
+                              className="btn btn-danger fw-bold px-4"
+                              onClick={() => setConfirmKick(true)}
+                            >
+                              Kick {user.data.username}
+                            </button>
+                          )}
                         {confirmKick && (
                           <>
                             <button
