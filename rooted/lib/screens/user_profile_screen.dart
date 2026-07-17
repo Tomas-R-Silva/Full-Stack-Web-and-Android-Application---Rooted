@@ -330,9 +330,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   String _formatDate(dynamic epochSeconds) {
     if (epochSeconds == null || epochSeconds == 0) return '—';
-    final dt = DateTime.fromMillisecondsSinceEpoch((epochSeconds as int) * 1000);
-    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    try {
+      final dt = DateTime.fromMillisecondsSinceEpoch((epochSeconds as int) * 1000);
+      final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    } catch (_) {
+      return '—';
+    }
   }
 }
 

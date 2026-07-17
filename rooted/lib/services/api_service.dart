@@ -439,11 +439,11 @@ class ApiService {
 
   static int _normalizeTimestamp(dynamic value) {
     if (value == null) return 0;
-    // Backend might return seconds, milliseconds, or nanoseconds (10^9, 10^12, or 10^18)
-    // We normalize everything to SECONDS because the UI does value * 1000.
     int ts = (value as num).toInt();
-    if (ts > 1000000000000000) return ts ~/ 1000000000; // Nanoseconds -> Seconds
-    if (ts > 1000000000000) return ts ~/ 1000;       // Milliseconds -> Seconds
+    final magnitude = ts.abs();
+    if (magnitude > 1000000000000000) return ts ~/ 1000000000; // Nanoseconds -> Seconds
+    if (magnitude > 1000000000000) return ts ~/ 1000;       // Milliseconds -> Seconds
+    if (magnitude > 10000000000) return 0;
     return ts;
   }
 

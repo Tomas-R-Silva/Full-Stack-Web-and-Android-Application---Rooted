@@ -181,9 +181,9 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
       separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
         final user = _users[index] as Map<String, dynamic>;
-        final uname = user['user_name'] ?? 'Unknown';
-        final display = user['user_display'] ?? uname;
-        final role = user['user_role'] ?? 'USER';
+        final uname = user['username'] ?? 'Unknown';
+        final display = user['display'] ?? uname;
+        final role = user['role'] ?? 'USER';
 
         return ListTile(
           onTap: () => Navigator.push(
