@@ -238,6 +238,8 @@ class ApiService {
     required int durationMinutes,
     required int maxAttendees,
     required bool public,
+    required double latitude,
+    required double longitude,
     String? username,
     int minAttendees = 0,
     bool isAccessible = false,
@@ -264,6 +266,8 @@ class ApiService {
           'public': public,
           'accessible': isAccessible,
           'sdg': sdg,
+          'lat': latitude,
+          'lng': longitude,
         }
       }),
     );
@@ -318,8 +322,8 @@ class ApiService {
           'description': description,
           'category': category,
           'location': location,
-          'latitude': latitude,
-          'longitude': longitude,
+          'lat': latitude,
+          'lng': longitude,
           'startDate': startDate,
           'durationMinutes': durationMinutes,
           'maxAttendees': maxAttendees,

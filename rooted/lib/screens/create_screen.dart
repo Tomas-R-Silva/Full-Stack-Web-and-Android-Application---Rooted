@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import '../theme/app_theme.dart';
@@ -8,6 +10,7 @@ import '../widgets/location_autocomplete.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'home_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 class CreatePage extends StatefulWidget {
@@ -84,7 +87,7 @@ class _CreatePageState extends State<CreatePage> {
     'Life on Land', 'Peace & Justice', 'Partnerships'
   ];
 
-  final String _placesApiKey = 'AIzaSyAmYzNozAPQB27PHT4uP00qoBOg-cz7jdk';
+  final String _placesApiKey = dotenv.env['MAPS_API_KEY'] ?? '';
 
   Future<void> _pickEventImage() async {
     final picker = ImagePicker();
@@ -126,6 +129,34 @@ class _CreatePageState extends State<CreatePage> {
     super.dispose();
   }
 
+  final String mapsApiKey = dotenv.env['MAPS_API_KEY'] ?? '';
+
+  Future<LatLng> _geocodeLocation(String address) async {
+    try {
+      final uri = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$mapsApiKey',
+      );
+      final response = await http.get(uri);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to geocode location');
+      }
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final results = body['results'] as List<dynamic>?;
+      if (results == null || results.isEmpty) {
+        throw Exception('Failed to geocode location');
+      }
+
+      final location = results.first['geometry']['location'];
+      return LatLng(
+        (location['lat'] as num).toDouble(),
+        (location['lng'] as num).toDouble(),
+      );
+    } catch (_) {
+      throw Exception('Failed to geocode location');
+    }
+  }
+
   Future<void> _submitEvent() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -153,6 +184,7 @@ class _CreatePageState extends State<CreatePage> {
 
     try {
       String eventId;
+      LatLng? latLng = await _geocodeLocation(_locationController.text.trim());
       if (_createdEventId == null) {
         final result = await ApiService.createEvent(
           jwt: jwt,
@@ -161,6 +193,8 @@ class _CreatePageState extends State<CreatePage> {
           description: _descriptionController.text.trim(),
           category: _selectedCategory.toUpperCase(),
           location: _locationController.text.trim(),
+          latitude: latLng.latitude,
+          longitude: latLng.longitude,
           startDate: DateTime(
             _selectedDate!.year, _selectedDate!.month, _selectedDate!.day,
             _selectedTime!.hour, _selectedTime!.minute,

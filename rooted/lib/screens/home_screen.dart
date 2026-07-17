@@ -54,8 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Discover',
+            icon: Icon(Icons.map_outlined),
+            label: 'Map',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
