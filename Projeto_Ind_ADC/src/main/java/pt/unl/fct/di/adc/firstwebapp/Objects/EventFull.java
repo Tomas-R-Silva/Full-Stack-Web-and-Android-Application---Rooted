@@ -121,6 +121,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		map.put("durationMinutes", this.durationMinutes);
 		map.put("organizerUsername", Full.string(this.organizerUsername));
 		map.put("maxAttendees", this.maxAttendees);
+		map.put("minAttendees", this.getMinAttendees());
 		map.put("attendeeCount",attendee);
 		map.put("isPublic", this.isPublic);
 		map.put("status", this.status.name());
