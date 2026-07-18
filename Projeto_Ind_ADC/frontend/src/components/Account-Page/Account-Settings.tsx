@@ -10,6 +10,7 @@ import AccountEvents from "./Account-Events";
 import { useNavigate } from "react-router-dom";
 import AccountAttends from "./Account-Attends";
 import AccountRewards from "./Account-Rewards";
+import PreferedThemes from "./Prefered-Themes";
 
 function AccountSettings() {
   const profileItems = [
@@ -23,7 +24,7 @@ function AccountSettings() {
     "Claimed Rewards",
     "Recent Points",
   ];
-  const personalizationItems = ["Preferred SDG", "Preferred Themes"];
+  const personalizationItems = ["Preferred Themes"];
   const [selected, setSelected] = useState(profileItems[0]);
   const { username, role } = useAuth();
   const navigate = useNavigate();
@@ -163,6 +164,9 @@ function AccountSettings() {
               </div>
             )}
             {selected === profileItems[7] && username && <AccountRewards />}
+            {selected === personalizationItems[0] && username && (
+              <PreferedThemes />
+            )}
           </div>
         </div>
       </div>

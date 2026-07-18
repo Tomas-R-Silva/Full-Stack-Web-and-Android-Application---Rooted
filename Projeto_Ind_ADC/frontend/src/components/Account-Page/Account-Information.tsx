@@ -22,6 +22,9 @@ function AccountInformation() {
       username: username ?? "",
       email: "",
       bio: "",
+      country: "",
+      birth: 0,
+      category: [],
     },
   });
 
@@ -29,6 +32,9 @@ function AccountInformation() {
     username: "",
     email: "",
     bio: "",
+    country: "",
+    birth: "",
+    category: "",
   });
 
   const [passwordData, setPassowrdData] = useState<RequestChangePassword>({
@@ -80,6 +86,9 @@ function AccountInformation() {
       username: "",
       email: "",
       bio: "",
+      country: "",
+      birth: "",
+      category: "",
     };
 
     if (formData.input.email && !formData.input.email.includes("@")) {
@@ -151,6 +160,23 @@ function AccountInformation() {
     if (!username) return;
     loadUser(username);
   }, [username]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        username: user.data.username,
+        email: user.data.email ?? "",
+        bio: user.data.bio ?? "",
+        country: user.data.country ?? "",
+        birth: user.data.birth ?? 0,
+        category: user.data.category ?? [],
+      },
+    }));
+  }, [user]);
 
   return (
     <>

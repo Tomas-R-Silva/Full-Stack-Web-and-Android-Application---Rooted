@@ -103,6 +103,7 @@ export type RequestModAccount = {
     birth: number,
     bio:string,
     email:string,
+    category: string[],
   }
 }
 
