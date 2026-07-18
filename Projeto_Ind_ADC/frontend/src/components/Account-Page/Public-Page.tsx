@@ -17,9 +17,11 @@ import type { UnfriendResponse } from "../../utils/types";
 import EventCard from "../Events-Page/Event-Card";
 import { addFriend, unfriend } from "../../api/auth";
 import verified from "../../assets/icons/verified_w.svg";
+import { useNotification } from "../NotificationContext";
 
 function PublicPage() {
   const { username } = useParams<{ username: string }>();
+  const { notify } = useNotification();
   const [nickname, setNickname] = useState<string>("");
   const [showNicknameInput, setShowNicknameInput] = useState<boolean>(false);
   const [user, setUser] = useState<UserInformationResponse>();
@@ -72,6 +74,9 @@ function PublicPage() {
         },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("NICKNAME_ADDED");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -158,6 +163,14 @@ function PublicPage() {
       });
       console.log(res.data.message);
       window.location.reload();
+      if (res.status === 200) {
+        if (res.data.message.includes("Sent")) {
+          notify("FRIEND_REQUEST_SENDED");
+        }
+        if (res.data.message.includes("Accepted")) {
+          notify("FRIEND_REQUEST_ACCEPTED");
+        }
+      }
     } catch (err) {
       console.error(err);
     }
@@ -181,6 +194,9 @@ function PublicPage() {
       });
       console.log(res.data.message);
       window.location.reload();
+      if (res.status === 200) {
+        notify("UNFRIEND");
+      }
     } catch (err) {
       console.error(err);
     }

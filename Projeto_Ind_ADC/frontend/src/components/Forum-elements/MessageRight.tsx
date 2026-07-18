@@ -5,11 +5,13 @@ import { DeleteMessage, getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
+import { useNotification } from "../NotificationContext";
 
 function MessageRight(texts: MessageProps) {
   const { username, role } = useAuth();
   const [user, setUser] = useState<UserInformationResponse>();
   const sdgs = [1, 10, 17];
+  const { notify } = useNotification();
 
   const handleTime = (timestamp: number): string => {
     const date = new Date(timestamp / 1000);
@@ -39,6 +41,9 @@ function MessageRight(texts: MessageProps) {
       });
       console.log(res.data.message);
       window.location.reload();
+      if (res.status === 200) {
+        notify("MESSAGE_DELETED");
+      }
     } catch (err) {
       console.error(err);
     }

@@ -33,6 +33,7 @@ import NavBar from "../NavBar/NavBar";
 import type { Image } from "../../utils/types";
 import { useMapsPage } from "../../api/maps";
 import { usePlacesAutocomplete } from "../../api/places";
+import { useNotification } from "../NotificationContext";
 
 type ErrorState = {
   [K in keyof RequestEventUpdate["input"]]: string;
@@ -58,6 +59,7 @@ function EventUpdater() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [partner, setPartner] = useState<string>();
   const navigate = useNavigate();
+  const { notify } = useNotification();
   const [event, setEvent] = useState<EventItem>();
   const [originalLocation, setOriginalLocation] = useState<string>("");
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
@@ -307,6 +309,9 @@ function EventUpdater() {
         },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("PARTNER_ADDED");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -332,6 +337,9 @@ function EventUpdater() {
         },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("PARTNER_REMOVED");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -451,6 +459,7 @@ function EventUpdater() {
       const response = await updateEvent(payload);
       console.log(response);
       window.location.reload();
+      notify("EVENT_UPDATED");
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -484,6 +493,7 @@ function EventUpdater() {
       console.log(response);
       navigate("/events/" + event.eventId);
       window.location.reload();
+      notify("EVENT_CANCELED");
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -517,6 +527,7 @@ function EventUpdater() {
       console.log(response);
       navigate("/events");
       window.location.reload();
+      notify("EVENT_DELETED");
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -550,6 +561,7 @@ function EventUpdater() {
       console.log(response);
       navigate("/events");
       window.location.reload();
+      notify("EVENT_COMPLETED");
     } catch (err) {
       console.log("Something went wrong!");
     }

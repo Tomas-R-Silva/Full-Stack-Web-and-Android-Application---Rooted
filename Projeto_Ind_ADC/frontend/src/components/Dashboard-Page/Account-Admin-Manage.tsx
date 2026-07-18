@@ -2,10 +2,12 @@ import type { RequestDeleteAccount, UserProps } from "../../utils/types";
 import { useState, useEffect } from "react";
 import type { RequestChangeRole } from "../../utils/types";
 import { deleteAccount, changeRole } from "../../api/auth";
+import { useNotification } from "../NotificationContext";
 
 function AccountAdminManage({ user }: UserProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newRole, setNewRole] = useState(user.role);
+  const { notify } = useNotification();
 
   const handleNewRole = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -37,6 +39,9 @@ function AccountAdminManage({ user }: UserProps) {
       const responseRole = await changeRole(payloadRole);
       console.log(responseRole);
       window.location.reload();
+      if (responseRole.status === 200) {
+        notify("ACCOUNT_UPDATED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -63,6 +68,9 @@ function AccountAdminManage({ user }: UserProps) {
       const response = await deleteAccount(payload);
       console.log(response);
       window.location.reload();
+      if (response.status === 200) {
+        notify("ACCOUNT_DELETED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }

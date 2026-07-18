@@ -1,20 +1,18 @@
 import { useState, useEffect } from "react";
-import type { RequestAddFriend, AddFriendResponse } from "../../utils/types";
-import type { RequestUnfriend, UnfriendResponse } from "../../utils/types";
-import type {
-  RequestFriendsList,
-  FriendsListResponse,
-} from "../../utils/types";
+import type { UnfriendResponse } from "../../utils/types";
+import type { FriendsListResponse } from "../../utils/types";
 import type { Friend } from "../../utils/types";
 import { useAuth } from "../AuthContext";
 import { getFriendsList, unfriend } from "../../api/auth";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
 import personRemove_w from "../../assets/icons/person_remove_w.svg";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../NotificationContext";
 
 function FriendsList() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const { username } = useAuth();
+  const { notify } = useNotification();
   const navigate = useNavigate();
 
   const loadFriends = async () => {
@@ -58,6 +56,9 @@ function FriendsList() {
         input: { username: friendToDelete },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("UNFRIEND");
+      }
     } catch (err) {
       console.error(err);
     }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { StepProps } from "../../utils/types";
 import { registerUser } from "../../api/auth";
 import SignInModal from "./SignIn-Modal";
+import { useNotification } from "../NotificationContext";
 
 function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   const categories = [
@@ -20,7 +21,7 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const [errors, setErrors] = useState({});
   const [showSignIn, setShowSignIn] = useState(false);
-
+  const { notify } = useNotification();
   const navigate = useNavigate();
   const [response, setResponse] = useState<any>(null);
 
@@ -44,6 +45,7 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
       setResponse(response);
       console.log(response);
       setShowSignIn(true);
+      notify("ACCOUNT_CREATED");
     } catch (err) {
       setResponse(err);
       setErrors(err instanceof Error ? err.message : "Something went wrong");

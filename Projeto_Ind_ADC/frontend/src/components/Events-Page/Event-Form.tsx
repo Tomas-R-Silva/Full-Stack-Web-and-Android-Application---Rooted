@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { usePlacesAutocomplete } from "../../api/places";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useMapsPage } from "../../api/maps";
+import { useNotification } from "../NotificationContext";
 
 type ErrorState = {
   [K in keyof RequestEventCreation["input"]]: string;
@@ -67,6 +68,7 @@ function EventForm() {
 
   //========== Receber Input e Limpar erros ==========
   const navigate = useNavigate();
+  const { notify } = useNotification();
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -269,8 +271,11 @@ function EventForm() {
       const response = await createEvent(payload);
       console.log(response);
       handleImagesUpload(response.data.eventId);
-      //navigate("/events/" + response.data.eventId);
-      //window.location.reload();
+      navigate("/events/" + response.data.eventId);
+      window.location.reload();
+      if (response.status === 200) {
+        notify("EVENT_CREATED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }

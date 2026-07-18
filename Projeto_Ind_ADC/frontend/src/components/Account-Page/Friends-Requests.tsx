@@ -14,10 +14,12 @@ import { useAuth } from "../AuthContext";
 import { getFriendsRequests, addFriend, unfriend } from "../../api/auth";
 import personAdd_w from "../../assets/icons/person_add_w.svg";
 import personRemove_w from "../../assets/icons/person_remove_w.svg";
+import { useNotification } from "../NotificationContext";
 
 function FriendsRequests() {
   const [friends, setFriends] = useState<Requester[]>([]);
   const { username } = useAuth();
+  const { notify } = useNotification();
 
   const loadRequests = async () => {
     try {
@@ -59,6 +61,9 @@ function FriendsRequests() {
         input: { username: friendToAdd },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("FRIEND_REQUEST_ACCEPTED");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -81,6 +86,9 @@ function FriendsRequests() {
         input: { username: friendToDelete },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("FRIEND_REQUEST_REJECTED");
+      }
     } catch (err) {
       console.error(err);
     }

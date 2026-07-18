@@ -31,15 +31,13 @@ function SDGelements() {
 
   const sdg: SdgItem = sdgInfos[Number(id) - 1];
 
-  const handleSDGFilter = (sdgId: number) => {
+  useEffect(() => {
+    if (!id) return;
+
     setFilter((prev) => ({
       ...prev,
-      sdg: [...(prev.sdg ?? []), sdgId],
+      sdg: [Number(id)],
     }));
-  };
-
-  useEffect(() => {
-    handleSDGFilter(sdg.id);
   }, [id]);
 
   return (

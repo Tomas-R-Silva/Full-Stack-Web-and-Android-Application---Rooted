@@ -28,6 +28,7 @@ import type { Image } from "../../utils/types";
 import { useMapsPage } from "../../api/maps";
 import { usePlacesAutocomplete } from "../../api/places";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../NotificationContext";
 
 type ErrorState = {
   [K in keyof RequestEventUpdate["input"]]: string;
@@ -54,6 +55,7 @@ function EventControlPanel({ event }: EventProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [partner, setPartner] = useState<string>();
   const navigate = useNavigate();
+  const { notify } = useNotification();
   const [originalLocation, setOriginalLocation] = useState<string>("");
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
   const [selectedImages, setSelectedImages] = useState<(Image | string)[]>([]);
@@ -301,6 +303,9 @@ function EventControlPanel({ event }: EventProps) {
         },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("PARTNER_ADDED");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -326,6 +331,9 @@ function EventControlPanel({ event }: EventProps) {
         },
       });
       console.log(res.data.message);
+      if (res.status === 200) {
+        notify("PARTNER_REMOVED");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -446,6 +454,9 @@ function EventControlPanel({ event }: EventProps) {
       const response = await updateEvent(payload);
       console.log(response);
       window.location.reload();
+      if (response.status === 200) {
+        notify("EVENT_UPDATED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -479,6 +490,9 @@ function EventControlPanel({ event }: EventProps) {
       console.log(response);
       navigate("/events/" + event.eventId);
       window.location.reload();
+      if (response.status === 200) {
+        notify("EVENT_CANCELED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -512,6 +526,9 @@ function EventControlPanel({ event }: EventProps) {
       console.log(response);
       navigate("/events");
       window.location.reload();
+      if (response.status === 200) {
+        notify("EVENT_DELETED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -545,6 +562,9 @@ function EventControlPanel({ event }: EventProps) {
       console.log(response);
       navigate("/events");
       window.location.reload();
+      if (response.status === 200) {
+        notify("EVENT_COMPLETED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }

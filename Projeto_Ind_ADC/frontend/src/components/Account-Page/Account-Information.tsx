@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { changePassword, modAccount } from "../../api/auth";
 import { getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
+import { useNotification } from "../NotificationContext";
 
 type ErrorState = {
   [K in keyof RequestModAccount["input"]]: string;
@@ -14,6 +15,7 @@ type ErrorState = {
 
 function AccountInformation() {
   const { username, role } = useAuth();
+  const { notify } = useNotification();
   const [user, setUser] = useState<UserInformationResponse>();
   const [changingPassword, setChangingPassword] = useState(false);
   const [formData, setFormData] = useState<RequestModAccount>({
@@ -126,6 +128,12 @@ function AccountInformation() {
       const responsePwd = await changePassword(payloadPwd);
       console.log(responsePwd);
       window.location.reload();
+      if (responseMod.status === 200) {
+        notify("ACCOUNT_UPDATED");
+      }
+      if (responsePwd.status === 200) {
+        notify("PASSWORD_CHANGED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -330,11 +338,29 @@ function AccountInformation() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label text-white fw-semibold">
+              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
                 Country
+                {!user?.data.country && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "#ffc107", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </label>
+
+              {!user?.data.country && (
+                <small className="text-warning d-block mb-2">
+                  Please complete your country.
+                </small>
+              )}
+
               <input
                 type="text"
+                name="country"
+                value={formData.input.country}
+                onChange={handleChange}
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
@@ -344,11 +370,41 @@ function AccountInformation() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label text-white fw-semibold">
+              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
                 Date of Birth
+                {!user?.data.birth && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "#ffc107", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </label>
+
+              {!user?.data.birth && (
+                <small className="text-warning d-block mb-2">
+                  Please complete your date of birth.
+                </small>
+              )}
+
               <input
                 type="date"
+                name="birth"
+                value={
+                  formData.input.birth
+                    ? new Date(formData.input.birth).toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    input: {
+                      ...prev.input,
+                      birth: new Date(e.target.value).getTime(),
+                    },
+                  }))
+                }
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",

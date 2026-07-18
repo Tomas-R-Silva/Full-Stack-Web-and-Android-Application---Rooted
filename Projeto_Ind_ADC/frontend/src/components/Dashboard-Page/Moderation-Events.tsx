@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getEventList } from "../../api/auth";
 import type { EventItem, EventListResponse } from "../../utils/types";
-import EventCardSmall from "../Events-Page/Event-Card-Small";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
 import eventUpcoming from "../../assets/icons/event_upcoming_w.svg";
@@ -45,7 +44,12 @@ function ModerationEvents() {
         token: { jwt: token },
         input: {
           pageSize: 12,
-          cursor: cursor ?? undefined,
+          cursor: cursor ?? null,
+          category: null,
+          organizerUsername: null,
+          status: null,
+          isAccessible: null,
+          sdg: [],
         },
       });
 
@@ -83,7 +87,6 @@ function ModerationEvents() {
 
   const totalCanceled = events.filter((e) => e.status === "CANCELED").length;
 
-  //fetch on page render
   useEffect(() => {
     loadEvents();
   }, []);
