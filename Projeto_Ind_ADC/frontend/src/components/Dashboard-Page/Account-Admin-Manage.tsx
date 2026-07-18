@@ -1,13 +1,65 @@
-import type { RequestDeleteAccount, UserProps } from "../../utils/types";
+import type {
+  RequestDeleteAccount,
+  RequestModAccount,
+  UserInformationResponse,
+  UserProps,
+} from "../../utils/types";
 import { useState, useEffect } from "react";
 import type { RequestChangeRole } from "../../utils/types";
-import { deleteAccount, changeRole } from "../../api/auth";
+import { deleteAccount, changeRole, getUser } from "../../api/auth";
 import { useNotification } from "../NotificationContext";
+import { countries } from "../../utils/countries";
+
+type ErrorState = {
+  [K in keyof RequestModAccount["input"]]: string;
+};
 
 function AccountAdminManage({ user }: UserProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newRole, setNewRole] = useState(user.role);
   const { notify } = useNotification();
+  const [userInfo, setUserInfo] = useState<UserInformationResponse>();
+  const [formData, setFormData] = useState<RequestModAccount>({
+    token: { jwt: "" },
+    input: {
+      username: user.username ?? "",
+      email: "",
+      bio: "",
+      country: "",
+      birth: 0,
+      category: [],
+    },
+  });
+
+  const [errors, setErrors] = useState<ErrorState>({
+    username: "",
+    email: "",
+    bio: "",
+    country: "",
+    birth: "",
+    category: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value, type } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        [name]: type === "number" ? (value === "" ? -1 : Number(value)) : value,
+      },
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
 
   const handleNewRole = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -76,9 +128,52 @@ function AccountAdminManage({ user }: UserProps) {
     }
   };
 
+  const loadUser = async (user: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!user) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: user,
+        },
+      });
+      console.log(res);
+      setUserInfo(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     setNewRole(user.role);
     setConfirmDelete(false);
+    loadUser(user.username);
+  }, [user]);
+
+  useEffect(() => {
+    if (!userInfo) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        username: userInfo.data.username,
+        email: userInfo.data.email ?? "",
+        bio: userInfo.data.bio ?? "",
+        country: userInfo.data.country ?? "",
+        birth: userInfo.data.birth ?? 0,
+        category: userInfo.data.category ?? [],
+      },
+    }));
   }, [user]);
 
   return (
@@ -190,42 +285,85 @@ function AccountAdminManage({ user }: UserProps) {
             </div>
 
             <div className="mb-3">
-              <label
-                className="form-label fw-semibold"
-                style={{
-                  color: "var(--color-green)",
-                }}
-              >
+              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
                 Country
+                {!userInfo?.data.country && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </label>
-              <input
-                type="text"
-                className="form-control border-0"
+
+              {!userInfo?.data.country && (
+                <small className="text-warning d-block mb-2">
+                  Please complete your country.
+                </small>
+              )}
+
+              <select
+                name="country"
+                value={formData.input.country}
+                onChange={handleChange}
+                className="form-select border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-                readOnly
-              />
+              >
+                <option value="">Select your country...</option>
+
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="mb-3">
-              <label
-                className="form-label fw-semibold"
-                style={{
-                  color: "var(--color-green)",
-                }}
-              >
+              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
                 Date of Birth
+                {!userInfo?.data.birth && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </label>
+
+              {!userInfo?.data.birth && (
+                <small className="text-warning d-block mb-2">
+                  Please complete your date of birth.
+                </small>
+              )}
+
               <input
                 type="date"
+                name="birth"
+                value={
+                  formData.input.birth
+                    ? new Date(formData.input.birth).toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    input: {
+                      ...prev.input,
+                      birth: new Date(e.target.value).getTime(),
+                    },
+                  }))
+                }
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-                readOnly
               />
             </div>
 
