@@ -104,9 +104,6 @@ function AccountAdminManage({ user }: UserProps) {
       if (responseRole.status === 200) {
         notify("ACCOUNT_UPDATED");
       }
-      if (responseMod.status === 200) {
-        notify("ACCOUNT_UPDATED");
-      }
     } catch (err) {
       console.log("Something went wrong!");
     }
