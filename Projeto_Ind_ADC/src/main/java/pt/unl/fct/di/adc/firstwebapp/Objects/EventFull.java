@@ -98,7 +98,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setMinAttendees(Full.getLong(entity,"min_attendees"));
 		event.setAttendee(Full.getLong(entity,"attendee_count"));
 		event.setPublic(Full.getBoolean(entity,"is_public"));
-		event.setStatus(Status.valueof(Full.getString(entity,"status")));
+		Status status = Status.valueof(Full.getString(entity,"status"));
+		event.setStatus(status != null ? status : Status.UPCOMING); // guard: missing/invalid stored status would NPE later (tomap, getStatus().equals(...))
 		event.setCreatedAt(Full.getLong(entity,"created_at") * TIME_DIVIDER);
 		event.setImageUrls(readImages(entity));
 		event.setpartner(Full.getStringList(entity,"partners"));
