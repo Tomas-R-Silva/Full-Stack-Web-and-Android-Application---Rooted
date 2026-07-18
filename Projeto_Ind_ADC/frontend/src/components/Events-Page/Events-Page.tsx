@@ -1,12 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import NavBar from "../NavBar/NavBar";
-import { getEventList } from "../../api/auth";
-import type {
-  EventItem,
-  EventListResponse,
-  FilterProps,
-} from "../../utils/types";
-import EventCard from "./Event-Card";
+import type { FilterProps } from "../../utils/types";
 import EventModal from "./Event-Modal";
 import { useAuth } from "../AuthContext";
 import SDGslider from "../SDG-elements/SDG-Slider";

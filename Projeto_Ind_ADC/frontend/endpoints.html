@@ -598,6 +598,20 @@
 <div class="endpoint">
   <div class="endpoint-header">
     <span class="method">POST</span>
+    <span class="path">/events/complete</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <p class="desc">Marks the event as COMPLETED (allowed at any time). Clears the event's forum posts and, for every user still enrolled, awards <b>+1 point per SDG</b> of the event and increments the matching per-SDG counts (<code>ods[]</code>). Blocked if the event is already cancelled or completed (so points are never awarded twice). <code>awarded</code> is how many enrolled users received points.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event completed successfully"</span>, <span class="key-str">"awarded"</span>: <span class="val-num">7</span> }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
     <span class="path">/events/delete</span>
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>
@@ -813,7 +827,7 @@
 
 <!-- ===================== FORUM ===================== -->
 <h2>Forum</h2>
-<p class="desc" style="margin-bottom:16px;">Each event has its own forum (chat). Posts support threaded replies via <code>parentPostId</code>. Forums of cancelled/completed events are wiped by a cron job.</p>
+<p class="desc" style="margin-bottom:16px;">Each event has its own forum (chat). Posts support threaded replies via <code>parentPostId</code>. Forums of cancelled events are wiped by a cron job; a completed event's forum is wiped when POST /events/complete is called.</p>
 
 <div class="endpoint">
   <div class="endpoint-header">

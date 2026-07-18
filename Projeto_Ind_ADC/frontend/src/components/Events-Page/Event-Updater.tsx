@@ -4,6 +4,7 @@ import type {
   ImageUploadResponse,
   ImageUploadURLResponse,
   RemovePartnerResponse,
+  RequestCompleteEvent,
   RequestEventCancel,
   RequestEventDelete,
 } from "../../utils/types";
@@ -26,6 +27,7 @@ import {
   uploadImageURL,
   addPartner,
   removePartner,
+  completeEvent,
 } from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
 import type { Image } from "../../utils/types";
@@ -51,6 +53,7 @@ function EventUpdater() {
     "OTHER",
   ];
   const { id } = useParams<{ id: string }>();
+  const [confirmComplete, setConfirmComplete] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [partner, setPartner] = useState<string>();
@@ -511,6 +514,39 @@ function EventUpdater() {
       };
       console.log(payload);
       const response = await deleteEvent(payload);
+      console.log(response);
+      navigate("/events");
+      window.location.reload();
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
+  };
+
+  const handleComplete = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+
+      if (!event) {
+        console.log("Event Invalid");
+        return;
+      }
+
+      const payload: RequestCompleteEvent = {
+        token: {
+          jwt: token,
+        },
+        input: {
+          eventId: event.eventId,
+        },
+      };
+      console.log(payload);
+      const response = await completeEvent(payload);
       console.log(response);
       navigate("/events");
       window.location.reload();
@@ -1035,6 +1071,7 @@ function EventUpdater() {
               )}
             </div>
           </div>
+
           <div className="row g-3 mt-2">
             <button
               type="submit"
@@ -1044,6 +1081,42 @@ function EventUpdater() {
             >
               Save Changes
             </button>
+          </div>
+          <div className="row g-3 mt-2">
+            <div>
+              {!confirmComplete && (
+                <button
+                  className="btn fw-bold px-4"
+                  onClick={() => setConfirmComplete(true)}
+                  style={{
+                    background: "var(--color-green2)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  Complete Event
+                </button>
+              )}
+              {confirmComplete && (
+                <>
+                  <button
+                    className="btn btn-danger fw-bold"
+                    onClick={() => setConfirmComplete(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn fw-bold ms-1"
+                    style={{
+                      background: "var(--color-green2)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={handleComplete}
+                  >
+                    Confirm
+                  </button>
+                </>
+              )}
+            </div>
           </div>
           <div className="row g-3 mt-2">
             <div>
@@ -1077,6 +1150,7 @@ function EventUpdater() {
               )}
             </div>
           </div>
+
           <div className="row g-3 mt-2">
             <div>
               {!confirmDelete && (
