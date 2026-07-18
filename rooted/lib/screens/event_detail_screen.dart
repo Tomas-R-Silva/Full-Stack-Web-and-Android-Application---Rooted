@@ -338,7 +338,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildEventInfo() {
-    final imageUrls = (_event['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [];
+    final imageUrls = (_event['imageUrls'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList() ?? [];
     final isOwnerOrAdmin = _event['organizerUsername'] == _username || _role == 'ADMIN';
 
     return Container(
@@ -380,11 +383,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 url,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(
-                                  color: AppTheme.primary.withValues(alpha: 0.15),
-                                  alignment: Alignment.center,
-                                  child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
-                                ),
+                                errorBuilder: (context, error, stackTrace) {
+                                  debugPrint('EVENT DETAIL IMAGE ERROR: $error');
+                                  debugPrint('IMAGE URL: $url');
+                                  if (error.toString().contains('404')) {
+                                    debugPrint('HINT: This URL returned 404. Check if a file extension (like .jpg) is missing on the backend.');
+                                  }
+                                  return Container(
+                                    color: AppTheme.primary.withValues(alpha: 0.15),
+                                    alignment: Alignment.center,
+                                    child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -777,16 +787,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_posts.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey),
-            SizedBox(height: 8),
-            Text('No messages yet.\nBe the first to say something!',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary)),
-          ],
+      return Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey),
+              const SizedBox(height: 8),
+              const Text('No messages yet.\nBe the first to say something!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppTheme.textSecondary)),
+            ],
+          ),
         ),
       );
     }

@@ -481,11 +481,28 @@ class ApiService {
     final imgs = event['imageUrls'];
     if (imgs is List) {
       event['imageUrls'] = imgs.map<String>((img) {
+        String url = '';
         if (img is Map) {
           // Extract just the URL for backward compatibility with UI that expects List<String>
-          return img['url']?.toString() ?? '';
+          url = img['url']?.toString() ?? '';
+        } else {
+          url = img.toString();
         }
-        return img.toString();
+        
+        if (url.isNotEmpty && !url.startsWith('http')) {
+          // If it's a relative path (with or without leading slash), prepend baseUrl
+          final normalizedPath = url.startsWith('/') ? url : '/$url';
+          url = '$baseUrl$normalizedPath';
+        }
+        
+        // Diagnostic log to see what the final URL looks like
+        if (url.contains('storage.googleapis.com')) {
+          debugPrint('API SERVICE: Detected GCS URL: $url');
+        } else if (url.isNotEmpty) {
+          debugPrint('API SERVICE: Normalized URL: $url');
+        }
+        
+        return url;
       }).toList();
       
       // Also keep the full objects in a separate key if needed for deletion later

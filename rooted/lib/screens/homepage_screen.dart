@@ -459,8 +459,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTinderCard(Map<String, dynamic> event) {
-    final imageUrls = event['imageUrls'] as List<dynamic>?;
-    final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+    final imageUrls = (event['imageUrls'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first : null;
     final sdgs = event['sdg'] as List<dynamic>? ?? [];
 
     return Container(
@@ -509,9 +512,16 @@ class _HomePageState extends State<HomePage> {
                             firstImage,
                             fit: BoxFit.cover,
                             width: double.infinity,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: AppTheme.primary.withValues(alpha: 0.15),
-                            ),
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('TINDER CARD IMAGE ERROR: $error');
+                              debugPrint('IMAGE URL: $firstImage');
+                              if (error.toString().contains('404')) {
+                                debugPrint('HINT: This URL returned 404. Check if a file extension (like .jpg) is missing on the backend.');
+                              }
+                              return Container(
+                                color: AppTheme.primary.withValues(alpha: 0.15),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -637,8 +647,11 @@ class _HomePageState extends State<HomePage> {
     final isPending     = _pendingIds.contains(eventId);
     final isFull        = maxAttendees > 0 && attendeeCount >= maxAttendees;
     final isOwn         = event['organizerUsername'] == _username;
-    final imageUrls     = event['imageUrls'] as List<dynamic>?;
-    final firstImage    = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+    final imageUrls     = (event['imageUrls'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final firstImage    = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first : null;
     final sdgs          = event['sdg'] as List<dynamic>? ?? [];
 
     return GestureDetector(
@@ -675,10 +688,17 @@ class _HomePageState extends State<HomePage> {
                         height: 140,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          height: 4,
-                          color: AppTheme.primary.withValues(alpha: 0.7),
-                        ),
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint('EVENT CARD IMAGE ERROR: $error');
+                          debugPrint('IMAGE URL: $firstImage');
+                          if (error.toString().contains('404')) {
+                            debugPrint('HINT: This URL returned 404. Check if a file extension (like .jpg) is missing on the backend.');
+                          }
+                          return Container(
+                            height: 4,
+                            color: AppTheme.primary.withValues(alpha: 0.7),
+                          );
+                        },
                       ),
                     ),
                   ),

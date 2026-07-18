@@ -345,8 +345,11 @@ class _EventsMapsState extends State<EventsMaps> {
             final ev = nearest[index];
             final pos = _eventPosition(ev);
             final dist = pos != null ? _distanceMeters(_center, pos) : null;
-            final imageUrls = ev['imageUrls'] as List<dynamic>?;
-            final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+            final imageUrls = (ev['imageUrls'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .where((e) => e.isNotEmpty)
+                .toList();
+            final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first : null;
 
             return Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -368,9 +371,13 @@ class _EventsMapsState extends State<EventsMaps> {
                           Image.network(
                             firstImage,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: AppTheme.primary.withOpacity(0.15),
-                            ),
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('MAP EVENT IMAGE ERROR: $error');
+                              debugPrint('IMAGE URL: $firstImage');
+                              return Container(
+                                color: AppTheme.primary.withOpacity(0.15),
+                              );
+                            },
                           )
                         else
                           Container(color: AppTheme.primary.withOpacity(0.15)),
