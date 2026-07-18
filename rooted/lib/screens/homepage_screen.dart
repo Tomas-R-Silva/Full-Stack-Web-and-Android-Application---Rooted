@@ -509,6 +509,9 @@ class _HomePageState extends State<HomePage> {
                             firstImage,
                             fit: BoxFit.cover,
                             width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: AppTheme.primary.withValues(alpha: 0.15),
+                            ),
                           ),
                         ),
                       ),

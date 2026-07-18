@@ -1021,8 +1021,11 @@ class ApiService {
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      _checkBodyError(body);
+      return;
+    }
     throw ApiException(_errorMessage(body, 'Failed to delete images'));
   }
 

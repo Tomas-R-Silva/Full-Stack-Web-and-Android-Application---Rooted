@@ -62,7 +62,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
                         );
                       },
                       errorBuilder: (context, error, stackTrace) => const Center(
-                        child: Icon(Icons.error_outline, color: Colors.white, size: 48),
+                        child: Icon(Icons.broken_image_outlined, color: Colors.white54, size: 60),
                       ),
                     ),
                   ),

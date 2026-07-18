@@ -339,6 +339,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Widget _buildEventInfo() {
     final imageUrls = (_event['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [];
+    final isOwnerOrAdmin = _event['organizerUsername'] == _username || _role == 'ADMIN';
 
     return Container(
       width: double.infinity,
@@ -357,27 +358,53 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     onPageChanged: (index) => setState(() => _currentImageIndex = index),
                     itemBuilder: (context, index) {
                       final url = imageUrls[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => FullScreenImage(
-                                imageUrls: imageUrls,
-                                initialIndex: index,
-                                tagBase: 'event_image_${_event['eventId']}',
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FullScreenImage(
+                                    imageUrls: imageUrls,
+                                    initialIndex: index,
+                                    tagBase: 'event_image_${_event['eventId']}',
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Hero(
+                              tag: 'event_image_${_event['eventId']}_$index',
+                              child: Image.network(
+                                url,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  color: AppTheme.primary.withValues(alpha: 0.15),
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                                ),
                               ),
                             ),
-                          );
-                        },
-                        child: Hero(
-                          tag: 'event_image_${_event['eventId']}_$index',
-                          child: Image.network(
-                            url,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
                           ),
-                        ),
+                          if (isOwnerOrAdmin)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: () => _confirmDeleteImage(index),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                ),
+                              ),
+                            ),
+                        ],
                       );
                     },
                   ),
@@ -595,6 +622,64 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         elevation: 0,
       ),
     );
+  }
+
+  Future<void> _confirmDeleteImage(int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove image?'),
+        content: const Text('This picture will be permanently removed from the event.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) _deleteImage(index);
+  }
+
+  Future<void> _deleteImage(int index) async {
+    if (_jwt == null) return;
+
+    // The real backend id only lives on the raw objects _normalizeEvent stashed
+    // here — _event['imageUrls'] has already been flattened to plain URL strings,
+    // and URLs are NOT what the /deleteimage endpoint matches against.
+    final imageObjects = List<dynamic>.from(_event['_imageObjects'] as List<dynamic>? ?? []);
+    if (index >= imageObjects.length) return;
+    final imageId = (imageObjects[index] as Map)['id']?.toString();
+    if (imageId == null) return;
+
+    try {
+      await ApiService.deleteImages(
+        jwt: _jwt!,
+        eventId: _event['eventId'] as String,
+        imageIds: [imageId],
+      );
+      if (!mounted) return;
+      setState(() {
+        final urls = List<dynamic>.from(_event['imageUrls'] as List<dynamic>? ?? []);
+        urls.removeAt(index);
+        imageObjects.removeAt(index);
+        _event['imageUrls'] = urls;
+        _event['_imageObjects'] = imageObjects;
+        if (_currentImageIndex >= urls.length && _currentImageIndex > 0) {
+          _currentImageIndex = urls.length - 1;
+        }
+      });
+      ApiService.notifyEventUpdate(_event['eventId'] as String?);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to remove image: $e')),
+      );
+    }
   }
 
   Future<void> _toggleAttend() async {
