@@ -22,8 +22,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
     'Other',
   ];
 
+  static const int _minDistanceKm = 5;
+  static const int _distanceStepKm = 5;
+
   final Set<String> _selectedCategories = <String>{};
   final Set<int> _selectedSdgs = <int>{};
+  int _selectedDistanceKm = 10;
+  bool _locationAvailable = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -84,6 +89,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 ],
               ),
             ),
+            if (_locationAvailable) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildDistanceStepper(),
+              ),
+            ],
             const SizedBox(height: 12),
             Expanded(
               child: Padding(
@@ -92,6 +104,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   categoryFilters: _selectedCategories.isEmpty ? null : _selectedCategories.toList(),
                   sdgFilters: _selectedSdgs.isEmpty ? null : _selectedSdgs.toList(),
                   searchQuery: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
+                  maxDistanceKm: _locationAvailable ? _selectedDistanceKm.toDouble() : null,
+                  onLocationAvailabilityChanged: (available) {
+                    if (!mounted || available == _locationAvailable) return;
+                    setState(() {
+                      _locationAvailable = available;
+                    });
+                  },
                 ),
               ),
             ),
@@ -157,6 +176,52 @@ class _DiscoverPageState extends State<DiscoverPage> {
         }
         onChanged(nextSelection);
       },
+    );
+  }
+
+  Widget _buildDistanceStepper() {
+    return Container(
+      height: 54,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.inputBorder),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.remove_circle_outline),
+            color: AppTheme.primary,
+            onPressed: _selectedDistanceKm <= _minDistanceKm
+                ? null
+                : () {
+                    setState(() {
+                      _selectedDistanceKm =
+                          (_selectedDistanceKm - _distanceStepKm).clamp(_minDistanceKm, 1000000);
+                    });
+                  },
+          ),
+          Expanded(
+            child: Text(
+              'Near you: $_selectedDistanceKm km',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            color: AppTheme.primary,
+            onPressed: () {
+              setState(() {
+                _selectedDistanceKm += _distanceStepKm;
+              });
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -15,12 +15,16 @@ class EventsMaps extends StatefulWidget {
   final List<String>? categoryFilters;
   final List<int>? sdgFilters;
   final String? searchQuery;
+  final double? maxDistanceKm;
+  final ValueChanged<bool>? onLocationAvailabilityChanged;
 
   EventsMaps({
     super.key,
     this.categoryFilters,
     this.sdgFilters,
     this.searchQuery,
+    this.maxDistanceKm,
+    this.onLocationAvailabilityChanged,
   });
 
   @override
@@ -30,8 +34,11 @@ class EventsMaps extends StatefulWidget {
 class _EventsMapsState extends State<EventsMaps> {
   GoogleMapController? _mapController;
   LatLng _center = const LatLng(0.0, 0.0);
+  double _zoom = 1.0;
   bool _loading = true;
+  bool _hasLocation = false;
   Set<Marker> _markers = {};
+  List<Map<String, dynamic>> _rawEvents = [];
   List<Map<String, dynamic>> _events = [];
 
   @override
@@ -45,19 +52,20 @@ class _EventsMapsState extends State<EventsMaps> {
     super.didUpdateWidget(oldWidget);
     final filtersChanged = !listEquals(widget.categoryFilters, oldWidget.categoryFilters) ||
         !listEquals(widget.sdgFilters, oldWidget.sdgFilters) ||
-        widget.searchQuery != oldWidget.searchQuery;
+        widget.searchQuery != oldWidget.searchQuery ||
+        widget.maxDistanceKm != oldWidget.maxDistanceKm;
 
     if (filtersChanged) {
-      _fetchAndShowEvents();
+      _applyFilters();
     }
   }
 
   Future<void> _init() async {
     await _determinePosition();
-    await _fetchAndShowEvents();
+    widget.onLocationAvailabilityChanged?.call(_hasLocation);
+    await _fetchEvents();
     if (mounted) {
       setState(() => _loading = false);
-      _updateMapView();
     }
   }
 
@@ -72,17 +80,16 @@ class _EventsMapsState extends State<EventsMaps> {
         final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
         if (mounted) {
           _center = LatLng(position.latitude, position.longitude);
+          _zoom = 14.0;
+          _hasLocation = true;
         }
       }
     } catch (_) {}
   }
 
-  Future<void> _fetchAndShowEvents() async {
+  /// Hits the network once and stores the unfiltered event list.
+  Future<void> _fetchEvents() async {
     if (!mounted) return;
-
-    setState(() {
-      _loading = true;
-    });
 
     List<Map<String, dynamic>> events = [];
 
@@ -91,48 +98,54 @@ class _EventsMapsState extends State<EventsMaps> {
         status: 'UPCOMING',
         pageSize: 100,
       );
-      final data = result;
-      final eventsData = (data['events'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
-
-      for (final event in eventsData) {
-        final evMap = Map<String, dynamic>.from(event);
-        if (!_matchesFilters(evMap)) {
-          continue;
-        }
-
-        if (widget.searchQuery != null && widget.searchQuery!.trim().isNotEmpty) {
-          final title = (evMap['title'] as String? ?? '').toLowerCase();
-          final description = (evMap['description'] as String? ?? '').toLowerCase();
-          final query = widget.searchQuery!.trim().toLowerCase();
-          if (!title.contains(query) && !description.contains(query)) {
-            continue;
-          }
-        }
-
-        events.add(evMap);
-      }
+      final eventsData = (result['events'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+      events = eventsData.map((event) => Map<String, dynamic>.from(event)).toList();
     } catch (e) {
       debugPrint('EventsMaps: failed to fetch events: $e');
     }
 
-    final newMarkers = <Marker>{};
+    if (mounted) {
+      _rawEvents = events;
+      _applyFilters();
+    }
+  }
 
-    for (final ev in events) {
-      final pos = await _resolveEventPosition(ev);
+  /// Filters the already-fetched events locally, no network call.
+  void _applyFilters() {
+    final filtered = <Map<String, dynamic>>[];
+
+    for (final ev in _rawEvents) {
+      if (!_matchesFilters(ev)) {
+        continue;
+      }
+
+      if (widget.searchQuery != null && widget.searchQuery!.trim().isNotEmpty) {
+        final title = (ev['title'] as String? ?? '').toLowerCase();
+        final description = (ev['description'] as String? ?? '').toLowerCase();
+        final query = widget.searchQuery!.trim().toLowerCase();
+        if (!title.contains(query) && !description.contains(query)) {
+          continue;
+        }
+      }
+
+      filtered.add(ev);
+    }
+
+    final newMarkers = <Marker>{};
+    for (final ev in filtered) {
+      final pos = _eventPosition(ev);
       if (pos != null) {
         newMarkers.add(_buildMarkerForEvent(ev, pos));
       } else {
         debugPrint('EventsMaps: no position for event "${ev['title']}" (location: ${ev['location']})');
       }
     }
-    
+
     if (mounted) {
       setState(() {
-        _events = events;
+        _events = filtered;
         _markers = newMarkers;
-        _loading = false;
       });
-      _updateMapView();
     }
   }
 
@@ -172,6 +185,17 @@ class _EventsMapsState extends State<EventsMaps> {
       }
     }
 
+    if (_hasLocation && widget.maxDistanceKm != null) {
+      final pos = _eventPosition(event);
+      if (pos == null) {
+        return false;
+      }
+      final distanceKm = _distanceMeters(_center, pos) / 1000;
+      if (distanceKm > widget.maxDistanceKm!) {
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -181,15 +205,6 @@ class _EventsMapsState extends State<EventsMaps> {
     if (lat != null && lng != null) {
       return LatLng(lat, lng);
     }
-    return null;
-  }
-
-  Future<LatLng?> _resolveEventPosition(Map<String, dynamic> event) async {
-    final existing = _eventPosition(event);
-    if (existing != null) {
-      return existing;
-    }
-
     return null;
   }
 
@@ -223,14 +238,11 @@ class _EventsMapsState extends State<EventsMaps> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
-            16 + MediaQuery.of(context).padding.bottom,
-          ),
+      builder: (context) {
+        final bottomInset = MediaQuery.of(context).padding.bottom;
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,8 +275,8 @@ class _EventsMapsState extends State<EventsMaps> {
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -287,21 +299,10 @@ class _EventsMapsState extends State<EventsMaps> {
     }
   }
 
-  void _updateMapView() {
-    if (_mapController == null) {
-      return;
-    }
-
-    if (_markers.isEmpty) {
-      _moveCamera(_center, 12);
-      return;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final nearest = List<Map<String, dynamic>>.from(_events);
-    if (_center.latitude != 0 || _center.longitude != 0) {
+    if (_hasLocation) {
       nearest.sort((a, b) {
         final aPos = _eventPosition(a);
         final bPos = _eventPosition(b);
@@ -323,14 +324,13 @@ class _EventsMapsState extends State<EventsMaps> {
                   )
                 : GoogleMap(
                     mapType: MapType.hybrid,
-                    initialCameraPosition: CameraPosition(target: _center, zoom: 1),
+                    initialCameraPosition: CameraPosition(target: _center, zoom: _zoom),
                     markers: _markers,
                     myLocationEnabled: true,
                     myLocationButtonEnabled: true,
                     zoomControlsEnabled: true,
                     onMapCreated: (controller) {
                       _mapController = controller;
-                      _updateMapView();
                     },
                   ),
           ),
@@ -426,7 +426,7 @@ class _EventsMapsState extends State<EventsMaps> {
                                     style: const TextStyle(fontSize: 12, color: Colors.white70),
                                   ),
                                   Text(
-                                    dist != null ? '${(dist / 1000).toStringAsFixed(1)} km' : '',
+                                    (_hasLocation && dist != null) ? '${(dist / 1000).toStringAsFixed(1)} km' : '',
                                     style: const TextStyle(fontSize: 12, color: Colors.white70),
                                   ),
                                 ],
