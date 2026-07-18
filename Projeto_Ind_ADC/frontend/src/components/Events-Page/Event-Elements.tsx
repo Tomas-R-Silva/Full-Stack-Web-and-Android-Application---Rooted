@@ -218,6 +218,12 @@ function EventElements() {
                     }}
                   />
                 </div>
+                <h2 style={{ color: "var(--color-white)" }}>Event Partners:</h2>
+                <p className="mb-1" style={{ color: "var(--color-white)" }}>
+                  {event && event.partners && event.partners.length !== 0
+                    ? event.partners
+                    : "This event has no partners."}
+                </p>
               </div>
             </div>
             <div className="row mt-5">

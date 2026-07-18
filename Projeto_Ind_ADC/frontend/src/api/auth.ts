@@ -19,6 +19,8 @@ import type { RequestEventCreation, EventCreationResponse } from "../utils/types
 import type { RequestEventGetter, EventGetterResponse } from "../utils/types";
 import type { RequestEventList, EventListResponse} from "../utils/types";
 import type { RequestEventUpdate, EventUpdateResponse} from "../utils/types";
+import type { RequestAddPartner, AddPartnerResponse} from "../utils/types";
+import type { RequestRemovePartner, RemovePartnerResponse} from "../utils/types";
 import type { RequestEventCancel, EventCancelResponse} from "../utils/types";
 import type { RequestEventDelete, EventDeleteResponse} from "../utils/types";
 import type { RequestEventAttend, EventAttendResponse} from "../utils/types";
@@ -155,6 +157,12 @@ export const getEventList = (data: RequestEventList) =>
 
 export const updateEvent = (data: RequestEventUpdate) =>
   apiRequest<EventUpdateResponse>("/events/update", data);
+
+export const addPartner = (data: RequestAddPartner) =>
+  apiRequest<AddPartnerResponse>("/events/addpartner", data);
+
+export const removePartner = (data: RequestRemovePartner) =>
+  apiRequest<RemovePartnerResponse>("/events/removepartner", data);
 
 export const cancelEvent = (data: RequestEventCancel) =>
   apiRequest<EventCancelResponse>("/events/cancel", data);

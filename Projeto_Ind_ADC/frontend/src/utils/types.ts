@@ -376,14 +376,40 @@ export type RequestEventUpdate = {
   }
 }
 
+export type RequestEventCancel = {
+  token: {jwt:string;}
+  input: {eventId:string;}
+}
+
 export type EventUpdateResponse = {
   status: number,
   data:{message: string},
 }
 
-export type RequestEventCancel = {
+export type RequestAddPartner = {
   token: {jwt:string;}
-  input: {eventId:string;}
+  input: {
+    username:string;
+    eventId:string;
+  }
+}
+
+export type AddPartnerResponse = {
+  status: number,
+  data:{message: string},
+}
+
+export type RequestRemovePartner = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    eventId:string;
+  }
+}
+
+export type RemovePartnerResponse = {
+  status: number,
+  data:{message: string},
 }
 
 export type EventCancelResponse = {

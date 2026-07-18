@@ -1,7 +1,9 @@
 import type {
+  AddPartnerResponse,
   ImageDeleteResponse,
   ImageUploadResponse,
   ImageUploadURLResponse,
+  RemovePartnerResponse,
   RequestEventCancel,
   RequestEventDelete,
 } from "../../utils/types";
@@ -22,6 +24,8 @@ import {
   cancelEvent,
   deleteEvent,
   uploadImageURL,
+  addPartner,
+  removePartner,
 } from "../../api/auth";
 import NavBar from "../NavBar/NavBar";
 import type { Image } from "../../utils/types";
@@ -34,7 +38,7 @@ type ErrorState = {
 
 function EventUpdater() {
   const mapsApiKey = import.meta.env.VITE_API_KEY;
-  const {geocodeAddress} = useMapsPage(mapsApiKey);
+  const { geocodeAddress } = useMapsPage(mapsApiKey);
   //========== Hooks ==========
   const categories = [
     "MUSIC",
@@ -49,6 +53,7 @@ function EventUpdater() {
   const { id } = useParams<{ id: string }>();
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [partner, setPartner] = useState<string>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<EventItem>();
   const [originalLocation, setOriginalLocation] = useState<string>("");
@@ -174,7 +179,7 @@ function EventUpdater() {
         ...prevForm,
         input: {
           ...prevForm.input,
-          SDG: updated,
+          sdg: updated,
         },
       }));
 
@@ -279,6 +284,56 @@ function EventUpdater() {
     }
   };
 
+  const handleAddPartner = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!partner || !event) {
+        console.log("Invalid partenr or event");
+        return;
+      }
+
+      const res: AddPartnerResponse = await addPartner({
+        token: { jwt: token },
+        input: {
+          username: partner,
+          eventId: event.eventId,
+        },
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRemovePartner = async (partnerToRemove: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!partner || !event) {
+        console.log("Invalid partenr or event");
+        return;
+      }
+
+      const res: RemovePartnerResponse = await removePartner({
+        token: { jwt: token },
+        input: {
+          username: partnerToRemove,
+          eventId: event.eventId,
+        },
+      });
+      console.log(res.data.message);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -361,12 +416,16 @@ function EventUpdater() {
       let lat = formData.input.lat;
       let lng = formData.input.lng;
 
-      if (formData.input.location && formData.input.location !== originalLocation) {
+      if (
+        formData.input.location &&
+        formData.input.location !== originalLocation
+      ) {
         const position = await geocodeAddress(formData.input.location);
         if (!position) {
           setErrors((prev) => ({
             ...prev,
-            location: "Could not find this location, please pick a different address",
+            location:
+              "Could not find this location, please pick a different address",
           }));
           return;
         }
@@ -513,42 +572,42 @@ function EventUpdater() {
   }, [event]);
 
   const {
-      inputValue: locationInputValue,
-      predictions: locationPredictions,
-      handleInputChange: handleLocationInputChange,
-      handleSelect: handleLocationSelect,
-    } = usePlacesAutocomplete({
-      apiKey: mapsApiKey,
-      value: formData.input.location,
-      onChange: (value) => {
-        setFormData((prev) => ({
-          ...prev,
-          input: {
-            ...prev.input,
-            location: value,
-          },
-        }));
-  
-        setErrors((prev) => ({
-          ...prev,
-          location: "",
-        }));
-      },
-      onSelect: (prediction) => {
-        setFormData((prev) => ({
-          ...prev,
-          input: {
-            ...prev.input,
-            location: prediction.description,
-          },
-        }));
-  
-        setErrors((prev) => ({
-          ...prev,
-          location: "",
-        }));
-      },
-    });
+    inputValue: locationInputValue,
+    predictions: locationPredictions,
+    handleInputChange: handleLocationInputChange,
+    handleSelect: handleLocationSelect,
+  } = usePlacesAutocomplete({
+    apiKey: mapsApiKey,
+    value: formData.input.location,
+    onChange: (value) => {
+      setFormData((prev) => ({
+        ...prev,
+        input: {
+          ...prev.input,
+          location: value,
+        },
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        location: "",
+      }));
+    },
+    onSelect: (prediction) => {
+      setFormData((prev) => ({
+        ...prev,
+        input: {
+          ...prev.input,
+          location: prediction.description,
+        },
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        location: "",
+      }));
+    },
+  });
 
   return (
     <>
@@ -925,6 +984,56 @@ function EventUpdater() {
                 </div>
               );
             })}
+          </div>
+          <div className="row g-3 mt-2">
+            <h5 style={{ color: "var(--color-green)" }}>Partners</h5>
+            <div className="card p-3 mb-3">
+              <div className="d-flex gap-2 mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter username..."
+                  value={partner ?? ""}
+                  onChange={(e) => setPartner(e.target.value)}
+                />
+
+                <button
+                  className="btn"
+                  style={{
+                    background: "var(--color-green2)",
+                    color: "white",
+                    minWidth: "90px",
+                  }}
+                  onClick={handleAddPartner}
+                >
+                  Add
+                </button>
+              </div>
+
+              {event?.partners?.length ? (
+                <div className="list-group">
+                  {event.partners.map((partner) => (
+                    <div
+                      key={partner}
+                      className="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <div>
+                        <strong>{partner}</strong>
+                      </div>
+
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleRemovePartner(partner)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted mb-0">No partners added yet.</p>
+              )}
+            </div>
           </div>
           <div className="row g-3 mt-2">
             <button

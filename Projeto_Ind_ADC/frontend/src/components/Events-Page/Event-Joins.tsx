@@ -422,7 +422,7 @@ function EventJoins() {
                             <button
                               className="btn fw-bold ms-1"
                               style={{
-                                background: "var(--color-green2)",
+                                background: "var(--color-green)",
                                 color: "var(--color-white)",
                               }}
                             >

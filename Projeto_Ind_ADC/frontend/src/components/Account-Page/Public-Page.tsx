@@ -18,6 +18,7 @@ import type { RequestUnfriend, UnfriendResponse } from "../../utils/types";
 import { useAuth } from "../AuthContext";
 import EventCard from "../Events-Page/Event-Card";
 import { addFriend, unfriend } from "../../api/auth";
+import verified from "../../assets/icons/verified_w.svg";
 
 function PublicPage() {
   const { username } = useParams<{ username: string }>();
@@ -247,6 +248,9 @@ function PublicPage() {
               <div className="ms-4 flex-grow-1">
                 <h4 className="mb-0 text-white fw-bold">
                   {user && user.data.display}
+                  {user?.data.role === "PARTNER" && (
+                    <img className="ms-1" src={verified} />
+                  )}
                 </h4>
                 <div className="text-white mt-2">
                   {user && user.data.username}
