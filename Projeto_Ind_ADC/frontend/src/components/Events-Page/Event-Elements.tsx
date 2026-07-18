@@ -91,6 +91,47 @@ function EventElements() {
   return (
     <>
       <NavBar />
+      <div className="my-2 mx-2">
+        <div className="d-flex justify-content-between align-items-center">
+          <p
+            className="mb-0"
+            style={{
+              color: "white",
+              fontSize: "12px",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate("/events")}
+          >
+            ← Return to Events
+          </p>
+
+          {isAuthenticated && event && event.organizerUsername === username && (
+            <div className="d-flex gap-3">
+              <img
+                src={editSquare_w}
+                alt="Edit event"
+                onClick={() => navigate(`/events/${id}/edit`)}
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  cursor: "pointer",
+                }}
+              />
+
+              <img
+                src={manageAccounts_w}
+                alt="Manage participants"
+                onClick={() => navigate(`/events/${id}/joins`)}
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  cursor: "pointer",
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
       <div className="hero-wrapper">
         <div className="top-image">
           {event && (
@@ -100,22 +141,6 @@ function EventElements() {
             />
           )}
         </div>
-        {isAuthenticated && event && event.organizerUsername === username && (
-          <img
-            className="edit-icon"
-            src={editSquare_w}
-            onClick={() => navigate("/events/" + id + "/edit")}
-            style={{ cursor: "pointer" }}
-          />
-        )}
-        {isAuthenticated && event && event.organizerUsername === username && (
-          <img
-            className="edit-icon mt-4"
-            src={manageAccounts_w}
-            onClick={() => navigate("/events/" + id + "/joins")}
-            style={{ cursor: "pointer" }}
-          />
-        )}
 
         {event && (
           <div className="ticket-wrapper">
