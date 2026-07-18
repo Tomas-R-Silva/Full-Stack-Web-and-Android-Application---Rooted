@@ -1,8 +1,6 @@
 import type {
   AddPartnerResponse,
   ImageDeleteResponse,
-  ImageUploadResponse,
-  ImageUploadURLResponse,
   RemovePartnerResponse,
   RequestCompleteEvent,
   RequestEventCancel,

@@ -1,13 +1,5 @@
-import type {
-  EventProps,
-  RequestListMessages,
-  ListMessagesResponse,
-  Post,
-} from "../../utils/types";
-import type {
-  RequestPostMessage,
-  PostMessageResponse,
-} from "../../utils/types";
+import type { EventProps, ListMessagesResponse, Post } from "../../utils/types";
+import type { RequestPostMessage } from "../../utils/types";
 import MessageRight from "./MessageRight";
 import MessageLeft from "./MessageLeft";
 import { useAuth } from "../AuthContext";

@@ -1,15 +1,9 @@
 import type {
-  EventProps,
-  RequestListMessages,
   ListMessagesResponse,
   Post,
-  Friend,
   FriendProps,
 } from "../../utils/types";
-import type {
-  RequestPostMessage,
-  PostMessageResponse,
-} from "../../utils/types";
+import type { RequestPostMessage } from "../../utils/types";
 import MessageRight from "../Forum-elements/MessageRight";
 import MessageLeft from "../Forum-elements/MessageLeft";
 import { useAuth } from "../AuthContext";
@@ -17,6 +11,7 @@ import { useEffect, useState } from "react";
 import { ListMessages } from "../../api/auth";
 import close from "../../assets/icons/close_white.svg";
 import { PostMessage } from "../../api/auth";
+import { useNotification } from "../NotificationContext";
 
 function FriendsChat({ friend }: FriendProps) {
   const { isAuthenticated, username } = useAuth();
@@ -25,10 +20,10 @@ function FriendsChat({ friend }: FriendProps) {
   const [loading, setLoading] = useState(false); //if the main page is being loaded
   const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
   const [error, setError] = useState<string | null>(null);
-  const [text, setText] = useState("");
   const [parentId, setParentId] = useState("");
   const [parentText, setParentText] = useState("");
   const [post, setPost] = useState("");
+  const { notify } = useNotification();
 
   const loadFriendChat = async (cursor?: string) => {
     try {
@@ -114,6 +109,9 @@ function FriendsChat({ friend }: FriendProps) {
       const response = await PostMessage(payload);
       console.log(response);
       window.location.reload();
+      if (response.status === 200) {
+        notify("MESSAGE_POSTED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }

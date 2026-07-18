@@ -285,7 +285,7 @@ function AccountAdminManage({ user }: UserProps) {
             </div>
 
             <div className="mb-3">
-              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
+              <label className="form-label fw-semibold d-flex align-items-center gap-2">
                 Country
                 {!userInfo?.data.country && (
                   <span
@@ -299,7 +299,7 @@ function AccountAdminManage({ user }: UserProps) {
 
               {!userInfo?.data.country && (
                 <small className="text-warning d-block mb-2">
-                  Please complete your country.
+                  Country to be completed.
                 </small>
               )}
 
@@ -324,7 +324,7 @@ function AccountAdminManage({ user }: UserProps) {
             </div>
 
             <div className="mb-3">
-              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
+              <label className="form-label fw-semibold d-flex align-items-center gap-2">
                 Date of Birth
                 {!userInfo?.data.birth && (
                   <span
@@ -338,7 +338,7 @@ function AccountAdminManage({ user }: UserProps) {
 
               {!userInfo?.data.birth && (
                 <small className="text-warning d-block mb-2">
-                  Please complete your date of birth.
+                  Date of birth to be completed.
                 </small>
               )}
 

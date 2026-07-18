@@ -18,7 +18,6 @@ function EventForm() {
   const mapsApiKey = import.meta.env.VITE_API_KEY;
   const { geocodeAddress } = useMapsPage(mapsApiKey);
   //========== Hook ==========
-  const [startDateInput, setStartDateInput] = useState("");
   const categories = [
     "MUSIC",
     "SPORTS",
