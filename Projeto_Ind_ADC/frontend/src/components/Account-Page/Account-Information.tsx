@@ -8,6 +8,7 @@ import { changePassword, modAccount } from "../../api/auth";
 import { getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
 import { useNotification } from "../NotificationContext";
+import { countries } from "../../utils/countries";
 
 type ErrorState = {
   [K in keyof RequestModAccount["input"]]: string;
@@ -49,7 +50,9 @@ function AccountInformation() {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
 
@@ -343,7 +346,7 @@ function AccountInformation() {
                 {!user?.data.country && (
                   <span
                     title="This field is required."
-                    style={{ color: "#ffc107", fontSize: "18px" }}
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
                   >
                     ⚠️
                   </span>
@@ -356,17 +359,24 @@ function AccountInformation() {
                 </small>
               )}
 
-              <input
-                type="text"
+              <select
                 name="country"
                 value={formData.input.country}
                 onChange={handleChange}
-                className="form-control border-0"
+                className="form-select border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-              />
+              >
+                <option value="">Select your country...</option>
+
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="mb-3">
@@ -375,7 +385,7 @@ function AccountInformation() {
                 {!user?.data.birth && (
                   <span
                     title="This field is required."
-                    style={{ color: "#ffc107", fontSize: "18px" }}
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
                   >
                     ⚠️
                   </span>
