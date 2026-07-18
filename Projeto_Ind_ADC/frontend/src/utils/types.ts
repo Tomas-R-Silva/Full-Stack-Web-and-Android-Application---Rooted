@@ -292,7 +292,7 @@ export type EventItem = {
   partners: string[];
   imageUrls: Image[];
   isAccessible: boolean;
-  sdg: number[];
+  SDG: number[];
   lat: number;
   lng: number,
 };

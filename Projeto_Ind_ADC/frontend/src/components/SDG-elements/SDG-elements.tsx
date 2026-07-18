@@ -10,11 +10,11 @@ function SDGelements() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [filter, setFilter] = useState<FilterProps>({
-    category: undefined,
-    status: undefined,
-    organizerUsername: undefined,
+    category: null,
+    status: null,
+    organizerUsername: null,
     isAccessible: false,
-    sdg: undefined,
+    sdg: id ? [Number(id)] : [],
   });
 
   if (!id) {

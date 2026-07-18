@@ -531,14 +531,14 @@ function EventControlPanel({ event }: EventProps) {
         minAttendees: event.minAttendees,
         public: event.isPublic,
         isAccessible: event.isAccessible ?? false,
-        sdg: event.sdg ?? [],
+        sdg: event.SDG ?? [],
         lat: event.lat,
         lng: event.lng,
       },
     });
 
     setOriginalLocation(event.location);
-    setSelectedSDGs(event.sdg ?? []);
+    setSelectedSDGs(event.SDG ?? []);
     setSelectedImages(event.imageUrls ?? []);
   }, [event]);
 
