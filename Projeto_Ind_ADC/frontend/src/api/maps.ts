@@ -142,7 +142,7 @@ export const useMapsPage = (mapsApiKey: string) => {
         <div>
           <h3>${event.title}</h3>
           <p>${event.location}</p>
-          
+          <a
             href="/events/${event.eventId}"
             class="btn btn-sm"
             style="background-color: var(--color-green); 
@@ -204,7 +204,7 @@ export const useMapsPage = (mapsApiKey: string) => {
 
   const renderEventMap = async (event: EventItem, container?: HTMLDivElement | null) => {
     const mapContainer = container ?? mapRef.current;
-    if (!mapContainer || !window.google || !hasValidCoords(event)) return;
+    if (!mapContainer || !window.google) return;
 
     let position: { lat: number; lng: number } | null = null;
 
