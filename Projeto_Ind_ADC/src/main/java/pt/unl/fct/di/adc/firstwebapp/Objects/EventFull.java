@@ -98,7 +98,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setMinAttendees(Full.getLong(entity,"min_attendees"));
 		event.setAttendee(Full.getLong(entity,"attendee_count"));
 		event.setPublic(Full.getBoolean(entity,"is_public"));
-		event.setStatus(Status.valueof(Full.getString(entity,"status")));
+		Status status = Status.valueof(Full.getString(entity,"status"));
+		event.setStatus(status != null ? status : Status.UPCOMING); // guard: missing/invalid stored status would NPE later (tomap, getStatus().equals(...))
 		event.setCreatedAt(Full.getLong(entity,"created_at") * TIME_DIVIDER);
 		event.setImageUrls(readImages(entity));
 		event.setpartner(Full.getStringList(entity,"partners"));
@@ -121,6 +122,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		map.put("durationMinutes", this.durationMinutes);
 		map.put("organizerUsername", Full.string(this.organizerUsername));
 		map.put("maxAttendees", this.maxAttendees);
+		map.put("minAttendees", this.getMinAttendees());
 		map.put("attendeeCount",attendee);
 		map.put("isPublic", this.isPublic);
 		map.put("status", this.status.name());
@@ -154,7 +156,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("image_urls", toImageValues(imageUrls))
 				.set("partners", Full.makeStringValueList(partners))
 				.set("is_accessible", this.isAccessible())
-				.set("SDG", Full.makeLongValueList(this.getSDGint()))
+				.set("SDG", Full.makeLongValueList(this.getSDG()))
 				.build();
 		return entity;
 	}
@@ -182,7 +184,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setPublic(input.isPublic());
 		event.setStatus(Status.UPCOMING);
 		event.setCreatedAt(System.currentTimeMillis());
-		event.setSDG(input.getSDGint());
+		event.setSDG(input.getSDG());
 		event.setAccessible(input.isAccessible());
 		event.setpartner(Collections.emptyList());
 		event.setImageUrls(Collections.emptyList());

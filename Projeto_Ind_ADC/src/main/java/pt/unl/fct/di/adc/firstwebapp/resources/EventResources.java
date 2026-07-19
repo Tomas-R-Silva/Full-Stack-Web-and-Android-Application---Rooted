@@ -176,17 +176,18 @@ public class EventResources {
 
 			List<Map<String, Object>> events = new LinkedList<>();
 
-			// SDG is optional in the request: getSDG() is null when the client omits it
-			// (the events page sends only pageSize + cursor). Guard against null/empty so
-			// we don't NPE on sdg.size() and so "no SDG filter" means "return all events".
+
 			List<Long> sdg = input.getSDG();
 			boolean filterBySdg = sdg != null && !sdg.isEmpty();
 
 			while (results.hasNext()) {
 				EventFull current = EventFull.fromdatabase(results.next());
 				if(filterBySdg) {
+					// Keep the event if it shares AT LEAST ONE SDG with the filter.
+					// b |= x means b = b | x (boolean OR-assign): b starts false and,
+					// once any filter SDG is found in the event, stays true for the rest.
 					boolean b=false;
-					List<Long> list = current.getSDGint();
+					List<Long> list = current.getSDG();
 					for(Long n:sdg)
 						b|=list.contains(n);
 					if(b)
@@ -254,8 +255,8 @@ public class EventResources {
 				existing.setAccessible(input.isAccessible());
 			if (input.isAccessiblenull() != null)
 				existing.setAccessible(input.isAccessible());
-			if(input.getSDGint()!= null)
-				existing.setSDG(input.getSDGint());			
+			if(input.getSDG()!= null)
+				existing.setSDG(input.getSDG());			
 			datastore.put(existing.toentity());
 			return ok(Map.of("message", "Event updated successfully"));
 
@@ -492,7 +493,8 @@ public class EventResources {
 			RespondJoinRequest.RespondJoinInput input = req.getInput();
 
 			EventFull event = getEventEntity(req.getInput());
-			UserFull user = AuthHelper.getUser(token);
+			// The requester (input.username) is the user being answered, NOT the organizer 
+			UserFull requester = AuthHelper.getUser(req.getInput());
 
 			if (event == null) ErrorException.trow(9902);
 
@@ -500,7 +502,7 @@ public class EventResources {
 			if (!event.isOwner(token))
 				Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
 
-			EventJoinRequestFull joinRequest = EventJoinRequestFull.fromdatabase(event,user);
+			EventJoinRequestFull joinRequest = EventJoinRequestFull.fromdatabase(event,requester);
 			if (joinRequest == null || !joinRequest.isStatus(RequestStatus.PENDING))
 				ErrorException.trow(9902); // no pending request for this user/event
 
@@ -516,7 +518,7 @@ public class EventResources {
 			if (maxAttendees > 0 && currentCount >= maxAttendees)
 				ErrorException.trow(9928);
 
-			datastore.put(AttendanceFull.newattendance(event,user).toentity());
+			datastore.put(AttendanceFull.newattendance(event,requester).toentity());
 			event.incAttendee();
 			datastore.put(event.toentity());
 

@@ -47,7 +47,7 @@ public class Event extends EventAtributsid {
 		this.setPublic(input.isPublic());
 		this.setStatus(Status.UPCOMING);
 		this.setCreatedAt(System.currentTimeMillis() / 1000L);
-		this.setSDG(input.getSDGint());
+		this.setSDG(input.getSDG());
 		this.setAccessible(input.isAccessible());
 		isValid();
 	}

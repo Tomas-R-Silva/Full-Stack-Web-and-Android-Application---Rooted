@@ -25,6 +25,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.AttendanceFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
@@ -185,6 +186,17 @@ public class ForumResources {
 					event.setStatus(Status.COMPLETED);
 					datastore.put(event.toentity());
 					eventsClosed++;
+					// Gamification: on completion, award +1 point per SDG to every user still enrolled.
+					List<Long> sdgs = event.getSDG();
+					QueryResults<Entity> attendees = datastore.run(Query.newEntityQueryBuilder()
+							.setKind("Attendance")
+							.setFilter(PropertyFilter.eq("event_id", event.getEventId()))
+							.build());
+					while (attendees.hasNext()) {
+						UserFull attendee = AuthHelper.getUser(AttendanceFull.fromdatabase(attendees.next()).getUsername());
+						attendee.addParticipation(sdgs);
+						datastore.put(attendee.toentity());
+					}
 				}
 			}
 			Log.info("Forum cleanup: closed " + eventsClosed + " events, deleted " + postsDeleted + " posts");

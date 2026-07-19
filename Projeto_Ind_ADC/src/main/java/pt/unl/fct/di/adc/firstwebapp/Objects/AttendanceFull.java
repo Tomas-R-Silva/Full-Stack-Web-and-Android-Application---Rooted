@@ -18,6 +18,7 @@ public class AttendanceFull implements Full{
 	private long joined;
 	
 	public String getEvent() {return event;}
+	public String getUsername() {return username;}
 	
 	public AttendanceFull(Key key) {this.key=key;}
 
