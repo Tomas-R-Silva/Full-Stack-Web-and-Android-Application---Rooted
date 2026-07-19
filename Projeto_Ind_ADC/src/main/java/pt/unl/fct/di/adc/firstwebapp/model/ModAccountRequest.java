@@ -28,6 +28,7 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
     	private String country;
     	private List<String> category;
     	private String avatar;
+    	private Boolean isPublic;
     	
         public String getEmail() {return email;}
         public void setEmail(String email) {this.email = email;}
@@ -41,7 +42,8 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
 		public void setCategory(List<String> category) {this.category=category;}
 		public String getAvatar() {return avatar;}
 		public void setAvatar(String avatar) {this.avatar = avatar;}
-		
+		public Boolean isPublic() {return isPublic;}
+		public void setAvatar(Boolean isPublic) {this.isPublic = isPublic;}
     }
 
 }

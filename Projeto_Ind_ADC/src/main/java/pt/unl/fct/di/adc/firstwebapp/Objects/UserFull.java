@@ -131,14 +131,14 @@ public class UserFull extends ShortUser implements Full{
 		map.put("role",Full.string(role.name()));
 		return map;
 	}
-	public Map<String,Object> tobigmap(String display,Friendstatus friendshipstatus){
+	public Map<String, Object> tobigmap(boolean admin, String displayname, Friendstatus friendshipstatus) {
 		Map<String,Object> map=this.tomap();
 		map.put("isPublic", isPublic);
 		map.put("avatar", avatar);
 		map.put("oldnames",Full.list(old));
 		map.put("borderID",Full.string(borderID));
 		map.put("friendship",friendshipstatus.toString());
-		if(isPublic||friendshipstatus.equals(Friendstatus.FRIENDS)) {
+		if(admin||isPublic||friendshipstatus.equals(Friendstatus.FRIENDS)) {
 			map.put("display",Full.string(display));//may be friend nickname or user display name
 			map.put("creation_time",creation);
 			map.put("bio",Full.string(bio));
