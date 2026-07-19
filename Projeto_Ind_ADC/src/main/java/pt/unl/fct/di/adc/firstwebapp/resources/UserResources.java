@@ -295,8 +295,15 @@ public class UserResources {
 			ChangeUserRoleInput input = request.getInput();
 			UserFull user = AuthHelper.getUser(input);
 			TokenFull token = AuthHelper.verifyToken(request);
-			Validator.unauthorized(token, new Role[] {Role.ADMIN});
-			Role newRole = Role.valueof(input.getNewrole());
+			Role oldRole = user.getRole(), newRole = Role.valueof(input.getNewrole());
+			if(oldRole.equals(newRole))
+				return buildresponse(Map.of("message", "Role updated successfully"));
+
+			Validator.unauthorized(token, 
+					(oldRole.equals(Role.ADMIN)||newRole.equals(Role.ADMIN)||newRole.equals(Role.BOFFICER))?
+							new Role[] {Role.ADMIN}:
+							new Role[] {Role.BOFFICER,Role.ADMIN});
+
 			user.setRole(newRole);
 			datastore.put(user.toentity());
 			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role

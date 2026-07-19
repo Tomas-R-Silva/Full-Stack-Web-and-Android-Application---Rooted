@@ -29,7 +29,7 @@ public class User extends ShortUser{
 		BOFFICER,
 		ADMIN;
 		public static Role valueof(String v) {
-			try{return Role.valueOf(v);}catch (Exception e) {return null;}
+			try{return Role.valueOf(v);}catch (Exception e) {return Role.USER;}
 		}
 	}
 	
