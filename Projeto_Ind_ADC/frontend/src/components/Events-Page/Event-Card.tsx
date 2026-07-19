@@ -1,10 +1,11 @@
 import type { EventProps } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import placeholder from "../../assets/images/placeholder.png";
+import accessible_w from "../../assets/icons/accessible_w.svg";
 
 function EventCard({ event }: EventProps) {
-  const startDate = new Date(event.startDate * 1000);
-  const Ids = [2, 6, 7, 8, 13];
+  const startDate = new Date(event.startDate);
+  const Ids = event.SDG ?? [];
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {
     day: "2-digit",
@@ -20,7 +21,7 @@ function EventCard({ event }: EventProps) {
     <div className="col">
       <div className="card h-100 shadow-sm">
         <img
-          src={event.imageUrls[0] || placeholder}
+          src={event.imageUrls?.[0]?.url ?? placeholder}
           className="card-img-top"
           alt={event.title}
           style={{
@@ -65,6 +66,32 @@ function EventCard({ event }: EventProps) {
                 Vacancies:
               </strong>{" "}
               {event.attendeeCount}/{event.maxAttendees}
+            </p>
+
+            <p className="mb-1">
+              <span
+                className="badge"
+                style={{
+                  background: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+              >
+                {event.isPublic ? "Public" : "Private"}
+              </span>
+              <span
+                className="badge ms-2"
+                style={{
+                  background: "var(--color-ods16)",
+                  color: "var(--color-white)",
+                }}
+              >
+                {event.isAccessible && (
+                  <img
+                    src={accessible_w}
+                    style={{ width: "12px", height: "12px" }}
+                  />
+                )}
+              </span>
             </p>
 
             <p className="mb-3">

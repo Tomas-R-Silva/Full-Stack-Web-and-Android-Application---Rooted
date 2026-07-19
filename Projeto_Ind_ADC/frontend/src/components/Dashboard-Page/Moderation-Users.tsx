@@ -26,7 +26,7 @@ function ModerationUsers() {
 
       setUsers(fetchedUsers);
 
-      if (fetchedUsers.length > 0) {
+      if (fetchedUsers && fetchedUsers.length > 0) {
         setManagedUser(fetchedUsers[0]);
       }
     } catch (err) {

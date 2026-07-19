@@ -1,13 +1,5 @@
-import type {
-  EventProps,
-  RequestListMessages,
-  ListMessagesResponse,
-  Post,
-} from "../../utils/types";
-import type {
-  RequestPostMessage,
-  PostMessageResponse,
-} from "../../utils/types";
+import type { EventProps, ListMessagesResponse, Post } from "../../utils/types";
+import type { RequestPostMessage } from "../../utils/types";
 import MessageRight from "./MessageRight";
 import MessageLeft from "./MessageLeft";
 import { useAuth } from "../AuthContext";
@@ -15,6 +7,7 @@ import { useEffect, useState } from "react";
 import { ListMessages } from "../../api/auth";
 import close from "../../assets/icons/close_white.svg";
 import { PostMessage } from "../../api/auth";
+import { useNotification } from "../NotificationContext";
 
 function Chat({ event }: EventProps) {
   const { isAuthenticated, username } = useAuth();
@@ -23,7 +16,7 @@ function Chat({ event }: EventProps) {
   const [loading, setLoading] = useState(false); //if the main page is being loaded
   const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
   const [error, setError] = useState<string | null>(null);
-  const [text, setText] = useState("");
+  const { notify } = useNotification();
   const [parentId, setParentId] = useState("");
   const [parentText, setParentText] = useState("");
   const [post, setPost] = useState("");
@@ -54,7 +47,8 @@ function Chat({ event }: EventProps) {
           jwt: token,
         },
         input: {
-          eventId: eventId,
+          id: eventId,
+          type: "EVENT",
           pageSize: 50,
           cursor: "",
         },
@@ -101,7 +95,8 @@ function Chat({ event }: EventProps) {
           jwt: token,
         },
         input: {
-          eventId: event.eventId,
+          id: event.eventId,
+          type: "EVENT",
           text: post,
           parentPostId: parentId,
         },
@@ -110,6 +105,9 @@ function Chat({ event }: EventProps) {
       const response = await PostMessage(payload);
       console.log(response);
       window.location.reload();
+      if (response.status === 200) {
+        notify("MESSAGE_POSTED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }

@@ -6,6 +6,7 @@ export type RequestSignIn = {
     password: string;
     email: string;
     confirmation: string;
+    category: string[];
     role: string;
   }
 };
@@ -31,13 +32,24 @@ export type LogInResponse = {
     token:{
       jwt:string,
       username: string,
-      email: string,
       role: string,
       issuedAt: number,
       expiresAt: number,
     }
   }
 };
+
+export type RequestLogOut = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type LogOutResponse = {
+  status: number,
+  data: {message:string;}
+}
 
 export interface AccountProps {
   image?: ImageBitmap;
@@ -62,8 +74,19 @@ export type ShowUsersResponse = {
   data: {users:User[]}
 }
 
+export type RequestShowUserRole = {
+   token: {jwt:string},
+   input: {username:string,}
+}
+
+export type ShowUserRoleResponse = {
+  status: number,
+  data: User,
+}
+
 export type User = {
   username: string,
+  display: string,
   email: string,
   role: string,
 }
@@ -75,16 +98,74 @@ export interface UserProps {
 export type RequestModAccount = {
   token: {jwt:string;}
   input: {
-    username:string;
+    username:string,
+    country: string,
+    birth: number,
+    bio:string,
     email:string,
-    country?: string,
-    birth?: number,
+    category: string[],
   }
 }
 
 export type ModAccountResponse = {
   status: number,
   data: {message:string;}
+}
+
+
+export type RequestUserInformation = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type UserInformationResponse = {
+  status: number,
+  data: {
+    username: string,
+    email: string,
+    role: string,
+    creation_time: number,
+    birth: number,
+    display: string,
+    bio: string,
+    country: string,
+    category: string[],
+    oldnames: string[],
+    ods: number[],
+    borderID: string,
+    points: number,
+    friendship: string,
+  }
+}
+
+export type RequestChangeBorder = {
+  token: {jwt:string;}
+  input: {
+    borderID:string;
+  }
+}
+
+export type ChangeBorderResponse = {
+  status: number,
+  data: {
+    message:string;
+    borderID: string;
+}
+}
+
+export type RequestFindUser = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+  }
+}
+
+export type FindUserResponse = {
+  status: number,
+  data: {
+    found: User[]}
 }
 
 export type RequestChangePassword = {
@@ -136,10 +217,24 @@ export type AddFriendResponse = {
   data: {message:string;}
 }
 
+export type RequestAddNickname = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    newname:string;
+   }
+}
+
+export type AddNicknameResponse = {
+  status: number,
+  data: {message:string;}
+}
+
 export type RequestUnfriend = {
   token: {jwt:string;}
   input: {username:string;}
 }
+
 
 export type UnfriendResponse = {
   status: number,
@@ -161,13 +256,22 @@ export type Friend = {
   Start: number,
 }
 
+export interface FriendProps {
+ friend: Friend;
+}
+
 export type RequestFriendsRequests = {
   token: {jwt:string;}
 }
 
 export type FriendsRequestsResponse = {
   status: number,
-  data: {friends:Friend[];}
+  data: {friends:Requester[];}
+}
+
+export type Requester = {
+  From: string,
+  "Sent At": number,
 }
 
 export type RequestAuthSessions = {
@@ -180,9 +284,10 @@ export type AuthSessionsResponse = {
 }
 
 export type TokenType = {
-  tokenID: string,
+  jwt: string,
   username: string,
   role: string,
+  issuedAt: number,
   expiresAt: number,
 }
 
@@ -198,12 +303,17 @@ export type EventItem = {
   durationMinutes: number;
   organizerUsername: string;
   maxAttendees: number;
+  minAttendees: number;
   attendeeCount: number;
   isPublic: boolean;
   status: string;
   createdAt: number;
-  coverImageUrl?: string;
-  imageUrls: string[];
+  partners: string[];
+  imageUrls: Image[];
+  isAccessible: boolean;
+  SDG: number[];
+  lat: number;
+  lng: number,
 };
 
 export type EventProps = {
@@ -221,18 +331,23 @@ export type RequestEventCreation = {
   durationMinutes: number,
   maxAttendees: number,
   minAttendees: number,
-  public: boolean
+  public: boolean,
+  accessible: boolean,
+  sdg: number[]
+  lat: number | null,
+  lng: number | null,
   }
 };
 
 export type EventCreationResponse = {
-  eventId: string,
-  message: string,
+  status: number,
+  data:{eventId: string,
+  message: string,}
 };
 
 export type RequestEventGetter = {
-  token?: {jwt:String;}
-  input: {eventId:String;}
+  token?: {jwt:string;}
+  input: {eventId:string;}
 }
 
 export type EventGetterResponse = {
@@ -242,11 +357,14 @@ export type EventGetterResponse = {
 
 export type RequestEventList = {
   token?: {jwt:string;}
-  input:{category?: string;
-  status?: string;
-  organizerUsername?: string;
-  pageSize: number;
-  cursor?: string;},
+  input:{
+    category: string | null;
+    status: string | null;
+    organizerUsername: string | null;
+    pageSize: number | null;
+    cursor: string | null;
+    isAccessible: boolean | null,
+    sdg: number[]},
 };
 
 export type EventListResponse = {
@@ -258,7 +376,7 @@ export type EventListResponse = {
 };
 
 export type RequestEventUpdate = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {
     eventId:string,
     title: string,
@@ -270,7 +388,10 @@ export type RequestEventUpdate = {
     maxAttendees: number,
     minAttendees: number,
     public: boolean,
-    coverImageUrl?: string,
+    isAccessible?: boolean,
+    sdg?: number[]
+    lat: number | null,
+    lng: number | null,
   }
 }
 
@@ -279,8 +400,34 @@ export type EventUpdateResponse = {
   data:{message: string},
 }
 
+export type RequestAddPartner = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    eventId:string;
+  }
+}
+
+export type AddPartnerResponse = {
+  status: number,
+  data:{message: string},
+}
+
+export type RequestRemovePartner = {
+  token: {jwt:string;}
+  input: {
+    username:string;
+    eventId:string;
+  }
+}
+
+export type RemovePartnerResponse = {
+  status: number,
+  data:{message: string},
+}
+
 export type RequestEventCancel = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {eventId:string;}
 }
 
@@ -289,8 +436,21 @@ export type EventCancelResponse = {
   data:{message: string},
 }
 
+export type RequestCompleteEvent = {
+  token: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type CompleteEventResponse = {
+  status: number,
+  data:{
+    message: string
+    awarded: number,
+  },
+}
+
 export type RequestEventDelete = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {eventId:string;}
 }
 
@@ -309,8 +469,38 @@ export type EventAttendResponse = {
   data:{message: string},
 }
 
-export type RequestEventUnattend = {
+export type RequestJoinRequests = {
   token?: {jwt:string;}
+  input: {eventId:string;}
+}
+
+export type JoinRequestsResponse = {
+  status: number,
+  data:{requests: JoinRequests[]},
+  count: number,
+}
+
+export type JoinRequests = {
+  requester: string,
+  requestedAt: number,
+}
+
+export type RequestRespondJoin = {
+  token?: {jwt:string;}
+  input: {
+    eventId:string;
+    username: string;
+    accept: boolean;
+  }
+}
+
+export type RespondJoinResponse = {
+  status: number,
+  data:{message: string},
+}
+
+export type RequestEventUnattend = {
+  token: {jwt:string;}
   input: {eventId:string;}
 }
 
@@ -330,13 +520,13 @@ export type EventAttendeesResponse = {
         count: number},
 }
 
-type Attendee = {
+export type Attendee = {
   username: string, 
   joinedAt: number,
 }
 
 export type RequestIsAttendee = {
-  token?: {jwt:string;}
+  token: {jwt:string;}
   input: {username:string,
     eventId: string,
   },
@@ -345,29 +535,67 @@ export type RequestIsAttendee = {
 export type IsAttendeeResponse = {
   status: number,
   data:{
-    eventId: boolean,
+    isattendee: boolean,
   }
+}
+
+export type RequestUserAttends = {
+  token: {jwt:string;}
+  input: {username:string},
+}
+
+export type UserAttendsResponse = {
+  status: number,
+  data:{
+    myattends: Attends[],
+    count: number,
+  },
+}
+
+export type Attends = {
+  eventId: string,
+  joinedAt: number,
 }
 
 export type RequestImageUpload = {
   token?: {jwt:string;}
   input: {eventId:string,
-    imageUrls: string[],
+    images: string[],
   },
 }
 
 export type ImageUploadResponse = {
   status: number,
   data:{
-    imageUrls: string[],
+    imageUrls: Image[],
     message: string
   },
+}
+
+export type RequestImageUploadURL = {
+  token?: {jwt:string;}
+  input: {eventId:string,
+    images: string[],
+  },
+}
+
+export type ImageUploadURLResponse = {
+  status: number,
+  data:{
+    imageUrls: Image[],
+    message: string
+  },
+}
+
+export type Image = {
+  id: string,
+  url: string,
 }
 
 export type RequestImageDelete = {
   token?: {jwt:string;}
   input: {eventId:string,
-    imageUrls: string[],
+    imageIds: string[],
   },
 }
 
@@ -377,36 +605,49 @@ export type ImageDeleteResponse = {
 }
 
 export type FilterProps = {
-  filter: string;
+  category: string | null;
+  status: string | null;
+  organizerUsername: string | null;
+  isAccessible: boolean | null;
+  sdg: number[] | null;
 };
 
 //========== Forum ==========
 
 export type RequestPostMessage = {
   token?: {jwt:string}
-  input: {eventId:string,
+  input: {
+    id: string,
+    type: string,
     text: string,
     parentPostId: string,
   },
 }
 
 export type PostMessageResponse = {
-  postId: string,
-  eventId: string,
-  authorUsername: string,
-  text: string,
-  createdAt: number,
-  parentPostId?: string,
+  status:number,
+  data:{
+    postId: string,
+    eventId: string,
+    authorUsername: string,
+    text: string,
+    createdAt: number,
+    parentPostId?: string,
+  }
 }
 
 export type RequestListMessages = {
   token?: {jwt:string},
-  input:{eventId: string,
-  pageSize?: number,
-  cursor?: string,}
+  input:{
+    id: string,
+    type: string,
+    pageSize?: number,
+    cursor?: string,
+  }
 }
 
 export type ListMessagesResponse = {
+  status:number,
   data:{posts: Post[],
   count: number,
   nextCursor?: string,},
@@ -427,6 +668,7 @@ export type RequestMessageDelete = {
 }
 
 export type MessageDeleteResponse = {
+  status:number,
   data:{message: string},
 }
 
@@ -459,3 +701,14 @@ export type SdgItem = {
   photo?: string;
   icon?: string;
 };
+
+//========== Borders ==========
+
+export type BorderItem = {
+  id:string,
+  idType: number,
+  name: string,
+  image: string,
+  value: number,
+  valueType: string,
+}

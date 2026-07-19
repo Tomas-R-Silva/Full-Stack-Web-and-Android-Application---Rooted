@@ -1,11 +1,17 @@
 import type {RequestSignIn, SignInResponse} from "../utils/types";
 import type {RequestLogIn, LogInResponse} from "../utils/types";
+import type {RequestLogOut, LogOutResponse} from "../utils/types";
 import type {RequestShowUsers, ShowUsersResponse} from "../utils/types";
+import type {RequestShowUserRole, ShowUserRoleResponse} from "../utils/types";
 import type {RequestModAccount, ModAccountResponse} from "../utils/types";
+import type {RequestUserInformation, UserInformationResponse} from "../utils/types";
+import type {RequestChangeBorder, ChangeBorderResponse} from "../utils/types";
+import type {RequestFindUser, FindUserResponse} from "../utils/types";
 import type {RequestChangePassword, ChangePasswordResponse} from "../utils/types";
 import type {RequestChangeRole, ChangeRoleResponse} from "../utils/types";
 import type {RequestDeleteAccount, DeleteAccountResponse} from "../utils/types";
 import type {RequestAddFriend, AddFriendResponse} from "../utils/types";
+import type {RequestAddNickname, AddNicknameResponse} from "../utils/types";
 import type {RequestUnfriend, UnfriendResponse} from "../utils/types";
 import type {RequestFriendsList, FriendsListResponse} from "../utils/types";
 import type {RequestFriendsRequests, FriendsRequestsResponse} from "../utils/types";
@@ -14,53 +20,58 @@ import type { RequestEventCreation, EventCreationResponse } from "../utils/types
 import type { RequestEventGetter, EventGetterResponse } from "../utils/types";
 import type { RequestEventList, EventListResponse} from "../utils/types";
 import type { RequestEventUpdate, EventUpdateResponse} from "../utils/types";
+import type { RequestAddPartner, AddPartnerResponse} from "../utils/types";
+import type { RequestRemovePartner, RemovePartnerResponse} from "../utils/types";
 import type { RequestEventCancel, EventCancelResponse} from "../utils/types";
+import type { RequestCompleteEvent, CompleteEventResponse} from "../utils/types";
 import type { RequestEventDelete, EventDeleteResponse} from "../utils/types";
 import type { RequestEventAttend, EventAttendResponse} from "../utils/types";
+import type {JoinRequestsResponse, RequestJoinRequests} from "../utils/types";
+import type {RespondJoinResponse, RequestRespondJoin} from "../utils/types";
 import type { RequestEventUnattend, EventUnattendResponse} from "../utils/types";
 import type { RequestEventAttendees, EventAttendeesResponse} from "../utils/types";
 import type { RequestIsAttendee, IsAttendeeResponse} from "../utils/types";
+import type { RequestUserAttends, UserAttendsResponse } from "../utils/types";
 import type { RequestImageUpload, ImageUploadResponse} from "../utils/types";
+import type { RequestImageUploadURL, ImageUploadURLResponse} from "../utils/types";
 import type { RequestImageDelete, ImageDeleteResponse} from "../utils/types";
 import type { RequestPostMessage, PostMessageResponse} from "../utils/types";
 import type { RequestMessageDelete, MessageDeleteResponse} from "../utils/types";
 import type { RequestListMessages, ListMessagesResponse} from "../utils/types";
 
-//========== USER ==========
-
-export const registerUser = async (
-  data: RequestSignIn
-): Promise<SignInResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/createaccount`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: data }),
-  });
-
-  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
-
-  const json: SignInResponse = await res.json();
-
-  return json;
+const handleTokenExpiration = (status: number) => {
+  if (status === 9904) {
+    removeToken();
+    window.location.replace("/login");
+    throw new Error("Session expired");
+  }
 };
 
-
-export const loginUser = async (
-  data: RequestLogIn
-): Promise<LogInResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+const apiRequest = async <T>(
+  endpoint: string,
+  data: unknown
+): Promise<T> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(data),
   });
 
-  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+  const json = await res.json();
 
-  const json: LogInResponse = await res.json();
+  handleTokenExpiration(json.status);
 
-  return json;
+  if (!res.ok) {
+    throw new Error(json.message);
+  }
+
+  return json as T;
 };
 
+
+//========== TOKEN ==========
 
 export const saveToken = (token: string) => {
   sessionStorage.setItem("token", token);
@@ -81,492 +92,130 @@ export const isAuthenticated = () => {
   return !!sessionStorage.getItem("token");
 };
 
-export const getUsers = async (
-  data: RequestShowUsers
-): Promise<ShowUsersResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/showusers`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
 
-  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+//========== USER ==========
 
-  const json: ShowUsersResponse = await res.json();
+export const registerUser = (data: RequestSignIn) =>
+  apiRequest<SignInResponse>("/createaccount", data);
 
-  return json;
-};
+export const loginUser = (data: RequestLogIn) =>
+  apiRequest<LogInResponse>("/login", data);
 
+export const logoutUser = (data: RequestLogOut) =>
+  apiRequest<LogOutResponse>("/logout", data);
 
-export const modAccount = async (
-  data: RequestModAccount
-): Promise<ModAccountResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/modaccount`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+export const getUsers = (data: RequestShowUsers) =>
+  apiRequest<ShowUsersResponse>("/showusers", data);
 
-  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+export const getUserRole = (data: RequestShowUserRole) =>
+  apiRequest<ShowUserRoleResponse>("/showuserrole", data);
 
-  const json: ModAccountResponse = await res.json();
+export const modAccount = (data: RequestModAccount) =>
+  apiRequest<ModAccountResponse>("/modaccount", data);
 
-  return json;
-};
+export const getUser = (data: RequestUserInformation) =>
+  apiRequest<UserInformationResponse>("/user", data);
 
+export const changeBorder = (data: RequestChangeBorder) =>
+  apiRequest<ChangeBorderResponse>("/changeborder", data);
 
-export const changePassword = async (
-  data: RequestChangePassword
-): Promise<ChangePasswordResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/changeuserpwd`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+export const findUser = (data: RequestFindUser) =>
+  apiRequest<FindUserResponse>("/find", data);
 
-  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+export const changePassword = (data: RequestChangePassword) =>
+  apiRequest<ChangePasswordResponse>("/changeuserpwd", data);
 
-  const json: ChangePasswordResponse = await res.json();
+export const changeRole = (data: RequestChangeRole) =>
+  apiRequest<ChangeRoleResponse>("/changeuserrole", data);
 
-  return json;
-};
+export const deleteAccount = (data: RequestDeleteAccount) =>
+  apiRequest<DeleteAccountResponse>("/deleteaccount", data);
 
+export const addFriend = (data: RequestAddFriend) =>
+  apiRequest<AddFriendResponse>("/addfriend", data);
 
-export const changeRole = async (
-  data: RequestChangeRole
-): Promise<ChangeRoleResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/changeuserrole`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+export const addNickName = (data: RequestAddNickname) =>
+  apiRequest<AddNicknameResponse>("/addnickname", data);
 
-  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
+export const unfriend = (data: RequestUnfriend) =>
+  apiRequest<UnfriendResponse>("/unfriend", data);
 
-  const json: ChangeRoleResponse = await res.json();
+export const getFriendsList = (data: RequestFriendsList) =>
+  apiRequest<FriendsListResponse>("/showfriends", data);
 
-  return json;
-};
+export const getFriendsRequests = (data: RequestFriendsRequests) =>
+  apiRequest<FriendsRequestsResponse>("/showfriendrequests", data);
 
-export const deleteAccount = async (
-  data: RequestDeleteAccount
-): Promise<DeleteAccountResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/deleteaccount`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok && res.status === 200) throw new Error((await res.json()).message);
-
-  const json: DeleteAccountResponse = await res.json();
-
-  return json;
-};
-
-
-export const addFriend = async (
-  data: RequestAddFriend
-): Promise<AddFriendResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/addfriend`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to add friend");
-  }
-
-  const json: AddFriendResponse = await res.json();
-  return json;
-};
-
-
-export const unfriend = async (
-  data: RequestUnfriend
-): Promise<UnfriendResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/unfriend`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to unfriend");
-  }
-
-  const json: UnfriendResponse = await res.json();
-  return json;
-};
-
-
-export const getFriendsList = async (
-  data: RequestFriendsList
-): Promise<FriendsListResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/showfriends`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to list friends");
-  }
-
-  const json: FriendsListResponse = await res.json();
-  return json;
-};
-
-
-export const getFriendsRequests = async (
-  data: RequestFriendsRequests
-): Promise<FriendsRequestsResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/showfriendrequests`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to friends requests");
-  }
-
-  const json: FriendsRequestsResponse = await res.json();
-  return json;
-};
-
-
-export const getAuthSessions = async (
-  data: RequestAuthSessions
-): Promise<AuthSessionsResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/showauthsessions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to show auth sessions.");
-  }
-
-  const json: AuthSessionsResponse = await res.json();
-  return json;
-};
+export const getAuthSessions = (data: RequestAuthSessions) =>
+  apiRequest<AuthSessionsResponse>("/showauthsessions", data);
 
 //========== EVENT ==========
 
+export const createEvent = (data: RequestEventCreation) =>
+  apiRequest<EventCreationResponse>("/events/create", data);
 
-export const createEvent = async (
-  data: RequestEventCreation
-): Promise<EventCreationResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/create`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+export const getEvent = (data: RequestEventGetter) =>
+  apiRequest<EventGetterResponse>("/events/get", data);
 
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to create an event");
-  }
+export const getEventList = (data: RequestEventList) =>
+  apiRequest<EventListResponse>("/events/list", data);
 
-  const json: EventCreationResponse = await res.json();
+export const updateEvent = (data: RequestEventUpdate) =>
+  apiRequest<EventUpdateResponse>("/events/update", data);
 
-  return json;
-};
+export const addPartner = (data: RequestAddPartner) =>
+  apiRequest<AddPartnerResponse>("/events/addpartner", data);
 
+export const removePartner = (data: RequestRemovePartner) =>
+  apiRequest<RemovePartnerResponse>("/events/removepartner", data);
 
-export const getEvent = async (
-  data: RequestEventGetter
-): Promise<EventGetterResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/get`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
+export const cancelEvent = (data: RequestEventCancel) =>
+  apiRequest<EventCancelResponse>("/events/cancel", data);
 
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to get an event");
-  }
+export const completeEvent = (data: RequestCompleteEvent) =>
+  apiRequest<CompleteEventResponse>("/events/complete", data);
 
-  const json: EventGetterResponse = await res.json();
-  return json;
-};
+export const deleteEvent = (data: RequestEventDelete) =>
+  apiRequest<EventDeleteResponse>("/events/delete", data);
 
+export const attendEvent = (data: RequestEventAttend) =>
+  apiRequest<EventAttendResponse>("/events/attend", data);
 
-export const getEventList = async (
-  data: RequestEventList
-): Promise<EventListResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/list`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+export const requestsJoinEvent = (data: RequestJoinRequests) =>
+  apiRequest<JoinRequestsResponse>("/events/joinrequests", data);
 
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to fetch event list");
-  }
+export const respondJoinEvent = (data: RequestRespondJoin) =>
+  apiRequest<RespondJoinResponse>("/events/respondjoin", data);
 
-  const json: EventListResponse = await res.json();
+export const unattendEvent = (data: RequestEventUnattend) =>
+  apiRequest<EventUnattendResponse>("/events/unattend", data);
 
-  return json;
-};
+export const attendeesEvent = (data: RequestEventAttendees) =>
+  apiRequest<EventAttendeesResponse>("/events/attendees", data);
 
+export const isAttendee = (data: RequestIsAttendee) =>
+  apiRequest<IsAttendeeResponse>("/events/isattendee", data);
 
-export const updateEvent = async (
-  data: RequestEventUpdate
-): Promise<EventUpdateResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/update`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
+export const UserAttends = (data: RequestUserAttends) =>
+  apiRequest<UserAttendsResponse>("/events/myattends", data);
 
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to update an event");
-  }
+export const uploadImage = (data: RequestImageUpload) =>
+  apiRequest<ImageUploadResponse>("/events/uploadimages", data);
 
-  const json: EventUpdateResponse = await res.json();
-  return json;
-};
+export const uploadImageURL = (data: RequestImageUploadURL) =>
+  apiRequest<ImageUploadURLResponse>("/events/uploadimageurls", data);
 
-
-export const cancelEvent = async (
-  data: RequestEventCancel
-): Promise<EventCancelResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/cancel`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to cancel an event");
-  }
-
-  const json: EventCancelResponse = await res.json();
-  return json;
-};
-
-
-export const deleteEvent = async (
-  data: RequestEventDelete
-): Promise<EventDeleteResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/delete`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to delete an event");
-  }
-
-  const json: EventDeleteResponse = await res.json();
-  return json;
-};
-
-
-export const attendEvent = async (
-  data: RequestEventAttend
-): Promise<EventAttendResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/attend`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to attend an event");
-  }
-
-  const json: EventAttendResponse = await res.json();
-  return json;
-};
-
-
-export const unattendEvent = async (
-  data: RequestEventUnattend
-): Promise<EventUnattendResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/unattend`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to unattend an event");
-  }
-
-  const json: EventUnattendResponse = await res.json();
-  return json;
-};
-
-
-export const attendeesEvent = async (
-  data: RequestEventAttendees
-): Promise<EventAttendeesResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/attendees`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to list attendees an event");
-  }
-
-  const json: EventAttendeesResponse = await res.json();
-  return json;
-};
-
-
-export const isAttendee = async (
-  data: RequestIsAttendee
-): Promise<IsAttendeeResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/isattendee`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to check if it is attendee of an event");
-  }
-
-  const json: IsAttendeeResponse = await res.json();
-  return json;
-};
-
-
-export const uploadImage = async (
-  data: RequestImageUpload
-): Promise<ImageUploadResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/uploadimages`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to upload an image");
-  }
-
-  const json: ImageUploadResponse = await res.json();
-  return json;
-};
-
-
-export const deleteImage = async (
-  data: RequestImageDelete
-): Promise<ImageDeleteResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/events/deleteimages`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to delete an image");
-  }
-
-  const json: ImageDeleteResponse = await res.json();
-  return json;
-};
+export const deleteImage = (data: RequestImageDelete) =>
+  apiRequest<ImageDeleteResponse>("/events/deleteimage", data);
 
 
 //========== Forum ==========
 
+export const PostMessage = (data: RequestPostMessage) =>
+  apiRequest<PostMessageResponse>("/forum/post", data);
 
-export const PostMessage = async (
-  data: RequestPostMessage
-): Promise<PostMessageResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/forum/post`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
+export const DeleteMessage = (data: RequestMessageDelete) =>
+  apiRequest<MessageDeleteResponse>("/forum/delete", data);
 
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to create a posts");
-  }
-
-  const json: PostMessageResponse = await res.json();
-  return json;
-};
-
-
-export const DeleteMessage = async (
-  data: RequestMessageDelete
-): Promise<MessageDeleteResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/forum/delete`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to delete a post");
-  }
-
-  const json: MessageDeleteResponse = await res.json();
-  return json;
-};
-
-
-export const ListMessages = async (
-  data: RequestListMessages
-): Promise<ListMessagesResponse> => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/forum/list`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok && res.status === 200) {
-    throw new Error("Failed to list the posts");
-  }
-
-  const json: ListMessagesResponse = await res.json();
-  return json;
-};
+export const ListMessages = (data: RequestListMessages) =>
+  apiRequest<ListMessagesResponse>("/forum/list", data);

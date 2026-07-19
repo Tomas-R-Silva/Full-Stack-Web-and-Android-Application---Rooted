@@ -3,6 +3,7 @@ import type { RequestLogIn } from "../../utils/types";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../api/auth";
 import { useAuth } from "../AuthContext";
+import { useNotification } from "../NotificationContext";
 
 function LogInStep1() {
   //========== Hook ==========
@@ -20,6 +21,7 @@ function LogInStep1() {
 
   //========== Receber Input e Limpar erros ==========
   const { login } = useAuth();
+  const { notify } = useNotification();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,11 +62,17 @@ function LogInStep1() {
       const token = response.data.token.jwt;
       const username = response.data.token.username;
       const role = response.data.token.role;
-      const email = response.data.token.email;
-      login(token, username, role, email);
+      console.log(response);
+      login(token, username, role);
       navigate("/#");
+      if (response.status === 200) {
+        notify("LOGIN_SUCCESS");
+      }
+      if (response.status === 9900) {
+        notify("INVALID_CREDENTIALS");
+      }
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 

@@ -1,32 +1,81 @@
 import NavBar from "../NavBar/NavBar";
 import Ticket from "./Ticket";
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import type {
   RequestEventGetter,
   EventGetterResponse,
   EventItem,
-  RequestEventUpdate,
 } from "../../utils/types";
 import { getEvent } from "../../api/auth";
 import placeholder from "../../assets/images/placeholder.png";
 import "./Event-Elements.css";
 import { useAuth } from "../AuthContext";
 import editSquare_w from "../../assets/icons/edit_square_white.svg";
-import EventUpdater from "./Event-Updater";
+import manageAccounts_w from "../../assets/icons/manage_accounts_w.svg";
 import Chat from "../Forum-elements/Chat";
+import { useMapsPage } from "../../api/maps";
+import { getUser } from "../../api/auth";
+import type { UserInformationResponse } from "../../utils/types";
+import account_circle_w from "../../assets/icons/account_circle_w.svg";
+import person_pin from "../../assets/icons/person_pin_w.svg";
+import verified from "../../assets/icons/verified_w.svg";
+import { getBorderItem } from "../../utils/borders";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventItem | undefined>();
   const { isAuthenticated, username } = useAuth();
-  const [showModal, setShowModal] = useState(false);
-  type UpdateField = keyof RequestEventUpdate["input"];
-  const [field, setField] = useState<UpdateField>("title");
+  const eventMapRef = useRef<HTMLDivElement | null>(null);
+  const { renderEventMap } = useMapsPage(import.meta.env.VITE_API_KEY);
+  const [user, setUser] = useState<UserInformationResponse>();
+  const navigate = useNavigate();
+  const [sdgs, setSdgs] = useState<{ id: number; value: number }[]>([]);
+
+  const loadUser = async (organizer: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!organizer) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: organizer,
+        },
+      });
+      console.log(res);
+      setUser(res);
+      setSdgs(loadSDGAnalitics(res.data.ods));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadSDGAnalitics = (sdgs: number[]) => {
+    return sdgs
+      .map((value, index) => ({
+        id: index + 1,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
+  };
 
   const loadEvents = async (id: string) => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      console.log("User is not authenticated");
+    }
+
     const request: RequestEventGetter = {
-      token: { jwt: "" },
+      token: { jwt: token ?? "" },
       input: { eventId: id },
     };
     const res: EventGetterResponse = await getEvent(request);
@@ -35,12 +84,9 @@ function EventElements() {
 
     setEvent(res.data.event);
 
-    console.log(event);
-  };
+    loadUser(res.data.event.organizerUsername);
 
-  const handleUpdate = (newField: any) => {
-    setShowModal(true);
-    setField(newField);
+    console.log(res.data.event);
   };
 
   useEffect(() => {
@@ -48,23 +94,65 @@ function EventElements() {
     loadEvents(id);
   }, [id]);
 
+  useEffect(() => {
+    if (!event || !eventMapRef.current) return;
+
+    renderEventMap(event, eventMapRef.current);
+  }, [event, renderEventMap]);
+
   return (
     <>
       <NavBar />
+      <div className="my-2 mx-2">
+        <div className="d-flex justify-content-between align-items-center">
+          <p
+            className="mb-0"
+            style={{
+              color: "white",
+              fontSize: "12px",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate("/events")}
+          >
+            ← Return to Events
+          </p>
+
+          {isAuthenticated && event && event.organizerUsername === username && (
+            <div className="d-flex gap-3">
+              <img
+                src={editSquare_w}
+                alt="Edit event"
+                onClick={() => navigate(`/events/${id}/edit`)}
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  cursor: "pointer",
+                }}
+              />
+
+              <img
+                src={manageAccounts_w}
+                alt="Manage participants"
+                onClick={() => navigate(`/events/${id}/joins`)}
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  cursor: "pointer",
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
       <div className="hero-wrapper">
         <div className="top-image">
           {event && (
-            <img src={event.imageUrls[0] || placeholder} alt={event.title} />
+            <img
+              src={event.imageUrls?.[0]?.url ?? placeholder}
+              alt={event.title}
+            />
           )}
         </div>
-        {isAuthenticated && event && event.organizerUsername === username && (
-          <img
-            className="edit-icon"
-            src={editSquare_w}
-            onClick={() => handleUpdate("coverImageUrl")}
-            style={{ cursor: "pointer" }}
-          />
-        )}
 
         {event && (
           <div className="ticket-wrapper">
@@ -77,15 +165,6 @@ function EventElements() {
               <div className="col-8">
                 <h2 style={{ color: "var(--color-white)" }}>
                   Event Descriprion:{" "}
-                  {isAuthenticated &&
-                    event &&
-                    event.organizerUsername === username && (
-                      <img
-                        src={editSquare_w}
-                        onClick={() => handleUpdate("description")}
-                        style={{ cursor: "pointer" }}
-                      />
-                    )}
                 </h2>
                 <p className="mb-1" style={{ color: "var(--color-white)" }}>
                   {event?.description}
@@ -95,8 +174,108 @@ function EventElements() {
                 <h2 style={{ color: "var(--color-white)" }}>
                   Event Organizer:
                 </h2>
-                <p style={{ color: "var(--color-white)" }}>
-                  {event?.organizerUsername}
+                <div
+                  className="rounded-3 px-3 py-3 d-flex align-items-center justify-content-between"
+                  style={{ background: "var(--color-green2)" }}
+                >
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "80px",
+                      height: "80px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={account_circle_w}
+                      alt="Avatar"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
+
+                    {user && user.data.borderID && (
+                      <img
+                        src={getBorderItem(user.data.borderID)?.image}
+                        alt=""
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          pointerEvents: "none",
+                          userSelect: "none",
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-grow-1 ms-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <h5
+                        className="mb-0 fw-bold"
+                        style={{ color: "var(--color-white)" }}
+                      >
+                        {user?.data.username || "Deleted account"}
+                        {user?.data.role === "PARTNER" && (
+                          <img className="ms-1" src={verified} />
+                        )}
+                      </h5>
+                      <div className="d-flex gap-1 ms-3">
+                        {sdgs.map(({ id, value }) => (
+                          <div
+                            key={id}
+                            style={{
+                              width: "12px",
+                              height: "12px",
+                              borderRadius: "50%",
+                              backgroundColor:
+                                value !== 0
+                                  ? `var(--color-ods${id})`
+                                  : "var(--color-white)",
+                              border: `1px solid ${
+                                value !== 0
+                                  ? `var(--color-ods${id})`
+                                  : "var(--color-green)"
+                              }`,
+                              flexShrink: 0,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <small
+                      style={{
+                        color: "var(--color-white)",
+                      }}
+                    >
+                      {user?.data.email || "Deleted account"}
+                    </small>
+                  </div>
+
+                  <img
+                    src={person_pin}
+                    alt="Action"
+                    onClick={() => navigate("/profile/" + user?.data.username)}
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                  />
+                </div>
+                <h2 className="mt-4" style={{ color: "var(--color-white)" }}>
+                  Event Partners:
+                </h2>
+                <p className="mb-1" style={{ color: "var(--color-white)" }}>
+                  {event && event.partners && event.partners.length !== 0
+                    ? event.partners
+                    : "This event has no partners."}
                 </p>
               </div>
             </div>
@@ -107,15 +286,32 @@ function EventElements() {
                 </h2>
 
                 <div className="photo-collection">
-                  {event?.imageUrls?.map((url, index) => (
-                    <img key={index} src={url} alt={`Event ${index + 1}`} />
+                  {event?.imageUrls?.length === 0 && (
+                    <p style={{ color: "var(--color-white)" }}>
+                      No images available.
+                    </p>
+                  )}
+
+                  {event?.imageUrls?.map((image, index) => (
+                    <img
+                      key={image.id}
+                      src={image.url}
+                      alt={`Event ${index + 1}`}
+                    />
                   ))}
                 </div>
               </div>
 
               <div className="col-4">
                 <h2 style={{ color: "var(--color-white)" }}>Event Location:</h2>
-                {/* map here */}
+                <div
+                  ref={eventMapRef}
+                  style={{
+                    width: "100%",
+                    height: "300px",
+                    borderRadius: "8px",
+                  }}
+                />
               </div>
             </div>
             <div className="row mt-5">
@@ -124,13 +320,6 @@ function EventElements() {
             </div>
           </div>
         </section>
-        {showModal && event && (
-          <EventUpdater
-            onClose={() => setShowModal(false)}
-            event={event}
-            field={field}
-          />
-        )}
       </div>
     </>
   );

@@ -86,11 +86,19 @@ function Activity() {
                       <div>
                         <span
                           className="fw-semibold"
-                          style={{ color: "var(--color-grenn)" }}
+                          style={{ color: "var(--color-white)" }}
                         >
-                          TokenId:{" "}
+                          TokenId:
                         </span>
-                        <span>{session.tokenID}</span>
+
+                        <div
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {session.jwt}
+                        </div>
                       </div>
 
                       <div>

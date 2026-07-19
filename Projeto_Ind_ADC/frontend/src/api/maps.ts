@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getEventList } from "./auth";
+import type { FilterProps } from "../utils/types";
 
 declare global {
   interface Window {
@@ -12,7 +13,8 @@ export interface EventItem {
   eventId: string;
   title: string;
   location: string;
-  position?: { lat: number; lng: number };
+  lat: number;
+  lng: number;
   distance?: number;
   [key: string]: any;
 }
@@ -42,6 +44,11 @@ export const computeDistanceMeters = (
   return 6371000 * c;
 };
 
+const hasValidCoords = (event: EventItem): boolean =>
+  typeof event.lat === "number" &&
+  typeof event.lng === "number" &&
+  !(event.lat === 0 && event.lng === 0);
+
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
@@ -67,15 +74,15 @@ export const useMapsPage = (mapsApiKey: string) => {
       .map((event) => ({
         ...event,
         distance:
-          hasGeolocation && center && event.position
-            ? computeDistanceMeters(center, event.position)
+          hasGeolocation && center && hasValidCoords(event)
+            ? computeDistanceMeters(center, { lat: event.lat, lng: event.lng })
             : -1,
       }))
       .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
   }, [center, events, hasGeolocation]);
 
   // -------------------------------------------------------------------------
-  // Map actions (stable refs via mapInstanceRef / markersRef)
+  // Map actions
   // -------------------------------------------------------------------------
 
   const openInfoWindow = (infoWindow: any, marker: any) => {
@@ -95,9 +102,10 @@ export const useMapsPage = (mapsApiKey: string) => {
 
   const focusEvent = (event: EventItem) => {
     const map = mapInstanceRef.current;
-    if (!map || !event.position) return;
+    if (!map || !hasValidCoords(event)) return;
 
-    map.panTo(event.position);
+    const position = { lat: event.lat, lng: event.lng };
+    map.panTo(position);
     map.setZoom(15);
     setActiveEventId(event.eventId);
 
@@ -105,6 +113,159 @@ export const useMapsPage = (mapsApiKey: string) => {
     if (entry) {
       openInfoWindow(entry.infoWindow, entry.marker);
     }
+  };
+
+  const clearMarkers = () => {
+    markersRef.current.forEach(({ marker }) => marker.setMap(null));
+    markersRef.current.clear();
+  };
+
+  const addMarkerToMap = (map: any, event: EventItem) => {
+    const position = { lat: event.lat, lng: event.lng };
+
+    const marker = new window.google.maps.Marker({
+      position,
+      map,
+      title: event.title,
+      icon: {
+        path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        scale: 9,
+        fillColor: "green",
+        fillOpacity: 1,
+        strokeColor: "white",
+        strokeWeight: 2,
+      },
+    });
+
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: `
+        <div>
+          <h3>${event.title}</h3>
+          <p>${event.location}</p>
+          
+            href="/events/${event.eventId}"
+            class="btn btn-sm"
+            style="background-color: var(--color-green); 
+            color: var(--color-white); 
+            border: none; 
+            display: block; 
+            width: 100%; 
+            text-align: center;"
+          >
+            View event
+          </a>
+        </div>
+      `,
+    });
+
+    marker.addListener("click", () => openInfoWindow(infoWindow, marker));
+    markersRef.current.set(event.eventId, { marker, infoWindow });
+  };
+
+  const renderVisibleMarkers = (eventList: EventItem[]) => {
+    const map = mapInstanceRef.current;
+    if (!map || !window.google) return;
+
+    clearMarkers();
+
+    eventList.forEach((event) => {
+      if (hasValidCoords(event)) {
+        addMarkerToMap(map, event);
+      }
+    });
+  };
+
+  const setMapContainer = (node: HTMLDivElement | null) => {
+    mapRef.current = node;
+  };
+
+  const getMapRef = () => mapRef.current;
+  const getSortedEvents = () => sortedEvents;
+  const getActiveEventId = () => activeEventId;
+  const getHasGeolocation = () => hasGeolocation;
+
+  const getFilteredEvents = (
+    nearYouEnabled: boolean,
+    nearYouRadiusKm: number,
+  ) => {
+    return sortedEvents.filter((event) => {
+      const matchesNearYou =
+        !nearYouEnabled ||
+        !hasGeolocation ||
+        (event.distance != null &&
+          event.distance >= 0 &&
+          event.distance <= nearYouRadiusKm / 1000);
+
+      return (
+        matchesNearYou
+      );
+    });
+  };
+
+  const renderEventMap = async (event: EventItem, container?: HTMLDivElement | null) => {
+    const mapContainer = container ?? mapRef.current;
+    if (!mapContainer || !window.google || !hasValidCoords(event)) return;
+
+    let position: { lat: number; lng: number } | null = null;
+
+    if (hasValidCoords(event)) {
+      position = { lat: event.lat, lng: event.lng };
+    } else if (event.location) {
+      position = await geocodeAddress(event.location);
+    }
+    
+
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = new window.google.maps.Map(mapContainer, {
+        center: position,
+        zoom: 15,
+        mapTypeId: "hybrid",
+        streetViewControl: false,
+        fullscreenControl: false,
+      });
+    }
+
+    const map = mapInstanceRef.current;
+    map.setCenter(position);
+    map.setZoom(15);
+
+    new window.google.maps.Marker({
+      position,
+      map,
+      title: event.title,
+      icon: {
+        path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        scale: 9,
+        fillColor: "green",
+        fillOpacity: 1,
+        strokeColor: "white",
+        strokeWeight: 2,
+      },
+    });
+  };
+
+    //========== Geocoding ==========
+  const geocodeAddress = (
+    address: string,
+  ): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      if (!window.google) {
+        resolve(null);
+        return;
+      }
+
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address }, (results: any, status: any) => {
+        if (status === "OK" && results[0]) {
+          resolve({
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng(),
+          });
+        } else {
+          resolve(null);
+        }
+      });
+    });
   };
 
   // -------------------------------------------------------------------------
@@ -170,79 +331,34 @@ export const useMapsPage = (mapsApiKey: string) => {
       );
     };
 
-    const addMarker = (
-      map: any,
-      position: { lat: number; lng: number },
-      event: EventItem,
-    ) => {
-      const marker = new window.google.maps.Marker({
-        position,
-        map,
-        title: event.title,
-        icon: {
-          path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-          scale: 9,
-          fillColor: "green",
-          fillOpacity: 1,
-          strokeColor: "white",
-          strokeWeight: 2,
-        },
-      });
-
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `
-          <div>
-            <h3>${event.title}</h3>
-            <p>${event.location}</p>
-            <a
-              href="/events/${event.eventId}"
-              class="btn btn-sm"
-              style="background-color: var(--color-green); color: var(--color-white); border: none; display: block; width: 100%; text-align: center;"
-            >
-              View event
-            </a>
-          </div>
-        `,
-      });
-
-      marker.addListener("click", () => openInfoWindow(infoWindow, marker));
-      markersRef.current.set(event.eventId, { marker, infoWindow });
-    };
-
-    const renderEvents = (map: any, eventList: EventItem[]) => {
-      const geocoder = new window.google.maps.Geocoder();
-
-      eventList.forEach((event) => {
-        geocoder.geocode(
-          { address: event.location },
-          (results: any, status: any) => {
-            if (status === "OK" && results[0]) {
-              const pos = {
-                lat: results[0].geometry.location.lat(),
-                lng: results[0].geometry.location.lng(),
-              };
-              const updatedEvent = { ...event, position: pos };
-              setEvents((current) =>
-                current.map((item) =>
-                  item.eventId === updatedEvent.eventId ? updatedEvent : item,
-                ),
-              );
-              addMarker(map, pos, updatedEvent);
-            }
-          },
-        );
-      });
-    };
-
     const addEventMarkers = async (map: any) => {
       try {
-        const res = await getEventList({ pageSize: 100, cursor: "" });
+        const res = await getEventList({
+          input: { category: null, status: null, organizerUsername: null, pageSize: 100, cursor: "", isAccessible: null, sdg: [] },
+        });
         const eventsData: EventItem[] =
           Array.isArray(res.data.events) && res.data.events.length > 0
             ? res.data.events
             : [];
-        setEvents(eventsData);
-        renderEvents(map, eventsData);
+
+        const resolvedEvents = await Promise.all(
+          eventsData.map(async (event) => {
+            if (event.lat === 0 && event.lng === 0 && event.location) {
+              const coords = await geocodeAddress(event.location);
+              if (coords) {
+                return { ...event, lat: coords.lat, lng: coords.lng };
+              }
+            }
+            return event;
+          }),
+        );
+
+        setEvents(resolvedEvents);
+        resolvedEvents.forEach((event) => {
+          if (hasValidCoords(event)) {
+            addMarkerToMap(map, event);
+          }
+        });
       } catch (err) {
         console.error("Failed to fetch server events:", err);
       }
@@ -281,16 +397,19 @@ export const useMapsPage = (mapsApiKey: string) => {
     };
 
     loadScript();
-  }, []);
-
-  // -------------------------------------------------------------------------
-  // Exposed API
-  // -------------------------------------------------------------------------
+  }, [mapsApiKey]);
 
   return {
-    mapRef,
-    sortedEvents,
-    activeEventId,
+    setMapContainer,
+    getMapRef,
+    getSortedEvents,
+    getActiveEventId,
+    getHasGeolocation,
+    getFilteredEvents,
     focusEvent,
+    renderEventMap,
+    renderVisibleMarkers,
+    geocodeAddress,
+    hasValidCoords,
   };
 };

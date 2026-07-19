@@ -3,27 +3,41 @@ import type {
   RequestChangePassword,
   RequestModAccount,
 } from "../../utils/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { changePassword, modAccount } from "../../api/auth";
+import { getUser } from "../../api/auth";
+import type { UserInformationResponse } from "../../utils/types";
+import { useNotification } from "../NotificationContext";
+import { countries } from "../../utils/countries";
 
 type ErrorState = {
   [K in keyof RequestModAccount["input"]]: string;
 };
 
 function AccountInformation() {
-  const { username, role, email } = useAuth();
+  const { username, role } = useAuth();
+  const { notify } = useNotification();
+  const [user, setUser] = useState<UserInformationResponse>();
   const [changingPassword, setChangingPassword] = useState(false);
   const [formData, setFormData] = useState<RequestModAccount>({
     token: { jwt: "" },
     input: {
       username: username ?? "",
       email: "",
+      bio: "",
+      country: "",
+      birth: 0,
+      category: [],
     },
   });
 
   const [errors, setErrors] = useState<ErrorState>({
     username: "",
     email: "",
+    bio: "",
+    country: "",
+    birth: "",
+    category: "",
   });
 
   const [passwordData, setPassowrdData] = useState<RequestChangePassword>({
@@ -36,7 +50,9 @@ function AccountInformation() {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
 
@@ -74,6 +90,10 @@ function AccountInformation() {
     const newErrors = {
       username: "",
       email: "",
+      bio: "",
+      country: "",
+      birth: "",
+      category: "",
     };
 
     if (formData.input.email && !formData.input.email.includes("@")) {
@@ -111,10 +131,63 @@ function AccountInformation() {
       const responsePwd = await changePassword(payloadPwd);
       console.log(responsePwd);
       window.location.reload();
+      if (responseMod.status === 200) {
+        notify("ACCOUNT_UPDATED");
+      }
+      if (responsePwd.status === 200) {
+        notify("PASSWORD_CHANGED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
   };
+
+  const loadUser = async (organizer: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!organizer) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: organizer,
+        },
+      });
+      console.log(res);
+      setUser(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!username) return;
+    loadUser(username);
+  }, [username]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        username: user.data.username,
+        email: user.data.email ?? "",
+        bio: user.data.bio ?? "",
+        country: user.data.country ?? "",
+        birth: user.data.birth ?? 0,
+        category: user.data.category ?? [],
+      },
+    }));
+  }, [user]);
 
   return (
     <>
@@ -135,15 +208,31 @@ function AccountInformation() {
               <input
                 type="text"
                 name="username"
-                value={username ?? ""}
                 readOnly
+                className="form-control border-0"
+                style={{
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+                placeholder={user?.data.username + " (Not editable)"}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label text-white fw-semibold">
+                Display Name
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={username ?? ""}
                 onChange={handleChange}
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
-                placeholder={username ?? "No username"}
+                placeholder={user?.data.display ?? "No username"}
               />
               {errors.username && (
                 <small className="text-danger">{errors.username}</small>
@@ -165,7 +254,8 @@ function AccountInformation() {
                   color: "var(--color-white)",
                 }}
                 placeholder={
-                  "Change your email here. Current: " + (email ?? "No email")
+                  "Change your email here. Current: " +
+                  (user?.data.email ?? "No email")
                 }
               />
               {errors.email && (
@@ -233,24 +323,98 @@ function AccountInformation() {
 
             <div className="mb-3">
               <label className="form-label text-white fw-semibold">
-                Country
+                Biography
               </label>
-              <input
-                type="text"
+              <textarea
+                name="bio"
+                value={formData.input.bio}
+                onChange={handleChange}
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
                   color: "var(--color-white)",
                 }}
+                placeholder={
+                  "Change your description here. Current: " + user?.data.bio
+                }
               />
             </div>
 
             <div className="mb-3">
-              <label className="form-label text-white fw-semibold">
-                Date of Birth
+              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
+                Country
+                {!user?.data.country && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </label>
+
+              {!user?.data.country && (
+                <small className="text-warning d-block mb-2">
+                  Please complete your country.
+                </small>
+              )}
+
+              <select
+                name="country"
+                value={formData.input.country}
+                onChange={handleChange}
+                className="form-select border-0"
+                style={{
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+              >
+                <option value="">Select your country...</option>
+
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label text-white fw-semibold d-flex align-items-center gap-2">
+                Date of Birth
+                {!user?.data.birth && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
+              </label>
+
+              {!user?.data.birth && (
+                <small className="text-warning d-block mb-2">
+                  Please complete your date of birth.
+                </small>
+              )}
+
               <input
                 type="date"
+                name="birth"
+                value={
+                  formData.input.birth
+                    ? new Date(formData.input.birth).toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    input: {
+                      ...prev.input,
+                      birth: new Date(e.target.value).getTime(),
+                    },
+                  }))
+                }
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",

@@ -1,29 +1,18 @@
 import type { EventProps } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useAuth } from "../AuthContext";
-import editSquare from "../../assets/icons/edit_square.svg";
 import { useState, useEffect } from "react";
-import EventUpdater from "./Event-Updater";
-import type { RequestEventUpdate } from "../../utils/types";
-import type {
-  RequestEventAttend,
-  EventAttendResponse,
-} from "../../utils/types";
-import type {
-  RequestEventUnattend,
-  EventUnattendResponse,
-} from "../../utils/types";
-import type { RequestIsAttendee, IsAttendeeResponse } from "../../utils/types";
+import type { RequestEventAttend } from "../../utils/types";
+import type { RequestEventUnattend } from "../../utils/types";
+import type { RequestIsAttendee } from "../../utils/types";
 import { attendEvent, unattendEvent, isAttendee } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
+import accessible_w from "../../assets/icons/accessible_w.svg";
 
 function Ticket({ event }: EventProps) {
-  const startDate = new Date(event.startDate * 1000);
-  const Ids = [2, 6, 7, 8, 13];
+  const startDate = new Date(event.startDate);
+  const Ids = event.SDG ?? [];
   const { isAuthenticated, username } = useAuth();
-  const [showModal, setShowModal] = useState(false);
-  type UpdateField = keyof RequestEventUpdate["input"];
-  const [field, setField] = useState<UpdateField>("title");
   const [IsAttendee, setIsAttendee] = useState(false);
 
   const navigate = useNavigate();
@@ -42,17 +31,6 @@ function Ticket({ event }: EventProps) {
   const sdgIcons = sdgInfos
     .filter((item) => Ids.includes(item.id))
     .map((item) => item.icon);
-
-  const handleUpdate = (newField: any) => {
-    setShowModal(true);
-    setField(newField);
-  };
-
-  const UpdateProps = {
-    onClose: () => setShowModal(false),
-    event,
-    field,
-  };
 
   const handleAttend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +104,7 @@ function Ticket({ event }: EventProps) {
       };
       console.log(payload);
       const response = await isAttendee(payload);
-      setIsAttendee(response.data.eventId);
+      setIsAttendee(response.data.isattendee);
       console.log(response);
     } catch (err) {
       console.log("Something went wrong!");
@@ -145,7 +123,7 @@ function Ticket({ event }: EventProps) {
         className="card"
         style={{
           minWidth: "1000px",
-          height: "280px",
+          height: event.title.length > 25 ? "320px" : "280px",
           filter: "drop-shadow(0 0 8px black)",
         }}
       >
@@ -155,38 +133,13 @@ function Ticket({ event }: EventProps) {
             style={{ borderRight: "3px dotted var(--color-green)" }}
           >
             <div className="container py-3 px-3">
-              <h1>
-                {event.title}{" "}
-                {isAuthenticated && event.organizerUsername === username && (
-                  <img
-                    src={editSquare}
-                    onClick={() => handleUpdate("title")}
-                    style={{ cursor: "pointer" }}
-                  />
-                )}
-              </h1>
+              <h1>{event.title} </h1>
 
-              <p>
-                {event.location}{" "}
-                {isAuthenticated && event.organizerUsername === username && (
-                  <img
-                    src={editSquare}
-                    onClick={() => handleUpdate("location")}
-                    style={{ cursor: "pointer" }}
-                  />
-                )}
-              </p>
+              <p>{event.location} </p>
               <div className="mt-auto">
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>Date:</strong>{" "}
                   {formattedDate}{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("startDate")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
                 </p>
 
                 <p className="mb-1">
@@ -199,35 +152,13 @@ function Ticket({ event }: EventProps) {
                     Duration:
                   </strong>{" "}
                   {event.durationMinutes} min{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("durationMinutes")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
                 </p>
 
                 <p className="mb-1">
                   <strong style={{ color: "var(--color-green)" }}>
                     Vacancies:
                   </strong>{" "}
-                  {event.attendeeCount}{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("minAttendees")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
-                  /{event.maxAttendees}{" "}
-                  {isAuthenticated && event.organizerUsername === username && (
-                    <img
-                      src={editSquare}
-                      onClick={() => handleUpdate("maxAttendees")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
+                  {event.attendeeCount} /{event.maxAttendees}{" "}
                 </p>
 
                 <p className="mb-3">
@@ -271,8 +202,33 @@ function Ticket({ event }: EventProps) {
                   {event.category}
                 </span>
               </p>
+              <p className="mb-1">
+                <span
+                  className="badge"
+                  style={{
+                    background: "var(--color-green2)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  {event.isPublic ? "Public" : "Private"}
+                </span>
+                <span
+                  className="badge ms-2"
+                  style={{
+                    background: "var(--color-ods16)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  {event.isAccessible && (
+                    <img
+                      src={accessible_w}
+                      style={{ width: "12px", height: "12px" }}
+                    />
+                  )}
+                </span>
+              </p>
               {isAuthenticated && (
-                <p className="mb-1">
+                <p className="mb-1 me-3">
                   {!IsAttendee && (
                     <button
                       className="btn rounded-pill mt-2"
@@ -287,7 +243,7 @@ function Ticket({ event }: EventProps) {
                   )}
                   {IsAttendee && (
                     <button
-                      className="btn rounded-pill mt-2 ms-3"
+                      className="btn rounded-pill mt-2"
                       style={{
                         background: "var(--color-green)",
                         color: "var(--color-white)",
@@ -303,7 +259,6 @@ function Ticket({ event }: EventProps) {
           </div>
         </div>
       </div>
-      {showModal && <EventUpdater {...UpdateProps} />}
     </>
   );
 }
