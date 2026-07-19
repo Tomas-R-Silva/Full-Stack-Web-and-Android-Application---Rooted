@@ -29,7 +29,7 @@ function EventElements() {
   const { renderEventMap } = useMapsPage(import.meta.env.VITE_API_KEY);
   const [user, setUser] = useState<UserInformationResponse>();
   const navigate = useNavigate();
-  const sdgs = [1, 10, 17];
+  const [sdgs, setSdgs] = useState<{ id: number; value: number }[]>([]);
 
   const loadUser = async (organizer: string) => {
     try {
@@ -51,9 +51,20 @@ function EventElements() {
       });
       console.log(res);
       setUser(res);
+      setSdgs(loadSDGAnalitics(res.data.ods));
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const loadSDGAnalitics = (sdgs: number[]) => {
+    return sdgs
+      .map((value, index) => ({
+        id: index + 1,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
   };
 
   const loadEvents = async (id: string) => {
@@ -208,14 +219,23 @@ function EventElements() {
                         {user?.data.username || "Deleted account"}
                       </h5>
                       <div className="d-flex gap-1 ms-3">
-                        {sdgs.map((id) => (
+                        {sdgs.map(({ id, value }) => (
                           <div
                             key={id}
                             style={{
                               width: "12px",
                               height: "12px",
                               borderRadius: "50%",
-                              backgroundColor: `var(--color-ods${id})`,
+                              backgroundColor:
+                                value !== 0
+                                  ? `var(--color-ods${id})`
+                                  : "var(--color-white)",
+                              border: `1px solid ${
+                                value !== 0
+                                  ? `var(--color-ods${id})`
+                                  : "var(--color-green)"
+                              }`,
+                              flexShrink: 0,
                             }}
                           />
                         ))}
@@ -243,7 +263,9 @@ function EventElements() {
                     }}
                   />
                 </div>
-                <h2 style={{ color: "var(--color-white)" }}>Event Partners:</h2>
+                <h2 className="mt-4" style={{ color: "var(--color-white)" }}>
+                  Event Partners:
+                </h2>
                 <p className="mb-1" style={{ color: "var(--color-white)" }}>
                   {event && event.partners && event.partners.length !== 0
                     ? event.partners

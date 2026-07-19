@@ -10,11 +10,11 @@ import { useNotification } from "../NotificationContext";
 function MessageLeft(texts: MessageProps) {
   const { username, role } = useAuth();
   const [user, setUser] = useState<UserInformationResponse>();
-  const sdgs = [1, 10, 17];
+  const [sdgs, setSdgs] = useState<{ id: number; value: number }[]>([]);
   const { notify } = useNotification();
 
   const handleTime = (timestamp: number): string => {
-    const date = new Date(timestamp / 1000);
+    const date = new Date(timestamp);
 
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -68,9 +68,20 @@ function MessageLeft(texts: MessageProps) {
       });
       console.log(res);
       setUser(res);
+      setSdgs(loadSDGAnalitics(res.data.ods));
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const loadSDGAnalitics = (sdgs: number[]) => {
+    return sdgs
+      .map((value, index) => ({
+        id: index + 1,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
   };
 
   useEffect(() => {
@@ -125,14 +136,23 @@ function MessageLeft(texts: MessageProps) {
             </small>
 
             <div className="d-flex gap-1 ms-2">
-              {sdgs.map((id) => (
+              {sdgs.map(({ id, value }) => (
                 <div
                   key={id}
                   style={{
                     width: "12px",
                     height: "12px",
                     borderRadius: "50%",
-                    backgroundColor: `var(--color-ods${id})`,
+                    backgroundColor:
+                      value !== 0
+                        ? `var(--color-ods${id})`
+                        : "var(--color-white)",
+                    border: `1px solid ${
+                      value !== 0
+                        ? `var(--color-ods${id})`
+                        : "var(--color-green)"
+                    }`,
+                    flexShrink: 0,
                   }}
                 />
               ))}

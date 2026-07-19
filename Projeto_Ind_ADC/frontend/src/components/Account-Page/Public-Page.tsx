@@ -25,9 +25,9 @@ function PublicPage() {
   const [nickname, setNickname] = useState<string>("");
   const [showNicknameInput, setShowNicknameInput] = useState<boolean>(false);
   const [user, setUser] = useState<UserInformationResponse>();
+  const [sdgs, setSdgs] = useState<{ id: number; value: number }[]>([]);
+  const maxValue = sdgs.length ? sdgs[0].value : 1;
   const navigate = useNavigate();
-  const sdgs = [1, 10, 17];
-  const value = [25, 50, 75];
 
   const loadUser = async () => {
     try {
@@ -49,9 +49,20 @@ function PublicPage() {
       });
       console.log(res);
       setUser(res);
+      setSdgs(loadSDGAnalitics(res.data.ods));
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const loadSDGAnalitics = (sdgs: number[]) => {
+    return sdgs
+      .map((value, index) => ({
+        id: index + 1,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
   };
 
   const handleAddNickname = async () => {
@@ -230,8 +241,8 @@ function PublicPage() {
               <div
                 style={{
                   position: "relative",
-                  width: "48px",
-                  height: "48px",
+                  width: "80px",
+                  height: "80px",
                 }}
               >
                 <img
@@ -443,35 +454,43 @@ function PublicPage() {
           <h5 className="fw-bold mb-3" style={{ color: "var(--color-green)" }}>
             SDG Analitcs
           </h5>
-          {sdgs.map((id, i) => (
-            <div key={id} className="d-flex align-items-center mb-3">
-              <img
-                src={sdgInfos[id - 1].image}
-                alt="sdg"
-                style={{
-                  width: "25px",
-                  height: "25px",
-                  objectFit: "cover",
-                }}
-              />
+          {sdgs.some(({ value }) => value > 0) ? (
+            sdgs
+              .filter(({ value }) => value > 0)
+              .map(({ id, value }) => (
+                <div key={id} className="d-flex align-items-center mb-3">
+                  <img
+                    src={sdgInfos[id - 1].image}
+                    alt={`SDG ${id}`}
+                    style={{
+                      width: "25px",
+                      height: "25px",
+                      objectFit: "cover",
+                    }}
+                  />
 
-              <div
-                className="progress flex-grow-1 ms-3"
-                role="progressbar"
-                aria-label={`SDG ${id}`}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div
-                  className="progress-bar"
-                  style={{
-                    width: `${value[i]}%`,
-                    backgroundColor: `var(--color-ods${id})`,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
+                  <div
+                    className="progress flex-grow-1 ms-3"
+                    role="progressbar"
+                    aria-label={`SDG ${id}`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className="progress-bar"
+                      style={{
+                        width: `${(value / maxValue) * 100}%`,
+                        backgroundColor: `var(--color-ods${id})`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+          ) : (
+            <p className="mb-0 text-muted">
+              This user hasn't participated in any events yet.
+            </p>
+          )}
         </div>
 
         <div

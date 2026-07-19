@@ -134,6 +134,7 @@ export type UserInformationResponse = {
     category: string[],
     oldnames: string[],
     friendship: string,
+    ods: number[],
   }
 }
 

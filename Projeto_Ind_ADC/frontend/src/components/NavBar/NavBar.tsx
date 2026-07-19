@@ -3,18 +3,61 @@ import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
 import account_circle from "../../assets/icons/account_circle_green2.svg";
 import border_all from "../../assets/images/border_all.png";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { UserInformationResponse } from "../../utils/types";
+import { getUser } from "../../api/auth";
 
 function NavBar() {
   const { isAuthenticated, username, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const sdgs = [6, 10, 13];
+  const [user, setUser] = useState<UserInformationResponse>();
+  const [sdgs, setSdgs] = useState<{ id: number; value: number }[]>([]);
+
+  const loadUser = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: username,
+        },
+      });
+      console.log(res);
+      setUser(res);
+      setSdgs(loadSDGAnalitics(res.data.ods));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadSDGAnalitics = (sdgs: number[]) => {
+    return sdgs
+      .map((value, index) => ({
+        id: index + 1,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
+  };
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
   };
+
+  useEffect(() => {
+    loadUser();
+  }, []);
 
   return (
     <nav
@@ -140,15 +183,22 @@ function NavBar() {
                     </div>
 
                     <div className="d-flex align-items-center gap-1 ms-2 mt-1">
-                      {sdgs.map((id) => (
+                      {sdgs.map(({ id, value }) => (
                         <div
                           key={id}
                           style={{
                             width: "12px",
                             height: "12px",
                             borderRadius: "50%",
-                            backgroundColor: `var(--color-ods${id})`,
-
+                            backgroundColor:
+                              value !== 0
+                                ? `var(--color-ods${id})`
+                                : "var(--color-white)",
+                            border: `1px solid ${
+                              value !== 0
+                                ? `var(--color-ods${id})`
+                                : "var(--color-green)"
+                            }`,
                             flexShrink: 0,
                           }}
                         />
