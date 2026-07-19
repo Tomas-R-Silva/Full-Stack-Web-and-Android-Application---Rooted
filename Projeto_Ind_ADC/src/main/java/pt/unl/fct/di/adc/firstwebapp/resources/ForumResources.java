@@ -96,7 +96,7 @@ public class ForumResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listMessages(ListForumRequest req) {
 		try {
-			AuthHelper.verifyToken(req);
+			TokenFull token=AuthHelper.verifyToken(req);
 			ListForumInput input=req.getInput();
 			if (input.getType() == null || input.getId() == null || input.getId().isBlank())
 				return Error.invalid_input();
@@ -104,8 +104,10 @@ public class ForumResources {
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("ForumPost");
 			if(input.getType().equals(ForumType.EVENT.name()))queryBuilder.setFilter(
 					CompositeFilter.and(PropertyFilter.eq("event_id", input.getEventId()),PropertyFilter.eq("type", input.getType())));
-			else if(input.getType().equals(ForumType.FRIEND.name()))queryBuilder.setFilter(
-					CompositeFilter.and(PropertyFilter.eq("friend_id", input.getId()),PropertyFilter.eq("type", input.getType())));
+			else if(input.getType().equals(ForumType.FRIEND.name())) {
+				FriendFull friend = FriendFull.fromdatabase(token,AuthHelper.getUser(req.getInput().getId()));
+				queryBuilder.setFilter(CompositeFilter.and(PropertyFilter.eq("friend_id", friend.formatkey()),PropertyFilter.eq("type", input.getType())));
+			}
 			if (input.getCursor() != null && !input.getCursor().isBlank())
 				queryBuilder.setStartCursor(Cursor.fromUrlSafe(input.getCursor()));
 			QueryResults<Entity> results = datastore.run(queryBuilder
