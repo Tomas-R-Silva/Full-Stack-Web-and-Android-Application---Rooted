@@ -1,7 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -196,15 +195,8 @@ public class EventResources {
 				else
 					events.add(current.tomap());
 			}
-
-			Map<String, Object> response = new HashMap<>();
-			response.put("events", events);
-			response.put("count", events.size());
-			if (results.getCursorAfter() != null)
-				response.put("nextCursor", results.getCursorAfter().toUrlSafe());
-
-			return ok(response);
-
+			return ok(Map.of("events", events,"count", events.size(),
+					"nextCursor",((results.getCursorAfter() != null)? results.getCursorAfter().toUrlSafe():"")));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -257,7 +249,7 @@ public class EventResources {
 				existing.setAccessible(input.isAccessible());
 			if(input.getSDG()!= null)
 				existing.setSDG(input.getSDG());			
-			datastore.put(existing.toentity());
+			datastore.update(existing.toentity());
 			return ok(Map.of("message", "Event updated successfully"));
 
 		} catch (Exception e) {
@@ -282,7 +274,7 @@ public class EventResources {
 				ErrorException.trow(9940); // can't edit a cancelled event
 			if(user != null)
 				event.addpartner(user);			
-			datastore.put(event.toentity());
+			datastore.update(event.toentity());
 			return ok(Map.of("message", "Partner added to event"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -304,7 +296,7 @@ public class EventResources {
 				ErrorException.trow(9940); // can't edit a cancelled event
 			if(user != null)
 				event.removepartner(user);			
-			datastore.put(event.toentity());
+			datastore.update(event.toentity());
 			return ok(Map.of("message", "Partner removed to event"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -354,7 +346,7 @@ public class EventResources {
 			if (!existing.isOwner(token) && token.getRole() != Role.ADMIN)
 				ErrorException.trow(9905);
 			existing.setStatus(Status.CANCELLED);
-			datastore.put(existing.toentity());
+			datastore.update(existing.toentity());
 			return ok(Map.of("message", "Event cancelled successfully"));
 
 		} catch (Exception e) {
@@ -406,7 +398,7 @@ public class EventResources {
 
 			datastore.put(attendance.toentity());
 			event.incAttendee();
-			datastore.put(event.toentity());
+			datastore.update(event.toentity());
 			return ok(Map.of("message", "Successfully registered for the event", "status", "JOINED"));
 
 		} catch (Exception e) {
@@ -436,7 +428,7 @@ public class EventResources {
 			long currentCount = event.getAttendee();
 			if (currentCount > 0) {
 				event.decAttendee();
-				datastore.put(event.toentity());
+				datastore.update(event.toentity());
 			}
 
 			return ok(Map.of("message", "Successfully unregistered from the event"));
@@ -468,7 +460,7 @@ public class EventResources {
 			long currentCount = event.getAttendee();
 			if (currentCount > 0) {
 				event.decAttendee();
-				datastore.put(event.toentity());
+				datastore.update(event.toentity());
 			}
 
 			return ok(Map.of("message", "Successfully unregistered from the event"));
@@ -552,7 +544,7 @@ public class EventResources {
 
 			datastore.put(AttendanceFull.newattendance(event,requester).toentity());
 			event.incAttendee();
-			datastore.put(event.toentity());
+			datastore.update(event.toentity());
 
 			// The request is resolved: once accepted the attendance is the source of truth,
 			// so the pending request is deleted.
@@ -694,7 +686,7 @@ public class EventResources {
 			}
 
 			eventEntity.setImageUrls(images);
-			datastore.put(eventEntity.toentity());
+			datastore.update(eventEntity.toentity());
 
 			return ok(Map.of("imageUrls", uploaded, "message", "Images uploaded successfully"));
 		} catch (Exception e) {
@@ -740,7 +732,7 @@ public class EventResources {
 			}
 			
 			event.setImageUrls(images);
-			datastore.put(event.toentity());
+			datastore.update(event.toentity());
 
 			return ok(Map.of("imageUrls", added, "message", "Image URLs added successfully"));
 		} catch (Exception e) {return Error.fromexception(e);}
@@ -786,7 +778,7 @@ public class EventResources {
 					GCSUploader.deleteImage(url);
 
 			eventEntity.setImageUrls(images);
-			txn.put(eventEntity.toentity());
+			txn.update(eventEntity.toentity());
 			txn.commit();
 			return ok(Map.of("message", "Image(s) deleted successfully"));
 		} catch (Exception e) {

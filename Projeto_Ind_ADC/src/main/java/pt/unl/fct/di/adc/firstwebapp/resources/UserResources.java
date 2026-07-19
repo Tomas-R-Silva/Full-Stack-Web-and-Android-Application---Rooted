@@ -187,7 +187,7 @@ public class UserResources {
 			if(input.getAvatar()!=null && !input.getAvatar().isBlank())
 				user.setAvatar(input.getAvatar());
 
-			datastore.put(user.toentity());
+			datastore.update(user.toentity());
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -297,15 +297,16 @@ public class UserResources {
 			TokenFull token = AuthHelper.verifyToken(request);
 			Role oldRole = user.getRole(), newRole = Role.valueof(input.getNewrole());
 			if(oldRole.equals(newRole))
-				return buildresponse(Map.of("message", "Role updated successfully"));
+				return buildresponse(Map.of("message", "Role is the same"));
 
 			Validator.unauthorized(token, 
-					(oldRole.equals(Role.ADMIN)||newRole.equals(Role.ADMIN)||newRole.equals(Role.BOFFICER))?
+					(oldRole.equals(Role.ADMIN)||oldRole.equals(Role.BOFFICER)||
+					newRole.equals(Role.ADMIN)||newRole.equals(Role.BOFFICER))?
 							new Role[] {Role.ADMIN}:
 							new Role[] {Role.BOFFICER,Role.ADMIN});
 
 			user.setRole(newRole);
-			datastore.put(user.toentity());
+			datastore.update(user.toentity());
 			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
 			AuthHelper.querydelete("Session","user_name",user.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
@@ -323,7 +324,7 @@ public class UserResources {
 			TokenFull token = AuthHelper.verifyToken(request);
 			UserFull user = AuthHelper.getUser(token);
 			user.setBorderID(request.getInput().getBorderID());
-			datastore.put(user.toentity());
+			datastore.update(user.toentity());
 			return buildresponse(Map.of("message", "Border updated successfully", "borderID", user.getBorderID()));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -345,7 +346,7 @@ public class UserResources {
 			if (!oldPwdHash.equals(user.getPassword())) 
 				ErrorException.trow(9941);
 			user.setPassword(input.getNewpassword());
-			datastore.put(user.toentity());
+			datastore.update(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
 
 		} catch (Exception e) {
@@ -369,7 +370,7 @@ public class UserResources {
 			if (!oldPwdHash.equals(user.getPassword())) 
 				ErrorException.trow(9941);
 			user.setPassword(input.getNewpassword());
-			datastore.put(user.toentity());
+			datastore.update(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
 
 		} catch (Exception e) {
@@ -429,7 +430,7 @@ public class UserResources {
 					ErrorException.trow(9927);
 				else {
 					friend.acceptrecquest();
-					txn.put(friend.toentity());
+					txn.update(friend.toentity());
 					txn.commit();
 
 				}
@@ -456,7 +457,7 @@ public class UserResources {
 				existingfriend.setNickname1(request.getInput().getNewName());
 			else
 				existingfriend.setNickname2(request.getInput().getNewName());
-			datastore.put(existingfriend.toentity());
+			datastore.update(existingfriend.toentity());
 			return buildresponse(Map.of("message", "Friend Nickname Set"));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -592,7 +593,7 @@ public class UserResources {
 			AttendanceFull attendace = AttendanceFull.fromdatabase(entitys.next());
 			EventFull event = EventFull.fromdatabase(attendace.getEvent());
 			event.decAttendee();
-			datastore.put(event.toentity());
+			datastore.update(event.toentity());
 			datastore.delete(attendace.getKey());
 		}
 	}

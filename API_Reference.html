@@ -315,7 +315,8 @@
   <div class="endpoint-header">
     <span class="method">POST</span>
     <span class="path">/changeuserrole</span>
-    <span class="tag tag-admin">ADMIN only</span>
+    <span class="tag tag-admin">ADMIN</span>
+    <span class="tag tag-bofficer">BOFFICER (restricted)</span>
   </div>
   <p class="desc">Changes a user's role. All that user's sessions are revoked (they must log in again).</p>
   <div class="label">Request</div>
@@ -323,11 +324,14 @@
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
   <span class="key-str">"input"</span>: {
     <span class="key-str">"username"</span>: <span class="val-str">"alice"</span>,
-    <span class="key-str">"newrole"</span>:  <span class="val-str">"BOFFICER"</span>
+    <span class="key-str">"newrole"</span>:  <span class="val-str">"BOFFICER"</span>  <span class="comment">//USER | PARTNER | BOFFICER | ADMIN</span>
   }
 }</pre>
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Role updated successfully"</span> }}</pre>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Role is the same"</span> }}
+  <span class="comment">//if old role is the same as new role </span></pre>
+
 </div>
 
 <div class="endpoint">

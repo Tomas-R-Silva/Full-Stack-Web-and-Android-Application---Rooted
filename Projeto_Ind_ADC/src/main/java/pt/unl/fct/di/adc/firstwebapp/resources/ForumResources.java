@@ -186,7 +186,7 @@ public class ForumResources {
 				else if (event.getEnded() && !event.isStatus(Status.COMPLETED)){
 					postsDeleted += AuthHelper.querydelete("ForumPost", "event_id", event.getEventId());
 					event.setStatus(Status.COMPLETED);
-					datastore.put(event.toentity());
+					datastore.update(event.toentity());
 					eventsClosed++;
 					// Gamification: on completion, award +1 point per SDG to every user still enrolled.
 					List<Long> sdgs = event.getSDG();
@@ -197,7 +197,7 @@ public class ForumResources {
 					while (attendees.hasNext()) {
 						UserFull attendee = AuthHelper.getUser(AttendanceFull.fromdatabase(attendees.next()).getUsername());
 						attendee.addParticipation(sdgs);
-						datastore.put(attendee.toentity());
+						datastore.update(attendee.toentity());
 					}
 				}
 			}
