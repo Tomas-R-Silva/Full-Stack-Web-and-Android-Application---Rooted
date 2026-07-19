@@ -445,6 +445,38 @@ public class EventResources {
 			return Error.fromexception(e);
 		}
 	}
+	
+	@POST
+	@Path("/kick")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response kickEvent(EventShortUserTokenRequest req) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(req);
+			EventFull event = getEventEntity(req.getInput());
+			UserFull user = AuthHelper.getUser(req.getInput());
+			
+			if (!event.isOwner(token) && token.getRole() != Role.ADMIN)
+				ErrorException.trow(9905);
+			
+			Key attendanceKey=AttendanceFull.makekey(event, user);
+			if (datastore.get(attendanceKey) == null)
+				return ok(Map.of("message", "Not attending this event"));
+
+			datastore.delete(attendanceKey);
+
+			long currentCount = event.getAttendee();
+			if (currentCount > 0) {
+				event.decAttendee();
+				datastore.put(event.toentity());
+			}
+
+			return ok(Map.of("message", "Successfully unregistered from the event"));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
 
 	// -------------------------------------------------------------------------
 	// POST /rest/events/joinrequests  — organizer lists the PENDING join requests
