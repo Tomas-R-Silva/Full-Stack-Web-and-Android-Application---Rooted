@@ -187,6 +187,10 @@ export const useMapsPage = (mapsApiKey: string) => {
   const getFilteredEvents = (
     nearYouEnabled: boolean,
     nearYouRadiusKm: number,
+    category: string | null,
+    sdg: number[] | null,
+    status: string | null,
+    isAccessible: boolean | null,
   ) => {
     return sortedEvents.filter((event) => {
       const matchesNearYou =
@@ -194,10 +198,26 @@ export const useMapsPage = (mapsApiKey: string) => {
         !hasGeolocation ||
         (event.distance != null &&
           event.distance >= 0 &&
-          event.distance <= nearYouRadiusKm / 1000);
+          event.distance <= nearYouRadiusKm * 1000);
+
+      const matchesCategory = !category || event.category === category;
+
+      const matchesSdg =
+        !sdg ||
+        sdg.length === 0 ||
+        (Array.isArray(event.SDG) &&
+          event.SDG.some((id: number) => sdg.includes(id)));
+
+      const matchesStatus = !status || event.status === status;
+
+      const matchesAccessible = !isAccessible || event.isAccessible === true;
 
       return (
-        matchesNearYou
+        matchesNearYou &&
+        matchesCategory &&
+        matchesSdg &&
+        matchesStatus &&
+        matchesAccessible
       );
     });
   };
