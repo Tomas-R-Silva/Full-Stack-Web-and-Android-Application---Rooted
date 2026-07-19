@@ -29,6 +29,7 @@ import { useMapsPage } from "../../api/maps";
 import { usePlacesAutocomplete } from "../../api/places";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../NotificationContext";
+import accessible_w from "../../assets/icons/accessible_w.svg";
 
 type ErrorState = {
   [K in keyof RequestEventUpdate["input"]]: string;
@@ -843,7 +844,19 @@ function EventControlPanel({ event }: EventProps) {
                 }}
                 defaultChecked={event?.isAccessible}
               >
-                Accessible
+                Accessible{" "}
+                <span
+                  className="badge ms-2"
+                  style={{
+                    background: "var(--color-ods16)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  <img
+                    src={accessible_w}
+                    style={{ width: "12px", height: "12px" }}
+                  />
+                </span>
               </label>
             </div>
           </div>

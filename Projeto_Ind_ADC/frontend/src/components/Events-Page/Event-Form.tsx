@@ -9,6 +9,7 @@ import { usePlacesAutocomplete } from "../../api/places";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useMapsPage } from "../../api/maps";
 import { useNotification } from "../NotificationContext";
+import accessible_w from "../../assets/icons/accessible_w.svg";
 
 type ErrorState = {
   [K in keyof RequestEventCreation["input"]]: string;
@@ -549,7 +550,19 @@ function EventForm() {
                   color: "var(--color-green)",
                 }}
               >
-                Accessible
+                Accessible{" "}
+                <span
+                  className="badge ms-2"
+                  style={{
+                    background: "var(--color-ods16)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  <img
+                    src={accessible_w}
+                    style={{ width: "12px", height: "12px" }}
+                  />
+                </span>
               </label>
             </div>
           </div>
