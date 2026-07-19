@@ -183,6 +183,9 @@ public class UserResources {
 				user.setCountry(input.getCountry());
 			if(input.getBirth()!=null&&user.getBirth()!=input.getBirth())
 				user.setBirth(input.getBirth());
+			if(input.getAvatar()!=null&&!user.getAvatar().equals(input.getAvatar()))
+				user.setAvatar(input.getAvatar());
+			
 			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {

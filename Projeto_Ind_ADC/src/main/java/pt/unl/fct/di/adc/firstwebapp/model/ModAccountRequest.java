@@ -27,7 +27,8 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
     	private Long birth;
     	private String country;
     	private List<String> category;
-
+    	private String avatar;
+    	
         public String getEmail() {return email;}
         public void setEmail(String email) {this.email = email;}
         public String getBio() {return bio;}
@@ -38,6 +39,8 @@ public class ModAccountRequest extends AbstractTokenInputRequest<ModAccountReque
 		public void setBirth(Long birth) {this.birth=birth;}
 		public List<String> getCategory() {return category;}
 		public void setCategory(List<String> category) {this.category=category;}
+		public String getAvatar() {return avatar;}
+		public void setAvatar(String avatar) {this.avatar = avatar;}
 		
     }
 

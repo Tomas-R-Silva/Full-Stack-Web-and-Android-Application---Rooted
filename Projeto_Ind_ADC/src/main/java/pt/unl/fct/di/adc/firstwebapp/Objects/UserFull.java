@@ -27,6 +27,7 @@ public class UserFull extends ShortUser implements Full{
 	private List<String> old;
 	private long birth;
 	private String country;
+	private String avatar;
 	private String bio;
 	private boolean isPublic;
 	private List<Long> ods;
@@ -52,6 +53,8 @@ public class UserFull extends ShortUser implements Full{
 	private void setbaseDisplay(String display) {this.display=display;}
 	public void setCountry(String country) {this.country=country;}
 	public String getCountry() {return country;}
+	public void setAvatar(String avatar) {this.avatar=avatar;}
+	public String getAvatar() {return avatar;}
 	private void setbaseCreation(long creation) {this.creation=creation*TIME_DIVIDER;}
 	private void setbaseBirth(long birth) {this.birth=birth*TIME_DIVIDER;}
 	public void setBirth(long birth) {this.birth=birth;}
@@ -97,13 +100,13 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setPublic(user.isPublic());
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
+		newuser.setAvatar("");		
 		newuser.setBio("");
 		newuser.setOds(null);
 		newuser.setBorderID("");
 		newuser.setbasePoints(0);
 
 		return newuser;
-		
 	}
 	
 	@Override
@@ -129,6 +132,7 @@ public class UserFull extends ShortUser implements Full{
 		map.put("ods",Full.list(ods));
 		map.put("borderID",Full.string(borderID));
 		map.put("points",points);
+		map.put("avatar",Full.string(avatar));		
 		return map;
 	}
 
@@ -157,6 +161,7 @@ public class UserFull extends ShortUser implements Full{
 		newUser.set("user_ods", Full.makeLongValueList(ods));
 		newUser.set("user_border", (borderID!=null)?borderID:"");
 		newUser.set("user_points", points);
+		newUser.set("avatar", avatar);
 		return newUser.build();
 	}
 	
@@ -178,6 +183,7 @@ public class UserFull extends ShortUser implements Full{
 		user.setOds(Full.getLongList(entity,"user_ods"));
 		user.setBorderID(Full.getString(entity,"user_border"));
 		user.setbasePoints(Full.getLong(entity,"user_points"));
+		user.setAvatar(Full.getString(entity,"avatar"));
 		return user;
 	}
 
