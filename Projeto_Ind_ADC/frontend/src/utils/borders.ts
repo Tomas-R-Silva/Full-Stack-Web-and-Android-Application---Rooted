@@ -18,6 +18,10 @@ import image17 from "../assets/images/border_17.png";
 import imageAll from "../assets/images/border_all.png";
 import type { BorderItem } from "./types";
 
+export const getBorderItem = (borderId: string): BorderItem | undefined => {
+  return bordersItems.find(border => border.id === borderId);
+};
+
 export const bordersItems: BorderItem[] = [
 {
   id: "border_sdg_1",

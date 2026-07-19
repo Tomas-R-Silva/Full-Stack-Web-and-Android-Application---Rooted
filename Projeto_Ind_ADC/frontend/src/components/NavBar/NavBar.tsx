@@ -2,7 +2,7 @@ import app from "../../assets/images/app_white.svg";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
 import account_circle from "../../assets/icons/account_circle_green2.svg";
-import border_all from "../../assets/images/border_all.png";
+import { getBorderItem } from "../../utils/borders";
 import { useState, useEffect } from "react";
 import type { UserInformationResponse } from "../../utils/types";
 import { getUser } from "../../api/auth";
@@ -157,18 +157,20 @@ function NavBar() {
                       }}
                     />
 
-                    <img
-                      src={border_all}
-                      alt=""
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        pointerEvents: "none",
-                        userSelect: "none",
-                      }}
-                    />
+                    {user && user.data.borderID && (
+                      <img
+                        src={getBorderItem(user.data.borderID)?.image}
+                        alt=""
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          pointerEvents: "none",
+                          userSelect: "none",
+                        }}
+                      />
+                    )}
                   </div>
 
                   <div className="text-start">

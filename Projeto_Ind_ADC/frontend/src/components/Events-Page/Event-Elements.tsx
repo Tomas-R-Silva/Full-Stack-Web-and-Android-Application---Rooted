@@ -17,10 +17,10 @@ import Chat from "../Forum-elements/Chat";
 import { useMapsPage } from "../../api/maps";
 import { getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
-import account_circle from "../../assets/icons/account_circle_green2.svg";
-import border_all from "../../assets/images/border_all.png";
+import account_circle_w from "../../assets/icons/account_circle_w.svg";
 import person_pin from "../../assets/icons/person_pin_w.svg";
 import verified from "../../assets/icons/verified_w.svg";
+import { getBorderItem } from "../../utils/borders";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
@@ -187,7 +187,7 @@ function EventElements() {
                     }}
                   >
                     <img
-                      src={account_circle}
+                      src={account_circle_w}
                       alt="Avatar"
                       style={{
                         width: "100%",
@@ -197,18 +197,20 @@ function EventElements() {
                       }}
                     />
 
-                    <img
-                      src={border_all}
-                      alt=""
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        pointerEvents: "none",
-                        userSelect: "none",
-                      }}
-                    />
+                    {user && user.data.borderID && (
+                      <img
+                        src={getBorderItem(user.data.borderID)?.image}
+                        alt=""
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          pointerEvents: "none",
+                          userSelect: "none",
+                        }}
+                      />
+                    )}
                   </div>
 
                   <div className="flex-grow-1 ms-3">

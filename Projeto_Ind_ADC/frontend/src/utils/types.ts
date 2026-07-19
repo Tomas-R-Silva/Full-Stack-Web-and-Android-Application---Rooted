@@ -133,8 +133,10 @@ export type UserInformationResponse = {
     country: string,
     category: string[],
     oldnames: string[],
-    friendship: string,
     ods: number[],
+    borderID: string,
+    points: number,
+    friendship: string,
   }
 }
 
