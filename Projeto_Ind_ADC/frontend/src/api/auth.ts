@@ -5,6 +5,7 @@ import type {RequestShowUsers, ShowUsersResponse} from "../utils/types";
 import type {RequestShowUserRole, ShowUserRoleResponse} from "../utils/types";
 import type {RequestModAccount, ModAccountResponse} from "../utils/types";
 import type {RequestUserInformation, UserInformationResponse} from "../utils/types";
+import type {RequestChangeBorder, ChangeBorderResponse} from "../utils/types";
 import type {RequestFindUser, FindUserResponse} from "../utils/types";
 import type {RequestChangePassword, ChangePasswordResponse} from "../utils/types";
 import type {RequestChangeRole, ChangeRoleResponse} from "../utils/types";
@@ -114,6 +115,9 @@ export const modAccount = (data: RequestModAccount) =>
 
 export const getUser = (data: RequestUserInformation) =>
   apiRequest<UserInformationResponse>("/user", data);
+
+export const changeBorder = (data: RequestChangeBorder) =>
+  apiRequest<ChangeBorderResponse>("/changeborder", data);
 
 export const findUser = (data: RequestFindUser) =>
   apiRequest<FindUserResponse>("/find", data);

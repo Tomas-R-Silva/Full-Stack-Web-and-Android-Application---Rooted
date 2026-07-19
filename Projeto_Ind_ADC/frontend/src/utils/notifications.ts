@@ -19,6 +19,7 @@ export type NotificationCode =
   | "NICKNAME_ADDED"
   | "MESSAGE_DELETED"
   | "MESSAGE_POSTED"
+  | "BORDER_CHANGED"
   | "ERROR";
 
 export type NotificationData = {
@@ -106,6 +107,10 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   MESSAGE_POSTED: {
     title: "Message Post",
     message: "Message posted successfully.",
+  },
+  BORDER_CHANGED: {
+    title: "Border Changed",
+    message: "Border changed successfully.",
   },
   ERROR: {
     title: "Oops!",

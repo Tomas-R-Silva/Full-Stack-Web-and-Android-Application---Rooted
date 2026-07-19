@@ -140,6 +140,21 @@ export type UserInformationResponse = {
   }
 }
 
+export type RequestChangeBorder = {
+  token: {jwt:string;}
+  input: {
+    borderID:string;
+  }
+}
+
+export type ChangeBorderResponse = {
+  status: number,
+  data: {
+    message:string;
+    borderID: string;
+}
+}
+
 export type RequestFindUser = {
   token: {jwt:string;}
   input: {
@@ -691,6 +706,7 @@ export type SdgItem = {
 
 export type BorderItem = {
   id:string,
+  idType: number,
   name: string,
   image: string,
   value: number,
