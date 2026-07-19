@@ -5,17 +5,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.EntityValue;
+import com.google.cloud.datastore.FullEntity;
 import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Category;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
 import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.GCSUploader;
 
 public class UserFull extends ShortUser implements Full{
 	private String password;
@@ -27,7 +31,7 @@ public class UserFull extends ShortUser implements Full{
 	private List<String> old;
 	private long birth;
 	private String country;
-	private String avatar;
+	private Map<String, String> avatar;
 	private String bio;
 	private boolean isPublic;
 	private List<Long> ods;
@@ -53,8 +57,8 @@ public class UserFull extends ShortUser implements Full{
 	private void setbaseDisplay(String display) {this.display=display;}
 	public void setCountry(String country) {this.country=country;}
 	public String getCountry() {return country;}
-	public void setAvatar(String avatar) {this.avatar=avatar;}
-	public String getAvatar() {return avatar;}
+	private void setAvatar(Map<String, String> avatar) {this.avatar=avatar;}
+	public Map<String, String> getAvatar() {return avatar;}
 	private void setbaseCreation(long creation) {this.creation=creation*TIME_DIVIDER;}
 	private void setbaseBirth(long birth) {this.birth=birth*TIME_DIVIDER;}
 	public void setBirth(long birth) {this.birth=birth;}
@@ -64,8 +68,8 @@ public class UserFull extends ShortUser implements Full{
 	private void setbaseCategory(List<Category> category) {this.category=category;}
 	public void setbaseCategorystr(List<String> category) {this.category= (category!=null)?category.stream().map(v -> Category.valueof(v)).collect(Collectors.toList()):Collections.emptyList();}
 	public void setOld(List<String> old){this.old=old;}
-    public String getBio() {return bio;}
-    public void setBio(String bio) {this.bio = bio;}
+	public String getBio() {return bio;}
+	public void setBio(String bio) {this.bio = bio;}
 	public List<Long> getOds() {return ods;}
 	// ods is kept as a fixed-size list of 17 counts (index i = SDG i+1).
 	public void setOds(List<Long> ods) {this.ods = (ods==null||ods.isEmpty())?new ArrayList<>(Collections.nCopies(ODS_COUNT, 0L)):ods;}
@@ -73,6 +77,15 @@ public class UserFull extends ShortUser implements Full{
 	public void setBorderID(String borderID) {this.borderID = (borderID!=null)?borderID:"";}
 	public long getPoints() {return points;}
 	private void setbasePoints(long points) {this.points = points;}
+	
+	public void setAvatar(String avatar){
+		String[] parts = avatar.split(",", 2);
+		String contentType = parts[0].replace("data:", "").replace(";base64", "");
+		byte[] bytes = java.util.Base64.getDecoder().decode(parts[1]);
+		String imageUrl = GCSUploader.uploadImage(bytes, contentType);
+		String id = UUID.randomUUID().toString();
+		this.avatar = Map.of("id", id,"url", imageUrl);
+	}
 
 	// Registers participation in an event: +1 in the count of each of its SDGs and +1 point per SDG.
 	public void addParticipation(List<Long> sdgs) {
@@ -100,7 +113,7 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setPublic(user.isPublic());
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
-		newuser.setAvatar("");		
+		newuser.setAvatar(Map.of());	
 		newuser.setBio("");
 		newuser.setOds(null);
 		newuser.setBorderID("");
@@ -108,7 +121,7 @@ public class UserFull extends ShortUser implements Full{
 
 		return newuser;
 	}
-	
+
 	@Override
 	public Map<String,Object> tomap(){
 		Map<String,Object> map=new HashMap<>();
@@ -132,7 +145,7 @@ public class UserFull extends ShortUser implements Full{
 		map.put("ods",Full.list(ods));
 		map.put("borderID",Full.string(borderID));
 		map.put("points",points);
-		map.put("avatar",Full.string(avatar));		
+		map.put("avatar",avatar);		
 		return map;
 	}
 
@@ -161,10 +174,10 @@ public class UserFull extends ShortUser implements Full{
 		newUser.set("user_ods", Full.makeLongValueList(ods));
 		newUser.set("user_border", (borderID!=null)?borderID:"");
 		newUser.set("user_points", points);
-		newUser.set("avatar", avatar);
+		newUser.set("avatar", toImageValues(avatar));
 		return newUser.build();
 	}
-	
+
 	public static UserFull fromdatabase(Entity entity) {
 		if(entity==null)return null;
 		UserFull user=new UserFull(entity.getKey());
@@ -183,8 +196,27 @@ public class UserFull extends ShortUser implements Full{
 		user.setOds(Full.getLongList(entity,"user_ods"));
 		user.setBorderID(Full.getString(entity,"user_border"));
 		user.setbasePoints(Full.getLong(entity,"user_points"));
-		user.setAvatar(Full.getString(entity,"avatar"));
+		user.setAvatar(readImages(entity));
 		return user;
+	}
+
+	public static Map<String, String> readImages(Entity e) {
+		if (!e.contains("avatar")) return new HashMap<>(1);
+		Object raw = e.getEntity("avatar");
+		String id, url;
+		if (raw instanceof FullEntity<?>) {
+			FullEntity<?> fe = (FullEntity<?>) raw;
+			url = fe.contains("url") ? fe.getString("url") : null;
+			id = fe.contains("id") ? fe.getString("id") : url;
+		} else { // legacy plain URL string
+			url = (String) raw;
+			id = url;
+		}
+		return Map.of("id", id,"url", url);
+	}
+
+	private static EntityValue toImageValues(Map<String, String> m) {
+		return EntityValue.of(FullEntity.newBuilder().set("id", m.get("id")).set("url", m.get("url")).build());
 	}
 
 	@Override
