@@ -207,7 +207,7 @@
   <div class="label">Request</div>
  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"username"</span>: <span class="val-str">"alice"</span> }}</pre>
   <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>:    <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
+  <pre>{<span class="key-str">"status"</span>:    <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="comment">// if isPublic is true or are friends</span>
     <span class="key-str">"username"</span>:      <span class="val-str">"alice"</span>,
     <span class="key-str">"email"</span>:         <span class="val-str">"alice@mail.com"</span>,
     <span class="key-str">"role"</span>:          <span class="val-str">"USER"</span>,   <span class="comment">// USER | BOFFICER | ADMIN</span>
@@ -222,9 +222,21 @@
     <span class="key-str">"ods"</span>:           [<span class="val-num">3</span>, <span class="val-num">0</span>, <span class="val-num">5</span>, <span class="val-num">0</span>, <span class="val-num">0</span>, ...],  <span class="comment">// 17 counts, index i = SDG i+1 (events participated per SDG)</span>
     <span class="key-str">"borderID"</span>:      <span class="val-str">"border_sdg_3"</span>,   <span class="comment">// equipped border id ("" if none)</span>
     <span class="key-str">"points"</span>:        <span class="val-num">8</span>,               <span class="comment">// total gamification points (= sum of ods)</span>
-    <span class="key-str">"friendship"</span>:    <span class="val-str">"FRIENDS"</span>
+    <span class="key-str">"isPublic"</span>:      <span class="val-str">"true"</span>
+    <span class="key-str">"friendship"</span>:    <span class="val-str">"FRIENDS"</span>    
       <span class="comment">// NOT_FRIENDS | FRIENDS | REQUEST_SENT | REQUEST_RECIVED | SELF</span>
-  
+  }}</pre>
+
+    <pre>{<span class="key-str">"status"</span>:    <span class="val-num">200</span>, <span class="key-str">"data"</span>: {<span class="comment">// if isPublic is false</span>
+    <span class="key-str">"username"</span>:      <span class="val-str">"alice"</span>,
+    <span class="key-str">"email"</span>:         <span class="val-str">"alice@mail.com"</span>,
+    <span class="key-str">"role"</span>:          <span class="val-str">"USER"</span>,   <span class="comment">// USER | BOFFICER | ADMIN</span>
+    <span class="key-str">"display"</span>:       <span class="val-str">"myfriendalice"</span>,
+    <span class="key-str">"avatar"</span>:        { <span class="key-str">"id"</span>: <span class="val-str">"d4e5f6"</span>, <span class="key-str">"url"</span>: <span class="val-str">"https://..."</span> },
+    <span class="key-str">"borderID"</span>:      <span class="val-str">"border_sdg_3"</span>,   <span class="comment">// equipped border id ("" if none)</span>
+    <span class="key-str">"isPublic"</span>:      <span class="val-str">"false"</span>
+    <span class="key-str">"friendship"</span>:    <span class="val-str">"REQUEST_SENT"</span>
+      <span class="comment">// NOT_FRIENDS | FRIENDS | REQUEST_SENT | REQUEST_RECIVED | SELF</span>
   }}</pre>
 </div>
 
