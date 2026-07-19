@@ -344,6 +344,19 @@
 <div class="endpoint">
   <div class="endpoint-header">
     <span class="method">POST</span>
+    <span class="path">/getnickname</span>
+    <span class="tag tag-auth">auth required</span>
+  </div>
+  <p class="desc">Get the nickname for the user. (must be friends)</p>
+  <div class="label">Request</div>
+  <pre>{<span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="key-str">"input"</span>: {<span class="key-str">"username"</span>: <span class="val-str">"alice"</span>}}</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"nickname"</span>: <span class="val-str">"NEWalice"</span> }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
     <span class="path">/unfriend</span>
     <span class="tag tag-auth">auth required</span>
   </div>

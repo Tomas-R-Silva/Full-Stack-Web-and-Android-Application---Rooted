@@ -434,6 +434,24 @@ public class UserResources {
 			return Error.fromexception(e);
 		}
 	}
+	
+	@POST
+	@Path("/getnickname")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getnickname(ShortUserTokenRequest request) throws ErrorException{
+		try{
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			FriendFull existingfriend = FriendFull.fromdatabase(datastore.get(FriendFull.getFriendKey(token,user)));
+			if(existingfriend == null || !existingfriend.getAccepted())
+				ErrorException.trow(9934);
+			String nickname=existingfriend.getUsername1().equals(user.getUsername())?existingfriend.getNickname1():existingfriend.getNickname2();			
+			return buildresponse(Map.of("nickname",nickname));
+		} catch (Exception e){
+			return Error.fromexception(e);
+		}
+	}
 
 	@POST
 	@Path("/unfriend")
