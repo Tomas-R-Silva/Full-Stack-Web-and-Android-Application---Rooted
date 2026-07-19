@@ -142,7 +142,7 @@ export const useMapsPage = (mapsApiKey: string) => {
         <div>
           <h3>${event.title}</h3>
           <p>${event.location}</p>
-          
+          <a
             href="/events/${event.eventId}"
             class="btn btn-sm"
             style="background-color: var(--color-green); 
@@ -187,6 +187,10 @@ export const useMapsPage = (mapsApiKey: string) => {
   const getFilteredEvents = (
     nearYouEnabled: boolean,
     nearYouRadiusKm: number,
+    category: string | null,
+    sdg: number[] | null,
+    status: string | null,
+    isAccessible: boolean | null,
   ) => {
     return sortedEvents.filter((event) => {
       const matchesNearYou =
@@ -194,17 +198,33 @@ export const useMapsPage = (mapsApiKey: string) => {
         !hasGeolocation ||
         (event.distance != null &&
           event.distance >= 0 &&
-          event.distance <= nearYouRadiusKm / 1000);
+          event.distance <= nearYouRadiusKm * 1000);
+
+      const matchesCategory = !category || event.category === category;
+
+      const matchesSdg =
+        !sdg ||
+        sdg.length === 0 ||
+        (Array.isArray(event.SDG) &&
+          event.SDG.some((id: number) => sdg.includes(id)));
+
+      const matchesStatus = !status || event.status === status;
+
+      const matchesAccessible = !isAccessible || event.isAccessible === true;
 
       return (
-        matchesNearYou
+        matchesNearYou &&
+        matchesCategory &&
+        matchesSdg &&
+        matchesStatus &&
+        matchesAccessible
       );
     });
   };
 
   const renderEventMap = async (event: EventItem, container?: HTMLDivElement | null) => {
     const mapContainer = container ?? mapRef.current;
-    if (!mapContainer || !window.google || !hasValidCoords(event)) return;
+    if (!mapContainer || !window.google) return;
 
     let position: { lat: number; lng: number } | null = null;
 
