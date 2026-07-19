@@ -13,6 +13,7 @@ export type NotificationCode =
   | "EVENT_DELETED"
   | "PARTNER_ADDED"
   | "PARTNER_REMOVED"
+  | "PARTNER_ROLE_SETTED"
   | "FRIEND_REQUEST_ACCEPTED"
   | "FRIEND_REQUEST_REJECTED"
   | "FRIEND_REQUEST_SENDED"
@@ -84,6 +85,10 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   PARTNER_REMOVED: {
     title: "Partner Removed",
     message: "A partner has been removed.",
+  },
+  PARTNER_ROLE_SETTED: {
+    title: "Partner Role Updated",
+    message: "The account partner role has been updated.",
   },
   FRIEND_REQUEST_ACCEPTED: {
     title: "Friend Request Accepted",
