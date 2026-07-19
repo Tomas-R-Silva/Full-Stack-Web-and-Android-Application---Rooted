@@ -1,5 +1,6 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -185,7 +186,7 @@ public class UserResources {
 				user.setBirth(input.getBirth());
 			if(input.getAvatar()!=null&&!user.getAvatar().equals(input.getAvatar()))
 				user.setAvatar(input.getAvatar());
-			
+
 			datastore.put(user.toentity());
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {
@@ -232,19 +233,18 @@ public class UserResources {
 		try {
 			AuthHelper.verifyToken(request);
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User").
-					setFilter(CompositeFilter.and(
-							PropertyFilter.eq("user_display", request.getInput().getUsername())
-							,PropertyFilter.eq("is_public", true)));
+					setFilter(PropertyFilter.eq("is_public", true));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
-			List<Map<String,Object>> list=new LinkedList<>();
-			while(sessions.hasNext()) 
-				list.add(UserFull.fromdatabase(sessions.next()).tomap());
-			try {
-				list.add(AuthHelper.getUser(request.getInput()).tomap());
-			}catch(ErrorException e) {
-				if(e.getStatus()!=9902)
-					throw e;
+			List<Map<String,Object>> list=new ArrayList<>();
+			while(sessions.hasNext()) {
+				UserFull user=UserFull.fromdatabase(sessions.next());
+				if(user.getDisplay().contains(request.getInput().getUsername()))
+					list.add(user.tomap());
 			}
+			try {
+				Map<String, Object> user = AuthHelper.getUser(request.getInput()).tomap();
+				if(!list.contains(user)) list.add(user);
+			}catch(ErrorException e) {if(e.getStatus()!=9902)throw e;}
 			return buildresponse(Map.of("found",list));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -454,7 +454,7 @@ public class UserResources {
 			return Error.fromexception(e);
 		}
 	}
-	
+
 	@POST
 	@Path("/getnickname")
 	@Consumes(MediaType.APPLICATION_JSON)
