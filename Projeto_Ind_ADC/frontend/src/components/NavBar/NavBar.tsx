@@ -6,6 +6,7 @@ import border_all from "../../assets/images/border_all.png";
 import { useState, useEffect } from "react";
 import type { UserInformationResponse } from "../../utils/types";
 import { getUser } from "../../api/auth";
+import verified_g from "../../assets/icons/verified_gold.svg";
 
 function NavBar() {
   const { isAuthenticated, username, logout } = useAuth();
@@ -180,6 +181,9 @@ function NavBar() {
                       }}
                     >
                       {username}
+                      {user?.data.role === "PARTNER" && (
+                        <img className="ms-1" src={verified_g} />
+                      )}
                     </div>
 
                     <div className="d-flex align-items-center gap-1 ms-2 mt-1">

@@ -6,6 +6,7 @@ import type { UserInformationResponse } from "../../utils/types";
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import { useNotification } from "../NotificationContext";
+import verified from "../../assets/icons/verified_w.svg";
 
 function MessageRight(texts: MessageProps) {
   const { username, role } = useAuth();
@@ -134,6 +135,9 @@ function MessageRight(texts: MessageProps) {
               }}
             >
               {user?.data.username}
+              {user?.data.role === "PARTNER" && (
+                <img className="ms-1" src={verified} />
+              )}
             </small>
 
             <div className="d-flex gap-1 ms-2">

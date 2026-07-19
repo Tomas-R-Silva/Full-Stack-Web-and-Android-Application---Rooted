@@ -6,6 +6,7 @@ import type { UserInformationResponse } from "../../utils/types";
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import { useNotification } from "../NotificationContext";
+import verified from "../../assets/icons/verified_w.svg";
 
 function MessageLeft(texts: MessageProps) {
   const { username, role } = useAuth();
@@ -133,6 +134,9 @@ function MessageLeft(texts: MessageProps) {
               }}
             >
               {user?.data.username || "Deleted User"}
+              {user?.data.role === "PARTNER" && (
+                <img className="ms-1" src={verified} />
+              )}
             </small>
 
             <div className="d-flex gap-1 ms-2">

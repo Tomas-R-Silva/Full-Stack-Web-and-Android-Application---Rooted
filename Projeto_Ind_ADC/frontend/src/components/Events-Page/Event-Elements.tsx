@@ -20,6 +20,7 @@ import type { UserInformationResponse } from "../../utils/types";
 import account_circle from "../../assets/icons/account_circle_green2.svg";
 import border_all from "../../assets/images/border_all.png";
 import person_pin from "../../assets/icons/person_pin_w.svg";
+import verified from "../../assets/icons/verified_w.svg";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
@@ -217,6 +218,9 @@ function EventElements() {
                         style={{ color: "var(--color-white)" }}
                       >
                         {user?.data.username || "Deleted account"}
+                        {user?.data.role === "PARTNER" && (
+                          <img className="ms-1" src={verified} />
+                        )}
                       </h5>
                       <div className="d-flex gap-1 ms-3">
                         {sdgs.map(({ id, value }) => (
