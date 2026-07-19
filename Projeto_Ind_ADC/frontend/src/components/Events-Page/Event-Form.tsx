@@ -81,8 +81,7 @@ function EventForm() {
     if (type === "checkbox") {
       newValue = (e.target as HTMLInputElement).checked;
     } else if (name === "startDate") {
-      // Convert date string to Unix timestamp (seconds)
-      newValue = Math.floor(new Date(value).getTime() / 1000);
+      newValue = Math.floor(new Date(value).getTime());
     } else if (type === "number") {
       newValue = value === "" ? 0 : Number(value);
     } else {
@@ -424,7 +423,7 @@ function EventForm() {
               className={`form-control  ${errors.startDate ? "is-invalid" : ""}`}
               value={
                 formData.input.startDate
-                  ? new Date(formData.input.startDate / 1000)
+                  ? new Date(formData.input.startDate)
                       .toISOString()
                       .slice(0, 16)
                   : ""

@@ -1,25 +1,16 @@
 import type { EventProps } from "../../utils/types";
 import { sdgInfos } from "../../utils/sdgInfo";
 import { useAuth } from "../AuthContext";
-import editSquare from "../../assets/icons/edit_square.svg";
 import { useState, useEffect } from "react";
-import EventUpdater from "./Event-Updater";
-import type { RequestEventUpdate } from "../../utils/types";
-import type {
-  RequestEventAttend,
-  EventAttendResponse,
-} from "../../utils/types";
-import type {
-  RequestEventUnattend,
-  EventUnattendResponse,
-} from "../../utils/types";
-import type { RequestIsAttendee, IsAttendeeResponse } from "../../utils/types";
+import type { RequestEventAttend } from "../../utils/types";
+import type { RequestEventUnattend } from "../../utils/types";
+import type { RequestIsAttendee } from "../../utils/types";
 import { attendEvent, unattendEvent, isAttendee } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 
 function Ticket({ event }: EventProps) {
-  const startDate = new Date(event.startDate / 1000);
-  const Ids = event.sdg ?? [];
+  const startDate = new Date(event.startDate);
+  const Ids = event.SDG ?? [];
   const { isAuthenticated, username } = useAuth();
   const [IsAttendee, setIsAttendee] = useState(false);
 
