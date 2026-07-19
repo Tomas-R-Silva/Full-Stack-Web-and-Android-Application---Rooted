@@ -1,19 +1,44 @@
 import NavBar from "../NavBar/NavBar";
 import { sdgInfos } from "../../utils/sdgInfo";
-import type { SdgItem } from "../../utils/types";
+import type { FilterProps, SdgItem } from "../../utils/types";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import EventsList from "../Events-Page/Events-List";
+import { useState, useEffect } from "react";
 
 function SDGelements() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const persons = [
+    { username: "Alexandre", value: "100" },
+    { username: "Tomás", value: "80" },
+    { username: "Artur", value: "60" },
+    { username: "Gustavo", value: "40" },
+    { username: "Eduardo", value: "20" },
+    { username: "Gonçalo", value: "1" },
+  ];
+  const [filter, setFilter] = useState<FilterProps>({
+    category: null,
+    status: null,
+    organizerUsername: null,
+    isAccessible: false,
+    sdg: id ? [Number(id)] : [],
+  });
 
   if (!id) {
     return <div>Invalid SDG number!</div>;
   }
 
   const sdg: SdgItem = sdgInfos[Number(id) - 1];
+
+  useEffect(() => {
+    if (!id) return;
+
+    setFilter((prev) => ({
+      ...prev,
+      sdg: [Number(id)],
+    }));
+  }, [id]);
 
   return (
     <>
@@ -120,7 +145,35 @@ function SDGelements() {
           />
           :
         </h1>
-        <EventsList filter={String(sdg.id)} />
+        <EventsList filter={filter} />
+      </div>
+
+      <div className="container py-5">
+        <h1 style={{ color: "var(--color-white" }}>
+          Top 50{" "}
+          <img
+            src={sdg.icon}
+            alt={`SDG ${sdg.id} icon`}
+            style={{
+              width: "50px",
+              height: "50px",
+              borderRadius: "16px",
+            }}
+          />
+          :
+        </h1>
+        {persons.map((p) => (
+          <div
+            key={p.username}
+            className="rounded-3 p-3 mb-2 border text-white"
+            style={{ background: "var(--color-green2)" }}
+          >
+            <div className="d-flex justify-content-between align-items-center">
+              <span>{p.username}</span>
+              <span>{p.value} events</span>
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );

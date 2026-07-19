@@ -8,10 +8,21 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
   });
 
   //========== Receber Input e Limpar erros ==========
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        [name]: value,
+      },
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
   //========== Submissão dos Campos ==========
@@ -20,7 +31,7 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
 
     const newErrors = { username: "", phone: "", address: "" };
 
-    if (!formData.username) newErrors.username = "Username is required";
+    if (!formData.input.username) newErrors.username = "Username is required";
 
     setErrors(newErrors);
 
@@ -39,7 +50,7 @@ function SignInStep2({ formData, setFormData, onNext, onBack }: StepProps) {
             type="text"
             name="username"
             className={`form-control  ${errors.username ? "is-invalid" : ""}`}
-            value={formData.username}
+            value={formData.input.username}
             onChange={handleChange}
             placeholder="Your name here"
           />

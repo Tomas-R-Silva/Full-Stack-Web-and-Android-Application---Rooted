@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import eventUpcoming from "../../assets/icons/event_upcoming_w.svg";
 
 function EventCardSmall({ event }: EventProps) {
-  const startDate = new Date(event.startDate * 1000);
-  const Ids = [2, 6, 7, 8, 13];
+  const startDate = new Date(event.startDate);
+  const Ids = event.SDG ?? [];
   const navigate = useNavigate();
 
   const formattedDate = startDate.toLocaleDateString("pt-PT", {
@@ -20,7 +20,7 @@ function EventCardSmall({ event }: EventProps) {
 
   return (
     <div
-      className="p-4 rounded"
+      className="p-4 rounded mb-1"
       style={{
         maxWidth: "500px",
         width: "100%",

@@ -1,49 +1,49 @@
-import type { RequestDeleteAccount, UserProps } from "../../utils/types";
-import { useState, useEffect } from "react";
 import type {
-  RequestChangePassword,
+  RequestDeleteAccount,
   RequestModAccount,
-  RequestChangeRole,
+  UserInformationResponse,
+  UserProps,
 } from "../../utils/types";
-import {
-  changePassword,
-  deleteAccount,
-  modAccount,
-  changeRole,
-} from "../../api/auth";
+import { useState, useEffect } from "react";
+import type { RequestChangeRole } from "../../utils/types";
+import { deleteAccount, changeRole, getUser, modAccount } from "../../api/auth";
+import { useNotification } from "../NotificationContext";
+import { countries } from "../../utils/countries";
 
 type ErrorState = {
   [K in keyof RequestModAccount["input"]]: string;
 };
 
 function AccountAdminManage({ user }: UserProps) {
-  const [changingPassword, setChangingPassword] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newRole, setNewRole] = useState(user.role);
+  const { notify } = useNotification();
+  const [userInfo, setUserInfo] = useState<UserInformationResponse>();
   const [formData, setFormData] = useState<RequestModAccount>({
     token: { jwt: "" },
     input: {
       username: user.username ?? "",
       email: "",
+      bio: "",
+      country: "",
+      birth: 0,
+      category: [],
     },
   });
 
   const [errors, setErrors] = useState<ErrorState>({
     username: "",
     email: "",
-  });
-
-  const [passwordData, setPasswordData] = useState<RequestChangePassword>({
-    token: { jwt: "" },
-    input: {
-      username: user.username ?? "",
-      oldpassword: "",
-      newpassword: "",
-    },
+    bio: "",
+    country: "",
+    birth: "",
+    category: "",
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
 
@@ -61,20 +61,6 @@ function AccountAdminManage({ user }: UserProps) {
     }));
   };
 
-  const handlePassword = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value, type } = e.target;
-
-    setPasswordData((prev) => ({
-      ...prev,
-      input: {
-        ...prev.input,
-        [name]: type === "number" ? (value === "" ? -1 : Number(value)) : value,
-      },
-    }));
-  };
-
   const handleNewRole = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -84,39 +70,12 @@ function AccountAdminManage({ user }: UserProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors = {
-      username: "",
-      email: "",
-    };
-
-    if (formData.input.email && !formData.input.email.includes("@")) {
-      newErrors.email = "Must be a valid email.";
-    }
-
-    setErrors(newErrors);
-
-    const hasErrors = Object.values(newErrors).some((error) => error !== "");
-    if (hasErrors) return;
-
     try {
       const token = sessionStorage.getItem("token");
       if (!token) {
         console.log("User is not authenticated");
         return;
       }
-      const payloadMod: RequestModAccount = {
-        ...formData,
-        token: {
-          jwt: token,
-        },
-      };
-
-      const payloadPwd: RequestChangePassword = {
-        ...passwordData,
-        token: {
-          jwt: token,
-        },
-      };
 
       const payloadRole: RequestChangeRole = {
         token: {
@@ -127,16 +86,24 @@ function AccountAdminManage({ user }: UserProps) {
           newrole: newRole,
         },
       };
-      console.log(payloadMod);
-      const responseMod = await modAccount(payloadMod);
-      console.log(responseMod);
-      console.log(payloadPwd);
-      const responsePwd = await changePassword(payloadPwd);
-      console.log(responsePwd);
+
+      const payloadMod: RequestModAccount = {
+        ...formData,
+        token: {
+          jwt: token,
+        },
+      };
+
       console.log(payloadRole);
       const responseRole = await changeRole(payloadRole);
       console.log(responseRole);
+      console.log(payloadMod);
+      const responseMod = await modAccount(payloadMod);
+      console.log(responseMod);
       window.location.reload();
+      if (responseRole.status === 200) {
+        notify("ACCOUNT_UPDATED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -163,32 +130,60 @@ function AccountAdminManage({ user }: UserProps) {
       const response = await deleteAccount(payload);
       console.log(response);
       window.location.reload();
+      if (response.status === 200) {
+        notify("ACCOUNT_DELETED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
   };
 
+  const loadUser = async (user: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!user) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UserInformationResponse = await getUser({
+        token: { jwt: token },
+        input: {
+          username: user,
+        },
+      });
+      console.log(res);
+      setUserInfo(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    setFormData({
-      token: { jwt: "" },
-      input: {
-        username: user.username,
-        email: "",
-      },
-    });
-
-    setPasswordData({
-      token: { jwt: "" },
-      input: {
-        username: user.username,
-        oldpassword: "",
-        newpassword: "",
-      },
-    });
-
     setNewRole(user.role);
-    setChangingPassword(false);
     setConfirmDelete(false);
+    loadUser(user.username);
+  }, [user]);
+
+  useEffect(() => {
+    if (!userInfo) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      input: {
+        ...prev.input,
+        username: userInfo.data.username,
+        email: userInfo.data.email ?? "",
+        bio: userInfo.data.bio ?? "",
+        country: userInfo.data.country ?? "",
+        birth: userInfo.data.birth ?? 0,
+        category: userInfo.data.category ?? [],
+      },
+    }));
   }, [user]);
 
   return (
@@ -211,7 +206,7 @@ function AccountAdminManage({ user }: UserProps) {
                 color: "var(--color-green)",
               }}
             >
-              As Admin you can see and manage some users account information.
+              As Admin you can see and manage the users roles.
             </p>
 
             <div className="mb-3">
@@ -228,7 +223,6 @@ function AccountAdminManage({ user }: UserProps) {
                 name="username"
                 value={user.username ?? ""}
                 readOnly
-                onChange={handleChange}
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
@@ -236,9 +230,6 @@ function AccountAdminManage({ user }: UserProps) {
                 }}
                 placeholder={user.username ?? "No username"}
               />
-              {errors.username && (
-                <small className="text-danger">{errors.username}</small>
-              )}
             </div>
 
             <div className="mb-3">
@@ -253,8 +244,8 @@ function AccountAdminManage({ user }: UserProps) {
               <input
                 type="email"
                 name="email"
-                value={formData.input.email}
-                onChange={handleChange}
+                value={user.email ?? ""}
+                readOnly
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
@@ -265,9 +256,6 @@ function AccountAdminManage({ user }: UserProps) {
                   (user.email ?? "No email")
                 }
               />
-              {errors.email && (
-                <small className="text-danger">{errors.email}</small>
-              )}
             </div>
 
             <div className="mb-3">
@@ -280,70 +268,24 @@ function AccountAdminManage({ user }: UserProps) {
                 >
                   Password
                 </label>
-
-                <button
-                  type="button"
-                  className="btn btn-sm text-white"
-                  style={{ backgroundColor: "var(--color-green2)" }}
-                  onClick={() => setChangingPassword((prev) => !prev)}
-                >
-                  {changingPassword ? "Cancel" : "Change"}
-                </button>
               </div>
 
-              {!changingPassword ? (
-                <input
-                  type="password"
-                  className="form-control border-0"
-                  style={{
-                    backgroundColor: "var(--color-green2)",
-                    color: "var(--color-white)",
-                  }}
-                  value="••••••••••••"
-                  readOnly
-                />
-              ) : (
-                <>
-                  <input
-                    type="password"
-                    name="oldpassword"
-                    value={passwordData.input.oldpassword}
-                    onChange={handlePassword}
-                    className="form-control border-0 mb-2"
-                    style={{
-                      backgroundColor: "var(--color-green2)",
-                      color: "var(--color-white)",
-                    }}
-                    placeholder="Current password"
-                  />
-
-                  <input
-                    type="password"
-                    name="newpassword"
-                    value={passwordData.input.newpassword}
-                    onChange={handlePassword}
-                    className="form-control border-0"
-                    style={{
-                      backgroundColor: "var(--color-green2)",
-                      color: "var(--color-white)",
-                    }}
-                    placeholder="New password"
-                  />
-                </>
-              )}
+              <input
+                type="password"
+                className="form-control border-0"
+                style={{
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
+                }}
+                value="••••••••••••"
+                readOnly
+              />
             </div>
 
             <div className="mb-3">
-              <label
-                className="form-label fw-semibold"
-                style={{
-                  color: "var(--color-green)",
-                }}
-              >
-                Country
-              </label>
-              <input
-                type="text"
+              <label className="form-label fw-semibold">Biography</label>
+              <textarea
+                name="bio"
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
@@ -353,16 +295,80 @@ function AccountAdminManage({ user }: UserProps) {
             </div>
 
             <div className="mb-3">
-              <label
-                className="form-label fw-semibold"
+              <label className="form-label fw-semibold d-flex align-items-center gap-2">
+                Country
+                {!userInfo?.data.country && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
+              </label>
+
+              {!userInfo?.data.country && (
+                <small className="text-warning d-block mb-2">
+                  Country to be completed.
+                </small>
+              )}
+
+              <select
+                name="country"
+                value={formData.input.country}
+                onChange={handleChange}
+                className="form-select border-0"
                 style={{
-                  color: "var(--color-green)",
+                  backgroundColor: "var(--color-green2)",
+                  color: "var(--color-white)",
                 }}
               >
+                <option value="">Select your country...</option>
+
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label fw-semibold d-flex align-items-center gap-2">
                 Date of Birth
+                {!userInfo?.data.birth && (
+                  <span
+                    title="This field is required."
+                    style={{ color: "var(--color-gold)", fontSize: "18px" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </label>
+
+              {!userInfo?.data.birth && (
+                <small className="text-warning d-block mb-2">
+                  Date of birth to be completed.
+                </small>
+              )}
+
               <input
                 type="date"
+                name="birth"
+                value={
+                  formData.input.birth
+                    ? new Date(formData.input.birth).toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    input: {
+                      ...prev.input,
+                      birth: new Date(e.target.value).getTime(),
+                    },
+                  }))
+                }
                 className="form-control border-0"
                 style={{
                   backgroundColor: "var(--color-green2)",
@@ -391,6 +397,7 @@ function AccountAdminManage({ user }: UserProps) {
                 }}
               >
                 <option value="USER">USER</option>
+                <option value="PARTNER">PARTNER</option>
                 <option value="BOFFICER">BACKOFFICER</option>
                 <option value="ADMIN">ADMIN</option>
               </select>

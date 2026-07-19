@@ -1,12 +1,12 @@
 import { createContext, useContext, useState } from "react";
+import { logoutUser } from "../api/auth";
 
 type AuthContextType = {
   isAuthenticated: boolean;
   username: string | null;
   role: string | null;
-  email: string | null;
-  login: (token: string, username: string, role: string, email: string) => void;
-  logout: () => void;
+  login: (token: string, username: string, role: string) => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -24,37 +24,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.getItem("role"),
   );
 
-  const [email, setEmail] = useState<string | null>(
-    sessionStorage.getItem("email"),
-  );
-
-  const login = (
-    token: string,
-    username: string,
-    role: string,
-    email: string,
-  ) => {
+  const login = (token: string, username: string, role: string) => {
     sessionStorage.setItem("token", token);
     sessionStorage.setItem("username", username);
     sessionStorage.setItem("role", role);
-    sessionStorage.setItem("email", email);
 
     setUsername(username);
     setRole(role);
-    setEmail(email);
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("role");
-    sessionStorage.removeItem("email");
+  const logout = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const username = sessionStorage.getItem("username");
 
-    setUsername(null);
-    setRole(null);
-    setEmail(null);
-    setIsAuthenticated(false);
+      if (token && username) {
+        await logoutUser({
+          token: {
+            jwt: token,
+          },
+          input: {
+            username,
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("username");
+      sessionStorage.removeItem("role");
+
+      setUsername(null);
+      setRole(null);
+      setIsAuthenticated(false);
+    }
   };
 
   return (
@@ -63,7 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         username,
         role,
-        email,
         login,
         logout,
       }}

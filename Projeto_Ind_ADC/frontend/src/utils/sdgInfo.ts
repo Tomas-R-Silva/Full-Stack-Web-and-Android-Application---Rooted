@@ -1,86 +1,86 @@
 import type { SdgItem } from "./types";
 
-import image1 from "../assets/images/ods1.png";
+import image1 from "../assets/images/1.png";
 import cir1 from "../assets/images/cir1.png";
 import photo1 from "../assets/images/photo1.png";
 import icon1 from "../assets/images/icon1.png";
 
-import image2 from "../assets/images/ods2.png";
+import image2 from "../assets/images/2.png";
 import cir2 from "../assets/images/cir2.png";
 import photo2 from "../assets/images/photo2.png";
 import icon2 from "../assets/images/icon2.png";
 
-import image3 from "../assets/images/ods3.png";
+import image3 from "../assets/images/3.png";
 import cir3 from "../assets/images/cir3.png";
 import photo3 from "../assets/images/photo3.png";
 import icon3 from "../assets/images/icon3.png";
 
-import image4 from "../assets/images/ods4.png";
+import image4 from "../assets/images/4.png";
 import cir4 from "../assets/images/cir4.png";
 import photo4 from "../assets/images/photo4.png";
 import icon4 from "../assets/images/icon4.png";
 
-import image5 from "../assets/images/ods5.png";
+import image5 from "../assets/images/5.png";
 import cir5 from "../assets/images/cir5.png";
 import photo5 from "../assets/images/photo5.png";
 import icon5 from "../assets/images/icon5.png";
 
-import image6 from "../assets/images/ods6.png";
+import image6 from "../assets/images/6.png";
 import cir6 from "../assets/images/cir6.png";
 import photo6 from "../assets/images/photo6.png";
 import icon6 from "../assets/images/icon6.png";
 
-import image7 from "../assets/images/ods7.png";
+import image7 from "../assets/images/7.png";
 import cir7 from "../assets/images/cir7.png";
 import photo7 from "../assets/images/photo7.png";
 import icon7 from "../assets/images/icon7.png";
 
-import image8 from "../assets/images/ods8.png";
+import image8 from "../assets/images/8.png";
 import cir8 from "../assets/images/cir8.png";
 import photo8 from "../assets/images/photo8.png";
 import icon8 from "../assets/images/icon8.png";
 
-import image9 from "../assets/images/ods9.png";
+import image9 from "../assets/images/9.png";
 import cir9 from "../assets/images/cir9.png";
 import photo9 from "../assets/images/photo9.png";
 import icon9 from "../assets/images/icon9.png";
 
-import image10 from "../assets/images/ods10.png";
+import image10 from "../assets/images/10.png";
 import cir10 from "../assets/images/cir10.png";
 import photo10 from "../assets/images/photo10.png";
 import icon10 from "../assets/images/icon10.png";
 
-import image11 from "../assets/images/ods11.png";
+import image11 from "../assets/images/11.png";
 import cir11 from "../assets/images/cir11.png";
 import photo11 from "../assets/images/photo11.png";
 import icon11 from "../assets/images/icon11.png";
 
-import image12 from "../assets/images/ods12.png";
+import image12 from "../assets/images/12.png";
 import cir12 from "../assets/images/cir12.png";
 import photo12 from "../assets/images/photo12.png";
 import icon12 from "../assets/images/icon12.png";
 
-import image13 from "../assets/images/ods13.png";
+import image13 from "../assets/images/13.png";
 import cir13 from "../assets/images/cir13.png";
 import photo13 from "../assets/images/photo13.png";
 import icon13 from "../assets/images/icon13.png";
 
-import image14 from "../assets/images/ods14.png";
+import image14 from "../assets/images/14.png";
 import cir14 from "../assets/images/cir14.png";
 import photo14 from "../assets/images/photo14.png";
 import icon14 from "../assets/images/icon14.png";
 
-import image15 from "../assets/images/ods15.png";
+import image15 from "../assets/images/15.png";
 import cir15 from "../assets/images/cir15.png";
 import photo15 from "../assets/images/photo15.png";
 import icon15 from "../assets/images/icon15.png";
 
-import image16 from "../assets/images/ods16.png";
+import image16 from "../assets/images/16.png";
 import cir16 from "../assets/images/cir16.png";
 import photo16 from "../assets/images/photo16.png";
 import icon16 from "../assets/images/icon16.png";
 
-import image17 from "../assets/images/ods17.png";
+import image17 from "../assets/images/17.png";
 import cir17 from "../assets/images/cir17.png";
 import photo17 from "../assets/images/photo17.png";
 import icon17 from "../assets/images/icon17.png";

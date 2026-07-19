@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { getEventList } from "../../api/auth";
-import type {
-  EventItem,
-  EventListResponse,
-  FilterProps,
-} from "../../utils/types";
+import type { EventItem, EventListResponse } from "../../utils/types";
 import EventCardSmall from "../Events-Page/Event-Card-Small";
 import { useAuth } from "../AuthContext";
 
@@ -43,9 +39,13 @@ function AccountEvents() {
       const res: EventListResponse = await getEventList({
         token: { jwt: token },
         input: {
+          category: null,
+          status: null,
           organizerUsername: username,
           pageSize: 10,
-          cursor: cursor ?? undefined,
+          cursor: cursor ?? null,
+          isAccessible: null,
+          sdg: [],
         },
       });
 

@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import type { RequestAddFriend, AddFriendResponse } from "../../utils/types";
+import type {
+  RequestAddFriend,
+  AddFriendResponse,
+  Requester,
+} from "../../utils/types";
 import type { RequestUnfriend, UnfriendResponse } from "../../utils/types";
 import type {
   RequestFriendsRequests,
@@ -7,13 +11,15 @@ import type {
 } from "../../utils/types";
 import type { Friend } from "../../utils/types";
 import { useAuth } from "../AuthContext";
-import { getFriendsRequests } from "../../api/auth";
+import { getFriendsRequests, addFriend, unfriend } from "../../api/auth";
 import personAdd_w from "../../assets/icons/person_add_w.svg";
 import personRemove_w from "../../assets/icons/person_remove_w.svg";
+import { useNotification } from "../NotificationContext";
 
 function FriendsRequests() {
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friends, setFriends] = useState<Requester[]>([]);
   const { username } = useAuth();
+  const { notify } = useNotification();
 
   const loadRequests = async () => {
     try {
@@ -38,9 +44,55 @@ function FriendsRequests() {
     }
   };
 
-  const handleAddfriend = () => {};
+  const handleAddfriend = async (friendToAdd: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
 
-  const handleUnfriend = () => {};
+      const res: AddFriendResponse = await addFriend({
+        token: { jwt: token },
+        input: { username: friendToAdd },
+      });
+      console.log(res.data.message);
+      if (res.status === 200) {
+        notify("FRIEND_REQUEST_ACCEPTED");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUnfriend = async (friendToDelete: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: UnfriendResponse = await unfriend({
+        token: { jwt: token },
+        input: { username: friendToDelete },
+      });
+      console.log(res.data.message);
+      if (res.status === 200) {
+        notify("FRIEND_REQUEST_REJECTED");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     loadRequests();
@@ -64,35 +116,36 @@ function FriendsRequests() {
                 No friends requests.
               </div>
             )}
-            {friends.length !== 0 && (
-              <div
-                className="d-flex justify-content-between align-items-center p-4 rounded"
-                style={{
-                  maxWidth: "500px",
-                  width: "100%",
-                  backgroundColor: "var(--color-green2)",
-                  color: "var(--color-white)",
-                }}
-              >
-                <span className="fw-semibold">Ti zé Taxista</span>
+            {friends.length !== 0 &&
+              friends.map((friend) => (
+                <div
+                  className="d-flex justify-content-between align-items-center p-4 rounded mt-1"
+                  style={{
+                    maxWidth: "500px",
+                    width: "100%",
+                    backgroundColor: "var(--color-green2)",
+                    color: "var(--color-white)",
+                  }}
+                >
+                  <span className="fw-semibold">{friend.From}</span>
 
-                <div className="d-flex gap-3">
-                  <img
-                    src={personAdd_w}
-                    alt="Add friend"
-                    onClick={handleAddfriend}
-                    style={{ cursor: "pointer" }}
-                  />
+                  <div className="d-flex gap-3">
+                    <img
+                      src={personAdd_w}
+                      alt="Add friend"
+                      onClick={() => handleAddfriend(friend.From)}
+                      style={{ cursor: "pointer" }}
+                    />
 
-                  <img
-                    src={personRemove_w}
-                    alt="Remove friend"
-                    onClick={handleUnfriend}
-                    style={{ cursor: "pointer" }}
-                  />
+                    <img
+                      src={personRemove_w}
+                      alt="Remove friend"
+                      onClick={() => handleUnfriend(friend.From)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
           </div>
         </div>
       </div>

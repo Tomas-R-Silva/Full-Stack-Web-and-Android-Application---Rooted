@@ -6,11 +6,12 @@ import SDGs from "./SDGs";
 import ModerationUsers from "./Moderation-Users";
 import ModerationPartners from "./Moderation-Partners";
 import ModerationEvents from "./Moderation-Events";
+import { useNavigate } from "react-router-dom";
 
 function DashboardADM() {
   const dashboardItems = [
     "Activity",
-    "Comunity",
+    "Community",
     "SDGs",
     "Moderation (Users)",
     "Moderation (Events)",
@@ -21,6 +22,8 @@ function DashboardADM() {
   const handleSelect = (selection: string) => {
     setSelected(selection);
   };
+
+  const navigate = useNavigate();
 
   return (
     <>
@@ -33,6 +36,16 @@ function DashboardADM() {
               style={{ background: "var(--color-white)" }}
             >
               <div className="flex-column py-3">
+                <a
+                  style={{
+                    color: "var(--color-green)",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => navigate("/account/settings")}
+                >
+                  ← Account Settings
+                </a>
                 <h3 style={{ color: "var(--color-green)" }}>Menu</h3>
                 {dashboardItems.map((item, i) => (
                   <div
