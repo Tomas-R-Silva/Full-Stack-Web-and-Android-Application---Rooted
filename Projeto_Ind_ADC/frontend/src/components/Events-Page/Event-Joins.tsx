@@ -8,6 +8,7 @@ import type {
   EventItem,
   JoinRequests,
   JoinRequestsResponse,
+  KickUserResponse,
   RequestEventGetter,
   RespondJoinResponse,
   UserInformationResponse,
@@ -16,16 +17,19 @@ import {
   attendeesEvent,
   getEvent,
   getUser,
+  kickUser,
   requestsJoinEvent,
   respondJoinEvent,
 } from "../../api/auth";
 import personPin_w from "../../assets/icons/person_pin_w.svg";
 import check_w from "../../assets/icons/check_w.svg";
 import close_w from "../../assets/icons/close_white.svg";
+import { useNotification } from "../NotificationContext";
 
 function EventJoins() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { notify } = useNotification();
   const [event, setEvent] = useState<EventItem>();
   const [requests, setRequests] = useState<JoinRequests[]>([]);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
@@ -163,6 +167,35 @@ function EventJoins() {
       });
       console.log(res.data.message);
       window.location.reload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleKick = async (username: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username || !id) {
+        console.log("Invalid username or event id");
+        return;
+      }
+
+      const res: KickUserResponse = await kickUser({
+        token: { jwt: token },
+        input: {
+          eventId: id,
+          username: username,
+        },
+      });
+      console.log(res.data.message);
+      window.location.reload();
+      if (res.status === 200) {
+        notify("USER_KICKED");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -411,7 +444,7 @@ function EventJoins() {
                               Kick {user.data.username}
                             </button>
                           )}
-                        {confirmKick && (
+                        {confirmKick && managedUser && (
                           <>
                             <button
                               className="btn btn-danger fw-bold"
@@ -425,6 +458,7 @@ function EventJoins() {
                                 background: "var(--color-green)",
                                 color: "var(--color-white)",
                               }}
+                              onClick={() => handleKick(managedUser.username)}
                             >
                               Confirm
                             </button>

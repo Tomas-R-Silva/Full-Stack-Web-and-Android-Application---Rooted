@@ -511,6 +511,19 @@ export type EventUnattendResponse = {
   data:{message: string},
 }
 
+export type RequestKickUser = {
+  token: {jwt:string;}
+  input: {
+    eventId: string,
+    username: string,
+  }
+}
+
+export type KickUserResponse = {
+  status: number,
+  data:{message: string},
+}
+
 export type RequestEventAttendees = {
   token?: {jwt:string;}
   input: {eventId:string;}

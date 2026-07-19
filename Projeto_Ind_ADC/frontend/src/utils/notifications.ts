@@ -19,6 +19,7 @@ export type NotificationCode =
   | "FRIEND_REQUEST_SENDED"
   | "UNFRIEND"
   | "NICKNAME_ADDED"
+  | "USER_KICKED"
   | "MESSAGE_DELETED"
   | "MESSAGE_POSTED"
   | "BORDER_CHANGED"
@@ -105,6 +106,10 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   UNFRIEND: {
     title: "Unfriend",
     message: "You are no longer friends.",
+  },
+  USER_KICKED: {
+    title: "User Kicked",
+    message: "The user has been kicked.",
   },
   NICKNAME_ADDED: {
     title: "Nickname Added",

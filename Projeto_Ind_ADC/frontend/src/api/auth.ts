@@ -29,6 +29,7 @@ import type { RequestEventAttend, EventAttendResponse} from "../utils/types";
 import type {JoinRequestsResponse, RequestJoinRequests} from "../utils/types";
 import type {RespondJoinResponse, RequestRespondJoin} from "../utils/types";
 import type { RequestEventUnattend, EventUnattendResponse} from "../utils/types";
+import type { RequestKickUser, KickUserResponse} from "../utils/types";
 import type { RequestEventAttendees, EventAttendeesResponse} from "../utils/types";
 import type { RequestIsAttendee, IsAttendeeResponse} from "../utils/types";
 import type { RequestUserAttends, UserAttendsResponse } from "../utils/types";
@@ -189,6 +190,9 @@ export const respondJoinEvent = (data: RequestRespondJoin) =>
 
 export const unattendEvent = (data: RequestEventUnattend) =>
   apiRequest<EventUnattendResponse>("/events/unattend", data);
+
+export const kickUser = (data: RequestKickUser) =>
+  apiRequest<KickUserResponse>("/events/kick", data);
 
 export const attendeesEvent = (data: RequestEventAttendees) =>
   apiRequest<EventAttendeesResponse>("/events/attendees", data);
