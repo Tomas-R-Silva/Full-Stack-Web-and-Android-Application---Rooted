@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'event_detail_screen.dart';
+import '../widgets/avatar_with_border.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String username;
@@ -147,15 +148,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final String friendship = _userData!['friendship'] ?? _userData!['friendshipstatus'] ?? 'NOT_FRIENDS';
     final String bio = _userData!['bio'] ?? '';
     final List<String> interests = _userData!['category_list'] as List<String>? ?? [];
+    final String? avatarUrl = _userData!['avatar_url'];
+    final String? borderId = _userData!['borderID'];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          const CircleAvatar(
+          AvatarWithBorder(
+            borderId: borderId,
+            imageUrl: avatarUrl,
             radius: 60,
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.person, size: 60, color: Colors.white),
           ),
           const SizedBox(height: 20),
           Text(

@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await AppTheme.loadTheme(); // Load saved theme preference
   final jwt = await SessionStorage.getJwt();
   runApp(RootedApp(isLoggedIn: jwt != null));
 }
@@ -19,10 +20,17 @@ class RootedApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      home: isLoggedIn ? const HomeScreen() : const WelcomeScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppTheme.themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.theme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: currentMode,
+          home: isLoggedIn ? const HomeScreen() : const WelcomeScreen(),
+        );
+      },
     );
   }
 }

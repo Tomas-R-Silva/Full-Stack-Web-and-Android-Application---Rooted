@@ -12,6 +12,9 @@ class SessionStorage {
   static const _categoryKey = 'category';
   static const _countryKey = 'country';
   static const _birthKey = 'birth';
+  static const _odsKey = 'ods';
+  static const _borderIdKey = 'border_id';
+  static const _pointsKey = 'points';
 
   static Future<void> save({
     required String jwt,
@@ -23,6 +26,9 @@ class SessionStorage {
     List<String> categories = const [],
     String country = '',
     int birth = 0,
+    List<int> ods = const [],
+    String borderId = '',
+    int points = 0,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_jwtKey, jwt);
@@ -34,6 +40,9 @@ class SessionStorage {
     await prefs.setStringList(_categoryKey, categories);
     await prefs.setString(_countryKey, country);
     await prefs.setInt(_birthKey, birth);
+    await prefs.setStringList(_odsKey, ods.map((e) => e.toString()).toList());
+    await prefs.setString(_borderIdKey, borderId);
+    await prefs.setInt(_pointsKey, points);
   }
 
   static Future<String?> getJwt() async {
@@ -81,6 +90,22 @@ class SessionStorage {
     return prefs.getInt(_birthKey);
   }
 
+  static Future<List<int>> getOds() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_odsKey);
+    return list?.map((e) => int.parse(e)).toList() ?? List.filled(17, 0);
+  }
+
+  static Future<String?> getBorderId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_borderIdKey);
+  }
+
+  static Future<int?> getPoints() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_pointsKey);
+  }
+
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_jwtKey);
@@ -92,5 +117,8 @@ class SessionStorage {
     await prefs.remove(_categoryKey);
     await prefs.remove(_countryKey);
     await prefs.remove(_birthKey);
+    await prefs.remove(_odsKey);
+    await prefs.remove(_borderIdKey);
+    await prefs.remove(_pointsKey);
   }
 }

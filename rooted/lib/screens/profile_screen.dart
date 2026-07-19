@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,6 +10,10 @@ import '../services/session_storage.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
 import 'admin_screen.dart';
+import 'bofficer_screen.dart';
+import '../data/borders_data.dart';
+import '../models/border_item.dart';
+import '../widgets/avatar_with_border.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -33,6 +38,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<String> _categories = [];
   String _country = '';
   int _birth = 0;
+  List<int> _ods = List.filled(17, 0);
+  String _borderId = '';
+  int _points = 0;
+  String _avatarUrl = '';
 
   @override
   void initState() {
@@ -49,6 +58,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final cats     = await SessionStorage.getCategory();
     final country  = await SessionStorage.getCountry();
     final birth    = await SessionStorage.getBirth();
+    final ods      = await SessionStorage.getOds();
+    final borderId = await SessionStorage.getBorderId();
+    final points   = await SessionStorage.getPoints();
+
     if (mounted) {
       setState(() {
         _username    = username ?? '';
@@ -59,11 +72,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _categories  = cats;
         _country     = country  ?? '';
         _birth       = birth    ?? 0;
+        _ods         = ods;
+        _borderId    = borderId ?? '';
+        _points      = points   ?? 0;
       });
       await _loadSavedImage();
+      _fetchLatestProfile(); // Fetch fresh data from server
     } else {
       if (mounted) setState(() => _isLoadingImage = false);
     }
+  }
+
+  Future<void> _fetchLatestProfile() async {
+    final jwt = await SessionStorage.getJwt();
+    if (jwt == null || _username.isEmpty) return;
+
+    try {
+      final profile = await ApiService.getUserAccount(jwt: jwt, username: _username);
+      if (mounted) {
+        setState(() {
+          _ods = (profile['ods'] as List?)?.cast<int>() ?? _ods;
+          _points = profile['points'] as int? ?? _points;
+          _borderId = profile['borderID']?.toString() ?? _borderId;
+          _avatarUrl = profile['avatar_url']?.toString() ?? '';
+        });
+        
+        // Update SessionStorage with latest data
+        await SessionStorage.save(
+          jwt: jwt,
+          username: _username,
+          role: _role,
+          displayName: _displayName,
+          email: _email,
+          bio: _bio,
+          categories: _categories,
+          country: _country,
+          birth: _birth,
+          ods: _ods,
+          borderId: _borderId,
+          points: _points,
+        );
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadSavedImage() async {
@@ -94,6 +144,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await prefs.setString(_prefsKey, savedImage.path);
 
     setState(() => _profileImage = savedImage);
+
+    // Upload to server
+    final jwt = await SessionStorage.getJwt();
+    if (jwt != null) {
+      try {
+        final bytes = await savedImage.readAsBytes();
+        final base64Image = base64Encode(bytes);
+        final mimeType = extension == 'png' ? 'image/png' : 'image/jpeg';
+        final dataUri = 'data:$mimeType;base64,$base64Image';
+
+        await ApiService.modifyAccount(
+          jwt: jwt,
+          username: _username,
+          email: _email,
+          avatar: dataUri,
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload profile picture: $e')),
+          );
+        }
+      }
+    }
   }
 
   // ── Edit profile bottom sheet ─────────────────────────────────────────────
@@ -157,6 +231,178 @@ class _ProfileScreenState extends State<ProfileScreen> {
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
+    }
+  }
+
+  void _showBorderPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Choose Profile Border',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Total Points: $_points',
+              style: const TextStyle(color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(20),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: BordersData.allBorders.length + 1, // +1 for "No Border"
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return _buildBorderOption(null, true);
+                  }
+                  final border = BordersData.allBorders[index - 1];
+                  final unlocked = BordersData.isUnlocked(border, _ods, _points);
+                  return _buildBorderOption(border, unlocked);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBorderOption(BorderItem? border, bool unlocked) {
+    final isSelected = (border?.id ?? '') == _borderId;
+
+    return GestureDetector(
+      onTap: unlocked ? () => _selectBorder(border?.id ?? '') : null,
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: isSelected
+                        ? Border.all(color: AppTheme.primary, width: 3)
+                        : null,
+                  ),
+                  child: Opacity(
+                    opacity: unlocked ? 1.0 : 0.4,
+                    child: AvatarWithBorder(
+                      borderId: border?.id,
+                      imageFile: _profileImage,
+                      imageUrl: _avatarUrl,
+                      radius: 30,
+                    ),
+                  ),
+                ),
+                if (!unlocked)
+                  const Icon(Icons.lock_outline, color: Colors.white, size: 24),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            border?.name ?? 'None',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: unlocked ? AppTheme.textPrimary : Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (border != null)
+            Text(
+              '${border.value} ${border.valueType}',
+              style: TextStyle(
+                fontSize: 8,
+                color: unlocked ? AppTheme.primary : Colors.grey.shade400,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectBorder(String borderId) async {
+    final jwt = await SessionStorage.getJwt();
+    if (jwt == null) return;
+
+    try {
+      await ApiService.changeBorder(jwt: jwt, borderID: borderId);
+      
+      // Update local storage
+      final username = await SessionStorage.getUsername();
+      final role = await SessionStorage.getRole();
+      final display = await SessionStorage.getDisplayName();
+      final email = await SessionStorage.getEmail();
+      final bio = await SessionStorage.getBio();
+      final cats = await SessionStorage.getCategory();
+      final country = await SessionStorage.getCountry();
+      final birth = await SessionStorage.getBirth();
+      final ods = await SessionStorage.getOds();
+      final points = await SessionStorage.getPoints();
+
+      await SessionStorage.save(
+        jwt: jwt,
+        username: username ?? '',
+        role: role ?? '',
+        displayName: display ?? '',
+        email: email ?? '',
+        bio: bio ?? '',
+        categories: cats,
+        country: country ?? '',
+        birth: birth ?? 0,
+        ods: ods,
+        borderId: borderId,
+        points: points ?? 0,
+      );
+
+      if (mounted) {
+        setState(() => _borderId = borderId);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Border updated!'), backgroundColor: AppTheme.primary),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update border: $e'), backgroundColor: AppTheme.error),
+        );
+      }
     }
   }
 
@@ -265,19 +511,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Avatar
             Stack(
               children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage:
-                      _profileImage != null ? FileImage(_profileImage!) : null,
-                  child: _profileImage == null && !_isLoadingImage
-                      ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                      : null,
+                GestureDetector(
+                  onTap: _showBorderPicker,
+                  child: AvatarWithBorder(
+                    borderId: _borderId,
+                    imageFile: _profileImage,
+                    imageUrl: _avatarUrl,
+                    radius: 60,
+                  ),
                 ),
                 Positioned(
                   bottom: 0,
                   right: 0,
                   child: FloatingActionButton.small(
+                    heroTag: 'camera_fab',
                     onPressed: _pickProfileImage,
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
@@ -339,6 +586,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 24),
 
+            // Settings Card
+            _InfoCard(children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.dark_mode_outlined, color: AppTheme.primary),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Dark Mode',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    ValueListenableBuilder<ThemeMode>(
+                      valueListenable: AppTheme.themeNotifier,
+                      builder: (context, mode, child) {
+                        return Switch(
+                          value: mode == ThemeMode.dark,
+                          onChanged: (val) => AppTheme.toggleTheme(val),
+                          activeColor: AppTheme.primary,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ]),
+
+            const SizedBox(height: 24),
+
             // Edit profile button
             SizedBox(
               width: double.infinity,
@@ -362,6 +643,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   label: const Text('Admin Dashboard'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+
+            if (_role == 'BOFFICER') ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BusinessOfficerScreen()),
+                  ),
+                  icon: const Icon(Icons.business_center_outlined, size: 18),
+                  label: const Text('Business Dashboard'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -636,9 +936,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -842,9 +1142,9 @@ class _InfoCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.inputBorder),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(children: children),
     );
@@ -870,15 +1170,15 @@ class _InfoRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500)),
                 const SizedBox(height: 2),
                 Text(value,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 15,
-                        color: AppTheme.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w500)),
               ],
             ),

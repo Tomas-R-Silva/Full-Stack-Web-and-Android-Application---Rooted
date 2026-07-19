@@ -86,8 +86,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       final result = await ApiService.listForumMessages(
         jwt: _jwt!,
         type: 'EVENT',
-        eventId: _event['eventId'] as String,
-        username: _username,
+        id: _event['eventId'] as String,
         pageSize: 50,
       );
       final data  = result;
@@ -115,8 +114,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       final result = await ApiService.listForumMessages(
         jwt: _jwt!,
         type: 'EVENT',
-        eventId: _event['eventId'] as String,
-        username: _username,
+        id: _event['eventId'] as String,
         pageSize: 50,
       );
       final data  = result;
@@ -175,9 +173,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       final post = await ApiService.postForumMessage(
         jwt: _jwt!,
         type: 'EVENT',
-        eventId: _event['eventId'] as String,
+        id: _event['eventId'] as String,
         text: text,
-        username: _username,
       );
       if (mounted) {
         final data = post['data'] ?? post;

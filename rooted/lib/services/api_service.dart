@@ -55,11 +55,7 @@ class ApiService {
     return serverStatus;
   }
 
-  /// Calls POST /createaccount.
-  ///
-  /// Mirrors UserResources.createAccount, which stores user_name,
-  /// user_email, user_pwd, user_role and user_creation_time.
-
+  /// Calls POST /createaccount. Public.
   static Future<Map<String, dynamic>> createAccount({
     required String username,
     required String email,
@@ -77,7 +73,7 @@ class ApiService {
           'username': username,
           'email': email,
           'password': password,
-          'confirmation' : password,
+          'confirmation': password,
           'category': interests.map((c) => c.toUpperCase()).toList(),
           'role': role,
           'public': true,
@@ -85,30 +81,12 @@ class ApiService {
       }),
     );
 
-    Map<String, dynamic> body;
-    try {
-      body = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      body = {};
-    }
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      _checkBodyError(body);
-      return body;
-    }
-    throw ApiException(
-        body['message']?.toString() ??
-            body['error']?.toString() ??
-            'Registration failed'
-    );
+    final body = _parseBody(response.body);
+    return _extractData(body);
   }
 
 
-  /// Calls POST /login.
-  ///
-  /// Mirrors UserResources.userLogin, which expects username + password
-  /// and returns a token object containing jwt, username, role,
-  /// issuedAt and expiresAt.
+  /// Calls POST /login. Public.
   static Future<Map<String, dynamic>> login({
     required String username,
     required String password,
@@ -126,29 +104,11 @@ class ApiService {
       }),
     );
 
-    Map<String, dynamic> body;
-    try {
-      body = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      body = {};
-    }
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      _checkBodyError(body);
-      return body;
-    }
-
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Login failed (status ${response.statusCode})';
-    throw ApiException(message);
+    final body = _parseBody(response.body);
+    return _extractData(body);
   }
 
-  /// Calls POST /logout.
-  ///
-  /// Mirrors UserResources.logOut, which expects a ShortUser (username)
-  /// and the caller's Token (jwt), and deletes that session
-  /// server-side.
+  /// Calls POST /logout. Auth required.
   static Future<void> logout({
     required String username,
     required String jwt,
@@ -166,28 +126,11 @@ class ApiService {
       }),
     );
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return;
-    }
-
-    Map<String, dynamic> body;
-    try {
-      body = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      body = {};
-    }
-
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Logout failed (status ${response.statusCode})';
-    throw ApiException(message);
+    final body = _parseBody(response.body);
+    _checkBodyError(body);
   }
 
-  /// Calls POST /deleteaccount.
-  ///
-  /// Mirrors UserResources.deleteAccount, which expects a ShortUser
-  /// (username) and the caller's Token (jwt), and permanently
-  /// deletes the User entity plus all of that user's sessions.
+  /// Calls POST /deleteaccount. ADMIN only.
   static Future<void> deleteAccount({
     required String username,
     required String jwt,
@@ -205,21 +148,8 @@ class ApiService {
       }),
     );
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return;
-    }
-
-    Map<String, dynamic> body;
-    try {
-      body = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      body = {};
-    }
-
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Account deletion failed (status ${response.statusCode})';
-    throw ApiException(message);
+    final body = _parseBody(response.body);
+    _checkBodyError(body);
   }
 
   /// Calls POST /events/create.
@@ -352,11 +282,7 @@ class ApiService {
     throw ApiException(message);
   }
 
-  /// Calls POST /modaccount.
-  ///
-  /// Mirrors UserResources.modifyAccount, which expects a username and
-  /// an attributes object {address, phone}, plus a Token. Only the
-  /// account owner, BOFFICER, or ADMIN may call this.
+  /// Calls POST /modaccount. Auth required (Owner).
   static Future<void> modifyAccount({
     required String jwt,
     required String username,
@@ -365,6 +291,7 @@ class ApiService {
     List<String>? categories,
     String? country,
     int? birth,
+    String? avatar,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/modaccount');
 
@@ -378,39 +305,45 @@ class ApiService {
         'input': {
           'username': username,
           'email': email,
-          if (bio != null) 'bio': bio,
-          if (categories != null) 'category': categories.map((c) => c.toUpperCase()).toList(),
-          if (country != null) 'country': country,
-          if (birth != null) 'birth': birth,
-        },
+          'bio': bio,
+          'category': categories?.map((c) => c.toUpperCase()).toList(),
+          'country': country,
+          'birth': birth,
+          'avatar': avatar,
+        }..removeWhere((k, v) => v == null)
       }),
     );
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return;
-    }
-
-    Map<String, dynamic> body;
-    try {
-      body = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      body = {};
-    }
-
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Profile update failed (status ${response.statusCode})';
-    throw ApiException(message);
+    final body = _parseBody(response.body);
+    _checkBodyError(body);
   }
 
   static void _checkBodyError(Map<String, dynamic> body) {
     final status = body['status'];
-    // Status can be int or String from backend. Non-zero usually means error.
-    if (status != null && status != 0 && status != 200 && status != '0' && status != '200') {
-      final message = body['message']?.toString() ??
-          body['error']?.toString() ??
-          body['data']?.toString() ??
-          'Operation failed (status $status)';
+    // 200 = ok, any 99xx = error.
+    if (status != null && status != 200 && status != '200') {
+      final dynamic data = body['data'];
+      String message = 'Operation failed (status $status)';
+
+      if (data is String) {
+        message = data;
+      } else if (data is List) {
+        // Validation error structure: { "status": 9906, "data": [ { "status": 9930, "data": "INVALID_MESSAGE_TEXT" } ] }
+        final List<String> errors = [];
+        for (final item in data) {
+          if (item is Map && item.containsKey('data')) {
+            errors.add(item['data'].toString());
+          }
+        }
+        if (errors.isNotEmpty) {
+          message = errors.join(', ');
+        }
+      } else if (body.containsKey('message')) {
+        message = body['message'].toString();
+      } else if (body.containsKey('error')) {
+        message = body['error'].toString();
+      }
+
       throw ApiException(message);
     }
   }
@@ -558,6 +491,20 @@ class ApiService {
       );
     }).toList();
 
+    user['ods'] ??= List.filled(17, 0);
+    user['borderID'] ??= "";
+    user['points'] ??= 0;
+    user['isPublic'] ??= "true";
+    user['friendship'] ??= "SELF";
+
+    // Normalize avatar
+    final avatarObj = user['avatar'];
+    if (avatarObj is Map) {
+      user['avatar_url'] = avatarObj['url']?.toString() ?? '';
+    } else {
+      user['avatar_url'] = '';
+    }
+
     return user;
   }
 
@@ -576,13 +523,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _normalizeEventPayload(_extractData(body));
-    }
-    throw ApiException(_errorMessage(body, 'Failed to load event'));
+    return _normalizeEventPayload(_extractData(body));
   }
 
-  /// Calls POST /rest/events/list.
+  /// Calls POST /rest/events/list. Public.
   static Future<Map<String, dynamic>> listEvents({
     String? jwt,
     String? organizerUsername,
@@ -614,13 +558,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _normalizeEventPayload(_extractData(body));
-    }
-    throw ApiException(_errorMessage(body, 'Failed to list events'));
+    return _normalizeEventPayload(_extractData(body));
   }
 
-  /// Calls POST /rest/events/addpartner.
+  /// Calls POST /rest/events/addpartner. Auth required Organizer or ADMIN.
   static Future<void> addPartner({
     required String jwt,
     required String eventId,
@@ -638,12 +579,11 @@ class ApiService {
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to add partner'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/removepartner.
+  /// Calls POST /rest/events/removepartner. Auth required Organizer or ADMIN.
   static Future<void> removePartner({
     required String jwt,
     required String eventId,
@@ -661,12 +601,11 @@ class ApiService {
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to remove partner'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/cancel.
+  /// Calls POST /rest/events/cancel. Auth required Organizer or ADMIN.
   static Future<void> cancelEvent({
     required String jwt,
     required String eventId,
@@ -680,12 +619,11 @@ class ApiService {
         'input': {'eventId': eventId},
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to cancel event'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/delete.
+  /// Calls POST /rest/events/delete. Auth required Organizer or ADMIN.
   static Future<void> deleteEvent({
     required String jwt,
     required String eventId,
@@ -699,12 +637,11 @@ class ApiService {
         'input': {'eventId': eventId},
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to delete event'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/attendees.
+  /// Calls POST /rest/events/attendees. Auth required Organizer, ADMIN or BOFFICER.
   static Future<Map<String, dynamic>> getAttendees({
     required String jwt,
     required String eventId,
@@ -719,13 +656,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to get attendees'));
+    return _extractData(body);
   }
 
-  /// Calls POST /rest/events/joinrequests.
+  /// Calls POST /rest/events/joinrequests. Auth required Organizer, ADMIN or BOFFICER.
   static Future<Map<String, dynamic>> listJoinRequests({
     required String jwt,
     required String eventId,
@@ -740,13 +674,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to list join requests'));
+    return _extractData(body);
   }
 
-  /// Calls POST /rest/events/respondjoin.
+  /// Calls POST /rest/events/respondjoin. Auth required Organizer, ADMIN or BOFFICER.
   static Future<void> respondJoinRequest({
     required String jwt,
     required String eventId,
@@ -766,12 +697,11 @@ class ApiService {
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to respond to join request'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/myattends.
+  /// Calls POST /rest/events/myattends. Auth required (Owner, ADMIN or BOFFICER).
   static Future<Map<String, dynamic>> getMyAttends({
     required String jwt,
     required String eventId,
@@ -786,13 +716,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to get my attends'));
+    return _extractData(body);
   }
 
-  /// Calls POST /rest/events/isattendee.
+  /// Calls POST /rest/events/isattendee. Auth required.
   static Future<bool> isAttendee({
     required String jwt,
     required String eventId,
@@ -813,22 +740,16 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      final data = _extractData(body);
-      return data['isattendee'] == true;
-    }
-    throw ApiException(_errorMessage(body, 'Failed to check attendance'));
+    final data = _extractData(body);
+    return data['isattendee'] == true;
   }
 
-  /// Calls POST /rest/forum/post.
-
+  /// Calls POST /rest/forum/post. Auth required.
   static Future<Map<String, dynamic>> postForumMessage({
     required String jwt,
-    String? eventId,
-    String? id,
+    required String id,
     String type = 'EVENT',
     required String text,
-    String? username,
     String? parentPostId,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/forum/post');
@@ -841,9 +762,8 @@ class ApiService {
           'jwt': jwt,
         },
         'input': {
+          'id': id,
           'type': type,
-          if (type == 'EVENT') 'eventId': eventId,
-          if (type == 'FRIEND') 'id': id,
           'text': text,
           'parentPostId': parentPostId,
         }..removeWhere((k, v) => v == null)
@@ -851,26 +771,16 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      final data = _extractData(body);
-      _normalizeForumPost(data);
-      return data;
-    }
-
-    throw ApiException(_errorMessage(body, 'Failed to post message'));
+    final data = _extractData(body);
+    _normalizeForumPost(data);
+    return data;
   }
 
-
-
-
-  /// Calls POST /rest/forum/list.
+  /// Calls POST /rest/forum/list. Auth required.
   static Future<Map<String, dynamic>> listForumMessages({
     required String jwt,
-    String? eventId,
-    String? id,
+    required String id,
     String type = 'EVENT',
-    String? username,
     int pageSize = 50,
     String? cursor,
   }) async {
@@ -883,29 +793,25 @@ class ApiService {
           'jwt': jwt,
         },
         'input': {
+          'id': id,
           'type': type,
-          if (type == 'EVENT') 'eventId': eventId,
-          if (type == 'FRIEND') 'id': id,
           'pageSize': pageSize,
           'cursor': cursor,
         }..removeWhere((k, v) => v == null)
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      final data = _extractData(body);
-      final posts = data['posts'];
-      if (posts is List) {
-        for (final p in posts) {
-          if (p is Map<String, dynamic>) _normalizeForumPost(p);
-        }
+    final data = _extractData(body);
+    final posts = data['posts'];
+    if (posts is List) {
+      for (final p in posts) {
+        if (p is Map<String, dynamic>) _normalizeForumPost(p);
       }
-      return data;
     }
-    throw ApiException(_errorMessage(body, 'Failed to load messages'));
+    return data;
   }
 
-  /// Calls POST /rest/forum/delete.
+  /// Calls POST /rest/forum/delete. Auth required Author, Organizer or ADMIN.
   static Future<void> deleteForumPost({
     required String jwt,
     required String postId,
@@ -919,12 +825,11 @@ class ApiService {
         'input': {'forumKey': postId},
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to delete message'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/attend.
+  /// Calls POST /rest/events/attend. Auth required.
   static Future<Map<String, dynamic>> attendEvent({
     required String jwt,
     required String eventId,
@@ -942,13 +847,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to join event'));
+    return _extractData(body);
   }
 
-  /// Calls POST /rest/events/unattend.
+  /// Calls POST /rest/events/unattend. Auth required.
   static Future<Map<String, dynamic>> unattendEvent({
     required String jwt,
     required String eventId,
@@ -966,13 +868,32 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to leave event'));
+    return _extractData(body);
   }
 
-  /// Calls POST /rest/events/uploadimages.
+  /// Calls POST /rest/events/kick. Auth required Organizer or ADMIN.
+  static Future<void> kickAttendee({
+    required String jwt,
+    required String eventId,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/events/kick');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {
+          'eventId': eventId,
+          'username': username,
+        },
+      }),
+    );
+    final body = _parseBody(response.body);
+    _checkBodyError(body);
+  }
+
+  /// Calls POST /rest/events/uploadimages. Auth required Organizer or ADMIN.
   static Future<void> uploadEventImages({
     required String jwt,
     required String eventId,
@@ -992,12 +913,11 @@ class ApiService {
       }),
     );
 
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to upload images (Status ${response.statusCode})'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/uploadimageurls.
+  /// Calls POST /rest/events/uploadimageurls. Auth required Organizer or ADMIN.
   static Future<void> uploadImageUrls({
     required String jwt,
     required String eventId,
@@ -1015,12 +935,11 @@ class ApiService {
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to upload image URLs'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/events/deleteimage.
+  /// Calls POST /rest/events/deleteimage. Auth required Organizer or ADMIN.
   static Future<void> deleteImages({
     required String jwt,
     required String eventId,
@@ -1039,14 +958,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      _checkBodyError(body);
-      return;
-    }
-    throw ApiException(_errorMessage(body, 'Failed to delete images'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /rest/user.
+  /// Calls POST /rest/user. Auth required.
   static Future<Map<String, dynamic>> getUserAccount({
     required String jwt,
     required String username,
@@ -1061,13 +976,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _normalizeUser(_extractData(body));
-    }
-    throw ApiException(_errorMessage(body, 'Failed to load user profile'));
+    return _normalizeUser(_extractData(body));
   }
 
-  /// Calls POST /find.
+  /// Calls POST /rest/find. Auth required.
   static Future<Map<String, dynamic>> findUsers({
     required String jwt,
     required String username,
@@ -1082,13 +994,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Search failed'));
+    return _extractData(body);
   }
 
-  /// Calls POST /showusers.
+  /// Calls POST /rest/showusers. ADMIN or BOFFICER.
   static Future<Map<String, dynamic>> showUsers({
     required String jwt,
   }) async {
@@ -1101,13 +1010,46 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to show users'));
+    return _extractData(body);
   }
 
-  /// Calls POST /changeuserrole.
+  /// Calls POST /rest/showuserrole. ADMIN or BOFFICER.
+  static Future<Map<String, dynamic>> showUserRole({
+    required String jwt,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/showuserrole');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'username': username},
+      }),
+    );
+    final body = _parseBody(response.body);
+    return _extractData(body);
+  }
+
+  /// Calls POST /rest/changeborder. Auth required USER (self).
+  static Future<Map<String, dynamic>> changeBorder({
+    required String jwt,
+    required String borderID,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/changeborder');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'borderID': borderID},
+      }),
+    );
+    final body = _parseBody(response.body);
+    return _extractData(body);
+  }
+
+  /// Calls POST /rest/changeuserrole. ADMIN only.
   static Future<void> changeUserRole({
     required String jwt,
     required String username,
@@ -1125,12 +1067,11 @@ class ApiService {
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to change role'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /changeuserpwd.
+  /// Calls POST /rest/changeuserpwd. Auth required Owner or ADMIN.
   static Future<void> changeUserPassword({
     required String jwt,
     required String username,
@@ -1150,12 +1091,11 @@ class ApiService {
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to change password'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /showauthsessions.
+  /// Calls POST /rest/showauthsessions. ADMIN only.
   static Future<Map<String, dynamic>> showAuthSessions({
     required String jwt,
   }) async {
@@ -1168,13 +1108,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to load sessions'));
+    return _extractData(body);
   }
 
-  /// Calls POST /endfriend.
+  /// Calls POST /rest/endfriend. ADMIN only.
   static Future<void> endFriendships({
     required String jwt,
   }) async {
@@ -1183,16 +1120,15 @@ class ApiService {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'token': {'jwt': jwt}, // Passed even if not checked by backend currently
+        'token': {'jwt': jwt},
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to reset friendships'));
+    _checkBodyError(body);
   }
 
   //Friend Endpoints
-  /// Calls POST /addfriend.
+  /// Calls POST /rest/addfriend. Auth required.
   static Future<void> addFriend({
     required String jwt,
     required String username,
@@ -1206,12 +1142,11 @@ class ApiService {
         'input': {'username': username},
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to add friend'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /unfriend.
+  /// Calls POST /rest/unfriend. Auth required.
   static Future<void> unfriend({
     required String jwt,
     required String username,
@@ -1225,12 +1160,11 @@ class ApiService {
         'input': {'username': username},
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to unfriend'));
+    _checkBodyError(body);
   }
 
-  /// Calls POST /showfriends.
+  /// Calls POST /rest/showfriends. Auth required.
   static Future<Map<String, dynamic>> showFriends({
     required String jwt,
     required String username,
@@ -1245,13 +1179,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to show friends'));
+    return _extractData(body);
   }
 
-  /// Calls POST /showfriendrequests.
+  /// Calls POST /rest/showfriendrequests. Auth required.
   static Future<Map<String, dynamic>> showFriendRequests({
     required String jwt,
   }) async {
@@ -1264,13 +1195,10 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return _extractData(body);
-    }
-    throw ApiException(_errorMessage(body, 'Failed to show friend requests'));
+    return _extractData(body);
   }
 
-  /// Calls POST /addnickname.
+  /// Calls POST /rest/addnickname. Auth required.
   static Future<void> addNickname({
     required String jwt,
     required String username,
@@ -1284,12 +1212,40 @@ class ApiService {
         'token': {'jwt': jwt},
         'input': {
           'username': username,
-          'newName': nickname,
+          'newname': nickname,
         },
       }),
     );
-    if (response.statusCode >= 200 && response.statusCode < 300) return;
     final body = _parseBody(response.body);
-    throw ApiException(_errorMessage(body, 'Failed to set nickname'));
+    _checkBodyError(body);
+  }
+
+  /// Calls POST /rest/getnickname. Auth required.
+  static Future<Map<String, dynamic>> getNickname({
+    required String jwt,
+    required String username,
+  }) async {
+    final uri = Uri.parse('$baseUrl/rest/getnickname');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': {'jwt': jwt},
+        'input': {'username': username},
+      }),
+    );
+    final body = _parseBody(response.body);
+    return _extractData(body);
+  }
+
+  /// Calls GET /rest/forum/cleanup. Cron only.
+  static Future<Map<String, dynamic>> cleanupForum() async {
+    final uri = Uri.parse('$baseUrl/rest/forum/cleanup');
+    final response = await http.get(
+      uri,
+      headers: {'X-AppEngine-Cron': 'true'},
+    );
+    final body = _parseBody(response.body);
+    return _extractData(body);
   }
 }

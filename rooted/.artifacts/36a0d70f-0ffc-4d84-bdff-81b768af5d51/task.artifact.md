@@ -1,0 +1,6 @@
+- [x] Define `darkTheme` and `themeNotifier` in `app_theme.dart`
+- [x] Update `main.dart` to listen for theme changes
+- [x] Add Dark Mode toggle to `profile_screen.dart`
+- [x] Implement persistence for theme preference
+- [x] Refactor Profile UI components for theme-awareness
+- [x] Verify functionality

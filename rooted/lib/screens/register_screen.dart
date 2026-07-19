@@ -86,6 +86,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       String email = token['email']?.toString() ?? _emailController.text.trim();
       String displayName = username;
       List<String> interests = _selectedInterests;
+      String country = '';
+      int birth = 0;
+      List<int> ods = List.filled(17, 0);
+      String borderId = '';
+      int points = 0;
       try {
         debugPrint('Step 4: calling getUserAccount...');
         final profile = await ApiService.getUserAccount(jwt: jwt, username: username);
@@ -93,13 +98,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         bio = profile['bio']?.toString() ?? '';
         email = profile['email']?.toString() ?? email;
         displayName = profile['display']?.toString() ?? username;
-        final cat = profile['category']?.toString();
-        if (cat != null && cat.isNotEmpty) {
-          interests = cat.split(',');
-        }
+        interests = profile['category_list'] as List<String>? ?? interests;
+        country = profile['country']?.toString() ?? '';
+        birth = profile['birth'] as int? ?? 0;
+        ods = (profile['ods'] as List?)?.cast<int>() ?? List.filled(17, 0);
+        borderId = profile['borderID']?.toString() ?? '';
+        points = profile['points'] as int? ?? 0;
       } catch (profileError) {
         debugPrint('Step 4 FAILED (non-fatal, using defaults): $profileError');
-        // Fallback to defaults if profile fetch fails
       }
 
       debugPrint('Step 5: saving session...');
@@ -111,6 +117,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         role: role,
         bio: bio,
         categories: interests,
+        country: country,
+        birth: birth,
+        ods: ods,
+        borderId: borderId,
+        points: points,
       );
       debugPrint('Step 5 OK: session saved');
 

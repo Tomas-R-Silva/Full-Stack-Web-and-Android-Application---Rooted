@@ -58,6 +58,9 @@ class _LoginScreenState extends State<LoginScreen> {
       List<String> categories = [];
       String country = '';
       int birth = 0;
+      List<int> ods = List.filled(17, 0);
+      String borderId = '';
+      int points = 0;
       try {
         final profile = await ApiService.getUserAccount(jwt: jwt, username: username);
         bio = profile['bio']?.toString() ?? '';
@@ -66,6 +69,9 @@ class _LoginScreenState extends State<LoginScreen> {
         categories = profile['category_list'] as List<String>? ?? [];
         country = profile['country']?.toString() ?? '';
         birth = profile['birth'] as int? ?? 0;
+        ods = (profile['ods'] as List?)?.cast<int>() ?? List.filled(17, 0);
+        borderId = profile['borderID']?.toString() ?? '';
+        points = profile['points'] as int? ?? 0;
       } catch (_) {
         // Fallback to defaults if profile fetch fails
       }
@@ -80,6 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
         categories: categories,
         country: country,
         birth: birth,
+        ods: ods,
+        borderId: borderId,
+        points: points,
       );
       if (mounted) {
         setState(() => _isLoading = false);
