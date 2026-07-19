@@ -1,6 +1,7 @@
 export type NotificationCode =
   | "LOGIN_SUCCESS"
   | "INVALID_CREDENTIALS"
+  | "INVALID_FILE"
   | "ACCOUNT_CREATED"
   | "ACCOUNT_DELETED"
   | "ACCOUNT_UPDATED"
@@ -35,6 +36,10 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   INVALID_CREDENTIALS: {
     title: "Invalid Credentials",
     message: "Your credentials are wrong. Try again!.",
+  },
+  INVALID_FILE: {
+    title: "Invalid File",
+    message: "You have sumbited a invalid file. Try again!.",
   },
   ACCOUNT_CREATED: {
     title: "Success!",

@@ -27,6 +27,7 @@ function AccountAdminManage({ user }: UserProps) {
       bio: "",
       country: "",
       birth: 0,
+      avatar: "",
       category: [],
     },
   });
@@ -37,6 +38,7 @@ function AccountAdminManage({ user }: UserProps) {
     bio: "",
     country: "",
     birth: "",
+    avatar: "",
     category: "",
   });
 

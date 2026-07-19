@@ -1,7 +1,12 @@
-import type { Attends, UserAttendsResponse } from "../../utils/types";
+import type {
+  Attends,
+  EventGetterResponse,
+  RequestEventGetter,
+  UserAttendsResponse,
+} from "../../utils/types";
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
-import { UserAttends } from "../../api/auth";
+import { getEvent, UserAttends } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import eventUpcoming from "../../assets/icons/event_upcoming_w.svg";
 
@@ -57,7 +62,6 @@ function AccountAttends() {
     });
   };
 
-  //fetch on page render
   useEffect(() => {
     loadAttends();
   }, []);

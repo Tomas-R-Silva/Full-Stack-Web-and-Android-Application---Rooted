@@ -101,8 +101,9 @@ export type RequestModAccount = {
     username:string,
     country: string,
     birth: number,
-    bio:string,
-    email:string,
+    bio: string,
+    avatar: string,
+    email: string,
     category: string[],
   }
 }
@@ -130,6 +131,7 @@ export type UserInformationResponse = {
     birth: number,
     display: string,
     bio: string,
+    avatar: Image,
     country: string,
     category: string[],
     oldnames: string[],

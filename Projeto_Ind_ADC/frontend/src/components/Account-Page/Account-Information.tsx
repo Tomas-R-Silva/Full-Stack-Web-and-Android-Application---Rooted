@@ -27,6 +27,7 @@ function AccountInformation() {
       bio: "",
       country: "",
       birth: 0,
+      avatar: "",
       category: [],
     },
   });
@@ -37,6 +38,7 @@ function AccountInformation() {
     bio: "",
     country: "",
     birth: "",
+    avatar: "",
     category: "",
   });
 
@@ -93,6 +95,7 @@ function AccountInformation() {
       bio: "",
       country: "",
       birth: "",
+      avatar: "",
       category: "",
     };
 

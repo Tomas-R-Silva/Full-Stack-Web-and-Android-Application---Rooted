@@ -11,10 +11,12 @@ import { useNavigate } from "react-router-dom";
 import AccountAttends from "./Account-Attends";
 import AccountRewards from "./Account-Rewards";
 import PreferedThemes from "./Prefered-Themes";
+import AccountAvatar from "./Account-Avatar";
 
 function AccountSettings() {
   const profileItems = [
     "Account Information",
+    "Avatar",
     "Friends List",
     "Friends Requests",
     "My Events",
@@ -44,8 +46,8 @@ function AccountSettings() {
             </h5>
 
             {profileItems.map((item, i) => {
-              if (i === 5 && role !== "ADMIN") return null;
-              if (i === 6 && role !== "BACKOFFICER") return null;
+              if (i === 6 && role !== "ADMIN") return null;
+              if (i === 7 && role !== "BACKOFFICER") return null;
 
               return (
                 <div
@@ -111,11 +113,12 @@ function AccountSettings() {
           </div>
           <div className="col-lg-8">
             {selected === profileItems[0] && <AccountInformation />}
-            {selected === profileItems[1] && <FriendsList />}
-            {selected === profileItems[2] && <FriendsRequests />}
-            {selected === profileItems[3] && username && <AccountEvents />}
-            {selected === profileItems[4] && username && <AccountAttends />}
-            {selected === profileItems[5] && (
+            {selected === profileItems[1] && username && <AccountAvatar />}
+            {selected === profileItems[2] && <FriendsList />}
+            {selected === profileItems[3] && <FriendsRequests />}
+            {selected === profileItems[4] && username && <AccountEvents />}
+            {selected === profileItems[5] && username && <AccountAttends />}
+            {selected === profileItems[6] && (
               <div className="container">
                 <div className="row w-100 justify-content-center">
                   <div className="col-12 col-lg-8">
@@ -137,7 +140,7 @@ function AccountSettings() {
                 </div>
               </div>
             )}
-            {selected === profileItems[6] && (
+            {selected === profileItems[7] && (
               <div className="container">
                 <div className="row w-100 justify-content-center">
                   <div className="col-12 col-lg-8">
@@ -163,7 +166,7 @@ function AccountSettings() {
                 </div>
               </div>
             )}
-            {selected === profileItems[7] && username && <AccountRewards />}
+            {selected === profileItems[8] && username && <AccountRewards />}
             {selected === personalizationItems[0] && username && (
               <PreferedThemes />
             )}

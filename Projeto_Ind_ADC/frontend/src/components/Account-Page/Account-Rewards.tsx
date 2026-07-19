@@ -109,7 +109,7 @@ function AccountRewards() {
                 }}
               >
                 <img
-                  src={account_circle_w}
+                  src={user?.data.avatar.url ?? account_circle_w}
                   alt="Avatar"
                   style={{
                     width: "100%",

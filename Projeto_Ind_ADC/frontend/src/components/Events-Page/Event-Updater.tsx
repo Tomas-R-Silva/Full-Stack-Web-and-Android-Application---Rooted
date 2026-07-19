@@ -458,7 +458,9 @@ function EventUpdater() {
       const response = await updateEvent(payload);
       console.log(response);
       window.location.reload();
-      notify("EVENT_UPDATED");
+      if (response.status === 200) {
+        notify("EVENT_UPDATED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
