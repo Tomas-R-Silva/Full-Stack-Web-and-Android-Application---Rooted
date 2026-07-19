@@ -49,7 +49,7 @@ export function NotificationProvider({
             position: "fixed",
             top: 24,
             right: 24,
-            background: "var(--color-green)",
+            background: "var(--color-green2)",
             color: "white",
             borderRadius: "16px",
             padding: "16px 22px",

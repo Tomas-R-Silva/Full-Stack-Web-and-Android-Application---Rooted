@@ -204,10 +204,10 @@ function EventsPage() {
                 }
               >
                 <option value="">All</option>
-                <option value="Upcoming">Upcoming</option>
-                <option value="Ongoing">Ongoing</option>
-                <option value="Finished">Finished</option>
-                <option value="Canceled">Canceled</option>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="ONGOING">Ongoing</option>
+                <option value="CANCELED">Canceled</option>
+                <option value="COMPLETED">Completed</option>
               </select>
             </div>
 
