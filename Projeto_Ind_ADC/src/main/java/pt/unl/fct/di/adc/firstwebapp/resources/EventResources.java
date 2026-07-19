@@ -588,7 +588,7 @@ public class EventResources {
 			List<Map<String, Object>> attendees = new ArrayList<>((int) eventEntity.getAttendee());
 
 			while (results.hasNext()) 
-				attendees.add(AttendanceFull.fromdatabase(results.next()).tomapusers());
+				attendees.add(AttendanceFull.fromdatabase(results.next()).tomap());
 			return ok(Map.of("attendees", attendees, "count", attendees.size()));
 
 		} catch (Exception e) {
@@ -620,7 +620,7 @@ public class EventResources {
 			List<Map<String, Object>> attendees = new ArrayList<>();
 
 			while (results.hasNext()) 
-				attendees.add(AttendanceFull.fromdatabase(results.next()).tomapevents());
+				attendees.add(AttendanceFull.fromdatabase(results.next()).tomap());
 
 			return ok(Map.of("myattends", attendees, "count", attendees.size()));
 

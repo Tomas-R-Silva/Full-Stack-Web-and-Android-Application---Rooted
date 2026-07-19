@@ -184,7 +184,7 @@ public class UserResources {
 				user.setCountry(input.getCountry());
 			if(input.getBirth()!=null&&user.getBirth()!=input.getBirth())
 				user.setBirth(input.getBirth());
-			if(input.getAvatar()!=null&&!user.getAvatar().equals(input.getAvatar()))
+			if(input.getAvatar()!=null && !input.getAvatar().isBlank())
 				user.setAvatar(input.getAvatar());
 
 			datastore.put(user.toentity());
@@ -231,9 +231,10 @@ public class UserResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response findAccount(ShortUserTokenRequest request) {
 		try {
-			AuthHelper.verifyToken(request);
-			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User").
-					setFilter(PropertyFilter.eq("is_public", true));
+			TokenFull token=AuthHelper.verifyToken(request);
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
+			if(!token.getRole().equals(Role.ADMIN))
+				queryBuilder.setFilter(PropertyFilter.eq("is_public", true));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
 			List<Map<String,Object>> list=new ArrayList<>();
 			while(sessions.hasNext()) {

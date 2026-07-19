@@ -77,7 +77,7 @@ public class UserFull extends ShortUser implements Full{
 	public void setBorderID(String borderID) {this.borderID = (borderID!=null)?borderID:"";}
 	public long getPoints() {return points;}
 	private void setbasePoints(long points) {this.points = points;}
-	
+
 	public void setAvatar(String avatar){
 		String[] parts = avatar.split(",", 2);
 		String contentType = parts[0].replace("data:", "").replace(";base64", "");
@@ -133,19 +133,21 @@ public class UserFull extends ShortUser implements Full{
 	}
 	public Map<String,Object> tobigmap(String display,Friendstatus friendshipstatus){
 		Map<String,Object> map=this.tomap();
-		map.put("friendship",friendshipstatus.toString());
-		map.put("display",Full.string(display));//may be friend nickname or user display name
-		map.put("creation_time",creation);
-		map.put("oldnames",Full.list(old));
 		map.put("isPublic", isPublic);
-		map.put("bio",Full.string(bio));
-		map.put("category",Full.makeStringEnumList(category));
-		map.put("country",Full.string(country));
-		map.put("birth",birth);
-		map.put("ods",Full.list(ods));
+		map.put("avatar", avatar);
+		map.put("oldnames",Full.list(old));
 		map.put("borderID",Full.string(borderID));
-		map.put("points",points);
-		map.put("avatar",avatar);		
+		map.put("friendship",friendshipstatus.toString());
+		if(isPublic||friendshipstatus.equals(Friendstatus.FRIENDS)) {
+			map.put("display",Full.string(display));//may be friend nickname or user display name
+			map.put("creation_time",creation);
+			map.put("bio",Full.string(bio));
+			map.put("category",Full.makeStringEnumList(category));
+			map.put("country",Full.string(country));
+			map.put("birth",birth);
+			map.put("ods",Full.list(ods));
+			map.put("points",points);
+		}
 		return map;
 	}
 
