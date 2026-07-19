@@ -1,14 +1,17 @@
 import NavBar from "../NavBar/NavBar";
 import { sdgInfos } from "../../utils/sdgInfo";
 import type { FilterProps, SdgItem } from "../../utils/types";
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import EventsList from "../Events-Page/Events-List";
 import { useState, useEffect } from "react";
 
 function SDGelements() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+
+  const sdgId = Number(id);
+  const isValidSdgId = Number.isInteger(sdgId) && sdgId >= 1 && sdgId <= 17;
+
   const persons = [
     { username: "Alexandre", value: "100" },
     { username: "Tomás", value: "80" },
@@ -17,42 +20,65 @@ function SDGelements() {
     { username: "Eduardo", value: "20" },
     { username: "Gonçalo", value: "1" },
   ];
+
   const [filter, setFilter] = useState<FilterProps>({
     category: null,
     status: null,
     organizerUsername: null,
     isAccessible: false,
-    sdg: id ? [Number(id)] : [],
+    sdg: isValidSdgId ? [sdgId] : [],
   });
 
-  if (!id) {
-    return <div>Invalid SDG number!</div>;
-  }
-
-  const sdg: SdgItem = sdgInfos[Number(id) - 1];
-
   useEffect(() => {
-    if (!id) return;
+    if (!isValidSdgId) return;
 
     setFilter((prev) => ({
       ...prev,
-      sdg: [Number(id)],
+      sdg: [sdgId],
     }));
-  }, [id]);
+  }, [sdgId, isValidSdgId]);
+
+  if (!isValidSdgId) {
+    return (
+      <>
+        <NavBar />
+        <div className="container py-5">
+          <h1 className="text-white">Invalid SDG number!</h1>
+          <button
+            className="btn btn-outline-light mt-3"
+            onClick={() => navigate("/sdg")}
+          >
+            Back to SDGs
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  const sdg: SdgItem = sdgInfos[sdgId - 1];
 
   return (
     <>
       <NavBar />
+
       <div
-        className="row"
+        className="container-fluid px-0"
         style={{
-          backgroundImage: `url(${sdg.photo})`,
+          backgroundImage: `linear-gradient(
+            rgba(0, 0, 0, 0.45),
+            rgba(0, 0, 0, 0.45)
+          ), url(${sdg.photo})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <div className="d-flex flex-column" style={{ minHeight: "50vh" }}>
-          <div className="d-flex justify-content-between w-100 p-4">
+        <div
+          className="d-flex flex-column"
+          style={{
+            minHeight: "50vh",
+          }}
+        >
+          <div className="d-flex justify-content-between align-items-center w-100 p-3 p-md-4 gap-2">
             <button
               className="btn btn-outline-light"
               onClick={() => navigate("/sdg/" + (sdg.id - 1))}
@@ -70,20 +96,14 @@ function SDGelements() {
             </button>
           </div>
 
-          <div className="d-flex flex-grow-1">
-            <div
-              className="d-none d-md-flex"
-              style={{
-                width: "65%",
-                alignItems: "center",
-                paddingLeft: "80px",
-              }}
-            >
-              <div>
+          <div className="container flex-grow-1 d-flex align-items-center py-4 py-md-5">
+            <div className="row align-items-center w-100 g-4">
+              <div className="col-12 col-lg-7 text-center text-lg-start">
                 <p
+                  className="mb-3"
                   style={{
                     color: "white",
-                    fontSize: "12px",
+                    fontSize: "14px",
                     cursor: "pointer",
                   }}
                   onClick={() => navigate("/sdg")}
@@ -92,16 +112,16 @@ function SDGelements() {
                 </p>
 
                 <p
-                  className={"fw-bold"}
+                  className="fw-bold d-flex align-items-center justify-content-center justify-content-lg-start gap-2"
                   style={{ color: "white", fontSize: "16px" }}
                 >
-                  Objective{" "}
+                  Objective
                   <img
                     src={sdg.icon}
                     alt={`SDG ${sdg.id} icon`}
                     style={{
-                      width: "20px",
-                      height: "20px",
+                      width: "24px",
+                      height: "24px",
                       borderRadius: "8px",
                     }}
                   />
@@ -110,7 +130,7 @@ function SDGelements() {
                 <h1
                   style={{
                     color: "white",
-                    fontSize: "64px",
+                    fontSize: "clamp(36px, 8vw, 64px)",
                     fontWeight: 800,
                     lineHeight: 1.1,
                   }}
@@ -118,22 +138,43 @@ function SDGelements() {
                   {sdg.title}
                 </h1>
 
-                <p style={{ color: "white", fontSize: "16px" }}>
+                <p
+                  className="mx-auto mx-lg-0"
+                  style={{
+                    color: "white",
+                    fontSize: "clamp(15px, 2vw, 18px)",
+                    maxWidth: "700px",
+                  }}
+                >
                   {sdg.description}
                 </p>
               </div>
-            </div>
 
-            <div className="d-flex align-items-center justify-content-center flex-grow-1">
-              <img src={sdg.circle} />
+              <div className="col-12 col-lg-5 d-flex align-items-center justify-content-center">
+                <img
+                  src={sdg.circle}
+                  alt={`SDG ${sdg.id}`}
+                  className="img-fluid"
+                  style={{
+                    maxWidth: "min(320px, 80vw)",
+                    height: "auto",
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container py-5">
-        <h1 style={{ color: "var(--color-white" }}>
-          Related Events{" "}
+      <div className="container py-4 py-md-5">
+        <h1
+          className="d-flex flex-wrap align-items-center gap-2 mb-4"
+          style={{
+            color: "var(--color-white)",
+            fontSize: "clamp(28px, 5vw, 40px)",
+          }}
+        >
+          Related Events
           <img
             src={sdg.icon}
             alt={`SDG ${sdg.id} icon`}
@@ -145,12 +186,19 @@ function SDGelements() {
           />
           :
         </h1>
+
         <EventsList filter={filter} />
       </div>
 
-      <div className="container py-5">
-        <h1 style={{ color: "var(--color-white" }}>
-          Top 50{" "}
+      <div className="container py-4 py-md-5">
+        <h1
+          className="d-flex flex-wrap align-items-center gap-2 mb-4"
+          style={{
+            color: "var(--color-white)",
+            fontSize: "clamp(28px, 5vw, 40px)",
+          }}
+        >
+          Top 50
           <img
             src={sdg.icon}
             alt={`SDG ${sdg.id} icon`}
@@ -162,18 +210,25 @@ function SDGelements() {
           />
           :
         </h1>
-        {persons.map((p) => (
-          <div
-            key={p.username}
-            className="rounded-3 p-3 mb-2 border text-white"
-            style={{ background: "var(--color-green2)" }}
-          >
-            <div className="d-flex justify-content-between align-items-center">
-              <span>{p.username}</span>
-              <span>{p.value} events</span>
+
+        <div className="row g-3">
+          {persons.map((p, index) => (
+            <div key={p.username} className="col-12">
+              <div
+                className="rounded-3 p-3 border text-white"
+                style={{ background: "var(--color-green2)" }}
+              >
+                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                  <span className="fw-semibold">
+                    #{index + 1} {p.username}
+                  </span>
+
+                  <span>{p.value} events</span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </>
   );

@@ -234,19 +234,20 @@ function PublicPage() {
           style={{ background: "var(--color-white)" }}
         >
           <div
-            className="p-4 rounded-top-4"
+            className="p-3 p-md-4 rounded-top-4"
             style={{ background: "var(--color-green2)" }}
           >
-            <div className="d-flex align-items-center">
+            <div className="d-flex flex-column flex-lg-row align-items-center align-items-lg-center gap-4">
               <div
                 style={{
                   position: "relative",
                   width: "80px",
                   height: "80px",
+                  minWidth: "80px",
                 }}
               >
                 <img
-                  src={account_circle_w}
+                  src={user?.data.avatar.url ?? account_circle_w}
                   alt="Avatar"
                   style={{
                     width: "100%",
@@ -272,48 +273,58 @@ function PublicPage() {
                 )}
               </div>
 
-              <div className="ms-4 flex-grow-1">
-                <h4 className="mb-0 text-white fw-bold">
-                  {user && user.data.display}
-                  {user?.data.role === "PARTNER" && (
-                    <img className="ms-1" src={verified} />
-                  )}
-                </h4>
-                <div className="text-white mt-2">
-                  {user && user.data.username}
+              <div className="text-center text-lg-start flex-grow-1 w-100">
+                <div className="row g-3 align-items-center">
+                  <div className="col-12 col-md-6 col-xl-3">
+                    <h4 className="mb-0 text-white fw-bold">
+                      {user && user.data.display}
+                      {user?.data.role === "PARTNER" && (
+                        <img className="ms-1" src={verified} alt="Verified" />
+                      )}
+                    </h4>
+
+                    <div className="text-white mt-2">
+                      {user && user.data.username}
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-md-6 col-xl-3">
+                    <div className="text-white">Email:</div>
+                    <h6 className="mb-0 text-white text-break">
+                      {user && user.data.email}
+                    </h6>
+                  </div>
+
+                  <div className="col-12 col-md-6 col-xl-2">
+                    <div className="text-white">Role:</div>
+                    <h6 className="mb-0 text-white">
+                      {user && user.data.role}
+                    </h6>
+                  </div>
+
+                  <div className="col-12 col-md-6 col-xl-3">
+                    <div className="text-white">Member since:</div>
+                    <h6 className="mb-0 text-white">
+                      {user && longToVisualDate(user.data.creation_time)}
+                    </h6>
+                  </div>
                 </div>
               </div>
 
-              <div className="ms-4 flex-grow-1">
-                <div className="text-white ">Email:</div>
-                <h6 className="mb-0 text-white">{user && user.data.email}</h6>
-              </div>
-
-              <div className="ms-4 flex-grow-1">
-                <div className="text-white ">Role:</div>
-                <h6 className="mb-0 text-white">{user && user.data.role}</h6>
-              </div>
-
-              <div className="ms-4 flex-grow-1">
-                <div className="text-white ">Member since:</div>
-                <h6 className="mb-0 text-white">
-                  {user && longToVisualDate(user.data.creation_time)}
-                </h6>
-              </div>
-
-              <div className="d-flex gap-3">
+              <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-center justify-content-lg-end align-items-center">
                 {user && user.data.friendship === "SELF" && (
                   <img
                     src={settings_w}
                     alt="Settings"
                     onClick={() => navigate("/account/settings")}
                     style={{
-                      width: "70px",
-                      height: "70px",
+                      width: "55px",
+                      height: "55px",
                       cursor: "pointer",
                     }}
                   />
                 )}
+
                 {user && user.data.friendship === "NOT_FRIENDS" && (
                   <button
                     className="btn px-4"
@@ -326,8 +337,9 @@ function PublicPage() {
                     Add Friend
                   </button>
                 )}
+
                 {user && user.data.friendship === "FRIENDS" && (
-                  <div className="d-flex gap-2 align-items-center">
+                  <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 align-items-center justify-content-center">
                     <button
                       className="btn px-4"
                       style={{
@@ -359,7 +371,10 @@ function PublicPage() {
                           placeholder="Nickname"
                           value={nickname}
                           onChange={(e) => setNickname(e.target.value)}
-                          style={{ width: "180px" }}
+                          style={{
+                            width: "100%",
+                            maxWidth: "180px",
+                          }}
                         />
 
                         <button
@@ -376,6 +391,7 @@ function PublicPage() {
                     )}
                   </div>
                 )}
+
                 {user && user.data.friendship === "REQUEST_RECIVED" && (
                   <button
                     className="btn px-4"
@@ -388,6 +404,7 @@ function PublicPage() {
                     Accept Request
                   </button>
                 )}
+
                 {user && user.data.friendship === "REQUEST_SENT" && (
                   <button
                     className="btn px-4"

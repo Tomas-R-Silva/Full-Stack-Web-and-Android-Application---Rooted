@@ -132,45 +132,49 @@ function AccountAvatar() {
   return (
     <>
       <div className="container">
-        <div className="row w-100 justify-content-center">
+        <div className="row w-100">
           <div className="col-12 col-lg-8">
             <h1 className="fw-bold text-white mb-3">Avatar</h1>
 
             <p className="text-white mb-4">Set your account avatar.</p>
-            <div
-              style={{
-                position: "relative",
-                width: "400px",
-                height: "400px",
-                flexShrink: 0,
-              }}
-            >
-              <img
-                src={formData.input.avatar || account_circle_w}
-                alt="Avatar"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  objectPosition: "center",
-                }}
-              />
 
-              {userInfo && userInfo.data.borderID && (
+            <div className="d-flex flex-column align-items-center justify-content-center">
+              <div
+                style={{
+                  position: "relative",
+                  width: "400px",
+                  height: "400px",
+                  flexShrink: 0,
+                }}
+              >
                 <img
-                  src={getBorderItem(userInfo.data.borderID)?.image}
-                  alt=""
+                  src={formData.input.avatar || account_circle_w}
+                  alt="Avatar"
                   style={{
-                    position: "absolute",
-                    inset: 0,
                     width: "100%",
                     height: "100%",
-                    pointerEvents: "none",
-                    userSelect: "none",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    objectPosition: "center",
                   }}
                 />
-              )}
+
+                {userInfo && userInfo.data.borderID && (
+                  <img
+                    src={getBorderItem(userInfo.data.borderID)?.image}
+                    alt=""
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}
+                  />
+                )}
+              </div>
+
               <input
                 type="file"
                 accept="image/*"
