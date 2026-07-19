@@ -100,7 +100,7 @@ function FriendsChat({ friend }: FriendProps) {
         },
         input: {
           id: friend.Friend,
-          type: "EVENT",
+          type: "FRIEND",
           text: post,
           parentPostId: parentId,
         },
@@ -108,7 +108,7 @@ function FriendsChat({ friend }: FriendProps) {
       console.log(payload);
       const response = await PostMessage(payload);
       console.log(response);
-      window.location.reload();
+      //window.location.reload();
       if (response.status === 200) {
         notify("MESSAGE_POSTED");
       }

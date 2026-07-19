@@ -539,7 +539,7 @@ function PublicPage() {
                     <div className="text-center mt-4">
                       <button
                         className="btn"
-                        onClick={() => navigate(`/events/${username}`)}
+                        onClick={() => navigate(`/events`)}
                         style={{
                           background: "var(--color-green)",
                           color: "var(--color-white)",
