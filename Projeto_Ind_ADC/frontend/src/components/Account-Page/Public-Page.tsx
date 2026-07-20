@@ -470,8 +470,8 @@ function PublicPage() {
             {user && user.data.oldnames && (
               <p className="mb-0">
                 {user.data.oldnames.length === 0
-                  ? "This user hasn't older names."
-                  : user.data.oldnames}
+                  ? "This user hasn't had any previous names."
+                  : user.data.oldnames.join(", ")}
               </p>
             )}
           </div>
