@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { addNickName, getUser } from "../../api/auth";
+import { addNickName, getNickName, getUser } from "../../api/auth";
 import type {
   AddNicknameResponse,
+  GetNicknameResponse,
   UserInformationResponse,
 } from "../../utils/types";
 import NavBar from "../NavBar/NavBar";
@@ -213,6 +214,29 @@ function PublicPage() {
     }
   };
 
+  const loadNickname = async (friend: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+      if (!username) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: GetNicknameResponse = await getNickName({
+        token: { jwt: token },
+        input: { username: friend },
+      });
+      console.log(res);
+      setNickname(res.data.nickname);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const longToVisualDate = (date: number) => {
     return new Date(date).toLocaleString("en-GB", {
       day: "2-digit",
@@ -277,7 +301,10 @@ function PublicPage() {
                 <div className="row g-3 align-items-center">
                   <div className="col-12 col-md-6 col-xl-3">
                     <h4 className="mb-0 text-white fw-bold">
-                      {user && user.data.display}
+                      {user &&
+                        (user.data.friendship === "FRIENDS" && nickname !== ""
+                          ? `${nickname} (${user.data.display})`
+                          : user.data.display)}
                       {user?.data.role === "PARTNER" && (
                         <img className="ms-1" src={verified} alt="Verified" />
                       )}

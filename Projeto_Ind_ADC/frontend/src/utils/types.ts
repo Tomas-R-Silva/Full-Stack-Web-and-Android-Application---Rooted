@@ -232,6 +232,16 @@ export type AddNicknameResponse = {
   data: {message:string;}
 }
 
+export type RequestGetNickname = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type GetNicknameResponse = {
+  status: number,
+  data: {nickname:string;}
+}
+
 export type RequestUnfriend = {
   token: {jwt:string;}
   input: {username:string;}
