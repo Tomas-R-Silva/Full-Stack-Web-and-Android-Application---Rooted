@@ -5,6 +5,7 @@ export type NotificationCode =
   | "ACCOUNT_CREATED"
   | "ACCOUNT_DELETED"
   | "ACCOUNT_UPDATED"
+  | "AVATAR_UPDATED"
   | "PASSWORD_CHANGED"
   | "EVENT_CREATED"
   | "EVENT_UPDATED"
@@ -19,6 +20,7 @@ export type NotificationCode =
   | "FRIEND_REQUEST_SENDED"
   | "UNFRIEND"
   | "NICKNAME_ADDED"
+  | "USER_KICKED"
   | "MESSAGE_DELETED"
   | "MESSAGE_POSTED"
   | "BORDER_CHANGED"
@@ -48,11 +50,15 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   },
   ACCOUNT_DELETED: {
     title: "Success!",
-    message: "Your account was created.",
+    message: "Account deleted with sucess.",
   },
   ACCOUNT_UPDATED: {
     title: "Saved!",
     message: "Account updated successfully.",
+  },
+  AVATAR_UPDATED: {
+    title: "Avatar Updated",
+    message: "Your account avatar updated successfully.",
   },
   PASSWORD_CHANGED: {
     title: "Password Updated",
@@ -105,6 +111,10 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   UNFRIEND: {
     title: "Unfriend",
     message: "You are no longer friends.",
+  },
+  USER_KICKED: {
+    title: "User Kicked",
+    message: "The user has been kicked.",
   },
   NICKNAME_ADDED: {
     title: "Nickname Added",

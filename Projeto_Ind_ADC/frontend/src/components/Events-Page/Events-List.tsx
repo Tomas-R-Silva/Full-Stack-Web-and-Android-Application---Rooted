@@ -28,10 +28,11 @@ function EventsList({ filter }: EventsListProps) {
         setLoading(true);
       }
 
-      setError(null); //reset errors
+      setError(null);
 
-      //TODO change in order to have filters
-      const res: EventListResponse = await getEventList({
+      const token = sessionStorage.getItem("token");
+
+      const payload = {
         input: {
           category: filter.category || null,
           status: filter.status,
@@ -41,12 +42,19 @@ function EventsList({ filter }: EventsListProps) {
           pageSize: 12,
           cursor: cursor ?? "",
         },
-      });
+        ...(token && {
+          token: {
+            jwt: token,
+          },
+        }),
+      };
+
+      const res: EventListResponse = await getEventList(payload);
 
       console.log(res.data.events);
 
       if (cursor) {
-        setEvents((prev) => [...prev, ...res.data.events]); //carregar mais => anteriores mais todos os restantes
+        setEvents((prev) => [...prev, ...res.data.events]);
       } else {
         setEvents(res.data.events);
       }

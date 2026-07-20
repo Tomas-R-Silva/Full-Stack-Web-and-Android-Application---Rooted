@@ -99,8 +99,8 @@ function ModerationPartners() {
   return (
     <>
       <div className="container py-3">
-        <div className="row">
-          <div className="col-4">
+        <div className="row g-3">
+          <div className="col-lg-4 col-12">
             <h4>All Users:</h4>
             <div
               className="container border rounded p-3"
@@ -194,7 +194,7 @@ function ModerationPartners() {
             </div>
           </div>
 
-          <div className="col-8">
+          <div className="col-lg-8 col-12">
             <div className="container">
               <div className="row w-100 justify-content-center">
                 {managedUser && (

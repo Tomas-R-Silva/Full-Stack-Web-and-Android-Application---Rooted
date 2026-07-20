@@ -3,6 +3,7 @@ import { useState } from "react";
 import SDGs from "./SDGs";
 import ModerationPartners from "./Moderation-Partners";
 import { useNavigate } from "react-router-dom";
+import Footer from "../NavBar/Footer";
 
 function DashboardBO() {
   const dashboardItems = ["SDGs", "Moderation (Partners)"];
@@ -73,6 +74,7 @@ function DashboardBO() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

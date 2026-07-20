@@ -186,7 +186,9 @@ function AccountAdminManage({ user }: UserProps) {
         category: userInfo.data.category ?? [],
       },
     }));
-  }, [user]);
+  }, [userInfo]);
+
+  console.log(formData);
 
   return (
     <>

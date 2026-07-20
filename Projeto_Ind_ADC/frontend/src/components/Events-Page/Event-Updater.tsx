@@ -33,6 +33,7 @@ import { useMapsPage } from "../../api/maps";
 import { usePlacesAutocomplete } from "../../api/places";
 import { useNotification } from "../NotificationContext";
 import accessible_w from "../../assets/icons/accessible_w.svg";
+import Footer from "../NavBar/Footer";
 
 type ErrorState = {
   [K in keyof RequestEventUpdate["input"]]: string;
@@ -1210,6 +1211,7 @@ function EventUpdater() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

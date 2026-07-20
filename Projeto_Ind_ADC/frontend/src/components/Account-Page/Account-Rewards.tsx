@@ -180,6 +180,11 @@ function AccountRewards() {
               </div>
             </div>
 
+            <div className="d-flex align-items-center gap-2 mt-4">
+              <h5 className="text-white mb-0">Points:</h5>
+              <span className="text-white">{user?.data.points} points</span>
+            </div>
+
             <h5 className="text-white mt-4">SDG Borders:</h5>
 
             <div className="row g-4">

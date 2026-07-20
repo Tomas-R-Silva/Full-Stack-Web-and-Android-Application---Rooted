@@ -1,15 +1,7 @@
 import { useState, useEffect } from "react";
-import type {
-  RequestAddFriend,
-  AddFriendResponse,
-  Requester,
-} from "../../utils/types";
-import type { RequestUnfriend, UnfriendResponse } from "../../utils/types";
-import type {
-  RequestFriendsRequests,
-  FriendsRequestsResponse,
-} from "../../utils/types";
-import type { Friend } from "../../utils/types";
+import type { AddFriendResponse, Requester } from "../../utils/types";
+import type { UnfriendResponse } from "../../utils/types";
+import type { FriendsRequestsResponse } from "../../utils/types";
 import { useAuth } from "../AuthContext";
 import { getFriendsRequests, addFriend, unfriend } from "../../api/auth";
 import personAdd_w from "../../assets/icons/person_add_w.svg";
@@ -61,6 +53,7 @@ function FriendsRequests() {
         input: { username: friendToAdd },
       });
       console.log(res.data.message);
+      window.location.reload();
       if (res.status === 200) {
         notify("FRIEND_REQUEST_ACCEPTED");
       }
@@ -86,6 +79,7 @@ function FriendsRequests() {
         input: { username: friendToDelete },
       });
       console.log(res.data.message);
+      window.location.reload();
       if (res.status === 200) {
         notify("FRIEND_REQUEST_REJECTED");
       }

@@ -2,6 +2,7 @@ import NavBar from "../NavBar/NavBar";
 import { useState } from "react";
 import FindPage from "./Find-Page";
 import FriendsRoom from "./Friends-Room";
+import Footer from "../NavBar/Footer";
 
 function SocialPage() {
   const tabs = ["Find People", "My Friends"];
@@ -36,6 +37,7 @@ function SocialPage() {
           {selected === tabs[1] && <FriendsRoom />}
         </div>
       </div>
+      <Footer />
     </>
   );
 }

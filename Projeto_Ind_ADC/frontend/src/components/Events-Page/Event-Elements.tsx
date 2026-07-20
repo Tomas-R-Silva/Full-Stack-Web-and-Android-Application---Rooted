@@ -21,6 +21,7 @@ import account_circle_w from "../../assets/icons/account_circle_w.svg";
 import person_pin from "../../assets/icons/person_pin_w.svg";
 import verified from "../../assets/icons/verified_w.svg";
 import { getBorderItem } from "../../utils/borders";
+import Footer from "../NavBar/Footer";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
@@ -187,7 +188,7 @@ function EventElements() {
                     }}
                   >
                     <img
-                      src={user?.data.avatar.url ?? account_circle_w}
+                      src={user?.data?.avatar?.url?.trim() || account_circle_w}
                       alt="Avatar"
                       style={{
                         width: "100%",
@@ -321,6 +322,7 @@ function EventElements() {
           </div>
         </section>
       </div>
+      <Footer />
     </>
   );
 }
