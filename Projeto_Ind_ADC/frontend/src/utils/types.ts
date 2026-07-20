@@ -346,8 +346,8 @@ export type RequestEventCreation = {
   public: boolean,
   accessible: boolean,
   sdg: number[]
-  lat: number | null,
-  lng: number | null,
+  latitude: number | null,
+  longitude: number | null,
   }
 };
 

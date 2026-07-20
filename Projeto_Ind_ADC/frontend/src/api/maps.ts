@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getEventList } from "./auth";
-import type { FilterProps } from "../utils/types";
 
 declare global {
   interface Window {
@@ -389,7 +388,7 @@ export const useMapsPage = (mapsApiKey: string) => {
 
       const map = new window.google.maps.Map(mapRef.current, {
         center: { lat: 0, lng: 0 },
-        zoom: 3,
+        zoom: 2,
         mapTypeId: "hybrid",
         streetViewControl: false,
         fullscreenControl: false,
