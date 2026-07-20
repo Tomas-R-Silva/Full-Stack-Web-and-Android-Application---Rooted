@@ -6,7 +6,7 @@ import type {
 } from "../../utils/types";
 import { useState, useEffect } from "react";
 import type { RequestChangeRole } from "../../utils/types";
-import { deleteAccount, changeRole, getUser, modAccount } from "../../api/auth";
+import { deleteAccount, changeRole, getUser } from "../../api/auth";
 import { useNotification } from "../NotificationContext";
 import { countries } from "../../utils/countries";
 
@@ -89,19 +89,9 @@ function AccountAdminManage({ user }: UserProps) {
         },
       };
 
-      const payloadMod: RequestModAccount = {
-        ...formData,
-        token: {
-          jwt: token,
-        },
-      };
-
       console.log(payloadRole);
       const responseRole = await changeRole(payloadRole);
       console.log(responseRole);
-      console.log(payloadMod);
-      const responseMod = await modAccount(payloadMod);
-      console.log(responseMod);
       window.location.reload();
       if (responseRole.status === 200) {
         notify("ACCOUNT_UPDATED");
@@ -189,6 +179,7 @@ function AccountAdminManage({ user }: UserProps) {
   }, [userInfo]);
 
   console.log(formData);
+  console.log(user);
 
   return (
     <>

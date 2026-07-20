@@ -39,7 +39,7 @@ function EventsList({ filter }: EventsListProps) {
           organizerUsername: filter.organizerUsername,
           isAccessible: filter.isAccessible,
           sdg: filter.sdg || [],
-          pageSize: 12,
+          pageSize: 48,
           cursor: cursor ?? "",
         },
         ...(token && {
@@ -48,6 +48,8 @@ function EventsList({ filter }: EventsListProps) {
           },
         }),
       };
+
+      console.log(payload);
 
       const res: EventListResponse = await getEventList(payload);
 
@@ -112,8 +114,8 @@ function EventsList({ filter }: EventsListProps) {
                 onClick={() => loadEvents(nextCursor)}
                 disabled={loadingMore}
                 style={{
-                  background: "var(--color-green)",
-                  color: "var(--color-white)",
+                  background: "var(--color-white)",
+                  color: "var(--color-green)",
                 }}
               >
                 {loadingMore ? "A carregar..." : "Carregar mais"}

@@ -586,8 +586,8 @@ function PublicPage() {
                         className="btn"
                         onClick={() => navigate(`/events`)}
                         style={{
-                          background: "var(--color-green)",
-                          color: "var(--color-white)",
+                          background: "var(--color-white)",
+                          color: "var(--color-green)",
                         }}
                       >
                         View All Events

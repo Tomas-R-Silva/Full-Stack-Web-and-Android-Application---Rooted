@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+import ods from "../../assets/images/sdgs_circle.png";
+
 function Footer() {
+  const navigate = useNavigate();
   return (
     <>
       <footer
@@ -50,26 +54,30 @@ function Footer() {
 
             <div className="col-md-3 mb-4">
               <h5>Contact</h5>
-              <p className="mb-1">📧 rooted@example.com</p>
+              <p className="mb-1">📧 rooted@gmail.com</p>
               <p className="mb-1">📍 Monte da Caparica, Portugal</p>
             </div>
 
-            {/* Socials */}
             <div className="col-md-3 mb-4">
-              <h5>Follow Us</h5>
-
-              <div className="d-flex gap-3 fs-4">
-                <a href="#" className="text-white text-decoration-none">
-                  <i className="bi bi-instagram"></i>
-                </a>
-
-                <a href="#" className="text-white text-decoration-none">
-                  <i className="bi bi-github"></i>
-                </a>
-
-                <a href="#" className="text-white text-decoration-none">
-                  <i className="bi bi-linkedin"></i>
-                </a>
+              <div
+                className="card h-100 mx-auto"
+                style={{
+                  cursor: "pointer",
+                  maxWidth: "100px",
+                  maxHeight: "100px",
+                }}
+                onClick={() => navigate("/sdg")}
+              >
+                <img
+                  src={ods}
+                  className="card-img-top"
+                  style={{
+                    borderRadius: "6px",
+                    maxHeight: "250px",
+                    objectFit: "contain",
+                  }}
+                  alt="SDG"
+                />
               </div>
             </div>
           </div>
