@@ -59,10 +59,9 @@ public class UserFull extends ShortUser implements Full{
 	public String getCountry() {return country;}
 	private void setAvatar(Map<String, String> avatar) {this.avatar=avatar;}
 	public Map<String, String> getAvatar() {return avatar;}
-	private void setbaseCreation(long creation) {this.creation=creation*TIME_DIVIDER;}
-	private void setbaseBirth(long birth) {this.birth=birth*TIME_DIVIDER;}
 	public void setBirth(long birth) {this.birth=birth;}
 	public long getBirth() {return birth;}
+	private void setCreation(long creation) {this.creation=creation;}
 	public boolean isPublic() { return isPublic; }
 	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 	private void setbaseCategory(List<Category> category) {this.category=category;}
@@ -114,11 +113,11 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setRole(user.getRole());
 		newuser.setOld(List.of(user.getUsername()));
 		newuser.setDisplay(user.getUsername());
-		newuser.setbaseCreation(System.currentTimeMillis());
+		newuser.setCreation(System.currentTimeMillis());
 		newuser.setbaseCategorystr(user.getCategory());
 		newuser.setPublic(user.isPublic());
 		newuser.setCountry("");
-		newuser.setbaseBirth(0);
+		newuser.setBirth(0);
 		newuser.setAvatar("");	
 		newuser.setBio("");
 		newuser.setOds(null);
@@ -197,8 +196,8 @@ public class UserFull extends ShortUser implements Full{
 		user.setPublic(Full.getBoolean(entity,"is_public"));
 		user.setbaseDisplay(Full.getString(entity,"user_display"));
 		user.setCountry(Full.getString(entity,"country"));
-		user.setbaseCreation(Full.getLong(entity,"user_creation_time")*TIME_DIVIDER);
-		user.setbaseBirth(Full.getLong(entity,"birth_time")*TIME_DIVIDER);
+		user.setCreation(Full.getLong(entity,"user_creation_time")*TIME_DIVIDER);
+		user.setBirth(Full.getLong(entity,"birth_time")*TIME_DIVIDER);
 		user.setOld(Full.getStringList(entity,"old_display"));
 		user.setbaseCategory(Full.getStringValueList(entity,"category").stream().map(v -> Category.valueof(v.get())).collect(Collectors.toList()));
 		user.setOds(Full.getLongList(entity,"user_ods"));
