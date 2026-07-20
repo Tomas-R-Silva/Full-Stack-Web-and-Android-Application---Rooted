@@ -397,14 +397,13 @@ public class UserResources {
 	}	
 
 	@POST
-	@Path("/endfriend")
+	@Path("/endall")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response endFriend() throws ErrorException{
-		QueryResults<Entity> sessions = datastore.run(Query.newEntityQueryBuilder().setKind("Friend").build());
-		AuthHelper.querydelete("ForumPost","type","FRIEND");
+	public Response end() throws ErrorException{
+		QueryResults<Entity> sessions = datastore.run(Query.newEntityQueryBuilder().build());
 		while(sessions.hasNext())
 			datastore.delete(sessions.next().getKey());
-		return buildresponse(Map.of("message", "ALL UNFRIEND"));
+		return buildresponse(Map.of("message", "ALL DELETED"));
 	}
 
 	@POST

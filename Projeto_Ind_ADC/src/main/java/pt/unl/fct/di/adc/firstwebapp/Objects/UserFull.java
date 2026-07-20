@@ -170,7 +170,7 @@ public class UserFull extends ShortUser implements Full{
 		newUser.set("user_name",Full.string(username));
 		newUser.set("user_email", Full.string(email));
 		newUser.set("user_pwd", Full.string(password));
-		newUser.set("user_role", role.name());
+		newUser.set("user_role", Full.string(role.name()));
 		newUser.set("user_display", Full.string(display));
 		newUser.set("user_creation_time", creation / TIME_DIVIDER);
 		newUser.set("birth_time", birth / TIME_DIVIDER);
