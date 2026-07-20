@@ -5,6 +5,7 @@ import '../services/session_storage.dart';
 import '../widgets/filter_dialog.dart';
 import '../widgets/full_screen_image.dart';
 import '../widgets/sdg_badge.dart';
+import '../widgets/accessibility_badge.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
 import 'user_profile_screen.dart';
@@ -569,9 +570,17 @@ class _HomePageState extends State<HomePage> {
                   _metaRow(context, Icons.calendar_today_rounded, _formatDate(event['startDate'])),
                   const SizedBox(height: 4),
                   _metaRow(context, Icons.location_on_rounded, event['location'] as String? ?? 'No location'),
-                  if (sdgs.isNotEmpty) ...[
+                  if (sdgs.isNotEmpty || (event['accessible'] == true || event['isAccessible'] == true)) ...[
                     const SizedBox(height: 8),
-                    SdgChipRow(sdgs: sdgs, compact: true),
+                    Row(
+                      children: [
+                        if (sdgs.isNotEmpty) SdgChipRow(sdgs: sdgs, compact: true),
+                        if (sdgs.isNotEmpty && (event['accessible'] == true || event['isAccessible'] == true))
+                          const SizedBox(width: 6),
+                        if (event['accessible'] == true || event['isAccessible'] == true)
+                          const AccessibilityChip(compact: true),
+                      ],
+                    ),
                   ],
                   const Spacer(),
                   Text(
@@ -770,9 +779,17 @@ class _HomePageState extends State<HomePage> {
                         ? '$attendeeCount / $maxAttendees attending'
                         : '$attendeeCount attending',
                   ),
-                  if (sdgs.isNotEmpty) ...[
+                  if (sdgs.isNotEmpty || (event['accessible'] == true || event['isAccessible'] == true)) ...[
                     const SizedBox(height: 10),
-                    SdgChipRow(sdgs: sdgs, compact: true),
+                    Row(
+                      children: [
+                        if (sdgs.isNotEmpty) SdgChipRow(sdgs: sdgs, compact: true),
+                        if (sdgs.isNotEmpty && (event['accessible'] == true || event['isAccessible'] == true))
+                          const SizedBox(width: 6),
+                        if (event['accessible'] == true || event['isAccessible'] == true)
+                          const AccessibilityChip(compact: true),
+                      ],
+                    ),
                   ],
                   const SizedBox(height: 12),
                   if (!isOwn)

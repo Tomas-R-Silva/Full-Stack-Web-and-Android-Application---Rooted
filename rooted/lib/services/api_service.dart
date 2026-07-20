@@ -332,7 +332,7 @@ class ApiService {
     );
   }
 
-  static void _checkBodyError(Map<String, dynamic> body) {
+  static void _checkBodyError(Map<String, dynamic> body, {bool redirectOnError = true}) {
     final status = body['status'];
     // 200 = ok, any 99xx = error.
     if (status != null && status != 200 && status != '200') {
@@ -341,7 +341,7 @@ class ApiService {
 
       // 9901/9902 are typical "Unauthorized" or "Token Expired" codes in this backend.
       if (status == 9901 || status == 9902 || status == '9901' || status == '9902') {
-        forceLogout();
+        if (redirectOnError) forceLogout();
         throw ApiException('Session expired. Please log in again.');
       }
 
@@ -385,8 +385,8 @@ class ApiService {
   /// but if `data` is missing, null, or not actually a Map (e.g. a plain
   /// string message), this falls back to the whole body instead of
   /// crashing with "type 'String' is not a subtype of type
-  static Map<String, dynamic> _extractData(Map<String, dynamic> body) {
-    _checkBodyError(body);
+  static Map<String, dynamic> _extractData(Map<String, dynamic> body, {bool redirectOnError = true}) {
+    _checkBodyError(body, redirectOnError: redirectOnError);
     final data = body['data'];
     if (data is Map<String, dynamic>) return data;
     // If data is a String but we expected a Map, it might be an error message
@@ -764,6 +764,7 @@ class ApiService {
     String type = 'EVENT',
     required String text,
     String? parentPostId,
+    bool redirectOnError = true,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/forum/post');
 
@@ -784,7 +785,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    final data = _extractData(body);
+    final data = _extractData(body, redirectOnError: redirectOnError);
     _normalizeForumPost(data);
     return data;
   }
@@ -796,6 +797,7 @@ class ApiService {
     String type = 'EVENT',
     int pageSize = 50,
     String? cursor,
+    bool redirectOnError = true,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/forum/list');
     final response = await http.post(
@@ -814,7 +816,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    final data = _extractData(body);
+    final data = _extractData(body, redirectOnError: redirectOnError);
     final posts = data['posts'];
     if (posts is List) {
       for (final p in posts) {

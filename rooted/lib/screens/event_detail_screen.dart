@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import '../widgets/full_screen_image.dart';
 import '../widgets/sdg_badge.dart';
+import '../widgets/accessibility_badge.dart';
 import '../widgets/attendees_bottom_sheet.dart';
 import 'create_screen.dart';
 import 'user_profile_screen.dart';
@@ -554,15 +555,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                 ),
                 
-                // SDG Display
-                if (_event['sdg'] != null && (_event['sdg'] as List).isNotEmpty) ...[
+                // SDG and Accessibility Display
+                if ((_event['sdg'] != null && (_event['sdg'] as List).isNotEmpty) ||
+                    (_event['accessible'] == true || _event['isAccessible'] == true)) ...[
                   const SizedBox(height: 12),
                   Text(
-                    'Sustainability Goals',
+                    'Commitments',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 8),
-                  SdgDetailList(sdgs: _event['sdg']),
+                  if (_event['accessible'] == true || _event['isAccessible'] == true)
+                    const AccessibilityDetailRow(),
+                  if (_event['sdg'] != null && (_event['sdg'] as List).isNotEmpty)
+                    SdgDetailList(sdgs: _event['sdg']),
                 ],
 
                 if ((_event['description'] as String? ?? '').isNotEmpty) ...[

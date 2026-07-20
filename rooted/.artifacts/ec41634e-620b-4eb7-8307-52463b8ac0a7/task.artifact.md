@@ -1,0 +1,4 @@
+- [x] Create `AccessibilityChip` in `lib/widgets/accessibility_badge.dart`
+- [x] Add accessibility indicator to `HomePage` cards in `lib/screens/homepage_screen.dart`
+- [x] Add accessibility section to `EventDetailScreen` in `lib/screens/event_detail_screen.dart`
+- [x] Verify visual consistency and correct data binding

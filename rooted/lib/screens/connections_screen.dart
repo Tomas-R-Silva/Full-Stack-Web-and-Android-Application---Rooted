@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'login_screen.dart';
 import 'user_profile_screen.dart';
+import 'chat_screen.dart';
 
 class ConnectionsScreen extends StatefulWidget {
   const ConnectionsScreen({super.key});
@@ -463,7 +464,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => UserProfileScreen(username: uname)),
+            MaterialPageRoute(builder: (_) => ChatScreen(friendUsername: uname)),
           );
         },
         leading: CircleAvatar(
