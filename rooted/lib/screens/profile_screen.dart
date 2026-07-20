@@ -14,6 +14,8 @@ import 'bofficer_screen.dart';
 import '../data/borders_data.dart';
 import '../models/border_item.dart';
 import '../widgets/avatar_with_border.dart';
+import '../widgets/impact_section.dart';
+import 'progress_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -660,7 +662,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProgressScreen(
+                      username: _username,
+                      displayName: _displayName,
+                      avatarUrl: _avatarUrl,
+                      borderId: _borderId,
+                      points: _points,
+                      ods: _ods,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.auto_graph_rounded, size: 18),
+                label: const Text('View My Progress'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
 
             // User's Events Section
             _buildMyEventsSection(),

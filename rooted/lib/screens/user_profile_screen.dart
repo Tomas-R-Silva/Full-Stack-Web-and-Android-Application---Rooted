@@ -3,7 +3,9 @@ import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'event_detail_screen.dart';
+import 'progress_screen.dart';
 import '../widgets/avatar_with_border.dart';
+import '../widgets/impact_section.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String username;
@@ -205,6 +207,31 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ),
           ]),
           const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProgressScreen(
+                    username: widget.username,
+                    displayName: display,
+                    avatarUrl: avatarUrl,
+                    borderId: borderId,
+                    points: _userData!['points'] as int? ?? 0,
+                    ods: (_userData!['ods'] as List?)?.cast<int>() ?? List.filled(17, 0),
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.auto_graph_rounded, size: 18),
+              label: const Text('View Progress & Impact'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
           _buildEventsSection(),
         ],
       ),
