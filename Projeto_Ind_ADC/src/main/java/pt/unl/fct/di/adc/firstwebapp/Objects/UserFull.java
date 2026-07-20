@@ -79,10 +79,16 @@ public class UserFull extends ShortUser implements Full{
 	private void setbasePoints(long points) {this.points = points;}
 
 	public void setAvatar(String avatar){
-		String[] parts = avatar.split(",", 2);
-		String contentType = parts[0].replace("data:", "").replace(";base64", "");
-		byte[] bytes = java.util.Base64.getDecoder().decode(parts[1]);
-		String imageUrl = GCSUploader.uploadImage(bytes, contentType);
+		String imageUrl;
+		try {
+			if(avatar!=null&&!avatar.isBlank()) {
+				String[] parts = avatar.split(",", 2);
+				String contentType = parts[0].replace("data:", "").replace(";base64", "");
+				byte[] bytes = java.util.Base64.getDecoder().decode(parts[1]);
+				imageUrl = GCSUploader.uploadImage(bytes, contentType);
+			}else
+				imageUrl="";
+		}catch(Exception e) {imageUrl="";}
 		String id = UUID.randomUUID().toString();
 		this.avatar = Map.of("id", id,"url", imageUrl);
 	}
