@@ -5,6 +5,7 @@ export type NotificationCode =
   | "ACCOUNT_CREATED"
   | "ACCOUNT_DELETED"
   | "ACCOUNT_UPDATED"
+  | "AVATAR_UPDATED"
   | "PASSWORD_CHANGED"
   | "EVENT_CREATED"
   | "EVENT_UPDATED"
@@ -54,6 +55,10 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   ACCOUNT_UPDATED: {
     title: "Saved!",
     message: "Account updated successfully.",
+  },
+  AVATAR_UPDATED: {
+    title: "Avatar Updated",
+    message: "Your account avatar updated successfully.",
   },
   PASSWORD_CHANGED: {
     title: "Password Updated",

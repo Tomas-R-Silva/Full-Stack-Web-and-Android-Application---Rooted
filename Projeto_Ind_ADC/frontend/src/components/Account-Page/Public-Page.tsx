@@ -247,7 +247,7 @@ function PublicPage() {
                 }}
               >
                 <img
-                  src={user?.data.avatar.url ?? account_circle_w}
+                  src={user?.data?.avatar?.url?.trim() || account_circle_w}
                   alt="Avatar"
                   style={{
                     width: "100%",

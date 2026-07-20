@@ -99,7 +99,7 @@ function AccountAvatar() {
       console.log(response);
       window.location.reload();
       if (response.status === 200) {
-        notify("EVENT_UPDATED");
+        notify("AVATAR_UPDATED");
       }
     } catch (err) {
       console.log("Something went wrong!");
@@ -148,7 +148,7 @@ function AccountAvatar() {
                 }}
               >
                 <img
-                  src={formData.input.avatar || account_circle_w}
+                  src={formData.input.avatar.trim() || account_circle_w}
                   alt="Avatar"
                   style={{
                     width: "100%",
