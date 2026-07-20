@@ -100,9 +100,9 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: AppTheme.primary,
+          SnackBar(
+            content: const Text('Login successful!'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message),
-            backgroundColor: AppTheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -120,9 +120,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
+          SnackBar(
+            content: const Text('Could not reach the server. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -164,21 +164,21 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Image.asset('assets/images/rooted.png', width: 160, height: 160),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Welcome back',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Sign in to continue to Rooted',
           style: TextStyle(
             fontSize: 15,
-            color: AppTheme.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -255,18 +255,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDivider() {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppTheme.inputBorder)),
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'or',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppTheme.inputBorder)),
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
       ],
     );
   }
@@ -275,9 +275,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           "Don't have an account?",
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
         ),
         TextButton(
           onPressed: () {

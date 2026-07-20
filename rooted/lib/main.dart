@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/session_storage.dart';
+import 'services/api_service.dart';
 import 'theme/app_theme.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -24,6 +25,7 @@ class RootedApp extends StatelessWidget {
       valueListenable: AppTheme.themeNotifier,
       builder: (_, ThemeMode currentMode, __) {
         return MaterialApp(
+          navigatorKey: ApiService.navigatorKey,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.theme,
           darkTheme: AppTheme.darkTheme,

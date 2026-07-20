@@ -133,7 +133,7 @@ class _HomePageState extends State<HomePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Joined ${event['title']}!'),
-            backgroundColor: AppTheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             duration: const Duration(seconds: 1),
           ),
         );
@@ -145,7 +145,10 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to join event'), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: const Text('Failed to join event'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     }
@@ -208,15 +211,18 @@ class _HomePageState extends State<HomePage> {
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
+          SnackBar(
+            content: const Text('Could not reach the server. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -282,7 +288,7 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadEvents,
-              color: AppTheme.primary,
+              color: Theme.of(context).colorScheme.primary,
               child: _buildMainContent(),
             ),
           ),
@@ -300,7 +306,7 @@ class _HomePageState extends State<HomePage> {
             child: Container(
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -313,7 +319,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary, size: 22),
+            icon: Icon(Icons.refresh_rounded, color: Theme.of(context).colorScheme.primary, size: 22),
             onPressed: _loadEvents,
             visualDensity: VisualDensity.compact,
           ),
@@ -321,8 +327,8 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(
               Icons.filter_list_rounded,
               color: (_selectedCategory != null || _selectedSDGs.isNotEmpty || _selectedAccessible)
-                  ? AppTheme.primary
-                  : AppTheme.textSecondary,
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 22,
             ),
             onPressed: _showFilterDialog,
@@ -348,7 +354,7 @@ class _HomePageState extends State<HomePage> {
         child: Container(
           margin: const EdgeInsets.all(2),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? Theme.of(context).colorScheme.surfaceContainer : Colors.transparent,
             borderRadius: BorderRadius.circular(18),
             boxShadow: isSelected
                 ? [
@@ -366,7 +372,7 @@ class _HomePageState extends State<HomePage> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-              color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+              color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -447,12 +453,12 @@ class _HomePageState extends State<HomePage> {
       alignment: isRight ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 40),
       decoration: BoxDecoration(
-        color: isRight ? AppTheme.primary.withValues(alpha: 0.2) : AppTheme.error.withValues(alpha: 0.2),
+        color: isRight ? Theme.of(context).colorScheme.primary.withOpacity(0.2) : Theme.of(context).colorScheme.error.withOpacity(0.2),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Icon(
         isRight ? Icons.check_circle_rounded : Icons.cancel_rounded,
-        color: isRight ? AppTheme.primary : AppTheme.error,
+        color: isRight ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
         size: 80,
       ),
     );
@@ -470,7 +476,7 @@ class _HomePageState extends State<HomePage> {
       width: double.infinity,
       height: MediaQuery.of(context).size.height * 0.6,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
@@ -487,7 +493,7 @@ class _HomePageState extends State<HomePage> {
             flex: 3,
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.05),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
               ),
               child: firstImage != null
@@ -513,13 +519,8 @@ class _HomePageState extends State<HomePage> {
                             fit: BoxFit.cover,
                             width: double.infinity,
                             errorBuilder: (context, error, stackTrace) {
-                              debugPrint('TINDER CARD IMAGE ERROR: $error');
-                              debugPrint('IMAGE URL: $firstImage');
-                              if (error.toString().contains('404')) {
-                                debugPrint('HINT: This URL returned 404. Check if a file extension (like .jpg) is missing on the backend.');
-                              }
                               return Container(
-                                color: AppTheme.primary.withValues(alpha: 0.15),
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                               );
                             },
                           ),
@@ -546,10 +547,10 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: Text(
                           event['title'] as String? ?? '',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -557,17 +558,17 @@ class _HomePageState extends State<HomePage> {
                       ),
                       Text(
                         '${event['attendeeCount'] ?? 0} ppl',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  _metaRow(Icons.calendar_today_rounded, _formatDate(event['startDate'])),
+                  _metaRow(context, Icons.calendar_today_rounded, _formatDate(event['startDate'])),
                   const SizedBox(height: 4),
-                  _metaRow(Icons.location_on_rounded, event['location'] as String? ?? 'No location'),
+                  _metaRow(context, Icons.location_on_rounded, event['location'] as String? ?? 'No location'),
                   if (sdgs.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     SdgChipRow(sdgs: sdgs, compact: true),
@@ -575,7 +576,7 @@ class _HomePageState extends State<HomePage> {
                   const Spacer(),
                   Text(
                     event['description'] as String? ?? 'No description provided.',
-                    style: const TextStyle(color: AppTheme.textSecondary, height: 1.3, fontSize: 13),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.3, fontSize: 13),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -588,8 +589,8 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _circularAction(Icons.close, AppTheme.error, () => _nextDiscoverCard()),
-                _circularAction(Icons.favorite, AppTheme.primary, () => _handleSwipeRight(event)),
+                _circularAction(Icons.close, Theme.of(context).colorScheme.error, () => _nextDiscoverCard()),
+                _circularAction(Icons.favorite, Theme.of(context).colorScheme.primary, () => _handleSwipeRight(event)),
               ],
             ),
           ),
@@ -617,14 +618,14 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.celebration_rounded, size: 64, color: AppTheme.primary),
+          Icon(Icons.celebration_rounded, size: 64, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 16),
           const Text(
             'No more events to discover!',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text('Check back later for new ones.', style: TextStyle(color: AppTheme.textSecondary)),
+          Text('Check back later for new ones.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 24),
           OutlinedButton(onPressed: _loadEvents, child: const Text('Refresh')),
         ],
@@ -662,9 +663,9 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.inputBorder),
+          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -689,14 +690,9 @@ class _HomePageState extends State<HomePage> {
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          debugPrint('EVENT CARD IMAGE ERROR: $error');
-                          debugPrint('IMAGE URL: $firstImage');
-                          if (error.toString().contains('404')) {
-                            debugPrint('HINT: This URL returned 404. Check if a file extension (like .jpg) is missing on the backend.');
-                          }
                           return Container(
                             height: 4,
-                            color: AppTheme.primary.withValues(alpha: 0.7),
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
                           );
                         },
                       ),
@@ -731,7 +727,7 @@ class _HomePageState extends State<HomePage> {
               Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
               ),
@@ -744,8 +740,8 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _badge(
                         '${_categoryEmoji(category)} ${_toTitleCase(category ?? 'Other')}',
-                        AppTheme.primary.withValues(alpha: 0.08),
-                        AppTheme.primary,
+                        Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                        Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 6),
                       if (!isPublic)
@@ -755,19 +751,20 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 10),
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _metaRow(Icons.calendar_today_outlined, _formatDate(startDate)),
+                  _metaRow(context, Icons.calendar_today_outlined, _formatDate(startDate)),
                   const SizedBox(height: 4),
                   if (location.isNotEmpty)
-                    _metaRow(Icons.location_on_outlined, location),
+                    _metaRow(context, Icons.location_on_outlined, location),
                   const SizedBox(height: 4),
                   _metaRow(
+                    context,
                     Icons.people_outline_rounded,
                     maxAttendees > 0
                         ? '$attendeeCount / $maxAttendees attending'
@@ -792,14 +789,14 @@ class _HomePageState extends State<HomePage> {
                   if (isOwn)
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded,
-                            size: 14, color: AppTheme.primary),
+                        Icon(Icons.star_rounded,
+                            size: 14, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 4),
-                        const Text(
+                        Text(
                           'Your event',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -817,14 +814,14 @@ class _HomePageState extends State<HomePage> {
                       },
                       child: Row(
                         children: [
-                          const Icon(Icons.person_outline_rounded,
-                              size: 14, color: AppTheme.textSecondary),
+                          Icon(Icons.person_outline_rounded,
+                              size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           const SizedBox(width: 4),
                           Text(
                             event['organizerUsername'] ?? '',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.primary,
+                              color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
                               decoration: TextDecoration.underline,
                             ),
@@ -863,8 +860,8 @@ class _HomePageState extends State<HomePage> {
         icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
         label: const Text('Joined'),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppTheme.primary,
-          side: const BorderSide(color: AppTheme.primary),
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          side: BorderSide(color: Theme.of(context).colorScheme.primary),
           minimumSize: const Size.fromHeight(38),
           textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
@@ -885,8 +882,8 @@ class _HomePageState extends State<HomePage> {
       icon: const Icon(Icons.add_rounded, size: 16),
       label: const Text('Join Event'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         minimumSize: const Size.fromHeight(38),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         elevation: 0,
@@ -895,15 +892,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _metaRow(IconData icon, String text) {
+  Widget _metaRow(BuildContext context, IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 13, color: AppTheme.textSecondary),
+        Icon(icon, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
         const SizedBox(width: 5),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -932,7 +929,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
           const SizedBox(height: 12),
-          Text(_error!, style: const TextStyle(color: AppTheme.textSecondary)),
+          Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 16),
           ElevatedButton(onPressed: _loadEvents, child: const Text('Retry')),
         ],
@@ -947,10 +944,10 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Icon(Icons.event_busy_rounded, size: 56, color: Colors.grey),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'No upcoming events yet.\nCheck back soon!',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 15),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(

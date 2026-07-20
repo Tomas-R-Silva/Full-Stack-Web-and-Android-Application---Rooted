@@ -32,14 +32,14 @@ class AvatarWithBorder extends StatelessWidget {
           // Avatar
           CircleAvatar(
             radius: radius,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             backgroundImage: imageFile != null
                 ? FileImage(imageFile!)
                 : (imageUrl != null && imageUrl!.isNotEmpty
                     ? NetworkImage(imageUrl!)
                     : null) as ImageProvider?,
             child: (imageFile == null && (imageUrl == null || imageUrl!.isEmpty))
-                ? Icon(Icons.person, size: radius, color: Colors.grey)
+                ? Icon(Icons.person, size: radius, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))
                 : null,
           ),
           // Border

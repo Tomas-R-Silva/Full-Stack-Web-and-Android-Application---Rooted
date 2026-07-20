@@ -109,15 +109,16 @@ class _FilterDialogState extends State<FilterDialog> {
           ],
         ),
       ),
-      actions: [
+          actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            foregroundColor: Colors.white,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            minimumSize: const Size(100, 44),
           ),
           onPressed: () {
             Navigator.pop(context, {

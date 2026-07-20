@@ -27,11 +27,13 @@ class AppTheme {
         secondary: primaryLight,
         primaryContainer: const Color(0xFFD8F3DC),
         onPrimaryContainer: primary,
-        surface: surface,
+        surface: background, // Scaffold background
+        onSurface: textPrimary,
+        surfaceContainer: Colors.white, // Standard cards/surfaces
+        onSurfaceVariant: textSecondary,
         error: error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onSurface: textPrimary,
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: background,
@@ -176,11 +178,13 @@ class AppTheme {
         secondary: primaryLight,
         primaryContainer: const Color(0xFF1B4332),
         onPrimaryContainer: Colors.white,
-        surface: surfaceDark,
+        surface: backgroundDark, // Scaffold background
+        onSurface: textPrimaryDark,
+        surfaceContainer: surfaceDark, // Standard cards/surfaces
+        onSurfaceVariant: textSecondaryDark,
         error: error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onSurface: textPrimaryDark,
         brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: backgroundDark,

@@ -187,12 +187,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         birth: _birth,
         onSaved: () {
           _loadSession(); // reload data after saving
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully!'),
-              backgroundColor: AppTheme.primary,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Profile updated successfully!'),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+            );
+          }
         },
       ),
     );
@@ -208,29 +210,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (username != null && jwt != null) {
         await ApiService.logout(username: username, jwt: jwt);
       }
-    } on ApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Logging out locally.'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
-    }
-    await SessionStorage.clear();
+    } catch (_) {}
+    
     if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
+      await ApiService.forceLogout();
     }
   }
 
@@ -266,7 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 8),
             Text(
               'Total Points: $_points',
-              style: const TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -310,7 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: isSelected
-                        ? Border.all(color: AppTheme.primary, width: 3)
+                        ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
                         : null,
                   ),
                   child: Opacity(
@@ -334,7 +317,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: unlocked ? AppTheme.textPrimary : Colors.grey,
+              color: unlocked ? Theme.of(context).colorScheme.onSurface : Colors.grey,
             ),
             textAlign: TextAlign.center,
             maxLines: 1,
@@ -345,7 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               '${border.value} ${border.valueType}',
               style: TextStyle(
                 fontSize: 8,
-                color: unlocked ? AppTheme.primary : Colors.grey.shade400,
+                color: unlocked ? Theme.of(context).colorScheme.primary : Colors.grey.shade400,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -394,13 +377,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() => _borderId = borderId);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Border updated!'), backgroundColor: AppTheme.primary),
+          SnackBar(
+            content: const Text('Border updated!'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update border: $e'), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text('Failed to update border: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     }
@@ -422,7 +411,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: AppTheme.error)),
+            child: Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -439,7 +428,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() => _isDeletingAccount = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
       return;
@@ -447,9 +439,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() => _isDeletingAccount = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
+          SnackBar(
+            content: const Text('Could not reach the server. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -481,9 +473,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Login to manage your profile and events.',
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
@@ -526,7 +518,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: FloatingActionButton.small(
                     heroTag: 'camera_fab',
                     onPressed: _pickProfileImage,
-                    backgroundColor: AppTheme.primary,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
                     child: const Icon(Icons.camera_alt, size: 18),
                   ),
@@ -539,10 +531,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Username + role badge
             Text(
               _displayName.isEmpty ? '—' : _displayName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             if (_role.isNotEmpty) ...[
@@ -550,15 +542,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   _role,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -592,7 +584,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.dark_mode_outlined, color: AppTheme.primary),
+                    Icon(Icons.dark_mode_outlined, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
@@ -609,7 +601,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         return Switch(
                           value: mode == ThemeMode.dark,
                           onChanged: (val) => AppTheme.toggleTheme(val),
-                          activeColor: AppTheme.primary,
+                          activeThumbColor: Theme.of(context).colorScheme.primary,
                         );
                       },
                     ),
@@ -685,13 +677,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ? const SizedBox(
                             height: 16, width: 16,
                             child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.logout_rounded, color: AppTheme.error),
+                        : Icon(Icons.logout_rounded, color: Theme.of(context).colorScheme.error),
                     label: Text(
                       _isLoggingOut ? 'Logging out…' : 'Log Out',
-                      style: const TextStyle(color: AppTheme.error),
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.error),
+                      side: BorderSide(color: Theme.of(context).colorScheme.error),
                       minimumSize: const Size.fromHeight(48),
                     ),
                   ),
@@ -708,7 +700,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : const Icon(Icons.delete_forever_rounded),
                     label: Text(_isDeletingAccount ? 'Deleting…' : 'Delete Account'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.error,
+                      backgroundColor: Theme.of(context).colorScheme.error,
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(48),
                     ),
@@ -732,7 +724,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
             ),
           ),
         ),
@@ -755,14 +746,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               return Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Theme.of(context).colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.inputBorder),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'You haven\'t created any events yet.',
-                    style: TextStyle(color: AppTheme.textSecondary),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ),
               );
@@ -777,21 +768,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final event = events[index];
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  tileColor: Colors.white,
+                  tileColor: Theme.of(context).colorScheme.surfaceContainer,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppTheme.inputBorder),
+                    side: BorderSide(color: Theme.of(context).dividerColor),
                   ),
                   title: Text(
                     event['title'] ?? 'Untitled',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                   ),
                   subtitle: Text(
                     event['location'] ?? 'No location',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -915,16 +907,19 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } catch (_) {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
+          SnackBar(
+            content: const Text('Could not reach the server. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -957,18 +952,18 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
           ),
           const SizedBox(height: 20),
 
-          const Text(
+          Text(
             'Edit Profile',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Update your profile information.',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 24),
 
@@ -1023,7 +1018,6 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -1045,17 +1039,17 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                           }
                         });
                       },
-                      selectedColor: AppTheme.primary.withValues(alpha: 0.1),
-                      checkmarkColor: AppTheme.primary,
+                      selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      checkmarkColor: Theme.of(context).colorScheme.primary,
                       labelStyle: TextStyle(
                         fontSize: 13,
-                        color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                        color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                         side: BorderSide(
-                          color: isSelected ? AppTheme.primary : AppTheme.inputBorder,
+                          color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
                           width: 1,
                         ),
                       ),
@@ -1142,7 +1136,7 @@ class _InfoCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
@@ -1163,7 +1157,7 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppTheme.primary),
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

@@ -372,8 +372,6 @@ class _EventsMapsState extends State<EventsMaps> {
                             firstImage,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              debugPrint('MAP EVENT IMAGE ERROR: $error');
-                              debugPrint('IMAGE URL: $firstImage');
                               return Container(
                                 color: AppTheme.primary.withOpacity(0.15),
                               );

@@ -61,9 +61,9 @@ class _AttendeesBottomSheetState extends State<AttendeesBottomSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.6,
       padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -72,7 +72,7 @@ class _AttendeesBottomSheetState extends State<AttendeesBottomSheet> {
             height: 4,
             margin: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -80,19 +80,22 @@ class _AttendeesBottomSheetState extends State<AttendeesBottomSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Attendees',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const Spacer(),
                 Text(
                   '${_attendees.length} people',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
           ),
-          const Divider(height: 32),
+          Divider(height: 32, color: Theme.of(context).dividerColor),
           Expanded(
             child: _buildContent(),
           ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
@@ -19,10 +20,12 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
 
   List<dynamic> _friends = [];
   List<dynamic> _requests = [];
-  List<String> _filteredSuggested = [];
+  List<Map<String, dynamic>> _filteredSuggested = [];
+  bool _isSearchingSuggestions = false;
   String? _processingUsername;
   
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -33,36 +36,67 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
+    _searchDebounce?.cancel();
+    final query = _searchController.text.trim();
     if (query.isEmpty) {
       setState(() => _filteredSuggested = []);
     } else {
-      _performServerSearch(query);
+      _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+        _performServerSearch(query);
+      });
     }
   }
 
   Future<void> _performServerSearch(String query) async {
     if (_jwt == null) return;
+    
+    setState(() => _isSearchingSuggestions = true);
+    
     try {
-      final result = await ApiService.findUsers(jwt: _jwt!, username: query);
-      final list = result['found'] as List<dynamic>? ?? [];
+      // First attempt with original query
+      var list = await _fetchSearchResults(query);
+      
+      // Fallback: If no results, try capitalized (for case-sensitive backends)
+      if (list.isEmpty && query.length == 1) {
+        final altQuery = query.toUpperCase();
+        if (altQuery != query) {
+          list = await _fetchSearchResults(altQuery);
+        }
+      }
+                   
       if (mounted) {
         setState(() {
-          _filteredSuggested = list.map((u) {
-            if (u is Map) return u['user_name']?.toString() ?? '';
-            return u.toString();
-          }).where((name) => name != _username).toList();
+          _filteredSuggested = list.where((u) {
+            final name = (u['username'] ?? u['user_name'] ?? u['display'] ?? '').toString();
+            if (name.isEmpty) return false;
+            return name.toLowerCase() != _username?.toLowerCase();
+          }).toList();
         });
       }
     } catch (_) {
       // Ignore search errors in background
+    } finally {
+      if (mounted) setState(() => _isSearchingSuggestions = false);
     }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchSearchResults(String query) async {
+    final result = await ApiService.findUsers(jwt: _jwt!, username: query);
+    final rawList = (result['found'] as List<dynamic>?) ?? 
+                    (result['users'] as List<dynamic>?) ?? 
+                    (result['data'] as List<dynamic>?) ?? [];
+                    
+    return rawList.map((u) {
+      if (u is Map) return Map<String, dynamic>.from(u);
+      return {'username': u.toString()};
+    }).toList();
   }
 
   Future<void> _loadData() async {
@@ -115,7 +149,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     }
@@ -136,7 +173,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Friend request processed for $target'),
-            backgroundColor: AppTheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -146,7 +183,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } finally {
@@ -163,7 +203,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } finally {
@@ -195,7 +238,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to set nickname: $e'), backgroundColor: AppTheme.error),
+            SnackBar(
+              content: Text('Failed to set nickname: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
           );
         }
       }
@@ -253,7 +299,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Social Hub'),
         actions: [
@@ -285,9 +331,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
             _buildSectionTitle('Your Friends'),
             const SizedBox(height: 12),
             if (_friends.isEmpty)
-              const Center(child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Text('No friends yet. Search above to add some!', style: TextStyle(color: AppTheme.textSecondary)),
+              Center(child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Text('No friends yet. Search above to add some!', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ))
             else
               ..._friends.map((f) => _buildFriendTile(f)),
@@ -300,7 +346,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
     );
   }
 
@@ -319,7 +365,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                   hintText: 'Search by username...',
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainer,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -335,8 +381,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
               child: ElevatedButton(
                 onPressed: () => _addFriend(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: EdgeInsets.zero,
                 ),
@@ -353,25 +399,44 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
-        children: _filteredSuggested.take(3).map((uname) => ListTile(
-          dense: true,
-          leading: const Icon(Icons.person_add_alt_1, color: AppTheme.primary, size: 20),
-          title: Text(uname, style: const TextStyle(fontWeight: FontWeight.w600)),
-          trailing: const Icon(Icons.chevron_right, size: 16),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => UserProfileScreen(username: uname)),
+        children: [
+          if (_isSearchingSuggestions)
+            const Padding(
+              padding: EdgeInsets.all(12),
+              child: Center(
+                child: SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          ..._filteredSuggested.map((user) {
+            final uname = (user['username'] ?? user['user_name'] ?? '').toString();
+            final display = user['display']?.toString() ?? uname;
+            
+            return ListTile(
+              dense: true,
+              leading: Icon(Icons.person_add_alt_1, color: Theme.of(context).colorScheme.primary, size: 20),
+              title: Text(display, style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: display != uname ? Text('@$uname', style: const TextStyle(fontSize: 11)) : null,
+              trailing: const Icon(Icons.chevron_right, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UserProfileScreen(username: uname)),
+                );
+              },
             );
-          },
-        )).toList(),
+          }),
+        ],
       ),
     );
   }
@@ -384,7 +449,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -402,8 +467,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           );
         },
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-          child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
         ),
         title: Text(nickname ?? uname, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: nickname != null ? Text('@$uname', style: const TextStyle(fontSize: 12)) : null,
@@ -414,7 +479,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           },
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'nickname', child: Text('Set Nickname')),
-            const PopupMenuItem(value: 'unfriend', child: Text('Unfriend', style: TextStyle(color: AppTheme.error))),
+            PopupMenuItem(value: 'unfriend', child: Text('Unfriend', style: TextStyle(color: Theme.of(context).colorScheme.error))),
           ],
         ),
       ),
@@ -430,9 +495,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
         ],
@@ -440,7 +505,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppTheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             child: InkWell(
               onTap: () {
                 Navigator.push(
@@ -464,16 +529,16 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(uname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const Text('Friend Request', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                  Text('Friend Request', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 ],
               ),
             ),
           ),
           if (isProcessing)
-            const SizedBox(
+            SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
             )
           else ...[
             _requestAction(
@@ -486,7 +551,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
             _requestAction(
               icon: Icons.close_rounded,
               label: 'Reject',
-              color: AppTheme.error,
+              color: Theme.of(context).colorScheme.error,
               onTap: () => _unfriend(uname),
             ),
           ],

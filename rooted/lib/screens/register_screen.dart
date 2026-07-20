@@ -48,25 +48,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      debugPrint('Step 1: calling createAccount...');
       await ApiService.createAccount(
         username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
         interests: _selectedInterests,
       );
-      debugPrint('Step 1 OK: account created');
 
       // Small delay for eventual consistency in backend persistence
       await Future.delayed(const Duration(seconds: 1));
 
       // Auto-login so SessionStorage is populated before reaching HomeScreen
-      debugPrint('Step 2: calling login...');
       final result = await ApiService.login(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
-      debugPrint('Step 2 OK: login result = $result');
 
       final dataField = result['data'];
       final token = (result['token'] as Map<String, dynamic>?) ??
@@ -79,7 +75,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final jwt = token['jwt']?.toString() ?? '';
       final username = token['username']?.toString() ?? _usernameController.text.trim();
       final role = token['role']?.toString() ?? '';
-      debugPrint('Step 3: parsed jwt (len=${jwt.length}), username=$username, role=$role');
 
       // After login, fetch the full user account to be consistent with LoginScreen
       String bio = '';
@@ -92,9 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       String borderId = '';
       int points = 0;
       try {
-        debugPrint('Step 4: calling getUserAccount...');
         final profile = await ApiService.getUserAccount(jwt: jwt, username: username);
-        debugPrint('Step 4 OK: profile = $profile');
         bio = profile['bio']?.toString() ?? '';
         email = profile['email']?.toString() ?? email;
         displayName = profile['display']?.toString() ?? username;
@@ -105,10 +98,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderId = profile['borderID']?.toString() ?? '';
         points = profile['points'] as int? ?? 0;
       } catch (profileError) {
-        debugPrint('Step 4 FAILED (non-fatal, using defaults): $profileError');
       }
 
-      debugPrint('Step 5: saving session...');
       await SessionStorage.save(
         jwt: jwt,
         username: username,
@@ -123,7 +114,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderId: borderId,
         points: points,
       );
-      debugPrint('Step 5 OK: session saved');
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -152,7 +142,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } catch (e) {
-      debugPrint('Registration flow failed: $e');
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(

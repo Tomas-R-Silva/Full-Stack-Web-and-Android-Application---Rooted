@@ -343,7 +343,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -381,11 +381,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  debugPrint('EVENT DETAIL IMAGE ERROR: $error');
-                                  debugPrint('IMAGE URL: $url');
-                                  if (error.toString().contains('404')) {
-                                    debugPrint('HINT: This URL returned 404. Check if a file extension (like .jpg) is missing on the backend.');
-                                  }
                                   return Container(
                                     color: AppTheme.primary.withValues(alpha: 0.15),
                                     alignment: Alignment.center,
@@ -496,13 +491,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       padding:
                           const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         _event['category'] as String? ?? '',
-                        style: const TextStyle(
-                            fontSize: 11, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                     ),
                   ],
@@ -510,10 +505,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 const SizedBox(height: 10),
                 Text(
                   _event['title'] as String? ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary),
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const SizedBox(height: 10),
                 _infoRow(
@@ -540,20 +535,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   onTap: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? _showAttendees : null,
                   child: Row(
                     children: [
-                      const Icon(Icons.people_outline, size: 14, color: AppTheme.textSecondary),
+                      Icon(Icons.people_outline, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       const SizedBox(width: 6),
                       Text(
                         '${_event['attendeeCount'] ?? 0} / ${_event['maxAttendees'] ?? '∞'} attendees',
                         style: TextStyle(
                           fontSize: 13,
-                          color: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? AppTheme.primary : AppTheme.textSecondary,
+                          color: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? FontWeight.w600 : FontWeight.normal,
                           decoration: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? TextDecoration.underline : null,
                         ),
                       ),
                       if (_event['organizerUsername'] == _username || _role == 'ADMIN') ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppTheme.primary),
+                        Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Theme.of(context).colorScheme.primary),
                       ],
                     ],
                   ),
@@ -562,9 +557,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 // SDG Display
                 if (_event['sdg'] != null && (_event['sdg'] as List).isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Sustainability Goals',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 8),
                   SdgDetailList(sdgs: _event['sdg']),
@@ -574,8 +569,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _event['description'] as String,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppTheme.textSecondary, height: 1.5),
+                    style: TextStyle(
+                        fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.5),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -746,12 +741,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: AppTheme.textSecondary),
+          Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 6),
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontFamily: 'PlusJakartaSans'),
+                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant, fontFamily: 'PlusJakartaSans'),
                 children: [
                   TextSpan(text: text),
                   if (linkText != null)
@@ -761,9 +756,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         onTap: onTap,
                         child: Text(
                           linkText,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,
                             decoration: TextDecoration.underline,
                           ),
@@ -822,7 +817,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             maxWidth: MediaQuery.of(context).size.width * 0.72,
           ),
           decoration: BoxDecoration(
-            color: isMe ? AppTheme.primary : Colors.grey.shade100,
+            color: isMe ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(16),
               topRight: const Radius.circular(16),
@@ -849,7 +844,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       decoration: TextDecoration.underline,
                     ),
                   ),
@@ -857,7 +852,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               Text(
                 post['text'] as String? ?? '',
                 style: TextStyle(
-                    color: isMe ? Colors.white : AppTheme.textPrimary,
+                    color: isMe ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface,
                     fontSize: 14),
               ),
               const SizedBox(height: 2),
@@ -865,7 +860,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 _formatDateShort(post['createdAt']),
                 style: TextStyle(
                     fontSize: 10,
-                    color: isMe ? Colors.white54 : Colors.grey.shade500),
+                    color: isMe ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7) : Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -879,8 +874,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
         ),
         child: Row(
           children: [
@@ -891,7 +886,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 decoration: InputDecoration(
                   hintText: 'Message…',
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 10),
                   border: OutlineInputBorder(
@@ -928,14 +923,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(12),
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         child: Text(
           _event['status'] == 'CANCELLED'
               ? 'This event was cancelled. The chat is now read-only.'
               : 'This event has ended. The chat is now read-only.',
           textAlign: TextAlign.center,
           style:
-              const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
         ),
       ),
     );

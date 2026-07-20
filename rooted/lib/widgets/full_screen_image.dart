@@ -62,8 +62,6 @@ class _FullScreenImageState extends State<FullScreenImage> {
                         );
                       },
                       errorBuilder: (context, error, stackTrace) {
-                        debugPrint('FULL SCREEN IMAGE ERROR: $error');
-                        debugPrint('IMAGE URL: $url');
                         return const Center(
                           child: Icon(Icons.broken_image_outlined, color: Colors.white54, size: 60),
                         );

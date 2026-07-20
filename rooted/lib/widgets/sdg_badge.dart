@@ -153,9 +153,10 @@ class SdgDetailList extends StatelessWidget {
                   Expanded(
                     child: Text(
                       SdgData.labelFor(n),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),

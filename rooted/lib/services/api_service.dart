@@ -1,6 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'session_storage.dart';
+import '../screens/login_screen.dart';
 
 /// Thrown when the backend returns a non-success response.
 class ApiException implements Exception {
@@ -14,6 +16,9 @@ class ApiException implements Exception {
 class ApiService {
   // Your deployed Google Cloud backend.
   static const String baseUrl = 'https://adc-final.ey.r.appspot.com';
+
+  /// Global navigator key to allow logout/redirect from service layer.
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   static const List<String> categories = [
     'Music',
@@ -318,12 +323,27 @@ class ApiService {
     _checkBodyError(body);
   }
 
+  /// Clears local session and redirects to Login screen.
+  static Future<void> forceLogout() async {
+    await SessionStorage.clear();
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   static void _checkBodyError(Map<String, dynamic> body) {
     final status = body['status'];
     // 200 = ok, any 99xx = error.
     if (status != null && status != 200 && status != '200') {
       final dynamic data = body['data'];
       String message = 'Operation failed (status $status)';
+
+      // 9901/9902 are typical "Unauthorized" or "Token Expired" codes in this backend.
+      if (status == 9901 || status == 9902 || status == '9901' || status == '9902') {
+        forceLogout();
+        throw ApiException('Session expired. Please log in again.');
+      }
 
       if (data is String) {
         message = data;
@@ -426,13 +446,6 @@ class ApiService {
           // If it's a relative path (with or without leading slash), prepend baseUrl
           final normalizedPath = url.startsWith('/') ? url : '/$url';
           url = '$baseUrl$normalizedPath';
-        }
-        
-        // Diagnostic log to see what the final URL looks like
-        if (url.contains('storage.googleapis.com')) {
-          debugPrint('API SERVICE: Detected GCS URL: $url');
-        } else if (url.isNotEmpty) {
-          debugPrint('API SERVICE: Normalized URL: $url');
         }
         
         return url;

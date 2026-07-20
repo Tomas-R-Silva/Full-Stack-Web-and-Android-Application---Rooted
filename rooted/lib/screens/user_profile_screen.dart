@@ -248,10 +248,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 final event = events[index];
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  tileColor: Colors.white,
+                  tileColor: Theme.of(context).colorScheme.surfaceContainer,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppTheme.inputBorder),
+                    side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
                   ),
                   title: Text(event['title'] ?? 'Untitled', style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(event['location'] ?? 'No location', maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -352,9 +352,9 @@ class _InfoCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.inputBorder),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: Column(children: children),
     );
@@ -374,22 +374,22 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: AppTheme.primary),
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500)),
                 const SizedBox(height: 2),
                 Text(value,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 15,
-                        color: AppTheme.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w500)),
               ],
             ),
