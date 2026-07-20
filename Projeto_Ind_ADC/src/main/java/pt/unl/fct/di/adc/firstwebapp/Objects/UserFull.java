@@ -113,7 +113,7 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setPublic(user.isPublic());
 		newuser.setCountry("");
 		newuser.setbaseBirth(0);
-		newuser.setAvatar(Map.of());	
+		newuser.setAvatar("");	
 		newuser.setBio("");
 		newuser.setOds(null);
 		newuser.setBorderID("");
@@ -127,7 +127,6 @@ public class UserFull extends ShortUser implements Full{
 		Map<String,Object> map=new HashMap<>();
 		map.put("username",Full.string(username));
 		map.put("display",Full.string(display));
-		map.put("email",Full.string(email));
 		map.put("role",Full.string(role.name()));
 		return map;
 	}
@@ -137,15 +136,16 @@ public class UserFull extends ShortUser implements Full{
 		map.put("avatar", avatar);
 		map.put("oldnames",Full.list(old));
 		map.put("borderID",Full.string(borderID));
-		map.put("friendship",friendshipstatus.toString());
+		map.put("friendship",Full.string(friendshipstatus.toString()));
+		map.put("ods",Full.list(ods));
+		map.put("bio",Full.string(bio));
 		if(admin||isPublic||friendshipstatus.equals(Friendstatus.FRIENDS)) {
 			map.put("display",Full.string(display));//may be friend nickname or user display name
 			map.put("creation_time",creation);
-			map.put("bio",Full.string(bio));
+			map.put("email",Full.string(email));
 			map.put("category",Full.makeStringEnumList(category));
 			map.put("country",Full.string(country));
 			map.put("birth",birth);
-			map.put("ods",Full.list(ods));
 			map.put("points",points);
 		}
 		return map;
@@ -161,20 +161,20 @@ public class UserFull extends ShortUser implements Full{
 	@Override
 	public Entity toentity() {
 		Builder newUser = Entity.newBuilder(key);
-		newUser.set("user_name", username);
-		newUser.set("user_email", email);
-		newUser.set("user_pwd", password);
+		newUser.set("user_name",Full.string(username));
+		newUser.set("user_email", Full.string(email));
+		newUser.set("user_pwd", Full.string(password));
 		newUser.set("user_role", role.name());
-		newUser.set("user_display", display);
+		newUser.set("user_display", Full.string(display));
 		newUser.set("user_creation_time", creation / TIME_DIVIDER);
 		newUser.set("birth_time", birth / TIME_DIVIDER);
-		newUser.set("country", country);
+		newUser.set("country", Full.string(country));
 		newUser.set("is_public", isPublic);
-		newUser.set("user_bio", bio);
+		newUser.set("user_bio", Full.string(bio));
 		newUser.set("old_display", Full.makeStringValueList(old));
 		newUser.set("category", Full.makeStringValueEnumList(category));
 		newUser.set("user_ods", Full.makeLongValueList(ods));
-		newUser.set("user_border", (borderID!=null)?borderID:"");
+		newUser.set("user_border", Full.string(borderID));
 		newUser.set("user_points", points);
 		newUser.set("avatar", toImageValues(avatar));
 		return newUser.build();
