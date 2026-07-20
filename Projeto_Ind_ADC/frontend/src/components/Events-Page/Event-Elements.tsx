@@ -21,6 +21,7 @@ import account_circle_w from "../../assets/icons/account_circle_w.svg";
 import person_pin from "../../assets/icons/person_pin_w.svg";
 import verified from "../../assets/icons/verified_w.svg";
 import { getBorderItem } from "../../utils/borders";
+import Footer from "../NavBar/Footer";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
@@ -321,6 +322,7 @@ function EventElements() {
           </div>
         </section>
       </div>
+      <Footer />
     </>
   );
 }

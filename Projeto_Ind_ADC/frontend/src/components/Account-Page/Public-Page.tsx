@@ -19,6 +19,7 @@ import EventCard from "../Events-Page/Event-Card";
 import { addFriend, unfriend } from "../../api/auth";
 import verified from "../../assets/icons/verified_w.svg";
 import { useNotification } from "../NotificationContext";
+import Footer from "../NavBar/Footer";
 
 function PublicPage() {
   const { username } = useParams<{ username: string }>();
@@ -599,6 +600,7 @@ function PublicPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

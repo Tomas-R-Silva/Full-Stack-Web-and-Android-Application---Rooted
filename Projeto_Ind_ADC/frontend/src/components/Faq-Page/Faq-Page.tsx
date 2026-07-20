@@ -1,3 +1,4 @@
+import Footer from "../NavBar/Footer";
 import NavBar from "../NavBar/NavBar";
 import { useState } from "react";
 
@@ -118,6 +119,7 @@ function FaqPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

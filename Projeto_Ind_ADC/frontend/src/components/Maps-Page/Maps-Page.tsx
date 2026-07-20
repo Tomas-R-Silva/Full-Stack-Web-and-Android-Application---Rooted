@@ -5,6 +5,7 @@ import placeholder from "../../assets/images/placeholder.png";
 import type { FilterProps } from "../../utils/types";
 import accessible_w from "../../assets/icons/accessible_w.svg";
 import { sdgInfos } from "../../utils/sdgInfo";
+import Footer from "../NavBar/Footer";
 
 const MapsPage = () => {
   const mapsApiKey = import.meta.env.VITE_API_KEY;
@@ -203,7 +204,9 @@ const MapsPage = () => {
                             setFilter((prev) => {
                               const newArray = e.target.checked
                                 ? [...(prev.sdg ?? []), sdg.id]
-                                : (prev.sdg ?? []).filter((id) => id !== sdg.id);
+                                : (prev.sdg ?? []).filter(
+                                    (id) => id !== sdg.id,
+                                  );
 
                               return {
                                 ...prev,
@@ -213,7 +216,10 @@ const MapsPage = () => {
                           }}
                         />
 
-                        <label className="form-check-label" htmlFor={`map-sdg-${sdg.id}`}>
+                        <label
+                          className="form-check-label"
+                          htmlFor={`map-sdg-${sdg.id}`}
+                        >
                           {sdg.id} - {sdg.title}
                         </label>
                       </div>
@@ -410,6 +416,7 @@ const MapsPage = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </>
   );
 };

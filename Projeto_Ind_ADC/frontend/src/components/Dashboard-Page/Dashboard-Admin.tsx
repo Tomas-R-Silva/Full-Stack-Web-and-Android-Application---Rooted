@@ -6,6 +6,7 @@ import ModerationUsers from "./Moderation-Users";
 import ModerationPartners from "./Moderation-Partners";
 import ModerationEvents from "./Moderation-Events";
 import { useNavigate } from "react-router-dom";
+import Footer from "../NavBar/Footer";
 
 function DashboardADM() {
   const dashboardItems = [
@@ -86,6 +87,7 @@ function DashboardADM() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

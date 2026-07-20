@@ -4,6 +4,7 @@ import type { FilterProps, SdgItem } from "../../utils/types";
 import { useParams, useNavigate } from "react-router-dom";
 import EventsList from "../Events-Page/Events-List";
 import { useState, useEffect } from "react";
+import Footer from "../NavBar/Footer";
 
 function SDGelements() {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ function SDGelements() {
             Back to SDGs
           </button>
         </div>
+        <Footer />
       </>
     );
   }
@@ -227,6 +229,7 @@ function SDGelements() {
           ))}
         </div>
       </div>
+      <Footer />
     </>
   );
 }

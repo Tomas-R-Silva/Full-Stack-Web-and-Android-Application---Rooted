@@ -25,6 +25,7 @@ import personPin_w from "../../assets/icons/person_pin_w.svg";
 import check_w from "../../assets/icons/check_w.svg";
 import close_w from "../../assets/icons/close_white.svg";
 import { useNotification } from "../NotificationContext";
+import Footer from "../NavBar/Footer";
 
 function EventJoins() {
   const { id } = useParams<{ id: string }>();
@@ -473,6 +474,7 @@ function EventJoins() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

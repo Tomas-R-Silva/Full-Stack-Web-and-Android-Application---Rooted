@@ -12,6 +12,7 @@ import AccountAttends from "./Account-Attends";
 import AccountRewards from "./Account-Rewards";
 import PreferedThemes from "./Prefered-Themes";
 import AccountAvatar from "./Account-Avatar";
+import Footer from "../NavBar/Footer";
 
 function AccountSettings() {
   const profileItems = [
@@ -24,7 +25,6 @@ function AccountSettings() {
     "Admin Dashboard",
     "Backofficer Dashboard",
     "Claimed Rewards",
-    "Recent Points",
   ];
   const personalizationItems = ["Preferred Themes"];
   const [selected, setSelected] = useState(profileItems[0]);
@@ -173,6 +173,7 @@ function AccountSettings() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

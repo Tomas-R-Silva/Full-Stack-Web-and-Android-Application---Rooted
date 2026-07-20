@@ -7,6 +7,7 @@ import SDGslider from "../SDG-elements/SDG-Slider";
 import EventsList from "./Events-List";
 import accessible_w from "../../assets/icons/accessible_w.svg";
 import { sdgInfos } from "../../utils/sdgInfo";
+import Footer from "../NavBar/Footer";
 
 function EventsPage() {
   //================= Hooks ===================
@@ -273,6 +274,7 @@ function EventsPage() {
 
         <EventsList filter={filter} />
       </div>
+      <Footer />
       {showModal && <EventModal onClose={() => setShowModal(false)} />}
     </>
   );
