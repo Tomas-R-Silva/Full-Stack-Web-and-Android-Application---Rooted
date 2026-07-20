@@ -119,31 +119,13 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listEvents(ListEventsRequest req) {
 		try {
-			boolean authenticated = false;
-			Role requesterRole = null;
 			ListEventsInput input =req.getInput();
-			if (req.getToken() != null && req.getToken().getJwt() != null) {
-				try {
-					TokenFull token = AuthHelper.verifyToken(req);
-					authenticated = true;
-					requesterRole = token.getRole();
-				} catch (ErrorException ignored) {
-					// Token invalid  treat as unauthenticated
-				}
-			}
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Event");
 
 			// Build filters
 			List<StructuredQuery.Filter> filters = new ArrayList<>(7);
 
-			// Unauthenticated users see only public events
-			if (!authenticated) {
-				filters.add(PropertyFilter.eq("is_public", true));
-			} else if (requesterRole != Role.ADMIN && requesterRole != Role.BOFFICER) {
-				// Regular users see public events and their own private events
-				filters.add(PropertyFilter.eq("is_public", true));
-			}
-
+			// The listing shows every event, public and private, to everyone. 
 			if (input.isAccessible() != null && input.isAccessible())
 				filters.add(PropertyFilter.eq("is_accessible", input.isAccessible()));
 
