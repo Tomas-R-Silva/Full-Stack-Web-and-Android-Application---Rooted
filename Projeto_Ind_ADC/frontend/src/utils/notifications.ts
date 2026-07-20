@@ -49,7 +49,7 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   },
   ACCOUNT_DELETED: {
     title: "Success!",
-    message: "Your account was created.",
+    message: "Account deleted with sucess.",
   },
   ACCOUNT_UPDATED: {
     title: "Saved!",

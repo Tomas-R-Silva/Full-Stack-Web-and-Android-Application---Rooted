@@ -64,10 +64,7 @@ function SDGelements() {
       <div
         className="container-fluid px-0"
         style={{
-          backgroundImage: `linear-gradient(
-            rgba(0, 0, 0, 0.45),
-            rgba(0, 0, 0, 0.45)
-          ), url(${sdg.photo})`,
+          backgroundImage: `url(${sdg.photo})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
