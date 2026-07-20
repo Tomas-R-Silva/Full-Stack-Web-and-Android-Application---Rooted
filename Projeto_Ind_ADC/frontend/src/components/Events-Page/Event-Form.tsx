@@ -46,8 +46,8 @@ function EventForm() {
       public: false,
       accessible: false,
       sdg: [],
-      lat: null,
-      lng: null,
+      latitude: null,
+      longitude: null,
     },
   });
   const [errors, setErrors] = useState<ErrorState>({
@@ -62,8 +62,8 @@ function EventForm() {
     public: "",
     accessible: "",
     sdg: "",
-    lat: "",
-    lng: "",
+    latitude: "",
+    longitude: "",
   });
 
   //========== Receber Input e Limpar erros ==========
@@ -188,8 +188,8 @@ function EventForm() {
       public: "",
       accessible: "",
       sdg: "",
-      lat: "",
-      lng: "",
+      latitude: "",
+      longitude: "",
     };
 
     if (!formData.input.title) {
@@ -259,8 +259,8 @@ function EventForm() {
         ...formData,
         input: {
           ...formData.input,
-          lat: position.lat,
-          lng: position.lng,
+          latitude: position.lat,
+          longitude: position.lng,
         },
         token: {
           jwt: token,

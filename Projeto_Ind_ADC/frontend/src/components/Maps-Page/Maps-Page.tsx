@@ -76,7 +76,7 @@ const MapsPage = () => {
           style={{ background: "var(--color-green2)" }}
         >
           <div className="d-flex flex-wrap align-items-end gap-3">
-            <div style={{ flex: "0 0 17%", minWidth: "180px" }}>
+            <div style={{ flex: "0 0 18%", minWidth: "200px" }}>
               <label
                 className="form-label fw-semibold"
                 style={{ color: "var(--color-white)" }}
@@ -105,7 +105,7 @@ const MapsPage = () => {
                   <>
                     <button
                       type="button"
-                      className="btn btn-sm"
+                      className="btn btn-sm fw-bold"
                       style={{
                         background: "var(--color-white)",
                         color: "var(--color-green)",
@@ -124,7 +124,7 @@ const MapsPage = () => {
                     </span>
                     <button
                       type="button"
-                      className="btn btn-sm"
+                      className="btn btn-sm fw-bold"
                       style={{
                         background: "var(--color-white)",
                         color: "var(--color-green)",
