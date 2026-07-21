@@ -57,7 +57,7 @@ public class ForumFull implements Full,EventInputInterface{
 		post.setAuthorUsername(Full.getString(entity, "author_username"));
 		post.setText(Full.getString(entity, "text"));
 		post.setParentPostId(Full.getString(entity, "parent_post_id"));
-		post.setCreatedAt(Full.getLong(entity, "created_at"));
+		post.setCreatedAt(Full.getLong(entity, "created_at")*TIME_DIVIDER);
 		return post;
 	}
 
