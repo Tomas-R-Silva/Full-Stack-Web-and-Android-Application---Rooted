@@ -10,12 +10,14 @@ import type {
 import { attendEvent, unattendEvent, isAttendee } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import accessible_w from "../../assets/icons/accessible_w.svg";
+import { useNotification } from "../NotificationContext";
 
 function Ticket({ event }: EventProps) {
   const startDate = new Date(event.startDate);
   const Ids = event.SDG ?? [];
   const { isAuthenticated, username } = useAuth();
   const [IsAttendee, setIsAttendee] = useState(false);
+  const { notify } = useNotification();
 
   const navigate = useNavigate();
 
@@ -60,7 +62,19 @@ function Ticket({ event }: EventProps) {
       console.log(response);
 
       navigate("/events/" + event.eventId);
-      window.location.reload();
+      if (response.status === 200) {
+        if (response.data.status === "PENDING") {
+          if (response.data.message.includes("already")) {
+            notify("EVENT_PENDING_REQUEST");
+          } else {
+            notify("EVENT_ATTENDED_REQUEST");
+            window.location.reload();
+          }
+        } else {
+          notify("EVENT_ATTENDED");
+          window.location.reload();
+        }
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }
@@ -93,6 +107,9 @@ function Ticket({ event }: EventProps) {
 
       navigate("/events/" + event.eventId);
       window.location.reload();
+      if (response.status === 200) {
+        notify("EVENT_UNATTENDED");
+      }
     } catch (err) {
       console.log("Something went wrong!");
     }

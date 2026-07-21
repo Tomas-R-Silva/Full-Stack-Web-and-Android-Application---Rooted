@@ -223,7 +223,7 @@ export type RequestAddNickname = {
   token: {jwt:string;}
   input: {
     username:string;
-    newname:string;
+    newName:string;
    }
 }
 
@@ -492,7 +492,9 @@ export type RequestEventAttend = {
 
 export type EventAttendResponse = {
   status: number,
-  data:{message: string},
+  data:{message: string,
+    status: string,
+  },
 }
 
 export type RequestJoinRequests = {

@@ -83,10 +83,11 @@ function PublicPage() {
         token: { jwt: token },
         input: {
           username: username,
-          newname: nickname,
+          newName: nickname,
         },
       });
       console.log(res.data.message);
+      window.location.reload();
       if (res.status === 200) {
         notify("NICKNAME_ADDED");
       }
@@ -94,10 +95,6 @@ function PublicPage() {
       console.error(err);
     }
   };
-
-  useEffect(() => {
-    loadUser();
-  }, []);
 
   const [events, setEvents] = useState<EventItem[]>([]); //Events got from the request
   const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
@@ -218,11 +215,13 @@ function PublicPage() {
   const loadNickname = async (friend: string) => {
     try {
       const token = sessionStorage.getItem("token");
+
       if (!token) {
         console.log("User is not authenticated");
         return;
       }
-      if (!username) {
+
+      if (!friend) {
         console.log("Invalid username");
         return;
       }
@@ -231,8 +230,10 @@ function PublicPage() {
         token: { jwt: token },
         input: { username: friend },
       });
+
       console.log(res);
-      setNickname(res.data.nickname);
+
+      setNickname(res.data.nickname ?? "");
     } catch (err) {
       console.error(err);
     }
@@ -246,9 +247,35 @@ function PublicPage() {
     });
   };
 
+  const getProfileName = () => {
+    if (!user) return "";
+
+    const displayName = user.data.display || user.data.username;
+
+    if (user.data.friendship === "FRIENDS" && nickname.trim() !== "") {
+      return `${nickname.trim()}`;
+    }
+
+    return displayName;
+  };
+
   useEffect(() => {
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    loadUser();
+  }, [username]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.data.friendship === "FRIENDS") {
+      loadNickname(user.data.username);
+    } else {
+      setNickname("");
+    }
+  }, [user]);
 
   return (
     <>
@@ -302,10 +329,8 @@ function PublicPage() {
                 <div className="row g-3 align-items-center">
                   <div className="col-12 col-md-6 col-xl-3">
                     <h4 className="mb-0 text-white fw-bold">
-                      {user &&
-                        (user.data.friendship === "FRIENDS" && nickname !== ""
-                          ? `${nickname} (${user.data.display})`
-                          : user.data.display)}
+                      {getProfileName()}
+
                       {user?.data.role === "PARTNER" && (
                         <img className="ms-1" src={verified} alt="Verified" />
                       )}

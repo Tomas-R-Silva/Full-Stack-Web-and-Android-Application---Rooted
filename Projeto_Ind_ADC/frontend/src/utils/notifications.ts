@@ -12,6 +12,10 @@ export type NotificationCode =
   | "EVENT_COMPLETED"
   | "EVENT_CANCELED"
   | "EVENT_DELETED"
+  | "EVENT_ATTENDED"
+  | "EVENT_ATTENDED_REQUEST"
+  | "EVENT_PENDING_REQUEST"
+  | "EVENT_UNATTENDED"
   | "PARTNER_ADDED"
   | "PARTNER_REMOVED"
   | "PARTNER_ROLE_SETTED"
@@ -83,6 +87,22 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   EVENT_DELETED: {
     title: "Event Deleted",
     message: "The event has been removed.",
+  },
+  EVENT_ATTENDED: {
+    title: "Event Attended",
+    message: "You are now attending to the event.",
+  },
+  EVENT_ATTENDED_REQUEST: {
+    title: "Event Attend Request",
+    message: "You request to attend to the event.",
+  },
+  EVENT_PENDING_REQUEST: {
+    title: "Event Pending Request",
+    message: "You already have a pending request.",
+  },
+  EVENT_UNATTENDED: {
+    title: "Event Unattended",
+    message: "You are no more attending to the event.",
   },
   PARTNER_ADDED: {
     title: "Partner Added",
