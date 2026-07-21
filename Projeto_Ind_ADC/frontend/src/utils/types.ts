@@ -689,7 +689,7 @@ export type Post = {
 
 export type RequestMessageDelete = {
   token?: {jwt:string}
-  input: string,
+  input: {forumKey: string},
 }
 
 export type MessageDeleteResponse = {

@@ -15,7 +15,7 @@ function MessageRight(texts: MessageProps) {
   const { notify } = useNotification();
 
   const handleTime = (timestamp: number): string => {
-    const date = new Date(timestamp);
+    const date = new Date(timestamp * 1000);
 
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -38,7 +38,7 @@ function MessageRight(texts: MessageProps) {
 
       const res: MessageDeleteResponse = await DeleteMessage({
         token: { jwt: token },
-        input: postId,
+        input: { forumKey: postId },
       });
       console.log(res.data.message);
       window.location.reload();
