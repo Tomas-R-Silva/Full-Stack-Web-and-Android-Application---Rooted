@@ -40,7 +40,7 @@ function SDGelements() {
     try {
       const res: TopSDGResponse = await getTopSDG({});
       console.log(res.data);
-      setTops(res.data.topBySDG);
+      setTops(res.data.topBySDG[sdgId]);
     } catch (err) {
       console.error(err);
     }
@@ -217,7 +217,7 @@ function SDGelements() {
             fontSize: "clamp(28px, 5vw, 40px)",
           }}
         >
-          Top 50
+          Top 20
           <img
             src={sdg.icon}
             alt={`SDG ${sdg.id} icon`}
@@ -231,22 +231,26 @@ function SDGelements() {
         </h1>
 
         <div className="row g-3">
-          {persons.map((p, index) => (
-            <div key={p.username} className="col-12">
-              <div
-                className="rounded-3 p-3 border text-white"
-                style={{ background: "var(--color-green2)" }}
-              >
-                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-                  <span className="fw-semibold">
-                    #{index + 1} {p.username}
-                  </span>
+          {tops.length > 0 ? (
+            tops.map((p, index) => (
+              <div key={p.username} className="col-12">
+                <div
+                  className="rounded-3 p-3 border text-white"
+                  style={{ background: "var(--color-green2)" }}
+                >
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-semibold">
+                      #{index + 1} {p.username}
+                    </span>
 
-                  <span>{p.value} events</span>
+                    <span>{p.points} pts</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-white">No users yet.</p>
+          )}
         </div>
       </div>
       <Footer />
