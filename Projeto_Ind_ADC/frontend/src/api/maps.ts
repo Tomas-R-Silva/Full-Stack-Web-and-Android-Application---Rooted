@@ -394,27 +394,27 @@ export const useMapsPage = (mapsApiKey: string) => {
       var coords = { lat: 0, lng: 0 };
       try {
         const token = sessionStorage.getItem("token");
-        if (!token) return;
+        if (token) {
+          const res: AuthSessionsResponse = await getAuthSessions({
+            token: { jwt: token },
+          });
 
-        const res: AuthSessionsResponse = await getAuthSessions({
-          token: { jwt: token },
-        });
+          const userToFind = res.data.tokens[0].username;
 
-        const userToFind = res.data.tokens[0].username;
+          const res2: UserInformationResponse = await getUser({
+            token: { jwt: token },
+            input: {
+              username: userToFind,
+            },
+          });
 
-        const res2: UserInformationResponse = await getUser({
-          token: { jwt: token },
-          input: {
-            username: userToFind,
-          },
-        });
-
-        const country = res2.data.country;
-        const possibleCoords = await geocodeAddress(country);
-        if (possibleCoords) {
-          coords = possibleCoords;
+          const country = res2.data.country;
+          const possibleCoords = await geocodeAddress(country);
+          if (possibleCoords) {
+            coords = possibleCoords;
+          }
         }
-      }catch (err) {
+      } catch (err) {
         console.error(err);
       }
 
