@@ -99,8 +99,12 @@ function AccountEvents() {
               )}
 
               {!loading && !error && events.length === 0 && (
-                <div className="alert alert-ligth" role="alert">
-                  There is no events availables.
+                <div
+                  className="alert alert-light"
+                  style={{ color: "var(--color-green)" }}
+                  role="alert"
+                >
+                  You have no events.
                 </div>
               )}
 
