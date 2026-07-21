@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../screens/user_profile_screen.dart';
+import 'partner_mark.dart';
 
 class AttendeesBottomSheet extends StatefulWidget {
   final String eventId;
@@ -142,7 +143,12 @@ class _AttendeesBottomSheetState extends State<AttendeesBottomSheet> {
               style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
             ),
           ),
-          title: Text(display, style: const TextStyle(fontWeight: FontWeight.w600)),
+          title: Row(
+            children: [
+              Text(display, style: const TextStyle(fontWeight: FontWeight.w600)),
+              PartnerMark(role: role, size: 16),
+            ],
+          ),
           subtitle: Text('@$username • $role', style: const TextStyle(fontSize: 12)),
           trailing: const Icon(Icons.chevron_right, size: 20),
           onTap: () {

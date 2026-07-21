@@ -1,36 +1,49 @@
-# Dark Mode Implementation Plan
+# Robust Token Expiration & Auto-Logout Implementation Plan
 
-Add support for dark mode with a persistent toggle in the Profile screen.
+Ensure the user is automatically logged out when their session token expires, both proactively (client-side check) and reactively (backend response handling).
 
 ## User Review Required
 
-> [!NOTE]
-> I will implement a global `themeNotifier` in `AppTheme` to manage the state across the app. The preference will be stored in `SharedPreferences`.
+> [!IMPORTANT]
+> The app will now track the session expiration time locally. If the token is found to be expired on startup or during app usage, the user will be immediately redirected to the Login screen to protect their account security.
 
 ## Proposed Changes
 
-### [Theme Management]
+### [Session Management]
 
-#### [MODIFY] [app_theme.dart](file:///home/efrra/ADC-Final/rooted/lib/theme/app_theme.dart)
-- Define a `darkTheme` `ThemeData`.
-- Add a `ValueNotifier<ThemeMode> themeNotifier` to handle dynamic switching.
-- Add methods to toggle and load the theme from storage.
+#### [MODIFY] [session_storage.dart](file:///home/efrra/ADC-Final/rooted/lib/services/session_storage.dart)
+- Add `_expiresAtKey` constant.
+- Update `save()` to accept an optional `int? expiresAt`.
+- Add `getExpiresAt()` getter.
 
-### [Core Infrastructure]
+#### [MODIFY] [api_service.dart](file:///home/efrra/ADC-Final/rooted/lib/services/api_service.dart)
+- Consolidate error handling:
+    - Update `createEvent` and `updateEvent` to use `_checkBodyError` to catch `9901/9902` errors.
+- Add `isSessionExpired()` helper method to check the stored expiration time.
+- Add `checkAndForceLogout()` to perform a proactive check and logout if needed.
+
+### [Authentication Flow]
+
+#### [MODIFY] [login_screen.dart](file:///home/efrra/ADC-Final/rooted/lib/screens/login_screen.dart)
+- Extract `expiresAt` from the backend `token` object.
+- Pass `expiresAt` to `SessionStorage.save()`.
+
+#### [MODIFY] [register_screen.dart](file:///home/efrra/ADC-Final/rooted/lib/screens/register_screen.dart)
+- Extract `expiresAt` from the backend `token` object.
+- Pass `expiresAt` to `SessionStorage.save()`.
+
+### [App Lifecycle]
 
 #### [MODIFY] [main.dart](file:///home/efrra/ADC-Final/rooted/lib/main.dart)
-- Wrap `RootedApp` with a `ValueListenableBuilder` to react to theme changes.
-- Provide both `theme` and `darkTheme` to `MaterialApp`.
+- Update `main()` to check if the session is expired before deciding the initial route.
+- If logged in, call `ApiService.checkAndForceLogout()` to ensure the user isn't stuck on an expired session from a previous run.
 
-### [UI Components]
-
-#### [MODIFY] [profile_screen.dart](file:///home/efrra/ADC-Final/rooted/lib/screens/profile_screen.dart)
-- Add a "Dark Mode" switch in the settings or info section.
-- Connect the switch to `AppTheme.themeNotifier`.
+#### [MODIFY] [home_screen.dart](file:///home/efrra/ADC-Final/rooted/lib/screens/home_screen.dart)
+- In `initState`, start a periodic timer (e.g., every minute) that calls `ApiService.checkAndForceLogout()`. This handles the case where the app is left open while the token expires.
 
 ## Verification Plan
 
 ### Manual Verification
-- Toggle the switch in the Profile screen.
-- Verify that the entire app (all screens) switches to dark mode.
-- Restart the app and verify the theme preference is persisted.
+1. **Startup Check**: Manually set a past expiration time in `SharedPreferences` (if possible via debug tools) or wait for a session to expire. Open the app and verify it redirects to Login instead of showing the Home screen.
+2. **Reactive Check**: Use a token that the backend considers expired. Attempt to perform an action (e.g., create an event). Verify the app shows "Session expired" and redirects to Login.
+3. **Background Expiry**: Leave the app on the Home screen. Wait for the session to expire. Verify that the periodic check triggers a redirect to the Login screen.

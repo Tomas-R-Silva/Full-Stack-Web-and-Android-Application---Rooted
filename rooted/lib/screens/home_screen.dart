@@ -5,6 +5,8 @@ import 'discover_screen.dart';
 import 'profile_screen.dart';
 import 'create_screen.dart';
 import 'connections_screen.dart';
+import 'dart:async';
+import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialIndex;
@@ -14,13 +16,34 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late int _currentIndex;
+  Timer? _sessionTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _currentIndex = widget.initialIndex;
+    
+    // Periodically check if the session has expired
+    _sessionTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      ApiService.checkAndForceLogout();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _sessionTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ApiService.checkAndForceLogout();
+    }
   }
 
   final List<Widget> _pages = const [

@@ -15,6 +15,7 @@ class SessionStorage {
   static const _odsKey = 'ods';
   static const _borderIdKey = 'border_id';
   static const _pointsKey = 'points';
+  static const _expiresAtKey = 'expires_at';
 
   static Future<void> save({
     required String jwt,
@@ -29,6 +30,7 @@ class SessionStorage {
     List<int> ods = const [],
     String borderId = '',
     int points = 0,
+    int? expiresAt,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_jwtKey, jwt);
@@ -43,6 +45,11 @@ class SessionStorage {
     await prefs.setStringList(_odsKey, ods.map((e) => e.toString()).toList());
     await prefs.setString(_borderIdKey, borderId);
     await prefs.setInt(_pointsKey, points);
+    if (expiresAt != null) {
+      await prefs.setInt(_expiresAtKey, expiresAt);
+    } else {
+      await prefs.remove(_expiresAtKey);
+    }
   }
 
   static Future<String?> getJwt() async {
@@ -106,6 +113,25 @@ class SessionStorage {
     return prefs.getInt(_pointsKey);
   }
 
+  static Future<int?> getExpiresAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_expiresAtKey);
+  }
+
+  // --- Unread Message Tracking ---
+
+  static String _lastReadKey(String friendUsername) => 'last_read_$friendUsername';
+
+  static Future<void> setLastRead(String friendUsername, int timestamp) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastReadKey(friendUsername), timestamp);
+  }
+
+  static Future<int> getLastRead(String friendUsername) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_lastReadKey(friendUsername)) ?? 0;
+  }
+
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_jwtKey);
@@ -120,5 +146,6 @@ class SessionStorage {
     await prefs.remove(_odsKey);
     await prefs.remove(_borderIdKey);
     await prefs.remove(_pointsKey);
+    await prefs.remove(_expiresAtKey);
   }
 }
