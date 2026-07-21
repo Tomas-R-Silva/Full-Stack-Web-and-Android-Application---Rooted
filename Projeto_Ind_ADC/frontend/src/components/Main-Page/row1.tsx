@@ -5,7 +5,10 @@ function Row1() {
   const navigate = useNavigate();
 
   return (
-    <div className="container-fluid px-0">
+    <div
+      className="container-fluid px-0"
+      style={{ overflowX: "hidden", overflowY: "hidden" }}
+    >
       <div
         className="row g-0 align-items-center"
         style={{
