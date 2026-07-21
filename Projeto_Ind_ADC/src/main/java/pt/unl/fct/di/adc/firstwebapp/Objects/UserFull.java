@@ -129,6 +129,8 @@ public class UserFull extends ShortUser implements Full{
 		map.put("username",Full.string(username));
 		map.put("display",Full.string(display));
 		map.put("role",Full.string(role.name()));
+		map.put("email",Full.string(email));
+		map.put("category",Full.makeStringEnumList(category));
 		return map;
 	}
 	public Map<String,Object> tobigmap(String display,Friendstatus friendshipstatus){
@@ -141,8 +143,6 @@ public class UserFull extends ShortUser implements Full{
 		map.put("bio",Full.string(bio));
 		map.put("display",Full.string(display));//may be friend nickname or user display name
 		map.put("creation_time",creation);
-		map.put("email",Full.string(email));
-		map.put("category",Full.makeStringEnumList(category));
 		map.put("country",Full.string(country));
 		map.put("birth",birth);
 		map.put("points",points);
