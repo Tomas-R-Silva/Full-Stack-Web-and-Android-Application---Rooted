@@ -14,7 +14,7 @@ public class endlocal {
 		//Thread.
 	
 		
-		AC a=AC.BASE2;
+		AC a=AC.END;
 		switch(a) {
 		case MY->{}
 		case END->{findandkill(8080);findandkill(8081);System.out.println("DONE");}
