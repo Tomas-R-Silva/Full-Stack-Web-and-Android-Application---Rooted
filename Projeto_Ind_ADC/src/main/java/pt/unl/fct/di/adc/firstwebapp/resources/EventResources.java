@@ -245,8 +245,7 @@ public class EventResources {
 				ErrorException.trow(9905);
 			if (event.getStatus().equals(Status.CANCELLED))
 				ErrorException.trow(9940); // can't edit a cancelled event
-			if(user != null)
-				event.addpartner(user);			
+			event.addpartner(user);			
 			datastore.update(event.toentity());
 			return ok(Map.of("message", "Partner added to event"));
 		} catch (Exception e) {
