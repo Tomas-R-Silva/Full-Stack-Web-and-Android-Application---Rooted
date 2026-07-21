@@ -194,14 +194,17 @@ public class UserResources {
 			AuthHelper.querydelete("EventJoinRequest","requester",user.getUsername());
 			AuthHelper.querydelete("EventJoinRequest","organizer",user.getUsername());
 
-			destroievents(user.getUsername());
+			
 
 			unattendevents(user.getUsername());
 
 			becomeloner(user.getUsername());
 
 			AuthHelper.querydelete("ForumPost","author_username",user.getUsername());
-
+			
+			destroievents(user.getUsername());
+			
+			AuthHelper.querydelete("Event","organizer_username",user.getUsername());
 			return buildresponse(Map.of("message", "Account deleted successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -216,7 +219,9 @@ public class UserResources {
 		try {
 			ModAccountRequestInput input = request.getInput();
 			TokenFull token = AuthHelper.verifyToken(request);
-			UserFull user = AuthHelper.getUser(token);
+			UserFull user = AuthHelper.getUser(input.getUsername());
+			if(!user.isme(token))
+				Validator.unauthorized(token, new Role []{Role.ADMIN});
 			if(input.getUsername()!=null&&!user.getDisplay().equals(input.getUsername())) 
 				user.setDisplay(input.getUsername());
 			if(input.getEmail()!=null&&!user.getEmail().equals(input.getEmail()))
@@ -609,19 +614,18 @@ public class UserResources {
 	}
 
 	private void destroievents(String name) {
-		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
+		Query<Entity> query = Query.newEntityQueryBuilder()
 				.setKind("Event")
-				.setFilter(PropertyFilter.eq("organizer_username", name))
-				.build());
+				.setFilter(StructuredQuery.PropertyFilter.eq("organizer_username", name))
+				.build();
+		QueryResults<Entity> results = datastore.run(query);
 		while (results.hasNext()) {
 			Entity entity=results.next();
+			datastore.delete(entity.getKey());
 			EventFull event = EventFull.fromdatabase(entity);
 			AuthHelper.querydelete("Attendance","event_id",event.getEventId());
 			AuthHelper.querydelete("ForumPost","event_id",event.getEventId());
-			datastore.delete(entity.getKey());
 		}
-
-
 	}
 
 	private void becomeloner(String name) throws ErrorException {
@@ -660,17 +664,12 @@ public class UserResources {
 	}
 
 	private void deleteAllSessionsForUser(String username) {
-		Query<Entity> query = Query.newEntityQueryBuilder()
+		QueryResults<Entity> sessions = datastore.run( Query.newEntityQueryBuilder()
 				.setKind("Session")
 				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
-				.build();
-
-		QueryResults<Entity> sessions = datastore.run(query);
-
-		while (sessions.hasNext()) {
-			Entity session = sessions.next();
-			datastore.delete(session.getKey());
-		}
+				.build());
+		while (sessions.hasNext()) 
+			datastore.delete(sessions.next().getKey());
 	}
 
 	private static Response buildresponse(Map<String,Object> map) {
