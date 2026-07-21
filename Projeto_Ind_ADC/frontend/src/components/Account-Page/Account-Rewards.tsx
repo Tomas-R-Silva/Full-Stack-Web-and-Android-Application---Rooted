@@ -435,6 +435,15 @@ function AccountRewards() {
                     </div>
                   );
                 })}
+              <div className="mt-4">
+                <button
+                  className="btn btn-outline-light"
+                  style={{ background: "var(--color-green2" }}
+                  onClick={() => handleChangeBorder("")}
+                >
+                  Remove Current Border
+                </button>
+              </div>
             </div>
           </div>
         </div>

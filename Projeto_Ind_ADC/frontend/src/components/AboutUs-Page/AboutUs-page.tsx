@@ -27,12 +27,6 @@ function AboutUsPage() {
           style={{ width: "100%" }}
         />
 
-
-        <hr
-          className="mx-auto my-5 border-white opacity-100"
-          style={{ width: "100%" }}
-        />
-
         <div className="row align-items-center my-5">
           <div className="col-lg-6">
             <h2 className="fw-bold text-white">What is ROOTED?</h2>

@@ -309,12 +309,13 @@ export type RequestTopSDG = {
 
 export type TopSDGResponse = {
   status: number,
-  data: {topBySDG:Top[];}
+  data: {topBySDG:Top[][];}
 }
 
 export type Top = {
   username: string,
-  value: number,
+  display: string,
+  points: number,
 }
 
 //========== EVENT ==========

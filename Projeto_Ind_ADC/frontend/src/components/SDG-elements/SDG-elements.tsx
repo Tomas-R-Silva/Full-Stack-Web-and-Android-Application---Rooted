@@ -15,18 +15,10 @@ import { getTopSDG } from "../../api/auth";
 function SDGelements() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [allTops, setAllTops] = useState<Record<number, Top[]>>({});
   const [tops, setTops] = useState<Top[]>([]);
   const sdgId = Number(id);
   const isValidSdgId = Number.isInteger(sdgId) && sdgId >= 1 && sdgId <= 17;
-
-  const persons = [
-    { username: "Alexandre", value: "100" },
-    { username: "Tomás", value: "80" },
-    { username: "Artur", value: "60" },
-    { username: "Gustavo", value: "40" },
-    { username: "Eduardo", value: "20" },
-    { username: "Gonçalo", value: "1" },
-  ];
 
   const [filter, setFilter] = useState<FilterProps>({
     category: null,
@@ -40,15 +32,24 @@ function SDGelements() {
     try {
       const res: TopSDGResponse = await getTopSDG({});
       console.log(res.data);
-      setTops(res.data.topBySDG);
+      setTops(res.data.topBySDG[sdgId]);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    loadTop();
+    const load = async () => {
+      const res = await getTopSDG({});
+      setAllTops(res.data.topBySDG);
+    };
+
+    load();
   }, []);
+
+  useEffect(() => {
+    setTops(allTops[sdgId] ?? []);
+  }, [allTops, sdgId]);
 
   useEffect(() => {
     if (!isValidSdgId) return;
@@ -217,7 +218,7 @@ function SDGelements() {
             fontSize: "clamp(28px, 5vw, 40px)",
           }}
         >
-          Top 50
+          Top 20
           <img
             src={sdg.icon}
             alt={`SDG ${sdg.id} icon`}
@@ -231,22 +232,26 @@ function SDGelements() {
         </h1>
 
         <div className="row g-3">
-          {persons.map((p, index) => (
-            <div key={p.username} className="col-12">
-              <div
-                className="rounded-3 p-3 border text-white"
-                style={{ background: "var(--color-green2)" }}
-              >
-                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-                  <span className="fw-semibold">
-                    #{index + 1} {p.username}
-                  </span>
+          {tops.length > 0 ? (
+            tops.map((p, index) => (
+              <div key={p.username} className="col-12">
+                <div
+                  className="rounded-3 p-3 border text-white"
+                  style={{ background: "var(--color-green2)" }}
+                >
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-semibold">
+                      #{index + 1} {p.username}
+                    </span>
 
-                  <span>{p.value} events</span>
+                    <span>{p.points} pts</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-white">No users yet.</p>
+          )}
         </div>
       </div>
       <Footer />
