@@ -75,6 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final jwt = token['jwt']?.toString() ?? '';
       final username = token['username']?.toString() ?? _usernameController.text.trim();
       final role = token['role']?.toString() ?? '';
+      final expiresAt = token['expiresAt'] as int?;
 
       // After login, fetch the full user account to be consistent with LoginScreen
       String bio = '';
@@ -113,6 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ods: ods,
         borderId: borderId,
         points: points,
+        expiresAt: expiresAt,
       );
 
       if (mounted) {

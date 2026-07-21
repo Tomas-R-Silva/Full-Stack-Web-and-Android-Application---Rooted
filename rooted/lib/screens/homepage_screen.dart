@@ -6,6 +6,7 @@ import '../widgets/filter_dialog.dart';
 import '../widgets/full_screen_image.dart';
 import '../widgets/sdg_badge.dart';
 import '../widgets/accessibility_badge.dart';
+import '../widgets/partner_mark.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
 import 'user_profile_screen.dart';
@@ -817,6 +818,16 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        if (_jwt != null)
+                          FutureBuilder<String?>(
+                            future: ApiService.getRoleForUser(
+                              jwt: _jwt!,
+                              username: _username!,
+                            ),
+                            builder: (context, snapshot) {
+                              return PartnerMark(role: snapshot.data, size: 14);
+                            },
+                          ),
                       ],
                     ),
                   if (!isOwn)
@@ -843,6 +854,16 @@ class _HomePageState extends State<HomePage> {
                               decoration: TextDecoration.underline,
                             ),
                           ),
+                          if (_jwt != null)
+                            FutureBuilder<String?>(
+                              future: ApiService.getRoleForUser(
+                                jwt: _jwt!,
+                                username: event['organizerUsername'],
+                              ),
+                              builder: (context, snapshot) {
+                                return PartnerMark(role: snapshot.data, size: 14);
+                              },
+                            ),
                         ],
                       ),
                     ),

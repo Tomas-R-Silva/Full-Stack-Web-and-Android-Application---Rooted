@@ -7,6 +7,8 @@ import '../widgets/full_screen_image.dart';
 import '../widgets/sdg_badge.dart';
 import '../widgets/accessibility_badge.dart';
 import '../widgets/attendees_bottom_sheet.dart';
+import '../widgets/partner_mark.dart';
+import '../widgets/partners_bottom_sheet.dart';
 import 'create_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -23,6 +25,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   String? _jwt;
   String? _username;
   String? _role;
+  String? _organizerRole;
 
   final List<Map<String, dynamic>> _posts = [];
   final TextEditingController _messageController = TextEditingController();
@@ -48,6 +51,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     _username = await SessionStorage.getUsername();
     _role = await SessionStorage.getRole();
     
+    // Fetch organizer role to show verified mark
+    _fetchOrganizerRole();
+    
     // Refresh event data to ensure attendance status is current
     await _refreshEventData();
     
@@ -71,6 +77,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     } catch (e) {
       // Silently fail if refresh fails
     }
+  }
+
+  Future<void> _fetchOrganizerRole() async {
+    final org = _event['organizerUsername'] as String?;
+    if (org == null || _jwt == null) return;
+    try {
+      final role = await ApiService.getRoleForUser(jwt: _jwt!, username: org);
+      if (mounted) {
+        setState(() {
+          _organizerRole = role;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -159,6 +178,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       builder: (_) => AttendeesBottomSheet(
         eventId: _event['eventId'] as String,
         jwt: _jwt!,
+      ),
+    );
+  }
+
+  void _showPartners() {
+    if (_jwt == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PartnersBottomSheet(
+        event: _event,
+        jwt: _jwt!,
+        onUpdate: _refreshEventData,
       ),
     );
   }
@@ -283,7 +316,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         actions: [
-          if (_event['organizerUsername'] == _username || _role == 'ADMIN')
+          if (_event['organizerUsername'] == _username || _role == 'ADMIN') ...[
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               onPressed: () async {
@@ -296,6 +329,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 _refreshEventData();
               },
             ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _confirmDeleteEvent,
+            ),
+          ],
         ],
       ),
       body: Column(
@@ -516,6 +554,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   Icons.person_outline_rounded,
                   'Organised by ',
                   linkText: _event['organizerUsername'] ?? '',
+                  trailing: PartnerMark(role: _organizerRole, size: 14),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -525,6 +564,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     );
                   },
                 ),
+                _buildPartnersRow(),
                 _infoRow(Icons.calendar_today_outlined,
                     _formatDate(_event['startDate'])),
                 _infoRow(Icons.location_on_outlined,
@@ -631,6 +671,76 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  Widget _buildPartnersRow() {
+    final partners = _event['partners'];
+    final List<String> partnerList = partners is List ? partners.map((e) => e.toString()).toList() : [];
+    final isOwnerOrAdmin = _event['organizerUsername'] == _username || _role == 'ADMIN';
+
+    if (partnerList.isEmpty && !isOwnerOrAdmin) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(Icons.handshake_outlined, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Expanded(
+            child: partnerList.isEmpty
+                ? Text(
+                    'No partners yet',
+                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6)),
+                  )
+                : Wrap(
+                    spacing: 4,
+                    children: [
+                      Text('With ', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                      ...partnerList.asMap().entries.map((entry) {
+                        final name = entry.value;
+                        final isLast = entry.key == partnerList.length - 1;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => UserProfileScreen(username: name)),
+                                );
+                              },
+                              child: Text(
+                                name,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                            if (!isLast) Text(', ', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          ],
+                        );
+                      }),
+                    ],
+                  ),
+          ),
+          if (isOwnerOrAdmin)
+            TextButton(
+              onPressed: _showPartners,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text('Manage', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _confirmDeleteImage(int index) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -650,6 +760,52 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ),
     );
     if (confirmed == true) _deleteImage(index);
+  }
+
+  Future<void> _confirmDeleteEvent() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Event?'),
+        content: const Text('This will permanently remove the event and all its data. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: AppTheme.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      _deleteEvent();
+    }
+  }
+
+  Future<void> _deleteEvent() async {
+    if (_jwt == null) return;
+    try {
+      await ApiService.deleteEvent(
+        jwt: _jwt!,
+        eventId: _event['eventId'] as String,
+      );
+      ApiService.notifyEventUpdate(_event['eventId'] as String);
+      if (mounted) {
+        Navigator.pop(context); // Go back to the previous screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete event: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
   }
 
   Future<void> _deleteImage(int index) async {
@@ -741,7 +897,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String text, {String? linkText, VoidCallback? onTap}) {
+  Widget _infoRow(IconData icon, String text, {String? linkText, Widget? trailing, VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -769,6 +925,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           ),
                         ),
                       ),
+                    ),
+                  if (trailing != null)
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: trailing,
                     ),
                 ],
               ),
@@ -844,14 +1005,29 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                     );
                   },
-                  child: Text(
-                    post['authorUsername'] as String? ?? '',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                      decoration: TextDecoration.underline,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        post['authorUsername'] as String? ?? '',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                      if (_jwt != null)
+                        FutureBuilder<String?>(
+                          future: ApiService.getRoleForUser(
+                            jwt: _jwt!,
+                            username: post['authorUsername'],
+                          ),
+                          builder: (context, snapshot) {
+                            return PartnerMark(role: snapshot.data, size: 10);
+                          },
+                        ),
+                    ],
                   ),
                 ),
               Text(

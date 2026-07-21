@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'event_detail_screen.dart';
 import 'user_profile_screen.dart';
+import '../widgets/partner_mark.dart';
 
 class BusinessOfficerScreen extends StatefulWidget {
   const BusinessOfficerScreen({super.key});
@@ -114,7 +115,12 @@ class _BusinessOfficerScreenState extends State<BusinessOfficerScreen> with Sing
             backgroundColor: Colors.teal.withValues(alpha: 0.1),
             child: Text(uname[0].toUpperCase(), style: const TextStyle(color: Colors.teal)),
           ),
-          title: Text(display, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Row(
+            children: [
+              Text(display, style: const TextStyle(fontWeight: FontWeight.bold)),
+              PartnerMark(role: role, size: 16),
+            ],
+          ),
           subtitle: Text('@$uname • $role'),
           trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
         );

@@ -1,35 +1,29 @@
-# Walkthrough - Dark Mode Support
+# Walkthrough - Robust Token Expiration & Auto-Logout
 
-I have implemented a full Dark Mode experience with a persistent toggle in the user's profile.
+I have implemented a comprehensive session management system that ensures users are automatically and securely logged out when their authentication token expires.
 
 ## Changes Made
 
-### 1. Theme Definition
-I updated [app_theme.dart](file:///home/efrra/ADC-Final/rooted/lib/theme/app_theme.dart) to include a comprehensive `darkTheme` configuration.
-- **Colors**: Introduced `surfaceDark`, `backgroundDark`, and updated text colors for high contrast.
-- **Components**: The dark theme covers AppBars, Cards, Inputs, and Buttons, ensuring your brand's green primary color remains consistent but well-balanced against dark backgrounds.
-- **Notifier**: Added `themeNotifier` (a `ValueNotifier`) to manage the current `ThemeMode` globally.
+### Session Tracking
+- **[SessionStorage](file:///home/efrra/ADC-Final/rooted/lib/services/session_storage.dart)**: Added support for storing the `expiresAt` timestamp provided by the backend. This allows the app to know exactly when a session will become invalid without needing to call an API.
 
-### 2. Core Integration
-Updated [main.dart](file:///home/efrra/ADC-Final/rooted/lib/main.dart) to:
-- Initialize and load the saved theme preference before the app starts.
-- Use a `ValueListenableBuilder` to reactively rebuild the `MaterialApp` whenever the theme changes.
+### Robust API Security
+- **[ApiService](file:///home/efrra/ADC-Final/rooted/lib/services/api_service.dart)**:
+    - Standardized error handling across all authenticated endpoints to ensure that any `9901` (Unauthorized) or `9902` (Token Expired) response immediately triggers the `forceLogout` sequence.
+    - Added proactive helper methods: `isSessionExpired()` to check stored state and `checkAndForceLogout()` to execute the redirect.
 
-### 3. Profile Toggle & UI Refactoring
-- **Settings Section**: Added a new "Settings" card in [profile_screen.dart](file:///home/efrra/ADC-Final/rooted/lib/screens/profile_screen.dart) with a "Dark Mode" switch.
-- **Theme Awareness**: Refactored the `_InfoCard` and `_InfoRow` components to use `Theme.of(context)` and `colorScheme`. This ensures they automatically adapt to light and dark modes without hardcoded colors.
-- **Modal Sheets**: Updated the "Edit Profile" and "Border Picker" bottom sheets to respect the theme's surface colors.
+### Authentication Integration
+- **[Login](file:///home/efrra/ADC-Final/rooted/lib/screens/login_screen.dart)** and **[Register](file:///home/efrra/ADC-Final/rooted/lib/screens/register_screen.dart)** flows now extract the `expiresAt` field from the successful login response and persist it to secure storage.
 
-### 4. Persistence
-The user's theme choice is saved in `SharedPreferences` via `AppTheme.loadTheme()` and `AppTheme.toggleTheme()`, so it stays applied even after restarting the app.
+### Proactive App-Level Enforcement
+- **[Main Entry Point](file:///home/efrra/ADC-Final/rooted/lib/main.dart)**: On app launch, the system now performs an immediate check. If a stored session exists but is expired, it is cleared instantly, ensuring the user never lands on a dashboard with stale data.
+- **[Home Dashboard](file:///home/efrra/ADC-Final/rooted/lib/screens/home_screen.dart)**: Added a background `Timer` that runs every minute while the app is active. This ensures that if a user leaves the app open for a long duration, they will be automatically redirected to the Login screen the moment their session expires.
 
 ## Verification Results
 
-### Functionality
-- ✅ Toggling Dark Mode instantly updates the entire app.
-- ✅ The choice is correctly saved and loaded on app restart.
-- ✅ All text remains legible on dark surfaces.
-- ✅ Profile components (cards, rows, sheets) correctly swap colors.
+- Verified that `ApiService.forceLogout()` correctly clears all local data and resets the navigation stack to `LoginScreen`.
+- Standardized `updateEvent` to use the unified `_checkBodyError` logic.
+- Confirmed background timer lifecycle management (starts in `initState`, stops in `dispose`).
 
-### Code Health
-- Verified all imports and fixed lint warnings related to deprecated `withOpacity` (replaced with `withValues`).
+> [!IMPORTANT]
+> Users will now see a "Session expired" message if they attempt to perform actions after their token has timed out, protecting their account from unauthorized access if the device is left unattended.

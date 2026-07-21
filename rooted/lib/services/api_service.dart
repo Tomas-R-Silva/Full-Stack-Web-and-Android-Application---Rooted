@@ -20,6 +20,9 @@ class ApiService {
   /// Global navigator key to allow logout/redirect from service layer.
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+  /// Cache for user roles to avoid redundant network calls.
+  static final Map<String, String> _roleCache = {};
+
   static const List<String> categories = [
     'Music',
     'Sports',
@@ -87,7 +90,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
 
@@ -110,7 +113,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /logout. Auth required.
@@ -132,7 +135,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /deleteaccount. ADMIN only.
@@ -154,7 +157,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /events/create.
@@ -210,8 +213,8 @@ class ApiService {
     final body = _parseBody(response.body);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      _checkBodyError(body);
-      return _extractData(body);
+      _checkBodyError(body, statusCode: response.statusCode);
+      return _extractData(body, statusCode: response.statusCode);
     }
 
     throw ApiException(_errorMessage(
@@ -270,21 +273,8 @@ class ApiService {
       }),
     );
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return;
-    }
-
-    Map<String, dynamic> body;
-    try {
-      body = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      body = {};
-    }
-
-    final message = body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Event update failed (status ${response.statusCode})';
-    throw ApiException(message);
+    final body = _parseBody(response.body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /modaccount. Auth required (Owner).
@@ -292,6 +282,7 @@ class ApiService {
     required String jwt,
     required String username,
     required String email,
+    String? displayName,
     String? bio,
     List<String>? categories,
     String? country,
@@ -300,6 +291,12 @@ class ApiService {
   }) async {
     final uri = Uri.parse('$baseUrl/rest/modaccount');
 
+    // NOTE: the backend's ModAccountRequestInput.username field is actually
+    // used to set the display name (see UserResources#modifyAccount, which
+    // does `user.setDisplay(input.getUsername())`). It is NOT the account's
+    // login username, which can't be changed through this endpoint. If no
+    // new display name is given, fall back to the current username so the
+    // field isn't left null.
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -308,7 +305,7 @@ class ApiService {
           'jwt': jwt,
         },
         'input': {
-          'username': username,
+          'username': displayName ?? username,
           'email': email,
           'bio': bio,
           'category': categories?.map((c) => c.toUpperCase()).toList(),
@@ -320,7 +317,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Clears local session and redirects to Login screen.
@@ -328,19 +325,37 @@ class ApiService {
     await SessionStorage.clear();
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
+          (route) => false,
     );
   }
 
-  static void _checkBodyError(Map<String, dynamic> body, {bool redirectOnError = true}) {
+  /// Proactively checks if the current session has expired based on stored timestamp.
+  static Future<bool> isSessionExpired() async {
+    final expiresAt = await SessionStorage.getExpiresAt();
+    if (expiresAt == null || expiresAt == 0) return false;
+
+    // expiresAt is in seconds
+    final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    return nowSeconds >= expiresAt;
+  }
+
+  /// Checks if the session is expired and logs out if it is.
+  static Future<void> checkAndForceLogout() async {
+    if (await isSessionExpired()) {
+      await forceLogout();
+    }
+  }
+
+  static void _checkBodyError(Map<String, dynamic> body, {bool redirectOnError = true, int? statusCode}) {
     final status = body['status'];
     // 200 = ok, any 99xx = error.
-    if (status != null && status != 200 && status != '200') {
+    if ((status != null && status != 200 && status != '200') || (statusCode == 401 || statusCode == 403)) {
       final dynamic data = body['data'];
-      String message = 'Operation failed (status $status)';
+      String message = 'Operation failed (status ${status ?? statusCode})';
 
       // 9901/9902 are typical "Unauthorized" or "Token Expired" codes in this backend.
-      if (status == 9901 || status == 9902 || status == '9901' || status == '9902') {
+      // Also check for 401/403 HTTP status codes.
+      if (status == 9901 || status == 9902 || status == '9901' || status == '9902' || statusCode == 401 || statusCode == 403) {
         if (redirectOnError) forceLogout();
         throw ApiException('Session expired. Please log in again.');
       }
@@ -385,8 +400,8 @@ class ApiService {
   /// but if `data` is missing, null, or not actually a Map (e.g. a plain
   /// string message), this falls back to the whole body instead of
   /// crashing with "type 'String' is not a subtype of type
-  static Map<String, dynamic> _extractData(Map<String, dynamic> body, {bool redirectOnError = true}) {
-    _checkBodyError(body, redirectOnError: redirectOnError);
+  static Map<String, dynamic> _extractData(Map<String, dynamic> body, {bool redirectOnError = true, int? statusCode}) {
+    _checkBodyError(body, redirectOnError: redirectOnError, statusCode: statusCode);
     final data = body['data'];
     if (data is Map<String, dynamic>) return data;
     // If data is a String but we expected a Map, it might be an error message
@@ -394,7 +409,7 @@ class ApiService {
     return body;
   }
 
-  static int _normalizeTimestamp(dynamic value) {
+  static int normalizeTimestamp(dynamic value) {
     if (value == null) return 0;
     int ts = (value as num).toInt();
     final magnitude = ts.abs();
@@ -427,7 +442,7 @@ class ApiService {
 
     // 2. Normalize timestamps
     if (event['startDate'] != null) {
-      event['startDate'] = _normalizeTimestamp(event['startDate']);
+      event['startDate'] = normalizeTimestamp(event['startDate']);
     }
 
     // 2. Normalize imageUrls: backend returns List<Map<String, String>> with {id, url}
@@ -441,16 +456,16 @@ class ApiService {
         } else {
           url = img.toString();
         }
-        
+
         if (url.isNotEmpty && !url.startsWith('http')) {
           // If it's a relative path (with or without leading slash), prepend baseUrl
           final normalizedPath = url.startsWith('/') ? url : '/$url';
           url = '$baseUrl$normalizedPath';
         }
-        
+
         return url;
       }).toList();
-      
+
       // Also keep the full objects in a separate key if needed for deletion later
       event['_imageObjects'] = imgs;
     }
@@ -476,17 +491,17 @@ class ApiService {
 
   static Map<String, dynamic> _normalizeForumPost(Map<String, dynamic> post) {
     if (post['createdAt'] != null) {
-      post['createdAt'] = _normalizeTimestamp(post['createdAt']);
+      post['createdAt'] = normalizeTimestamp(post['createdAt']);
     }
     return post;
   }
 
   static Map<String, dynamic> _normalizeUser(Map<String, dynamic> user) {
     if (user['creation_time'] != null) {
-      user['creation_time'] = _normalizeTimestamp(user['creation_time']);
+      user['creation_time'] = normalizeTimestamp(user['creation_time']);
     }
     if (user['birth'] != null) {
-      user['birth'] = _normalizeTimestamp(user['birth']);
+      user['birth'] = normalizeTimestamp(user['birth']);
     }
     // Normalize category (interests) to a List<String>
     final cat = user['category'];
@@ -499,7 +514,7 @@ class ApiService {
 
     user['category_list'] = rawCats.map((e) {
       return categories.firstWhere(
-        (c) => c.toLowerCase() == e.toLowerCase(),
+            (c) => c.toLowerCase() == e.toLowerCase(),
         orElse: () => e,
       );
     }).toList();
@@ -536,7 +551,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _normalizeEventPayload(_extractData(body));
+    return _normalizeEventPayload(_extractData(body, statusCode: response.statusCode));
   }
 
   /// Calls POST /rest/events/list. Public.
@@ -571,7 +586,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _normalizeEventPayload(_extractData(body));
+    return _normalizeEventPayload(_extractData(body, statusCode: response.statusCode));
   }
 
   /// Calls POST /rest/events/addpartner. Auth required Organizer or ADMIN.
@@ -593,7 +608,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/removepartner. Auth required Organizer or ADMIN.
@@ -615,7 +630,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/cancel. Auth required Organizer or ADMIN.
@@ -633,7 +648,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/delete. Auth required Organizer or ADMIN.
@@ -651,7 +666,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/attendees. Auth required Organizer, ADMIN or BOFFICER.
@@ -669,7 +684,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/joinrequests. Auth required Organizer, ADMIN or BOFFICER.
@@ -687,7 +702,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/respondjoin. Auth required Organizer, ADMIN or BOFFICER.
@@ -711,7 +726,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/myattends. Auth required (Owner, ADMIN or BOFFICER).
@@ -729,7 +744,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/isattendee. Auth required.
@@ -753,7 +768,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    final data = _extractData(body);
+    final data = _extractData(body, statusCode: response.statusCode);
     return data['isattendee'] == true;
   }
 
@@ -785,7 +800,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    final data = _extractData(body, redirectOnError: redirectOnError);
+    final data = _extractData(body, redirectOnError: redirectOnError, statusCode: response.statusCode);
     _normalizeForumPost(data);
     return data;
   }
@@ -816,7 +831,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    final data = _extractData(body, redirectOnError: redirectOnError);
+    final data = _extractData(body, redirectOnError: redirectOnError, statusCode: response.statusCode);
     final posts = data['posts'];
     if (posts is List) {
       for (final p in posts) {
@@ -841,7 +856,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/attend. Auth required.
@@ -862,7 +877,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/unattend. Auth required.
@@ -883,7 +898,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/kick. Auth required Organizer or ADMIN.
@@ -905,7 +920,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/uploadimages. Auth required Organizer or ADMIN.
@@ -929,7 +944,7 @@ class ApiService {
     );
 
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/uploadimageurls. Auth required Organizer or ADMIN.
@@ -951,7 +966,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/events/deleteimage. Auth required Organizer or ADMIN.
@@ -973,7 +988,27 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
+  }
+
+  /// Retrieves a user's role, using a cache to avoid redundant calls.
+  static Future<String?> getRoleForUser({
+    required String jwt,
+    required String username,
+  }) async {
+    if (_roleCache.containsKey(username)) {
+      return _roleCache[username];
+    }
+    try {
+      final user = await getUserAccount(jwt: jwt, username: username);
+      final role = user['role'] as String?;
+      if (role != null) {
+        _roleCache[username] = role;
+      }
+      return role;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Calls POST /rest/user. Auth required.
@@ -1009,7 +1044,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/showusers. ADMIN or BOFFICER.
@@ -1025,7 +1060,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/showuserrole. ADMIN or BOFFICER.
@@ -1043,7 +1078,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/changeborder. Auth required USER (self).
@@ -1061,7 +1096,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/changeuserrole. ADMIN only.
@@ -1083,7 +1118,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/changeuserpwd. Auth required Owner or ADMIN.
@@ -1107,7 +1142,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/showauthsessions. ADMIN only.
@@ -1123,7 +1158,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/endfriend. ADMIN only.
@@ -1139,7 +1174,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   //Friend Endpoints
@@ -1158,7 +1193,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/unfriend. Auth required.
@@ -1176,7 +1211,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/showfriends. Auth required.
@@ -1194,7 +1229,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/showfriendrequests. Auth required.
@@ -1210,7 +1245,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/addnickname. Auth required.
@@ -1227,12 +1262,12 @@ class ApiService {
         'token': {'jwt': jwt},
         'input': {
           'username': username,
-          'newname': nickname,
+          'newName': nickname,
         },
       }),
     );
     final body = _parseBody(response.body);
-    _checkBodyError(body);
+    _checkBodyError(body, statusCode: response.statusCode);
   }
 
   /// Calls POST /rest/getnickname. Auth required.
@@ -1250,7 +1285,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 
   /// Calls GET /rest/forum/cleanup. Cron only.
@@ -1261,6 +1296,6 @@ class ApiService {
       headers: {'X-AppEngine-Cron': 'true'},
     );
     final body = _parseBody(response.body);
-    return _extractData(body);
+    return _extractData(body, statusCode: response.statusCode);
   }
 }

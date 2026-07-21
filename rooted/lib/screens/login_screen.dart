@@ -50,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final jwt = token['jwt']?.toString() ?? '';
       final username = token['username']?.toString() ?? _usernameController.text.trim();
       final role = token['role']?.toString() ?? '';
+      final expiresAt = token['expiresAt'] as int?;
 
       // After login, fetch the full user account to get the bio and latest email
       String bio = '';
@@ -89,6 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ods: ods,
         borderId: borderId,
         points: points,
+        expiresAt: ApiService.normalizeTimestamp(expiresAt),
       );
       if (mounted) {
         setState(() => _isLoading = false);

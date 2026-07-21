@@ -6,6 +6,7 @@ import '../services/session_storage.dart';
 import 'login_screen.dart';
 import 'user_profile_screen.dart';
 import 'chat_screen.dart';
+import '../widgets/partner_mark.dart';
 
 class ConnectionsScreen extends StatefulWidget {
   const ConnectionsScreen({super.key});
@@ -21,6 +22,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
 
   List<dynamic> _friends = [];
   List<dynamic> _requests = [];
+  Map<String, int> _unreadCounts = {};
   List<Map<String, dynamic>> _filteredSuggested = [];
   bool _isSearchingSuggestions = false;
   String? _processingUsername;
@@ -145,6 +147,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           _requests = requestsList;
           _isLoading = false;
         });
+        _loadUnreadCounts();
       }
     } catch (e) {
       if (mounted) {
@@ -156,6 +159,50 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _loadUnreadCounts() async {
+    if (_jwt == null || _friends.isEmpty) return;
+
+    final Map<String, int> newCounts = {};
+    
+    await Future.wait(_friends.map((friend) async {
+      final String uname = (friend is Map) ? (friend['Friend'] ?? '') : friend.toString();
+      if (uname.isEmpty) return;
+
+      try {
+        final lastRead = await SessionStorage.getLastRead(uname);
+        final result = await ApiService.listForumMessages(
+          jwt: _jwt!,
+          type: 'FRIEND',
+          id: uname,
+          pageSize: 20, // Check last 20 messages
+          redirectOnError: false,
+        );
+
+        final posts = (result['posts'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+        int count = 0;
+        for (var post in posts) {
+          final createdAt = post['createdAt'] as int? ?? 0;
+          final author = post['authorUsername'] as String?;
+          // Only count messages from the friend (not self) that are newer than lastRead
+          if (createdAt > lastRead && author != _username) {
+            count++;
+          }
+        }
+        if (count > 0) {
+          newCounts[uname] = count;
+        }
+      } catch (_) {
+        // Ignore errors for individual friend unread counts
+      }
+    }));
+
+    if (mounted) {
+      setState(() {
+        _unreadCounts = newCounts;
+      });
     }
   }
 
@@ -422,11 +469,17 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           ..._filteredSuggested.map((user) {
             final uname = (user['username'] ?? user['user_name'] ?? '').toString();
             final display = user['display']?.toString() ?? uname;
+            final role = user['role']?.toString();
             
             return ListTile(
               dense: true,
               leading: Icon(Icons.person_add_alt_1, color: Theme.of(context).colorScheme.primary, size: 20),
-              title: Text(display, style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Row(
+                children: [
+                  Text(display, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  PartnerMark(role: role, size: 14),
+                ],
+              ),
               subtitle: display != uname ? Text('@$uname', style: const TextStyle(fontSize: 11)) : null,
               trailing: const Icon(Icons.chevron_right, size: 16),
               onTap: () {
@@ -446,6 +499,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     // Backend returns: {"Friend": "username", "Start": ...}
     final String uname = (friend is Map) ? (friend['Friend'] ?? 'Unknown') : friend.toString();
     final String? nickname = (friend is Map) ? friend['nickname'] : null;
+    final int unreadCount = _unreadCounts[uname] ?? 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -465,7 +519,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => ChatScreen(friendUsername: uname)),
-          );
+          ).then((_) => _loadUnreadCounts());
         },
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
@@ -473,14 +527,25 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         ),
         title: Text(nickname ?? uname, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: nickname != null ? Text('@$uname', style: const TextStyle(fontSize: 12)) : null,
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == 'unfriend') _unfriend(uname);
-            if (value == 'nickname') _setNickname(uname);
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(value: 'nickname', child: Text('Set Nickname')),
-            PopupMenuItem(value: 'unfriend', child: Text('Unfriend', style: TextStyle(color: Theme.of(context).colorScheme.error))),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (unreadCount > 0)
+              Badge(
+                label: Text(unreadCount > 9 ? '9+' : '$unreadCount'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'unfriend') _unfriend(uname);
+                if (value == 'nickname') _setNickname(uname);
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'nickname', child: Text('Set Nickname')),
+                PopupMenuItem(value: 'unfriend', child: Text('Unfriend', style: TextStyle(color: Theme.of(context).colorScheme.error))),
+              ],
+            ),
           ],
         ),
       ),

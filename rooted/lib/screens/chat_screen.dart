@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
+import '../widgets/partner_mark.dart';
 import 'user_profile_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   String? _jwt;
   String? _myUsername;
+  String? _friendRole;
 
   final List<Map<String, dynamic>> _posts = [];
   final TextEditingController _messageController = TextEditingController();
@@ -40,6 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // The conversation ID for private chats is the friend's username
     _conversationId = widget.friendUsername;
 
+    _fetchFriendRole();
     await _loadMessages();
     // Poll for new messages every 5 seconds
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _pollMessages());
@@ -51,6 +54,17 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchFriendRole() async {
+    if (_jwt == null) return;
+    final role = await ApiService.getRoleForUser(
+      jwt: _jwt!,
+      username: widget.friendUsername,
+    );
+    if (mounted) {
+      setState(() => _friendRole = role);
+    }
   }
 
   Future<void> _loadMessages() async {
@@ -75,6 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
           _loadingMessages = false;
         });
         _scrollToBottom();
+        _updateLastRead();
       }
     } catch (e) {
       if (mounted) {
@@ -113,6 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ..addAll(posts);
         });
         _scrollToBottom();
+        _updateLastRead();
       }
     } catch (_) {
       // Silently ignore poll errors
@@ -129,6 +145,15 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     });
+  }
+
+  void _updateLastRead() {
+    if (_posts.isNotEmpty) {
+      final lastTimestamp = _posts.last['createdAt'] as int?;
+      if (lastTimestamp != null) {
+        SessionStorage.setLastRead(widget.friendUsername, lastTimestamp);
+      }
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -198,9 +223,16 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  widget.friendUsername,
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.friendUsername,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    PartnerMark(role: _friendRole, size: 16),
+                  ],
                 ),
               ),
             ],

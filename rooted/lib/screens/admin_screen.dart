@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'event_detail_screen.dart';
 import 'user_profile_screen.dart';
+import '../widgets/partner_mark.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -287,7 +288,12 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
             backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
             child: Text(uname[0].toUpperCase()),
           ),
-          title: Text(display, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Row(
+            children: [
+              Text(display, style: const TextStyle(fontWeight: FontWeight.bold)),
+              PartnerMark(role: role, size: 16),
+            ],
+          ),
           subtitle: Text('@$uname • $role'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,

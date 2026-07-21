@@ -11,7 +11,16 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
   await AppTheme.loadTheme(); // Load saved theme preference
   final jwt = await SessionStorage.getJwt();
-  runApp(RootedApp(isLoggedIn: jwt != null));
+  bool isLoggedIn = jwt != null;
+
+  if (isLoggedIn) {
+    if (await ApiService.isSessionExpired()) {
+      await SessionStorage.clear();
+      isLoggedIn = false;
+    }
+  }
+
+  runApp(RootedApp(isLoggedIn: isLoggedIn));
 }
 
 class RootedApp extends StatelessWidget {

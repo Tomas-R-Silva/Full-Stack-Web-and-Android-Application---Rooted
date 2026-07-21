@@ -6,6 +6,7 @@ import 'event_detail_screen.dart';
 import 'progress_screen.dart';
 import '../widgets/avatar_with_border.dart';
 import '../widgets/impact_section.dart';
+import '../widgets/partner_mark.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String username;
@@ -163,9 +164,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             radius: 60,
           ),
           const SizedBox(height: 20),
-          Text(
-            display,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                display,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              PartnerMark(role: role, size: 22),
+            ],
           ),
           const SizedBox(height: 4),
           Text(

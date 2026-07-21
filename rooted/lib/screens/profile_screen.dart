@@ -11,10 +11,13 @@ import 'event_detail_screen.dart';
 import 'login_screen.dart';
 import 'admin_screen.dart';
 import 'bofficer_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../data/borders_data.dart';
 import '../models/border_item.dart';
 import '../widgets/avatar_with_border.dart';
 import '../widgets/impact_section.dart';
+import '../widgets/country_autocomplete.dart';
+import '../widgets/partner_mark.dart';
 import 'progress_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -98,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _borderId = profile['borderID']?.toString() ?? _borderId;
           _avatarUrl = profile['avatar_url']?.toString() ?? '';
         });
-        
+
         // Update SessionStorage with latest data
         await SessionStorage.save(
           jwt: jwt,
@@ -213,7 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await ApiService.logout(username: username, jwt: jwt);
       }
     } catch (_) {}
-    
+
     if (mounted) {
       await ApiService.forceLogout();
     }
@@ -347,7 +350,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       await ApiService.changeBorder(jwt: jwt, borderID: borderId);
-      
+
       // Update local storage
       final username = await SessionStorage.getUsername();
       final role = await SessionStorage.getRole();
@@ -404,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Delete account?'),
         content: const Text(
           'This permanently deletes your account and all of its data. '
-          'This cannot be undone.',
+              'This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -454,7 +457,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
+            (route) => false,
       );
     }
   }
@@ -485,7 +488,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
+                        (route) => false,
                   );
                 },
                 child: const Text('Login / Sign Up'),
@@ -531,13 +534,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 20),
 
             // Username + role badge
-            Text(
-              _displayName.isEmpty ? '—' : _displayName,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _displayName.isEmpty ? '—' : _displayName,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary, // Changed to a more consistent style if needed, but keeping original theme if possible
+                  ),
+                ),
+                PartnerMark(role: _role, size: 20),
+              ],
             ),
             if (_role.isNotEmpty) ...[
               const SizedBox(height: 6),
@@ -704,8 +713,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: _isLoggingOut ? null : _handleLogout,
                     icon: _isLoggingOut
                         ? const SizedBox(
-                            height: 16, width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 16, width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                         : Icon(Icons.logout_rounded, color: Theme.of(context).colorScheme.error),
                     label: Text(
                       _isLoggingOut ? 'Logging out…' : 'Log Out',
@@ -723,9 +732,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: _isDeletingAccount ? null : _handleDeleteAccount,
                     icon: _isDeletingAccount
                         ? const SizedBox(
-                            height: 16, width: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                        height: 16, width: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
                         : const Icon(Icons.delete_forever_rounded),
                     label: Text(_isDeletingAccount ? 'Deleting…' : 'Delete Account'),
                     style: ElevatedButton.styleFrom(
@@ -907,13 +916,19 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
       await ApiService.modifyAccount(
         jwt: jwt,
-        username: newDisplayName,
+        username: widget.username,
+        displayName: newDisplayName,
         email: newEmail,
         bio: newBio,
         categories: _selectedCategories,
         country: newCountry,
         birth: _birth,
       );
+
+      // Fetch current additional data to avoid overwriting with defaults
+      final currentOds = await SessionStorage.getOds();
+      final currentBorder = await SessionStorage.getBorderId();
+      final currentPoints = await SessionStorage.getPoints();
 
       // Persist changes locally so they are visible immediately
       await SessionStorage.save(
@@ -926,6 +941,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
         categories: _selectedCategories,
         country: newCountry,
         birth: _birth,
+        ods: currentOds,
+        borderId: currentBorder ?? '',
+        points: currentPoints ?? 0,
       );
 
       if (mounted) {
@@ -1086,13 +1104,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                CountryAutocomplete(
+                  apiKey: dotenv.env['MAPS_API_KEY'] ?? '',
                   controller: _countryController,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Country',
-                    prefixIcon: Icon(Icons.public_outlined, size: 20),
-                  ),
+                  onCountrySelected: (val) {
+                    _countryController.text = val;
+                  },
                 ),
                 const SizedBox(height: 16),
                 ListTile(
@@ -1102,9 +1119,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   subtitle: Text(_birth == 0
                       ? 'Not set'
                       : DateTime.fromMillisecondsSinceEpoch(_birth * 1000)
-                          .toLocal()
-                          .toString()
-                          .split(' ')[0]),
+                      .toLocal()
+                      .toString()
+                      .split(' ')[0]),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
@@ -1116,7 +1133,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     );
                     if (picked != null) {
                       setState(() =>
-                          _birth = picked.millisecondsSinceEpoch ~/ 1000);
+                      _birth = picked.millisecondsSinceEpoch ~/ 1000);
                     }
                   },
                 ),
@@ -1140,9 +1157,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   onPressed: _isSaving ? null : _save,
                   child: _isSaving
                       ? const SizedBox(
-                          height: 20, width: 20,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2.5))
+                      height: 20, width: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2.5))
                       : const Text('Save'),
                 ),
               ),
