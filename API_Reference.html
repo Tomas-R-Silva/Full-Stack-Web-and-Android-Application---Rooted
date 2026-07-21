@@ -486,11 +486,14 @@
   <div class="endpoint-header">
     <span class="method">POST</span>
     <span class="path">/events/get</span>
-    <span class="tag tag-public">public</span>
+    <span class="tag tag-public">public (if public event)</span>
   </div>
-  <p class="desc">Returns one event.</p>
+  <p class="desc">Returns one event. Token optional for public events; required for private ones (organizer, attendee, ADMIN or BOFFICER).</p>
   <div class="label">Request</div>
-  <pre>{<span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-...-446655440000"</span> }}</pre>
+  <pre>{
+  <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },  <span class="comment">// optional for public events</span>
+  <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"550e8400-...-446655440000"</span> }
+}</pre>
   <div class="label out">Response</div>
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: {
   <span class="key-str">"event"</span>: {

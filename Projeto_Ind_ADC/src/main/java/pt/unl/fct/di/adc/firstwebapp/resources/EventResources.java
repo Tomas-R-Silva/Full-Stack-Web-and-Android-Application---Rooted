@@ -43,7 +43,6 @@ import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
 import pt.unl.fct.di.adc.firstwebapp.model.CreateEventRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.EventRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.EventShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.EventTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ImageRequest;
@@ -89,11 +88,15 @@ public class EventResources {
 	@Path("/get")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getEvent(EventRequest req) {
+	public Response getEvent(EventTokenRequest req) {
 		try {
 			// isPublic only gates joining (/attend) anyone can view an event's details.
-			return ok(Map.of("event", getEventEntity(req.getInput()).tomap()));
-		} catch (Exception e) {return Error.fromexception(e);}
+			EventFull entity = getEventEntity(req.getInput());
+			return ok(Map.of("event", entity.tomap()));
+
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
 	}
 
 	// -------------------------------------------------------------------------
@@ -211,6 +214,8 @@ public class EventResources {
 				existing.setMinAttendees(input.getMinAttendees());
 			if (input.isPublicnull() != null)
 				existing.setPublic(input.isPublic());
+			if (input.isAccessiblenull() != null)
+				existing.setAccessible(input.isAccessible());
 			if (input.isAccessiblenull() != null)
 				existing.setAccessible(input.isAccessible());
 			if(input.getSDG()!= null)
