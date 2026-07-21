@@ -186,8 +186,6 @@ public class UserResources {
 				user.setBirth(input.getBirth());
 			if(input.getAvatar()!=null && !input.getAvatar().isBlank())
 				user.setAvatar(input.getAvatar());
-			if(input.isPublic()!=null&&user.isPublic()!=input.isPublic())
-				user.setPublic(input.isPublic());
 
 			datastore.update(user.toentity());
 			return buildresponse(Map.of("message", "Updated successfully"));
@@ -223,8 +221,7 @@ public class UserResources {
 								Friendstatus.REQUEST_SENT:Friendstatus.REQUEST_RECIVED;
 				}
 			}
-			
-			return buildresponse(user.tobigmap(token.getRole().equals(Role.ADMIN),displayname,friendshipstatus));
+			return buildresponse(user.tobigmap(displayname,friendshipstatus));
 		}catch(Exception e) {return Error.fromexception(e);}
 	}
 
