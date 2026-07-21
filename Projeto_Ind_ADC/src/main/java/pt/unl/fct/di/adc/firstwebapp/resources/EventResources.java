@@ -90,7 +90,9 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEvent(EventTokenRequest req) {
 		try {
-			// isPublic only gates joining (/attend) anyone can view an event's details.
+			// isPublic only gates joining (/attend) anyone can view an event's details,
+			// but a valid token is still required to call this endpoint at all.
+			AuthHelper.verifyToken(req);
 			EventFull entity = getEventEntity(req.getInput());
 			return ok(Map.of("event", entity.tomap()));
 
