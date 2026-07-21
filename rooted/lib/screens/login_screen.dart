@@ -37,14 +37,63 @@ class _LoginScreenState extends State<LoginScreen> {
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
-      final data = (result['data'] as Map<String, dynamic>?) ?? {};
-      final token = (data['token'] as Map<String, dynamic>?) ?? {};
+      
+      // Backend might return token at root or nested under data
+      final dataField = result['data'];
+      final token = (result['token'] as Map<String, dynamic>?) ?? 
+                    (dataField is Map<String, dynamic> ? dataField['token'] as Map<String, dynamic>? : null) ?? {};
+
+      if (token.isEmpty) {
+        throw ApiException('Login failed to return a session.');
+      }
+
+      final jwt = token['jwt']?.toString() ?? '';
+      if (jwt.isEmpty) {
+        throw ApiException('Server did not provide a valid session token.');
+      }
+      final username = token['username']?.toString() ?? _usernameController.text.trim();
+      final role = token['role']?.toString() ?? '';
+      final expiresAt = token['expiresAt'];
+
+      // After login, fetch the full user account to get the bio and latest email
+      String bio = '';
+      String email = token['email']?.toString() ?? '';
+      String displayName = username;
+      List<String> categories = [];
+      String country = '';
+      int birth = 0;
+      List<int> ods = List.filled(17, 0);
+      String borderId = '';
+      int points = 0;
+      try {
+        final profile = await ApiService.getUserAccount(jwt: jwt, username: username, redirectOnError: false);
+        bio = profile['bio']?.toString() ?? '';
+        email = profile['email']?.toString() ?? email;
+        displayName = profile['display']?.toString() ?? username;
+        categories = profile['category_list'] as List<String>? ?? [];
+        country = profile['country']?.toString() ?? '';
+        birth = profile['birth'] as int? ?? 0;
+        ods = (profile['ods'] as List?)?.cast<int>() ?? List.filled(17, 0);
+        borderId = profile['borderID']?.toString() ?? '';
+        points = profile['points'] as int? ?? 0;
+      } catch (_) {
+        // Fallback to defaults if profile fetch fails
+      }
 
       await SessionStorage.save(
-        jwt: token['jwt']?.toString() ?? '',
-        username: token['username']?.toString() ?? _usernameController.text.trim(),
-        email: token['email']?.toString() ?? '',
-        role: token['role']?.toString() ?? '',
+        jwt: jwt,
+        username: username,
+        displayName: displayName,
+        email: email,
+        role: role,
+        bio: bio,
+        categories: categories,
+        country: country,
+        birth: birth,
+        ods: ods,
+        borderId: borderId,
+        points: points,
+        expiresAt: ApiService.normalizeTimestamp(expiresAt),
       );
       if (mounted) {
         setState(() => _isLoading = false);
@@ -56,9 +105,9 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: AppTheme.primary,
+          SnackBar(
+            content: const Text('Login successful!'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -68,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message),
-            backgroundColor: AppTheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -76,9 +125,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
+          SnackBar(
+            content: const Text('Could not reach the server. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -120,21 +169,21 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Image.asset('assets/images/rooted.png', width: 160, height: 160),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Welcome back',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Sign in to continue to Rooted',
           style: TextStyle(
             fontSize: 15,
-            color: AppTheme.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -211,18 +260,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDivider() {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppTheme.inputBorder)),
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'or',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppTheme.inputBorder)),
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
       ],
     );
   }
@@ -231,9 +280,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           "Don't have an account?",
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
         ),
         TextButton(
           onPressed: () {

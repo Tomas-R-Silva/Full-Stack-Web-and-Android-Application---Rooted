@@ -15,13 +15,22 @@ dependencies:
   http: ^1.2.2
   google_maps_flutter: ^2.9.0
   geolocator: ^13.0.1
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/images/rooted.png"
+  min_sdk_android: 21 # android min sdk value
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - .env

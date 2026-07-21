@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
+import '../widgets/filter_dialog.dart';
+import '../widgets/full_screen_image.dart';
+import '../widgets/sdg_badge.dart';
+import '../widgets/accessibility_badge.dart';
+import '../widgets/partner_mark.dart';
 import 'event_detail_screen.dart';
 import 'login_screen.dart';
+import 'user_profile_screen.dart';
+
+enum HomeViewType { feed, discover }
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +28,15 @@ class _HomePageState extends State<HomePage> {
   String? _error;
 
   List<Map<String, dynamic>> _events = [];
+  HomeViewType _viewType = HomeViewType.feed;
+
+  // Filtering
+  String? _selectedCategory;
+  List<int> _selectedSDGs = [];
+  bool _selectedAccessible = false;
+
+  // For Discover View (Tinder cards)
+  int _discoverIndex = 0;
 
   // Track which eventIds are currently being joined/left
   final Set<String> _pendingIds = {};
@@ -50,26 +67,50 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadEvents() async {
-    setState(() { _loading = true; _error = null; });
+    if (!mounted) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+      _discoverIndex = 0;
+    });
     try {
       final result = await ApiService.listEvents(
         jwt: _jwt,
         status: 'UPCOMING',
-        pageSize: 20,
+        category: _selectedCategory?.toUpperCase(),
+        sdg: _selectedSDGs.isEmpty ? null : _selectedSDGs,
+        isAccessible: _selectedAccessible ? true : null,
+        pageSize: 50,
       );
-      final data   = (result['data'] as Map<String, dynamic>?) ?? result;
+      final data   = result;
       final events = (data['events'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
 
-      // Filter out events user is already attending so they don't show up in the feed
-      // But keep them if they were organized by the current user
-      events.removeWhere((e) => e['_attending'] == true && e['organizerUsername'] != _username);
+      // Client-side SDG Filtering (OR Logic)
+      if (_selectedSDGs.isNotEmpty) {
+        events.retainWhere((e) {
+          final eventSDGs = (e['sdg'] as List<dynamic>? ?? [])
+              .map((s) => (s as num).toInt())
+              .toSet();
+          return _selectedSDGs.any((s) => eventSDGs.contains(s));
+        });
+      }
 
-      // Sort by startDate descending (most recent first)
+      // Filter logic:
+      if (_viewType == HomeViewType.feed) {
+        // Feed: show everything upcoming, but filter out joined (except own)
+        events.removeWhere((e) => e['_attending'] == true && e['organizerUsername'] != _username);
+      } else {
+        // Discover: hide joined AND own
+        events.removeWhere((e) => e['organizerUsername'] == _username);
+        events.removeWhere((e) => e['_attending'] == true);
+      }
+
+      // Sort by startDate ascending (soonest first)
       events.sort((a, b) {
         final aDate = (a['startDate'] as int?) ?? 0;
         final bDate = (b['startDate'] as int?) ?? 0;
-        return bDate.compareTo(aDate);
+        return aDate.compareTo(bDate);
       });
 
       if (mounted) setState(() { _events = events; _loading = false; });
@@ -78,23 +119,71 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _handleSwipeRight(Map<String, dynamic> event) async {
+    if (_jwt == null) {
+      _showLoginPrompt();
+      _nextDiscoverCard();
+      return;
+    }
+    
+    try {
+      final eventId = event['eventId'] as String;
+      await ApiService.attendEvent(jwt: _jwt!, eventId: eventId, username: _username);
+      ApiService.notifyEventUpdate(eventId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Joined ${event['title']}!'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to join event'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+    _nextDiscoverCard();
+  }
+
+  void _nextDiscoverCard() {
+    setState(() {
+      _discoverIndex++;
+    });
+  }
+
+  void _showLoginPrompt() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Please login to join events'),
+        action: SnackBarAction(
+          label: 'Login',
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Future<void> _toggleAttend(Map<String, dynamic> event) async {
     if (_jwt == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please login to join events'),
-          action: SnackBarAction(
-            label: 'Login',
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-          ),
-        ),
-      );
+      _showLoginPrompt();
       return;
     }
     final eventId = event['eventId'] as String;
@@ -103,7 +192,7 @@ class _HomePageState extends State<HomePage> {
     setState(() => _pendingIds.add(eventId));
     try {
       if (isAttending) {
-        await ApiService.unattendEvent(jwt: _jwt!, eventId: eventId);
+        await ApiService.unattendEvent(jwt: _jwt!, eventId: eventId, username: _username);
         if (mounted) {
           setState(() {
             event['_attending'] = false;
@@ -112,7 +201,7 @@ class _HomePageState extends State<HomePage> {
           });
         }
       } else {
-        await ApiService.attendEvent(jwt: _jwt!, eventId: eventId);
+        await ApiService.attendEvent(jwt: _jwt!, eventId: eventId, username: _username);
         ApiService.notifyEventUpdate(eventId);
         if (mounted) {
           setState(() {
@@ -124,20 +213,43 @@ class _HomePageState extends State<HomePage> {
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not reach the server. Please try again.'),
-            backgroundColor: AppTheme.error,
+          SnackBar(
+            content: const Text('Could not reach the server. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
     } finally {
       if (mounted) setState(() => _pendingIds.remove(eventId));
+    }
+  }
+
+  Future<void> _showFilterDialog() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => FilterDialog(
+        initialCategory: _selectedCategory,
+        initialSDGs: _selectedSDGs,
+        initialAccessible: _selectedAccessible,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedCategory = result['category'];
+        _selectedSDGs = result['sdgs'];
+        _selectedAccessible = result['accessible'] ?? false;
+      });
+      _loadEvents();
     }
   }
 
@@ -153,7 +265,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _categoryEmoji(String? category) {
-    switch (category) {
+    switch (category?.toUpperCase()) {
       case 'MUSIC':     return '🎵';
       case 'SPORTS':    return '⚽';
       case 'TECH':      return '💻';
@@ -161,15 +273,10 @@ class _HomePageState extends State<HomePage> {
       case 'FOOD':      return '🍔';
       case 'BUSINESS':  return '💼';
       case 'COMMUNITY': return '🤝';
+      case 'HEALTH':    return '🏥';
+      case 'EDUCATION': return '📚';
       default:          return '📌';
     }
-  }
-
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -177,74 +284,366 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: RefreshIndicator(
-        onRefresh: _loadEvents,
-        color: AppTheme.primary,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader()),
-            if (_loading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_error != null)
-              SliverFillRemaining(child: _buildError())
-            else if (_events.isEmpty)
-              SliverFillRemaining(child: _buildEmpty())
-            else ...[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: Text(
-                    'Upcoming Events',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildEventCard(_events[index]),
-                  childCount: _events.length,
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${_greeting()}, ${_username ?? 'Guest'} 👋',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-              letterSpacing: -0.3,
+          _buildTopBar(),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadEvents,
+              color: Theme.of(context).colorScheme.primary,
+              child: _buildMainContent(),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _jwt == null
-                ? 'Login to join events and connect with others.'
-                : 'Here\'s what\'s coming up around you.',
-            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildTopBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  _tabItem('Feed', HomeViewType.feed),
+                  _tabItem('Discover', HomeViewType.discover),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(Icons.refresh_rounded, color: Theme.of(context).colorScheme.primary, size: 22),
+            onPressed: _loadEvents,
+            visualDensity: VisualDensity.compact,
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.filter_list_rounded,
+              color: (_selectedCategory != null || _selectedSDGs.isNotEmpty || _selectedAccessible)
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 22,
+            ),
+            onPressed: _showFilterDialog,
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabItem(String label, HomeViewType type) {
+    final isSelected = _viewType == type;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (_viewType != type) {
+            setState(() {
+              _viewType = type;
+              _loadEvents();
+            });
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: isSelected ? Theme.of(context).colorScheme.surfaceContainer : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: _buildError(),
+        ),
+      );
+    }
+    if (_events.isEmpty) {
+      return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: _buildEmpty(),
+        ),
+      );
+    }
+
+    if (_viewType == HomeViewType.feed) {
+      return ListView.builder(
+        padding: const EdgeInsets.only(bottom: 20),
+        itemCount: _events.length,
+        itemBuilder: (context, index) => _buildEventCard(_events[index]),
+      );
+    } else {
+      // Must be scrollable for RefreshIndicator
+      return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: _buildDiscoverView(),
+        ),
+      );
+    }
+  }
+
+  Widget _buildDiscoverView() {
+    if (_discoverIndex >= _events.length) {
+      return _buildEmptyDiscover();
+    }
+
+    final event = _events[_discoverIndex];
+
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Center(
+        child: Dismissible(
+          key: Key('discover_${event['eventId']}'),
+          onDismissed: (direction) {
+            if (direction == DismissDirection.endToStart) {
+              _nextDiscoverCard();
+            } else {
+              _handleSwipeRight(event);
+            }
+          },
+          background: _swipeBackground(true),
+          secondaryBackground: _swipeBackground(false),
+          child: _buildTinderCard(event),
+        ),
+      ),
+    );
+  }
+
+  Widget _swipeBackground(bool isRight) {
+    return Container(
+      alignment: isRight ? Alignment.centerLeft : Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      decoration: BoxDecoration(
+        color: isRight ? Theme.of(context).colorScheme.primary.withOpacity(0.2) : Theme.of(context).colorScheme.error.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Icon(
+        isRight ? Icons.check_circle_rounded : Icons.cancel_rounded,
+        color: isRight ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
+        size: 80,
+      ),
+    );
+  }
+
+  Widget _buildTinderCard(Map<String, dynamic> event) {
+    final imageUrls = (event['imageUrls'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first : null;
+    final sdgs = event['sdg'] as List<dynamic>? ?? [];
+
+    return Container(
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height * 0.6,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              child: firstImage != null
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullScreenImage(
+                                imageUrls: imageUrls != null ? imageUrls.cast<String>() : [firstImage],
+                                initialIndex: 0,
+                                tagBase: 'event_image_${event['eventId']}',
+                              ),
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: 'event_image_${event['eventId']}_0',
+                          child: Image.network(
+                            firstImage,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        _categoryEmoji(event['category'] as String?),
+                        style: const TextStyle(fontSize: 100),
+                      ),
+                    ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          event['title'] as String? ?? '',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        '${event['attendeeCount'] ?? 0} ppl',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _metaRow(context, Icons.calendar_today_rounded, _formatDate(event['startDate'])),
+                  const SizedBox(height: 4),
+                  _metaRow(context, Icons.location_on_rounded, event['location'] as String? ?? 'No location'),
+                  if (sdgs.isNotEmpty || (event['accessible'] == true || event['isAccessible'] == true)) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        if (sdgs.isNotEmpty) SdgChipRow(sdgs: sdgs, compact: true),
+                        if (sdgs.isNotEmpty && (event['accessible'] == true || event['isAccessible'] == true))
+                          const SizedBox(width: 6),
+                        if (event['accessible'] == true || event['isAccessible'] == true)
+                          const AccessibilityChip(compact: true),
+                      ],
+                    ),
+                  ],
+                  const Spacer(),
+                  Text(
+                    event['description'] as String? ?? 'No description provided.',
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.3, fontSize: 13),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _circularAction(Icons.close, Theme.of(context).colorScheme.error, () => _nextDiscoverCard()),
+                _circularAction(Icons.favorite, Theme.of(context).colorScheme.primary, () => _handleSwipeRight(event)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circularAction(IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 2),
+        ),
+        child: Icon(icon, color: color, size: 28),
+      ),
+    );
+  }
+
+  Widget _buildEmptyDiscover() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.celebration_rounded, size: 64, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(height: 16),
+          const Text(
+            'No more events to discover!',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text('Check back later for new ones.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 24),
+          OutlinedButton(onPressed: _loadEvents, child: const Text('Refresh')),
+        ],
+      ),
+    );
+  }
+
+  // ── Existing Card Components ─────────────────────────────────────────────
 
   Widget _buildEventCard(Map<String, dynamic> event) {
     final eventId      = event['eventId'] as String? ?? '';
@@ -259,8 +658,12 @@ class _HomePageState extends State<HomePage> {
     final isPending     = _pendingIds.contains(eventId);
     final isFull        = maxAttendees > 0 && attendeeCount >= maxAttendees;
     final isOwn         = event['organizerUsername'] == _username;
-    final imageUrls     = event['imageUrls'] as List<dynamic>?;
-    final firstImage    = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first as String : null;
+    final imageUrls     = (event['imageUrls'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final firstImage    = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first : null;
+    final sdgs          = event['sdg'] as List<dynamic>? ?? [];
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -270,9 +673,9 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.inputBorder),
+          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -285,25 +688,56 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (firstImage != null)
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  firstImage,
-                  height: 140,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 4,
-                    color: AppTheme.primary.withValues(alpha: 0.7),
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Hero(
+                      tag: 'event_image_${event['eventId']}_0',
+                      child: Image.network(
+                        firstImage,
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 4,
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                  if (imageUrls != null && imageUrls.length > 1)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.collections, color: Colors.white, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${imageUrls.length}',
+                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               )
             else
-              // Card header — category colour bar if no image
               Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
               ),
@@ -312,13 +746,12 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Category + visibility badges
                   Row(
                     children: [
                       _badge(
                         '${_categoryEmoji(category)} ${_toTitleCase(category ?? 'Other')}',
-                        AppTheme.primary.withValues(alpha: 0.08),
-                        AppTheme.primary,
+                        Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                        Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 6),
                       if (!isPublic)
@@ -326,37 +759,40 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 10),
-
-                  // Title
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Date
-                  _metaRow(Icons.calendar_today_outlined, _formatDate(startDate)),
+                  _metaRow(context, Icons.calendar_today_outlined, _formatDate(startDate)),
                   const SizedBox(height: 4),
-
-                  // Location
                   if (location.isNotEmpty)
-                    _metaRow(Icons.location_on_outlined, location),
+                    _metaRow(context, Icons.location_on_outlined, location),
                   const SizedBox(height: 4),
-
-                  // Attendees
                   _metaRow(
+                    context,
                     Icons.people_outline_rounded,
                     maxAttendees > 0
                         ? '$attendeeCount / $maxAttendees attending'
                         : '$attendeeCount attending',
                   ),
+                  if (sdgs.isNotEmpty || (event['accessible'] == true || event['isAccessible'] == true)) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        if (sdgs.isNotEmpty) SdgChipRow(sdgs: sdgs, compact: true),
+                        if (sdgs.isNotEmpty && (event['accessible'] == true || event['isAccessible'] == true))
+                          const SizedBox(width: 6),
+                        if (event['accessible'] == true || event['isAccessible'] == true)
+                          const AccessibilityChip(compact: true),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 12),
-
-                  // Join / Leave button
                   if (!isOwn)
                     SizedBox(
                       width: double.infinity,
@@ -368,22 +804,68 @@ class _HomePageState extends State<HomePage> {
                         event: event,
                       ),
                     ),
-
                   if (isOwn)
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded,
-                            size: 14, color: AppTheme.primary),
+                        Icon(Icons.star_rounded,
+                            size: 14, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 4),
-                        const Text(
+                        Text(
                           'Your event',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        if (_jwt != null)
+                          FutureBuilder<String?>(
+                            future: ApiService.getRoleForUser(
+                              jwt: _jwt!,
+                              username: _username!,
+                            ),
+                            builder: (context, snapshot) {
+                              return PartnerMark(role: snapshot.data, size: 14);
+                            },
+                          ),
                       ],
+                    ),
+                  if (!isOwn)
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => UserProfileScreen(username: event['organizerUsername']),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.person_outline_rounded,
+                              size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Text(
+                            event['organizerUsername'] ?? '',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                          if (_jwt != null)
+                            FutureBuilder<String?>(
+                              future: ApiService.getRoleForUser(
+                                jwt: _jwt!,
+                                username: event['organizerUsername'],
+                              ),
+                              builder: (context, snapshot) {
+                                return PartnerMark(role: snapshot.data, size: 14);
+                              },
+                            ),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -410,21 +892,19 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-
     if (isAttending) {
       return OutlinedButton.icon(
         onPressed: () => _toggleAttend(event),
         icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
         label: const Text('Joined'),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppTheme.primary,
-          side: const BorderSide(color: AppTheme.primary),
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          side: BorderSide(color: Theme.of(context).colorScheme.primary),
           minimumSize: const Size.fromHeight(38),
           textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
       );
     }
-
     if (isFull) {
       return OutlinedButton(
         onPressed: null,
@@ -435,14 +915,13 @@ class _HomePageState extends State<HomePage> {
         child: const Text('Event full'),
       );
     }
-
     return ElevatedButton.icon(
       onPressed: () => _toggleAttend(event),
       icon: const Icon(Icons.add_rounded, size: 16),
       label: const Text('Join Event'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         minimumSize: const Size.fromHeight(38),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         elevation: 0,
@@ -451,15 +930,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _metaRow(IconData icon, String text) {
+  Widget _metaRow(BuildContext context, IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 13, color: AppTheme.textSecondary),
+        Icon(icon, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
         const SizedBox(width: 5),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -488,7 +967,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
           const SizedBox(height: 12),
-          Text(_error!, style: const TextStyle(color: AppTheme.textSecondary)),
+          Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 16),
           ElevatedButton(onPressed: _loadEvents, child: const Text('Retry')),
         ],
@@ -503,10 +982,10 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Icon(Icons.event_busy_rounded, size: 56, color: Colors.grey),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'No upcoming events yet.\nCheck back soon!',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 15),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(

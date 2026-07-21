@@ -14,17 +14,18 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _displayName = TextEditingController();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   bool _acceptedTerms = false;
+  final List<String> _selectedInterests = [];
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _displayName.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -51,20 +52,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        interests: _selectedInterests,
       );
+
+      // Small delay for eventual consistency in backend persistence
+      await Future.delayed(const Duration(seconds: 1));
 
       // Auto-login so SessionStorage is populated before reaching HomeScreen
       final result = await ApiService.login(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
-      print('DEBUG: Registration auto-login Response: $result');
-      final token = (result['token'] as Map<String, dynamic>?) ?? {};
+
+      final dataField = result['data'];
+      final token = (result['token'] as Map<String, dynamic>?) ??
+          (dataField is Map<String, dynamic> ? dataField['token'] as Map<String, dynamic>? : null) ?? {};
+
+      if (token.isEmpty) {
+        throw ApiException('Registration succeeded but login failed to return a session.');
+      }
+
+      final jwt = token['jwt']?.toString() ?? '';
+      if (jwt.isEmpty) {
+        throw ApiException('Registration succeeded but session token is missing.');
+      }
+      final username = token['username']?.toString() ?? _usernameController.text.trim();
+      final role = token['role']?.toString() ?? '';
+      final expiresAt = token['expiresAt'];
+
+      // After login, fetch the full user account to be consistent with LoginScreen
+      String bio = '';
+      String email = token['email']?.toString() ?? _emailController.text.trim();
+      String displayName = username;
+      List<String> interests = _selectedInterests;
+      String country = '';
+      int birth = 0;
+      List<int> ods = List.filled(17, 0);
+      String borderId = '';
+      int points = 0;
+      try {
+        final profile = await ApiService.getUserAccount(jwt: jwt, username: username, redirectOnError: false);
+        bio = profile['bio']?.toString() ?? '';
+        email = profile['email']?.toString() ?? email;
+        displayName = profile['display']?.toString() ?? username;
+        interests = profile['category_list'] as List<String>? ?? interests;
+        country = profile['country']?.toString() ?? '';
+        birth = profile['birth'] as int? ?? 0;
+        ods = (profile['ods'] as List?)?.cast<int>() ?? List.filled(17, 0);
+        borderId = profile['borderID']?.toString() ?? '';
+        points = profile['points'] as int? ?? 0;
+      } catch (profileError) {
+      }
+
       await SessionStorage.save(
-        jwt: token['jwt']?.toString() ?? '',
-        username: token['username']?.toString() ?? _usernameController.text.trim(),
-        email: token['email']?.toString() ?? _emailController.text.trim(),
-        role: token['role']?.toString() ?? '',
+        jwt: jwt,
+        username: username,
+        displayName: displayName,
+        email: email,
+        role: role,
+        bio: bio,
+        categories: interests,
+        country: country,
+        birth: birth,
+        ods: ods,
+        borderId: borderId,
+        points: points,
+        expiresAt: ApiService.normalizeTimestamp(expiresAt),
       );
 
       if (mounted) {
@@ -74,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           MaterialPageRoute(
             builder: (context) => const HomeScreen(),
           ),
-          (route) => false,
+              (route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -121,7 +174,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _buildHeader(),
               const SizedBox(height: 32),
               _buildForm(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              _buildInterestSelection(),
+              const SizedBox(height: 24),
               _buildTermsCheckbox(),
               const SizedBox(height: 24),
               _buildRegisterButton(),
@@ -182,7 +237,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             label: 'Full Name',
             hint: 'John Doe',
             prefixIcon: Icons.person_outline_rounded,
-            controller: _nameController,
+            controller: _displayName,
             keyboardType: TextInputType.name,
             validator: (value) {
               if (value == null || value.trim().isEmpty) return 'Name is required';
@@ -255,6 +310,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInterestSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Your Interests',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Choose categories you like (you can change this later)',
+          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: ApiService.categories.map((category) {
+            final isSelected = _selectedInterests.contains(category);
+            return FilterChip(
+              label: Text(category),
+              selected: isSelected,
+              onSelected: (val) {
+                setState(() {
+                  if (val) {
+                    _selectedInterests.add(category);
+                  } else {
+                    _selectedInterests.remove(category);
+                  }
+                });
+              },
+              selectedColor: AppTheme.primary.withValues(alpha: 0.1),
+              checkmarkColor: AppTheme.primary,
+              labelStyle: TextStyle(
+                color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(
+                  color: isSelected ? AppTheme.primary : AppTheme.inputBorder,
+                  width: 1,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
