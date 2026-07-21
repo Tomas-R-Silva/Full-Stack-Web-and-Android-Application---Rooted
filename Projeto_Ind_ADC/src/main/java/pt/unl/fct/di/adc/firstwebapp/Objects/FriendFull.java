@@ -122,8 +122,19 @@ public class FriendFull implements Full{
 		return String.format("%s@@@%s", f1,f2);
 	}
 	
-	public String formatkey() {
-		return String.format("%s@@@%s", this.username1,this.username2);
+	public String formatkey() throws ErrorException {
+		int compare=this.username1.compareTo(this.username2);
+		if(compare==0)
+			ErrorException.trow(9925);
+		String f1,f2;
+		if((compare>0)) {
+			f1=this.username1;
+			f2=this.username2;
+		}else{
+			f2=this.username1;
+			f1=this.username2;
+		}
+		return String.format("%s@@@%s", f1,f2);
 	}
 	
 	public static Key getFriendKey(TokenFull token,UserFull user) throws ErrorException{

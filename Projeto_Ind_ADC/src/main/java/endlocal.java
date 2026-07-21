@@ -5,15 +5,27 @@ import java.util.regex.Pattern;
 
 public class endlocal {
 	public endlocal() {}
-	private enum AC{START,STARTQUICK,END,BASE,BASE2;}
+	private enum AC{START,STARTQUICK,END,BASE,BASE2,MY;}
 
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		//Process p;
 		//Runtime.getRuntime().
 		//Thread.
-		AC a=AC.END;
+	
+		
+		AC a=AC.MY;
 		switch(a) {
+		case MY->{
+			Long l=-4783236209826506000L;
+			
+			System.out.println(l);
+			//System.out.println(Long.toBinaryString(l));
+			
+			
+			
+			
+			System.out.println(System.currentTimeMillis());}
 		case END->{findandkill(8080);findandkill(8081);System.out.println("DONE");}
 		case START->{new endlocal.Startdatabase().start();new endlocal.Startprogram().start();}
 		case BASE2->{findandkill(8080);findandkill(8081);System.out.println("KILLED");new endlocal.Startdatabase().start();}
