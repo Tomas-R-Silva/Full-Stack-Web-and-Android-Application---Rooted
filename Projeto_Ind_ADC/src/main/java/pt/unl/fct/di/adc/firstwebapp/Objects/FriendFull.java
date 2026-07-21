@@ -86,8 +86,10 @@ public class FriendFull implements Full{
 		final String friend="Friend",starts="Start";	
 		if(username1.equals(me))
 			return Map.of(friend, username2,starts, start);
-		else
+		else if(username2.equals(me))
 			return Map.of(friend, username1,starts, start);
+		else 
+			return null;
 
 	}
 	

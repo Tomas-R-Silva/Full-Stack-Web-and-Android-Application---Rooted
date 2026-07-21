@@ -7,7 +7,7 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
-import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
+import com.google.cloud.datastore.StructuredQuery;
 
 import pt.unl.fct.di.adc.firstwebapp.Objects.ModelToken;
 import pt.unl.fct.di.adc.firstwebapp.Objects.ShortUser;
@@ -61,22 +61,25 @@ public class AuthHelper {
 		Validator.userNotFound(new Entity[]{user});
 		return UserFull.fromdatabase(user);
 	}
-	
+
 	public static int querydelete(String kind,String type,String name) {
 		QueryResults<Key> keys = datastore.run(Query.newKeyQueryBuilder()
 				.setKind(kind)
-				.setFilter(PropertyFilter.eq(type, name))
+				.setFilter(StructuredQuery.PropertyFilter.eq(type, name))
 				.build());
 		int deleted = 0;
 		int times = 0;
 		Key[] keylist=new Key[DELETE_BATCH];
 		while (keys.hasNext()) {
-			keylist[deleted++]=keys.next();
-			if (deleted == DELETE_BATCH) {
-				datastore.delete(keylist);
-				keylist=new Key[DELETE_BATCH];
-				times++;
-				deleted=0;
+			Key k=keys.next();
+			if(k!=null){
+				keylist[deleted++]=k;
+				if (deleted == DELETE_BATCH) {
+					datastore.delete(keylist);
+					keylist=new Key[DELETE_BATCH];
+					times++;
+					deleted=0;
+				}
 			}
 		}
 		if (deleted>0)
