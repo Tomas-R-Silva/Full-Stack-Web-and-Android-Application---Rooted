@@ -2,7 +2,6 @@ import NavBar from "../NavBar/NavBar";
 import header from "../../assets/images/about-us-header.png";
 import rooted from "../../assets/images/placeholder.png";
 import team from "../../assets/images/team.png";
-import SDGslider from "../SDG-elements/SDG-Slider";
 import Footer from "../NavBar/Footer";
 
 function AboutUsPage() {
@@ -28,7 +27,6 @@ function AboutUsPage() {
           style={{ width: "100%" }}
         />
 
-        <SDGslider />
 
         <hr
           className="mx-auto my-5 border-white opacity-100"
