@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getEventList } from "./auth";
+import { getAuthSessions } from "./auth";
+import type { AuthSessionsResponse } from "../utils/types";
+import { getUser } from "./auth";
+import type { UserInformationResponse } from "../utils/types";
 
 declare global {
   interface Window {
@@ -230,6 +234,7 @@ export const useMapsPage = (mapsApiKey: string) => {
     if (hasValidCoords(event)) {
       position = { lat: event.lat, lng: event.lng };
     } else if (event.location) {
+      // Should remove this in the future
       position = await geocodeAddress(event.location);
     }
     
@@ -263,7 +268,8 @@ export const useMapsPage = (mapsApiKey: string) => {
     });
   };
 
-    //========== Geocoding ==========
+  // Should remove this in the future
+  //========== Geocoding ==========
   const geocodeAddress = (
     address: string,
   ): Promise<{ lat: number; lng: number } | null> => {
@@ -362,6 +368,7 @@ export const useMapsPage = (mapsApiKey: string) => {
 
         const resolvedEvents = await Promise.all(
           eventsData.map(async (event) => {
+            // Should remove this in the future
             if (event.lat === 0 && event.lng === 0 && event.location) {
               const coords = await geocodeAddress(event.location);
               if (coords) {
@@ -384,10 +391,37 @@ export const useMapsPage = (mapsApiKey: string) => {
     };
 
     const initMap = async () => {
+      var coords = { lat: 0, lng: 0 };
+      try {
+        const token = sessionStorage.getItem("token");
+        if (!token) return;
+
+        const res: AuthSessionsResponse = await getAuthSessions({
+          token: { jwt: token },
+        });
+
+        const userToFind = res.data.tokens[0].username;
+
+        const res2: UserInformationResponse = await getUser({
+          token: { jwt: token },
+          input: {
+            username: userToFind,
+          },
+        });
+
+        const country = res2.data.country;
+        const possibleCoords = await geocodeAddress(country);
+        if (possibleCoords) {
+          coords = possibleCoords;
+        }
+      }catch (err) {
+        console.error(err);
+      }
+
       if (!mapRef.current || !window.google) return;
 
       const map = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 0, lng: 0 },
+        center: { lat: coords.lat, lng: coords.lng },
         zoom: 2,
         mapTypeId: "hybrid",
         streetViewControl: false,
