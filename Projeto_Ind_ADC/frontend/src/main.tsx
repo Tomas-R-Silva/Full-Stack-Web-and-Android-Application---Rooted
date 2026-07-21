@@ -23,6 +23,7 @@ import EventJoins from "./components/Events-Page/Event-Joins.tsx";
 import AboutUsPage from "./components/AboutUs-Page/AboutUs-page.tsx";
 import SocialPage from "./components/Social-Page/Social-Page.tsx";
 import { NotificationProvider } from "./components/NotificationContext.tsx";
+import NotFound from "./components/NotFound.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -75,6 +76,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/aboutus" element={<AboutUsPage />} />
             <Route path="/sdg" element={<SDGoverall />} />
             <Route path="/sdg/:id" element={<SDGelements />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </NotificationProvider>
       </AuthProvider>

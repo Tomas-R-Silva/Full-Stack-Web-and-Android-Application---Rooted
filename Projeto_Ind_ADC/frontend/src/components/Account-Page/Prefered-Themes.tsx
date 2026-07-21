@@ -4,10 +4,12 @@ import type {
 } from "../../utils/types";
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
-import { getUser } from "../../api/auth";
+import { getUser, modAccount } from "../../api/auth";
+import { useNotification } from "../NotificationContext";
 
 function PreferedThemes() {
   const { username } = useAuth();
+  const { notify } = useNotification();
   const [user, setUser] = useState<UserInformationResponse>();
   const categories = [
     { value: "MUSIC", label: "🎺 Music" },
@@ -22,6 +24,7 @@ function PreferedThemes() {
   const [formData, setFormData] = useState<RequestModAccount>({
     token: { jwt: "" },
     input: {
+      avatar: "",
       username: username ?? "",
       email: "",
       bio: "",
@@ -72,6 +75,39 @@ function PreferedThemes() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const token = sessionStorage.getItem("token");
+
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+
+      const payloadMod: RequestModAccount = {
+        ...formData,
+        token: {
+          jwt: token,
+        },
+      };
+
+      console.log(payloadMod);
+
+      const responseMod = await modAccount(payloadMod);
+
+      console.log(responseMod);
+      window.location.reload();
+      if (responseMod.status === 200) {
+        notify("ACCOUNT_UPDATED");
+      }
+    } catch (err) {
+      console.log("Something went wrong!");
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     if (!username) return;
     loadUser(username);
@@ -84,6 +120,7 @@ function PreferedThemes() {
       ...prev,
       input: {
         ...prev.input,
+        avatar: user.data.avatar.url,
         username: user.data.username,
         email: user.data.email ?? "",
         bio: user.data.bio ?? "",
@@ -101,38 +138,52 @@ function PreferedThemes() {
       <div className="row w-100 justify-content-center">
         <div className="col-12 col-lg-8">
           <h1 className="fw-bold text-white mb-3">Prefered Themes</h1>
+
           <p className="text-white mb-4">
             View and manage your prefered themes.
           </p>
-          <div className="row g-2">
-            {categories.map(({ value, label }) => (
-              <div className="col-6" key={value}>
-                <input
-                  type="checkbox"
-                  className="btn-check"
-                  id={`btn-${value}`}
-                  checked={formData.input.category.includes(value)}
-                  onChange={() => handleCategoryChange(value)}
-                  autoComplete="off"
-                />
 
-                <label
-                  className="btn w-100"
-                  htmlFor={`btn-${value}`}
-                  style={{
-                    background: formData.input.category.includes(value)
-                      ? "var(--color-green2)"
-                      : "var(--color-white)",
-                    color: formData.input.category.includes(value)
-                      ? "var(--color-white)"
-                      : "var(--color-green2)",
-                  }}
-                >
-                  {label}
-                </label>
-              </div>
-            ))}
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="row g-2">
+              {categories.map(({ value, label }) => (
+                <div className="col-6" key={value}>
+                  <input
+                    type="checkbox"
+                    className="btn-check"
+                    id={`btn-${value}`}
+                    checked={formData.input.category.includes(value)}
+                    onChange={() => handleCategoryChange(value)}
+                    autoComplete="off"
+                  />
+
+                  <label
+                    className="btn w-100"
+                    htmlFor={`btn-${value}`}
+                    style={{
+                      background: formData.input.category.includes(value)
+                        ? "var(--color-green2)"
+                        : "var(--color-white)",
+                      color: formData.input.category.includes(value)
+                        ? "var(--color-white)"
+                        : "var(--color-green2)",
+                    }}
+                  >
+                    {label}
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4">
+              <button
+                type="submit"
+                className="btn text-white w-100"
+                style={{ background: "var(--color-green2)" }}
+              >
+                Save preferred themes
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

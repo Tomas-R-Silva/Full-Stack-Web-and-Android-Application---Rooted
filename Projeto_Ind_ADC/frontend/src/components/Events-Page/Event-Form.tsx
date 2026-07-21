@@ -731,7 +731,7 @@ function EventForm() {
               style={{ background: "var(--color-green2)" }}
               onClick={handleSubmit}
             >
-              Save Changes
+              Create Event
             </button>
           </div>
         </div>

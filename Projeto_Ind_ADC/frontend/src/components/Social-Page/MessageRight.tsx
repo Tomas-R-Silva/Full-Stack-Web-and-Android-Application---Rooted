@@ -1,5 +1,5 @@
 import type { MessageDeleteResponse, MessageProps } from "../../utils/types";
-import replyAll from "../../assets/icons/reply_all.svg";
+import replyAll from "../../assets/icons/reply_all_w.svg";
 import close_w from "../../assets/icons/close_white.svg";
 import { DeleteMessage, getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
@@ -8,7 +8,7 @@ import { useAuth } from "../AuthContext";
 import { useNotification } from "../NotificationContext";
 import verified from "../../assets/icons/verified_w.svg";
 
-function MessageLeft(texts: MessageProps) {
+function MessageRight(texts: MessageProps) {
   const { username, role } = useAuth();
   const [user, setUser] = useState<UserInformationResponse>();
   const [sdgs, setSdgs] = useState<{ id: number; value: number }[]>([]);
@@ -41,6 +41,7 @@ function MessageLeft(texts: MessageProps) {
         input: { forumKey: postId },
       });
       console.log(res.data.message);
+      window.location.reload();
       if (res.status === 200) {
         notify("MESSAGE_DELETED");
       }
@@ -91,14 +92,14 @@ function MessageLeft(texts: MessageProps) {
 
   return (
     <>
-      <div className="d-flex justify-content-start text-start mt-2">
+      <div className="d-flex justify-content-end text-end mt-2">
         {texts.parentText && (
           <div
             className="rounded-3 p-3"
             style={{
               maxWidth: "25%",
               width: "fit-content",
-              background: "var(--color-green2)",
+              background: "var(--color-green)",
               color: "var(--color-white)",
               opacity: "50%",
             }}
@@ -107,33 +108,24 @@ function MessageLeft(texts: MessageProps) {
           </div>
         )}
       </div>
-      <div className="d-flex justify-content-start text-start">
+      <div className="d-flex justify-content-end text-end">
         <div
           className="rounded-3 p-3"
           style={{
             maxWidth: "75%",
             width: "fit-content",
-            background:
-              texts.eventOrganizer === texts.authorUsername
-                ? "var(--color-gold)"
-                : "var(--color-white)",
-            color:
-              texts.eventOrganizer === texts.authorUsername
-                ? "var(--color-white)"
-                : "var(--color-green2)",
+            background: "var(--color-green2)",
+            color: "var(--color-white)",
           }}
         >
-          <div className="d-flex align-items-center justify-content-start mb-2">
+          <div className="d-flex align-items-center justify-content-end mb-2">
             <small
               className="fw-bold mb-0"
               style={{
-                color:
-                  texts.eventOrganizer === texts.authorUsername
-                    ? "var(--color-white)"
-                    : "var(--color-green2)",
+                color: "var(--color-white)",
               }}
             >
-              {user?.data.username || "Deleted User"}
+              {user?.data.username}
               {user?.data.role === "PARTNER" && (
                 <img className="ms-1" src={verified} />
               )}
@@ -163,7 +155,9 @@ function MessageLeft(texts: MessageProps) {
             </div>
           </div>
           <p className="mb-1">{texts.text}</p>
+
           <small>{handleTime(texts.createdAt)}</small>
+
           <img
             className=""
             src={replyAll}
@@ -186,4 +180,4 @@ function MessageLeft(texts: MessageProps) {
   );
 }
 
-export default MessageLeft;
+export default MessageRight;

@@ -66,20 +66,6 @@ function EventsPage() {
                 className="form-label fw-semibold"
                 style={{ color: "var(--color-white)" }}
               >
-                Search Bar
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search..."
-              />
-            </div>
-
-            <div className="col-lg-2 col-md-4">
-              <label
-                className="form-label fw-semibold"
-                style={{ color: "var(--color-white)" }}
-              >
                 Organizer
               </label>
               <input
@@ -212,7 +198,7 @@ function EventsPage() {
               </select>
             </div>
 
-            <div className="col-lg-1 col-md-2">
+            <div className="col-lg-2 col-md-2">
               <label
                 className="form-label fw-semibold"
                 style={{ color: "var(--color-white)" }}
@@ -249,7 +235,7 @@ function EventsPage() {
               </div>
             </div>
 
-            <div className="col-lg-1 col-md-6 d-grid">
+            <div className="col-lg-2 col-md-6 d-grid">
               <button
                 className="btn"
                 style={{

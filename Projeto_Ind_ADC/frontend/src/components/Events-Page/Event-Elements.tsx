@@ -9,7 +9,6 @@ import type {
 } from "../../utils/types";
 import { getEvent } from "../../api/auth";
 import placeholder from "../../assets/images/placeholder.png";
-import "./Event-Elements.css";
 import { useAuth } from "../AuthContext";
 import editSquare_w from "../../assets/icons/edit_square_white.svg";
 import manageAccounts_w from "../../assets/icons/manage_accounts_w.svg";
@@ -22,6 +21,7 @@ import person_pin from "../../assets/icons/person_pin_w.svg";
 import verified from "../../assets/icons/verified_w.svg";
 import { getBorderItem } from "../../utils/borders";
 import Footer from "../NavBar/Footer";
+import NotFound from "../NotFound";
 
 function EventElements() {
   const { id } = useParams<{ id: string }>();
@@ -32,14 +32,17 @@ function EventElements() {
   const [user, setUser] = useState<UserInformationResponse>();
   const navigate = useNavigate();
   const [sdgs, setSdgs] = useState<{ id: number; value: number }[]>([]);
+  const [notFound, setNotFound] = useState(false);
 
   const loadUser = async (organizer: string) => {
     try {
       const token = sessionStorage.getItem("token");
+
       if (!token) {
         console.log("User is not authenticated");
         return;
       }
+
       if (!organizer) {
         console.log("Invalid username");
         return;
@@ -51,6 +54,7 @@ function EventElements() {
           username: organizer,
         },
       });
+
       console.log(res);
       setUser(res);
       setSdgs(loadSDGAnalitics(res.data.ods));
@@ -71,23 +75,21 @@ function EventElements() {
 
   const loadEvents = async (id: string) => {
     const token = sessionStorage.getItem("token");
-    if (!token) {
-      console.log("User is not authenticated");
-    }
 
     const request: RequestEventGetter = {
       token: { jwt: token ?? "" },
       input: { eventId: id },
     };
+
     const res: EventGetterResponse = await getEvent(request);
 
-    console.log(res);
+    if (res.status === 9902) {
+      setNotFound(true);
+      return;
+    }
 
     setEvent(res.data.event);
-
     loadUser(res.data.event.organizerUsername);
-
-    console.log(res.data.event);
   };
 
   useEffect(() => {
@@ -101,11 +103,16 @@ function EventElements() {
     renderEventMap(event, eventMapRef.current);
   }, [event, renderEventMap]);
 
+  if (notFound) {
+    return <NotFound />;
+  }
+
   return (
     <>
       <NavBar />
-      <div className="my-2 mx-2">
-        <div className="d-flex justify-content-between align-items-center">
+
+      <div className="container-fluid px-2 px-sm-3 px-md-4 my-2">
+        <div className="d-flex justify-content-between align-items-center gap-3">
           <p
             className="mb-0"
             style={{
@@ -119,7 +126,7 @@ function EventElements() {
           </p>
 
           {isAuthenticated && event && event.organizerUsername === username && (
-            <div className="d-flex gap-3">
+            <div className="d-flex gap-3 flex-shrink-0">
               <img
                 src={editSquare_w}
                 alt="Edit event"
@@ -145,39 +152,88 @@ function EventElements() {
           )}
         </div>
       </div>
-      <div className="hero-wrapper">
-        <div className="top-image">
+
+      <div style={{ position: "relative" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "clamp(220px, 38vw, 400px)",
+            overflow: "hidden",
+          }}
+        >
           {event && (
             <img
               src={event.imageUrls?.[0]?.url ?? placeholder}
               alt={event.title}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
             />
           )}
         </div>
 
         {event && (
-          <div className="ticket-wrapper">
+          <div
+            className="container-fluid px-2 px-sm-3 px-md-4"
+            style={{
+              position: "relative",
+              zIndex: 10,
+              marginTop: "clamp(-120px, -10vw, -70px)",
+            }}
+          >
             <Ticket event={event} />
           </div>
         )}
-        <section className="content-area">
-          <div className="container pt-5">
-            <div className="row">
-              <div className="col-8">
-                <h2 style={{ color: "var(--color-white)" }}>
-                  Event Descriprion:{" "}
+
+        <section
+          style={{
+            paddingTop: "clamp(32px, 5vw, 70px)",
+            minHeight: "800px",
+          }}
+        >
+          <div className="container px-3 px-md-4">
+            <div className="row g-4">
+              <div className="col-12 col-lg-8">
+                <h2
+                  style={{
+                    color: "var(--color-white)",
+                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                  }}
+                >
+                  Event Description:
                 </h2>
-                <p className="mb-1" style={{ color: "var(--color-white)" }}>
+
+                <p
+                  className="mb-1"
+                  style={{
+                    color: "var(--color-white)",
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word",
+                  }}
+                >
                   {event?.description}
                 </p>
               </div>
-              <div className="col-4">
-                <h2 style={{ color: "var(--color-white)" }}>
+
+              <div className="col-12 col-lg-4">
+                <h2
+                  style={{
+                    color: "var(--color-white)",
+                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                  }}
+                >
                   Event Organizer:
                 </h2>
+
                 <div
-                  className="rounded-3 px-3 py-3 d-flex align-items-center justify-content-between"
-                  style={{ background: "var(--color-green2)" }}
+                  className="rounded-3 px-3 py-3 d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3"
+                  style={{
+                    background: "var(--color-green2)",
+                    width: "100%",
+                  }}
                 >
                   <div
                     style={{
@@ -214,18 +270,37 @@ function EventElements() {
                     )}
                   </div>
 
-                  <div className="flex-grow-1 ms-3">
-                    <div className="d-flex align-items-center gap-2">
+                  <div
+                    className="flex-grow-1"
+                    style={{
+                      minWidth: 0,
+                    }}
+                  >
+                    <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2">
                       <h5
                         className="mb-0 fw-bold"
-                        style={{ color: "var(--color-white)" }}
+                        style={{
+                          color: "var(--color-white)",
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
+                        }}
                       >
                         {user?.data.username || "Deleted account"}
+
                         {user?.data.role === "PARTNER" && (
-                          <img className="ms-1" src={verified} />
+                          <img
+                            className="ms-1"
+                            src={verified}
+                            alt="Verified partner"
+                            style={{
+                              width: "16px",
+                              height: "16px",
+                            }}
+                          />
                         )}
                       </h5>
-                      <div className="d-flex gap-1 ms-3">
+
+                      <div className="d-flex gap-1 flex-wrap">
                         {sdgs.map(({ id, value }) => (
                           <div
                             key={id}
@@ -252,6 +327,9 @@ function EventElements() {
                     <small
                       style={{
                         color: "var(--color-white)",
+                        overflowWrap: "anywhere",
+                        wordBreak: "break-word",
+                        display: "block",
                       }}
                     >
                       {user?.data.email || "Deleted account"}
@@ -260,68 +338,125 @@ function EventElements() {
 
                   <img
                     src={person_pin}
-                    alt="Action"
-                    onClick={() => navigate("/profile/" + user?.data.username)}
+                    alt="Open organizer profile"
+                    onClick={() => {
+                      if (user?.data.username) {
+                        navigate("/profile/" + user.data.username);
+                      }
+                    }}
                     style={{
                       width: "36px",
                       height: "36px",
-                      cursor: "pointer",
+                      cursor: user?.data.username ? "pointer" : "default",
                       flexShrink: 0,
+                      alignSelf: "center",
                     }}
                   />
                 </div>
-                <h2 className="mt-4" style={{ color: "var(--color-white)" }}>
+
+                <h2
+                  className="mt-4"
+                  style={{
+                    color: "var(--color-white)",
+                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                  }}
+                >
                   Event Partners:
                 </h2>
-                <p className="mb-1" style={{ color: "var(--color-white)" }}>
+
+                <p
+                  className="mb-1"
+                  style={{
+                    color: "var(--color-white)",
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word",
+                  }}
+                >
                   {event && event.partners && event.partners.length !== 0
                     ? event.partners
                     : "This event has no partners."}
                 </p>
               </div>
             </div>
-            <div className="row mt-5">
-              <div className="col-8">
-                <h2 style={{ color: "var(--color-white)" }}>
+
+            <div className="row g-4 mt-4 mt-md-5">
+              <div className="col-12 col-lg-8">
+                <h2
+                  style={{
+                    color: "var(--color-white)",
+                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                  }}
+                >
                   Event Photo Collection:
                 </h2>
 
-                <div className="photo-collection">
+                <div className="row g-3">
                   {event?.imageUrls?.length === 0 && (
-                    <p style={{ color: "var(--color-white)" }}>
-                      No images available.
-                    </p>
+                    <div className="col-12">
+                      <p style={{ color: "var(--color-white)" }}>
+                        No images available.
+                      </p>
+                    </div>
                   )}
 
                   {event?.imageUrls?.map((image, index) => (
-                    <img
-                      key={image.id}
-                      src={image.url}
-                      alt={`Event ${index + 1}`}
-                    />
+                    <div key={image.id} className="col-12 col-sm-6 col-xl-4">
+                      <img
+                        src={image.url}
+                        alt={`Event ${index + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "220px",
+                          borderRadius: "8px",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
 
-              <div className="col-4">
-                <h2 style={{ color: "var(--color-white)" }}>Event Location:</h2>
+              <div className="col-12 col-lg-4">
+                <h2
+                  style={{
+                    color: "var(--color-white)",
+                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                  }}
+                >
+                  Event Location:
+                </h2>
+
                 <div
                   ref={eventMapRef}
                   style={{
                     width: "100%",
-                    height: "300px",
+                    height: "clamp(260px, 40vw, 300px)",
                     borderRadius: "8px",
+                    overflow: "hidden",
                   }}
                 />
               </div>
             </div>
-            <div className="row mt-5">
-              <h2 style={{ color: "var(--color-white)" }}>Event Chat:</h2>
-              {event && <Chat event={event} />}
+
+            <div className="row mt-4 mt-md-5">
+              <div className="col-12">
+                <h2
+                  style={{
+                    color: "var(--color-white)",
+                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                  }}
+                >
+                  Event Chat:
+                </h2>
+
+                {event && <Chat event={event} />}
+              </div>
             </div>
           </div>
         </section>
       </div>
+
       <Footer />
     </>
   );

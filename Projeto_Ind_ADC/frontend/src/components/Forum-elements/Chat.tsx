@@ -56,10 +56,16 @@ function Chat({ event }: EventProps) {
 
       console.log(res);
 
+      const sortedPosts = [...res.data.posts].sort(
+        (a, b) => a.createdAt - b.createdAt,
+      );
+
       if (cursor) {
-        setMessages((prev) => [...prev, ...res.data.posts]); //carregar mais => anteriores mais todos os restantes
+        setMessages((prev) =>
+          [...prev, ...sortedPosts].sort((a, b) => a.createdAt - b.createdAt),
+        );
       } else {
-        setMessages(res.data.posts);
+        setMessages(sortedPosts);
       }
 
       setNextCursor(res.data.nextCursor);

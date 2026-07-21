@@ -42,7 +42,7 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   },
   INVALID_FILE: {
     title: "Invalid File",
-    message: "You have sumbited a invalid file. Try again!.",
+    message: "You have sumbited a invalid file. Try again!",
   },
   ACCOUNT_CREATED: {
     title: "Success!",

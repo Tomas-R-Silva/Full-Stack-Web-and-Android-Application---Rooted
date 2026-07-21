@@ -400,7 +400,7 @@ export type RequestEventUpdate = {
     maxAttendees: number,
     minAttendees: number,
     public: boolean,
-    isAccessible?: boolean,
+    accessible?: boolean,
     sdg?: number[]
     lat: number | null,
     lng: number | null,
@@ -689,7 +689,7 @@ export type Post = {
 
 export type RequestMessageDelete = {
   token?: {jwt:string}
-  input: string,
+  input: {forumKey: string},
 }
 
 export type MessageDeleteResponse = {
