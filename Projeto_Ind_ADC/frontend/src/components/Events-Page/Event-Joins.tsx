@@ -209,271 +209,313 @@ function EventJoins() {
     loadEvents(id);
   }, [id]);
 
+  const showRequestsColumn = event && !event.isPublic;
+  const mainColumnClass = showRequestsColumn
+    ? "col-12 col-lg-4"
+    : "col-12 col-lg-6";
+
   return (
     <>
       <NavBar />
-      <div
-        className="container py-5"
+
+      <main
+        className="container-fluid py-4 py-md-5 px-3 px-md-4"
         style={{ background: "var(--color-white)" }}
       >
-        <div className="row w-100 justify-content-center">
-          <a
-            style={{
-              color: "var(--color-green)",
-              fontSize: "16px",
-              cursor: "pointer",
-            }}
-            onClick={() => navigate("/events/" + id)}
-          >
-            ← Event Page
-          </a>
-          <h1
-            className="fw-bold mb-3"
-            style={{
-              color: "var(--color-green)",
-            }}
-          >
-            Event Joins Management:
-          </h1>
-          <div className="container py-3">
-            <div className="row">
-              {event && !event.isPublic && (
-                <div className="col-4">
-                  <h4>Users Join Requests:</h4>
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-12">
+              <button
+                type="button"
+                className="btn p-0 mb-3"
+                style={{
+                  color: "var(--color-green)",
+                  fontSize: "16px",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/events/" + id)}
+              >
+                ← Event Page
+              </button>
+
+              <h1
+                className="fw-bold mb-3 fs-3 fs-md-1"
+                style={{
+                  color: "var(--color-green)",
+                }}
+              >
+                Event Joins Management:
+              </h1>
+
+              <div className="row g-4">
+                {showRequestsColumn && (
+                  <div className="col-12 col-lg-4">
+                    <h4 className="fs-5">Users Join Requests:</h4>
+
+                    <div
+                      className="container-fluid border rounded p-3"
+                      style={{
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {requests.length === 0 && (
+                        <div
+                          className="alert alert-light"
+                          style={{ color: "var(--color-green)" }}
+                          role="alert"
+                        >
+                          No requests.
+                        </div>
+                      )}
+
+                      {requests.length !== 0 &&
+                        requests.map((req) => (
+                          <div
+                            key={req.requester}
+                            className="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3 p-3 p-md-4 rounded mt-2"
+                            style={{
+                              width: "100%",
+                              backgroundColor: "var(--color-green2)",
+                              color: "var(--color-white)",
+                            }}
+                          >
+                            <div className="w-100">
+                              <div>
+                                <span className="fw-semibold">Username: </span>
+                                <span className="text-break">
+                                  {req.requester}
+                                </span>
+                              </div>
+
+                              <div>
+                                <span className="fw-semibold">
+                                  Requested At:{" "}
+                                </span>
+                                <span>{formatDate(req.requestedAt)}</span>
+                              </div>
+                            </div>
+
+                            <div className="d-flex flex-row flex-sm-column gap-3 align-items-center">
+                              <img
+                                src={personPin_w}
+                                alt="View Profile"
+                                onClick={() =>
+                                  navigate("/profile/" + req.requester)
+                                }
+                                style={{ cursor: "pointer", width: "24px" }}
+                              />
+
+                              <img
+                                src={check_w}
+                                alt="Accept"
+                                onClick={() =>
+                                  handleRespond(req.requester, true)
+                                }
+                                style={{ cursor: "pointer", width: "24px" }}
+                              />
+
+                              <img
+                                src={close_w}
+                                alt="Decline"
+                                onClick={() =>
+                                  handleRespond(req.requester, false)
+                                }
+                                style={{ cursor: "pointer", width: "24px" }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className={mainColumnClass}>
+                  <h4 className="fs-5">Users Joined:</h4>
+
                   <div
-                    className="container border rounded p-3"
+                    className="container-fluid border rounded p-3"
                     style={{
                       maxHeight: "500px",
                       overflowY: "auto",
                     }}
                   >
-                    {requests.length === 0 && (
+                    {attendees.length === 0 && (
                       <div
                         className="alert alert-light"
                         style={{ color: "var(--color-green)" }}
                         role="alert"
                       >
-                        No requests.
+                        No attendees.
                       </div>
                     )}
-                    {requests.length !== 0 &&
-                      requests.map((req) => (
+
+                    {attendees.length !== 0 &&
+                      attendees.map((attendee) => (
                         <div
-                          className="d-flex justify-content-between align-items-start p-4 rounded mt-2"
+                          key={attendee.username}
+                          className="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3 p-3 p-md-4 rounded mt-2"
                           style={{
-                            maxWidth: "500px",
                             width: "100%",
-                            backgroundColor: "var(--color-green2)",
+                            backgroundColor:
+                              managedUser?.username === attendee.username
+                                ? "var(--color-green)"
+                                : "var(--color-green2)",
                             color: "var(--color-white)",
                             cursor: "pointer",
                           }}
+                          onClick={() => handleManagedUser(attendee)}
                         >
-                          <div>
-                            <span className="fw-semibold">Username: </span>
-                            <span>{req.requester}</span>
+                          <div className="w-100">
+                            <div>
+                              <span className="fw-semibold">Username: </span>
+                              <span className="text-break">
+                                {attendee.username}
+                              </span>
+                            </div>
 
                             <div>
-                              <span className="fw-semibold">Email: </span>
-                              <span>{formatDate(req.requestedAt)}</span>
+                              <span className="fw-semibold">Joined At: </span>
+                              <span>{formatDate(attendee.joinedAt)}</span>
                             </div>
                           </div>
 
-                          <div
-                            className="d-flex flex-column justify-content-between align-items-end"
-                            style={{ height: "100%" }}
-                          >
+                          <div className="d-flex flex-row flex-sm-column gap-3 align-items-center">
                             <img
                               src={personPin_w}
                               alt="View Profile"
-                              onClick={() =>
-                                navigate("/profile/" + req.requester)
-                              }
-                              style={{ cursor: "pointer" }}
-                            />
-                            <img
-                              src={check_w}
-                              alt="Aceept"
-                              onClick={() => handleRespond(req.requester, true)}
-                              style={{ cursor: "pointer" }}
-                            />
-                            <img
-                              src={close_w}
-                              alt="Decline"
-                              onClick={() =>
-                                handleRespond(req.requester, false)
-                              }
-                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate("/profile/" + attendee.username);
+                              }}
+                              style={{ cursor: "pointer", width: "24px" }}
                             />
                           </div>
                         </div>
                       ))}
                   </div>
                 </div>
-              )}
-              <div className={event && !event.isPublic ? "col-4" : "col-6"}>
-                <h4>Users Joined:</h4>
-                <div
-                  className="container border rounded p-3"
-                  style={{
-                    maxHeight: "500px",
-                    overflowY: "auto",
-                  }}
-                >
-                  {attendees.length === 0 && (
+
+                <div className={mainColumnClass}>
+                  <h4 className="fs-5">User Manage:</h4>
+
+                  {!user && (
                     <div
                       className="alert alert-light"
                       style={{ color: "var(--color-green)" }}
                       role="alert"
                     >
-                      No attendees.
+                      No users to manage.
                     </div>
                   )}
-                  {attendees.length !== 0 &&
-                    attendees.map((attendee) => (
-                      <div
-                        key={attendee.username}
-                        className="d-flex justify-content-between align-items-start p-4 rounded mt-2"
-                        style={{
-                          maxWidth: "500px",
-                          width: "100%",
-                          backgroundColor:
-                            managedUser?.username === attendee.username
-                              ? "var(--color-green)"
-                              : "var(--color-green2)",
-                          color: "var(--color-white)",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => handleManagedUser(attendee)}
-                      >
-                        <div>
-                          <span className="fw-semibold">Username: </span>
-                          <span>{attendee.username}</span>
 
-                          <div>
-                            <span className="fw-semibold">Joined At: </span>
-                            <span>{formatDate(attendee.joinedAt)}</span>
-                          </div>
-                        </div>
-
-                        <div
-                          className="d-flex flex-column justify-content-between align-items-end"
-                          style={{ height: "100%" }}
-                        >
-                          <img
-                            src={personPin_w}
-                            alt="View Profile"
-                            onClick={() =>
-                              navigate("/profile/" + attendee.username)
-                            }
-                            style={{ cursor: "pointer" }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-              <div className={event && !event.isPublic ? "col-4" : "col-6"}>
-                <h4>User Manage:</h4>
-                {!user && (
-                  <div
-                    className="alert alert-light"
-                    style={{ color: "var(--color-green)" }}
-                    role="alert"
-                  >
-                    No users to manage.
-                  </div>
-                )}
-                {user && (
-                  <div
-                    className="rounded-3 p-3"
-                    style={{
-                      background:
-                        managedUser?.username === event?.organizerUsername
-                          ? "var(--color-gold)"
-                          : "var(--color-green2)",
-                    }}
-                  >
-                    <div>
-                      <span className="fw-semibold text-white">Username: </span>
-                      <span className="text-white">
-                        {user.data.username || "No username"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="fw-semibold text-white">
-                        Displayed Name:{" "}
-                      </span>
-                      <span className="text-white">
-                        {user.data.display || "No displayed username"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="fw-semibold text-white">Email: </span>
-                      <span className="text-white">
-                        {user.data.email || "No email"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="fw-semibold text-white">Role: </span>
-                      <span className="text-white">
-                        {user.data.role || "No role"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="fw-semibold text-white">From: </span>
-                      <span className="text-white">
-                        {user.data.country || "No country"}
-                      </span>
-                    </div>
-                    <div className="row mt-3">
+                  {user && (
+                    <div
+                      className="rounded-3 p-3"
+                      style={{
+                        background:
+                          managedUser?.username === event?.organizerUsername
+                            ? "var(--color-gold)"
+                            : "var(--color-green2)",
+                      }}
+                    >
                       <div>
-                        {managedUser?.username === event?.organizerUsername && (
-                          <div
-                            className="rounded-3 fw-bold px-4"
-                            style={{ background: "var(--color-white)" }}
-                          >
-                            Event Organizer
-                          </div>
-                        )}
-                        {!confirmKick &&
-                          managedUser?.username !==
+                        <span className="fw-semibold text-white">
+                          Username:{" "}
+                        </span>
+                        <span className="text-white text-break">
+                          {user.data.username || "No username"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="fw-semibold text-white">
+                          Displayed Name:{" "}
+                        </span>
+                        <span className="text-white text-break">
+                          {user.data.display || "No displayed username"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="fw-semibold text-white">Email: </span>
+                        <span className="text-white text-break">
+                          {user.data.email || "No email"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="fw-semibold text-white">Role: </span>
+                        <span className="text-white">
+                          {user.data.role || "No role"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="fw-semibold text-white">From: </span>
+                        <span className="text-white">
+                          {user.data.country || "No country"}
+                        </span>
+                      </div>
+
+                      <div className="row mt-3">
+                        <div className="col-12">
+                          {managedUser?.username ===
                             event?.organizerUsername && (
-                            <button
-                              className="btn btn-danger fw-bold px-4"
-                              onClick={() => setConfirmKick(true)}
+                            <div
+                              className="rounded-3 fw-bold px-4 py-2 text-center text-md-start"
+                              style={{ background: "var(--color-white)" }}
                             >
-                              Kick {user.data.username}
-                            </button>
+                              Event Organizer
+                            </div>
                           )}
-                        {confirmKick && managedUser && (
-                          <>
-                            <button
-                              className="btn btn-danger fw-bold"
-                              onClick={() => setConfirmKick(false)}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              className="btn fw-bold ms-1"
-                              style={{
-                                background: "var(--color-green)",
-                                color: "var(--color-white)",
-                              }}
-                              onClick={() => handleKick(managedUser.username)}
-                            >
-                              Confirm
-                            </button>
-                          </>
-                        )}
+
+                          {!confirmKick &&
+                            managedUser?.username !==
+                              event?.organizerUsername && (
+                              <button
+                                type="button"
+                                className="btn btn-danger fw-bold px-4 w-100 w-md-auto"
+                                onClick={() => setConfirmKick(true)}
+                              >
+                                Kick {user.data.username}
+                              </button>
+                            )}
+
+                          {confirmKick && managedUser && (
+                            <div className="d-flex flex-column flex-sm-row gap-2">
+                              <button
+                                type="button"
+                                className="btn btn-danger fw-bold"
+                                onClick={() => setConfirmKick(false)}
+                              >
+                                Cancel
+                              </button>
+
+                              <button
+                                type="button"
+                                className="btn fw-bold"
+                                style={{
+                                  background: "var(--color-green)",
+                                  color: "var(--color-white)",
+                                }}
+                                onClick={() => handleKick(managedUser.username)}
+                              >
+                                Confirm
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
       <Footer />
     </>
   );

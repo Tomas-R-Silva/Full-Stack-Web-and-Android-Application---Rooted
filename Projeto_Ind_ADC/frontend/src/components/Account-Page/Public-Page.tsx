@@ -487,7 +487,7 @@ function PublicPage() {
               <p className="mb-0">
                 {user.data.category.length === 0
                   ? "This user hasn't interests."
-                  : user.data.category}
+                  : user.data.category.join(", ")}
               </p>
             )}
           </div>
