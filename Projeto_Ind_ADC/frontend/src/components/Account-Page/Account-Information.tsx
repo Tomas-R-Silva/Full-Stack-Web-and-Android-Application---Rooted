@@ -103,7 +103,7 @@ function AccountInformation() {
       logout();
       navigate("/");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
