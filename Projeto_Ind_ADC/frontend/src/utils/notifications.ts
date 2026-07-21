@@ -126,7 +126,7 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
     message: "Now you are friends!",
   },
   FRIEND_REQUEST_REJECTED: {
-    title: "Friend Request Sended",
+    title: "Friend Request Rejected",
     message: "The friend request has been rejected.",
   },
   FRIEND_REQUEST_SENDED: {

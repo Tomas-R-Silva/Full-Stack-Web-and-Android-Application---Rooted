@@ -1,10 +1,11 @@
 import { useAuth } from "../AuthContext";
 import type {
   RequestChangePassword,
+  RequestDeleteAccount,
   RequestModAccount,
 } from "../../utils/types";
 import { useState, useEffect } from "react";
-import { changePassword, modAccount } from "../../api/auth";
+import { changePassword, deleteAccount, modAccount } from "../../api/auth";
 import { getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
 import { useNotification } from "../NotificationContext";
@@ -15,6 +16,7 @@ type ErrorState = {
 };
 
 function AccountInformation() {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { username, role } = useAuth();
   const { notify } = useNotification();
   const [user, setUser] = useState<UserInformationResponse>();
@@ -70,6 +72,35 @@ function AccountInformation() {
       ...prev,
       [name]: "",
     }));
+  };
+
+  const handleDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token || !username) {
+        console.log("User is not authenticated or invalid");
+        return;
+      }
+      const payload: RequestDeleteAccount = {
+        token: {
+          jwt: token,
+        },
+        input: {
+          username: username,
+        },
+      };
+      console.log(payload);
+      const response = await deleteAccount(payload);
+      console.log(response);
+      window.location.reload();
+      if (response.status === 200) {
+        notify("ACCOUNT_DELETED");
+      }
+    } catch (err) {
+      console.log("Something went wrong!");
+    }
   };
 
   const handlePassword = (
@@ -450,6 +481,36 @@ function AccountInformation() {
               >
                 Save Changes
               </button>
+            </div>
+            <div className="d-flex justify-content-end mt-3">
+              {!confirmDelete && (
+                <button
+                  className="btn btn-danger fw-bold px-4"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete Account
+                </button>
+              )}
+              {confirmDelete && (
+                <>
+                  <button
+                    className="btn btn-danger fw-bold"
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn fw-bold ms-1"
+                    style={{
+                      background: "var(--color-green2)",
+                      color: "var(--color-white)",
+                    }}
+                    onClick={handleDelete}
+                  >
+                    Confirm
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
