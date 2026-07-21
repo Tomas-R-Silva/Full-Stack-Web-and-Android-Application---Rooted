@@ -16,7 +16,7 @@ class ApiException implements Exception {
 
 class ApiService {
   // Your deployed Google Cloud backend.
-  static const String baseUrl = 'https://adc-final.ey.r.appspot.com';
+  static const String baseUrl = 'https://adc-final.appspot.com';
 
   /// Global navigator key to allow logout/redirect from service layer.
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

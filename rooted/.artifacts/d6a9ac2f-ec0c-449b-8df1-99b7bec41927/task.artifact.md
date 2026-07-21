@@ -1,5 +1,0 @@
-- `[x]` Event Partner Management
-    - `[x]` Create `lib/widgets/partners_bottom_sheet.dart`
-    - `[x]` Update `lib/screens/event_detail_screen.dart` to show "Manage Partners" button
-    - `[x]` Update `lib/screens/event_detail_screen.dart` to display current partners
-    - `[ ]` Test adding/removing partners
