@@ -303,6 +303,20 @@ export type TokenType = {
   expiresAt: number,
 }
 
+export type RequestTopSDG = {
+  
+}
+
+export type TopSDGResponse = {
+  status: number,
+  data: {topBySDG:Top[];}
+}
+
+export type Top = {
+  username: string,
+  value: number,
+}
+
 //========== EVENT ==========
 
 export type EventItem = {

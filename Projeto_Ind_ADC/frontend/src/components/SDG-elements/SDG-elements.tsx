@@ -1,15 +1,21 @@
 import NavBar from "../NavBar/NavBar";
 import { sdgInfos } from "../../utils/sdgInfo";
-import type { FilterProps, SdgItem } from "../../utils/types";
+import {
+  type Top,
+  type FilterProps,
+  type SdgItem,
+  type TopSDGResponse,
+} from "../../utils/types";
 import { useParams, useNavigate } from "react-router-dom";
 import EventsList from "../Events-Page/Events-List";
 import { useState, useEffect } from "react";
 import Footer from "../NavBar/Footer";
+import { getTopSDG } from "../../api/auth";
 
 function SDGelements() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-
+  const [tops, setTops] = useState<Top[]>([]);
   const sdgId = Number(id);
   const isValidSdgId = Number.isInteger(sdgId) && sdgId >= 1 && sdgId <= 17;
 
@@ -29,6 +35,20 @@ function SDGelements() {
     isAccessible: false,
     sdg: isValidSdgId ? [sdgId] : [],
   });
+
+  const loadTop = async () => {
+    try {
+      const res: TopSDGResponse = await getTopSDG({});
+      console.log(res.data);
+      setTops(res.data.topBySDG);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadTop();
+  }, []);
 
   useEffect(() => {
     if (!isValidSdgId) return;

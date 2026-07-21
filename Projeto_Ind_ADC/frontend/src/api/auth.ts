@@ -17,6 +17,7 @@ import type {RequestUnfriend, UnfriendResponse} from "../utils/types";
 import type {RequestFriendsList, FriendsListResponse} from "../utils/types";
 import type {RequestFriendsRequests, FriendsRequestsResponse} from "../utils/types";
 import type {RequestAuthSessions, AuthSessionsResponse} from "../utils/types";
+import type {RequestTopSDG, TopSDGResponse} from "../utils/types";
 import type { RequestEventCreation, EventCreationResponse } from "../utils/types";
 import type { RequestEventGetter, EventGetterResponse } from "../utils/types";
 import type { RequestEventList, EventListResponse} from "../utils/types";
@@ -153,6 +154,9 @@ export const getFriendsRequests = (data: RequestFriendsRequests) =>
 
 export const getAuthSessions = (data: RequestAuthSessions) =>
   apiRequest<AuthSessionsResponse>("/showauthsessions", data);
+
+export const getTopSDG = (data: RequestTopSDG) =>
+  apiRequest<TopSDGResponse>("/topsdg", data);
 
 //========== EVENT ==========
 
