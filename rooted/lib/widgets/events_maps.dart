@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rooted/screens/event_detail_screen.dart';
+import 'package:http/http.dart' as http;
 
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
@@ -40,6 +42,7 @@ class _EventsMapsState extends State<EventsMaps> {
   Set<Marker> _markers = {};
   List<Map<String, dynamic>> _rawEvents = [];
   List<Map<String, dynamic>> _events = [];
+  final Map<String, LatLng> _geocodeCache = {};
 
   @override
   void initState() {
@@ -61,9 +64,16 @@ class _EventsMapsState extends State<EventsMaps> {
   }
 
   Future<void> _init() async {
-    await _determinePosition();
+    await Future.wait([
+      _determinePosition().timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {}, // give up on location silently, map still loads
+      ),
+      _fetchEvents(),
+    ]);
+
     widget.onLocationAvailabilityChanged?.call(_hasLocation);
-    await _fetchEvents();
+
     if (mounted) {
       setState(() => _loading = false);
     }
@@ -76,15 +86,40 @@ class _EventsMapsState extends State<EventsMaps> {
         permission = await Geolocator.requestPermission();
       }
 
-      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-        final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-        if (mounted) {
-          _center = LatLng(position.latitude, position.longitude);
-          _zoom = 14.0;
-          _hasLocation = true;
+      if (permission != LocationPermission.whileInUse && permission != LocationPermission.always) {
+        return;
+      }
+
+      Position? position;
+
+      try {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        ).timeout(const Duration(seconds: 5));
+      } catch (_) {
+        // High-accuracy fix failed or timed out; fall back gracefully.
+        position = await Geolocator.getLastKnownPosition();
+
+        if (position == null) {
+          try {
+            position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.medium,
+            ).timeout(const Duration(seconds: 5));
+          } catch (_) {
+            position = null; // give up cleanly instead of hanging
+          }
         }
       }
-    } catch (_) {}
+
+      if (mounted && position != null) {
+        _center = LatLng(position.latitude, position.longitude);
+        _zoom = 14.0;
+        _hasLocation = true;
+      }
+    } catch (_) {
+      // Any unexpected error (permission denial, plugin error, etc.) — just
+      // proceed without location rather than blocking map load.
+    }
   }
 
   /// Hits the network once and stores the unfiltered event list.
@@ -104,8 +139,34 @@ class _EventsMapsState extends State<EventsMaps> {
       debugPrint('EventsMaps: failed to fetch events: $e');
     }
 
+    // Resolve geocoding for events missing real coordinates, in parallel.
+    final resolvedEvents = await Future.wait(events.map((ev) async {
+      final lat = ev['lat'];
+      final lng = ev['lng'];
+      final location = ev['location'] as String?;
+
+      final needsGeocode = (lat == null || lng == null || (lat == 0.0 && lng == 0.0)) &&
+          location != null &&
+          location.isNotEmpty;
+
+      if (!needsGeocode) return ev;
+
+      if (_geocodeCache.containsKey(location)) {
+        final cached = _geocodeCache[location]!;
+        return {...ev, 'lat': cached.latitude, 'lng': cached.longitude};
+      }
+
+      try {
+        final pos = await _geocodeLocation(location);
+        _geocodeCache[location] = pos;
+        return {...ev, 'lat': pos.latitude, 'lng': pos.longitude};
+      } catch (_) {
+        return ev; // leave as-is; _eventPosition will just return null for it
+      }
+    }));
+
     if (mounted) {
-      _rawEvents = events;
+      _rawEvents = resolvedEvents;
       _applyFilters();
     }
   }
@@ -199,21 +260,40 @@ class _EventsMapsState extends State<EventsMaps> {
     return true;
   }
 
-  LatLng? _eventPosition(Map<String, dynamic> event) {
-    final lat = _readDouble(event['lat'] ?? event['latitude']);
-    final lng = _readDouble(event['lng'] ?? event['longitude']);
-    if (lat != null && lng != null) {
-      return LatLng(lat, lng);
+  Future<LatLng> _geocodeLocation(String address) async {
+    try {
+      final uri = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=${widget.mapsApiKey}',
+      );
+      final response = await http.get(uri);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to geocode location');
+      }
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final results = body['results'] as List<dynamic>?;
+      if (results == null || results.isEmpty) {
+        throw Exception('Failed to geocode location');
+      }
+
+      final location = results.first['geometry']['location'];
+      return LatLng(
+        (location['lat'] as num).toDouble(),
+        (location['lng'] as num).toDouble(),
+      );
+    } catch (_) {
+      throw Exception('Failed to geocode location');
     }
-    return null;
   }
 
-  double? _readDouble(dynamic value) {
-    if (value is num) {
-      return value.toDouble();
-    }
-    if (value is String) {
-      return double.tryParse(value);
+  LatLng? _eventPosition(Map<String, dynamic> event) {
+    final lat = event['lat'];
+    final lng = event['lng'];
+    if (lat != null && lng != null) {
+      if (lat == 0.0 && lng == 0.0) {
+        return null;
+      }
+      return LatLng(lat, lng);
     }
     return null;
   }
@@ -312,140 +392,150 @@ class _EventsMapsState extends State<EventsMaps> {
       });
     }
 
-    return Column(
+    return Stack(
+      fit: StackFit.expand,
       children: [
-        Flexible(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: _loading
-                ? Container(
-                    color: AppTheme.primary.withOpacity(0.06),
-                    child: const Center(child: CircularProgressIndicator()),
-                  )
-                : GoogleMap(
-                    mapType: MapType.hybrid,
-                    initialCameraPosition: CameraPosition(target: _center, zoom: _zoom),
-                    markers: _markers,
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    zoomControlsEnabled: true,
-                    onMapCreated: (controller) {
-                      _mapController = controller;
-                    },
-                  ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 130,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: nearest.length,
-            itemBuilder: (context, index) {
-            final ev = nearest[index];
-            final pos = _eventPosition(ev);
-            final dist = pos != null ? _distanceMeters(_center, pos) : null;
-            final imageUrls = (ev['imageUrls'] as List<dynamic>?)
-                ?.map((e) => e.toString())
-                .where((e) => e.isNotEmpty)
-                .toList();
-            final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first : null;
+        // Map fills the whole available space.
+        _loading
+            ? Container(
+                color: AppTheme.primary.withOpacity(0.06),
+                child: const Center(child: CircularProgressIndicator()),
+              )
+            : GoogleMap(
+                mapType: MapType.hybrid,
+                initialCameraPosition: CameraPosition(target: _center, zoom: _zoom),
+                markers: _markers,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                zoomControlsEnabled: true,
+                padding: const EdgeInsets.only(top: 150, bottom: 150),
+                onMapCreated: (controller) {
+                  _mapController = controller;
+                  // If position resolved after the map was created, recenter now.
+                  if (_hasLocation) {
+                    controller.animateCamera(CameraUpdate.newLatLngZoom(_center, _zoom));
+                  }
+                },
+              ),
 
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: SizedBox(
-                width: 240,
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () {
-                      if (pos != null) {
-                        _moveCamera(pos, 14);
-                      }
-                    },
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Background image or fallback color
-                        if (firstImage != null)
-                          Image.network(
-                            firstImage,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: AppTheme.primary.withOpacity(0.15),
-                              );
-                            },
-                          )
-                        else
-                          Container(color: AppTheme.primary.withOpacity(0.15)),
+        // Event cards float on top of the map, pinned to the bottom.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 130,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                itemCount: nearest.length,
+                itemBuilder: (context, index) {
+                  final ev = nearest[index];
+                  final pos = _eventPosition(ev);
+                  final dist = pos != null ? _distanceMeters(_center, pos) : null;
+                  final imageUrls = (ev['imageUrls'] as List<dynamic>?)
+                      ?.map((e) => e.toString())
+                      .where((e) => e.isNotEmpty)
+                      .toList();
+                  final firstImage = (imageUrls != null && imageUrls.isNotEmpty) ? imageUrls.first : null;
 
-                        // Gradient scrim so text stays readable
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Colors.black.withOpacity(0.85),
-                                Colors.black.withOpacity(0.55),
-                                Colors.black.withOpacity(0.0),
-                              ],
-                              stops: const [0.0, 0.4, 0.7],
-                            ),
-                          ),
-                        ),
-
-                        // Text content
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: SizedBox(
+                      width: 240,
+                      child: Card(
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () {
+                            if (pos != null) {
+                              _moveCamera(pos, 14);
+                            }
+                          },
+                          child: Stack(
+                            fit: StackFit.expand,
                             children: [
-                              Text(
-                                ev['title']?.toString() ?? 'Event',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.white,
+                              if (firstImage != null)
+                                Image.network(
+                                  firstImage,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: AppTheme.primary.withOpacity(0.15),
+                                    );
+                                  },
+                                )
+                              else
+                                Container(color: AppTheme.primary.withOpacity(0.15)),
+
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [
+                                      Colors.black.withOpacity(0.85),
+                                      Colors.black.withOpacity(0.55),
+                                      Colors.black.withOpacity(0.0),
+                                    ],
+                                    stops: const [0.0, 0.4, 0.7],
+                                  ),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                ev['location']?.toString() ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13, color: Colors.white70),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    ev['attendeeCount'] != null
-                                        ? '${ev['attendeeCount']} attendees'
-                                        : 'No attendees info',
-                                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                                  ),
-                                  Text(
-                                    (_hasLocation && dist != null) ? '${(dist / 1000).toStringAsFixed(1)} km' : '',
-                                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                                  ),
-                                ],
+
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      ev['title']?.toString() ?? 'Event',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      ev['location']?.toString() ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 13, color: Colors.white70),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          ev['attendeeCount'] != null
+                                              ? '${ev['attendeeCount']} attendees'
+                                              : 'No attendees info',
+                                          style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                        ),
+                                        Text(
+                                          (_hasLocation && dist != null) ? '${(dist / 1000).toStringAsFixed(1)} km' : '',
+                                          style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
-            );
-          },),
+            ),
+          ),
         ),
       ],
     );
