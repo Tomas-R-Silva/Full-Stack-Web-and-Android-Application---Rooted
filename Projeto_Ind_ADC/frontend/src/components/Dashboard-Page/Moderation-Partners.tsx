@@ -81,7 +81,7 @@ function ModerationPartners() {
         notify("PARTNER_ROLE_SETTED");
       }
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
@@ -292,7 +292,7 @@ function ModerationPartners() {
                           color: "var(--color-green)",
                         }}
                       >
-                        Role
+                        New Role
                       </label>
 
                       <select

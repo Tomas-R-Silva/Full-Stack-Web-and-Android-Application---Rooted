@@ -7,6 +7,7 @@ export type NotificationCode =
   | "ACCOUNT_UPDATED"
   | "AVATAR_UPDATED"
   | "PASSWORD_CHANGED"
+  | "MAX_SDG"
   | "EVENT_CREATED"
   | "EVENT_UPDATED"
   | "EVENT_COMPLETED"
@@ -67,6 +68,10 @@ export const notificationMessages: Record<NotificationCode, NotificationData> = 
   PASSWORD_CHANGED: {
     title: "Password Updated",
     message: "Your password has been changed.",
+  },
+  MAX_SDG: {
+    title: "Max SDG",
+    message: "There is a limit of 5 SDG per event.",
   },
   EVENT_CREATED: {
     title: "Event Created",

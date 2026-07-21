@@ -128,9 +128,26 @@ function EventForm() {
 
   const toggleSDG = (id: number) => {
     setSelectedSDGs((prev) => {
-      const updated = prev.includes(id)
-        ? prev.filter((sdgId) => sdgId !== id)
-        : [...prev, id];
+      if (prev.includes(id)) {
+        const updated = prev.filter((sdgId) => sdgId !== id);
+
+        setFormData((prevForm) => ({
+          ...prevForm,
+          input: {
+            ...prevForm.input,
+            sdg: updated,
+          },
+        }));
+
+        return updated;
+      }
+
+      if (prev.length >= 5) {
+        notify("MAX_SDG");
+        return prev;
+      }
+
+      const updated = [...prev, id];
 
       setFormData((prevForm) => ({
         ...prevForm,

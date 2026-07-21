@@ -1,18 +1,8 @@
-import type {
-  RequestDeleteAccount,
-  RequestModAccount,
-  UserInformationResponse,
-  UserProps,
-} from "../../utils/types";
+import type { UserProps } from "../../utils/types";
 import { useState, useEffect } from "react";
 import type { RequestChangeRole } from "../../utils/types";
-import { deleteAccount, changeRole, getUser } from "../../api/auth";
+import { changeRole } from "../../api/auth";
 import { useNotification } from "../NotificationContext";
-import { countries } from "../../utils/countries";
-
-type ErrorState = {
-  [K in keyof RequestModAccount["input"]]: string;
-};
 
 function PartnerManage({ user }: UserProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -53,36 +43,7 @@ function PartnerManage({ user }: UserProps) {
         notify("ACCOUNT_UPDATED");
       }
     } catch (err) {
-      console.log("Something went wrong!");
-    }
-  };
-
-  const handleDelete = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const token = sessionStorage.getItem("token");
-      if (!token) {
-        console.log("User is not authenticated");
-        return;
-      }
-      const payload: RequestDeleteAccount = {
-        token: {
-          jwt: token,
-        },
-        input: {
-          username: user.username,
-        },
-      };
-      console.log(payload);
-      const response = await deleteAccount(payload);
-      console.log(response);
-      window.location.reload();
-      if (response.status === 200) {
-        notify("ACCOUNT_DELETED");
-      }
-    } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
