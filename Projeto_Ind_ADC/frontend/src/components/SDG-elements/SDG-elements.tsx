@@ -15,18 +15,10 @@ import { getTopSDG } from "../../api/auth";
 function SDGelements() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [allTops, setAllTops] = useState<Record<number, Top[]>>({});
   const [tops, setTops] = useState<Top[]>([]);
   const sdgId = Number(id);
   const isValidSdgId = Number.isInteger(sdgId) && sdgId >= 1 && sdgId <= 17;
-
-  const persons = [
-    { username: "Alexandre", value: "100" },
-    { username: "Tomás", value: "80" },
-    { username: "Artur", value: "60" },
-    { username: "Gustavo", value: "40" },
-    { username: "Eduardo", value: "20" },
-    { username: "Gonçalo", value: "1" },
-  ];
 
   const [filter, setFilter] = useState<FilterProps>({
     category: null,
@@ -47,8 +39,17 @@ function SDGelements() {
   };
 
   useEffect(() => {
-    loadTop();
+    const load = async () => {
+      const res = await getTopSDG({});
+      setAllTops(res.data.topBySDG);
+    };
+
+    load();
   }, []);
+
+  useEffect(() => {
+    setTops(allTops[sdgId] ?? []);
+  }, [allTops, sdgId]);
 
   useEffect(() => {
     if (!isValidSdgId) return;
