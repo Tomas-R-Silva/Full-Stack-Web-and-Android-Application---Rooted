@@ -64,6 +64,7 @@ function EventUpdater() {
   const [originalLocation, setOriginalLocation] = useState<string>("");
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
   const [selectedImages, setSelectedImages] = useState<(Image | string)[]>([]);
+  const [imagesChanged, setImagesChanged] = useState(false);
   const [formData, setFormData] = useState<RequestEventUpdate>({
     token: { jwt: "" },
     input: {
@@ -152,6 +153,7 @@ function EventUpdater() {
 
     reader.onload = () => {
       setSelectedImages((prev) => [...prev, reader.result as string]);
+      setImagesChanged(true);
     };
 
     reader.readAsDataURL(file);
@@ -171,19 +173,27 @@ function EventUpdater() {
         return img !== image;
       }),
     );
+
+    setImagesChanged(true);
   };
 
   const selectCover = (image: Image | string) => {
     setSelectedImages((prev) => {
-      const rest = prev.filter((img) => {
-        if (typeof img === "string" && typeof image === "string")
-          return img !== image;
+      if (prev[0] === image) return prev;
 
-        if (typeof img !== "string" && typeof image !== "string")
+      const rest = prev.filter((img) => {
+        if (typeof img === "string" && typeof image === "string") {
+          return img !== image;
+        }
+
+        if (typeof img !== "string" && typeof image !== "string") {
           return img.id !== image.id;
+        }
 
         return img !== image;
       });
+
+      setImagesChanged(true);
 
       return [image, ...rest];
     });
@@ -424,12 +434,14 @@ function EventUpdater() {
     const hasErrors = Object.values(newErrors).some((error) => error !== "");
     if (hasErrors) return;
 
-    if (event?.imageUrls?.length) {
-      await handleImagesDelete();
-    }
+    if (imagesChanged) {
+      if (event?.imageUrls?.length) {
+        await handleImagesDelete();
+      }
 
-    if (selectedImages.length) {
-      await handleImagesUpload();
+      if (selectedImages.length) {
+        await handleImagesUpload();
+      }
     }
 
     try {
@@ -880,7 +892,7 @@ function EventUpdater() {
             <div className="form-check">
               <input
                 type="checkbox"
-                name="isAccessible"
+                name="accessible"
                 className="form-check-input"
                 checked={formData.input.accessible ?? false}
                 onChange={handleChange}
