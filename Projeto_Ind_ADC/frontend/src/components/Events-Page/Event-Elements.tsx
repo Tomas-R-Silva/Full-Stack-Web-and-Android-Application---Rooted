@@ -107,6 +107,23 @@ function EventElements() {
     return <NotFound />;
   }
 
+  if (!isAuthenticated) {
+    return (
+      <>
+        <NavBar />
+        <div className="container-fluid px-2 px-sm-3 px-md-4 my-2">
+          <div
+            className="alert alert-light mt-5"
+            style={{ color: "var(--color-green)" }}
+            role="alert"
+          >
+            You need to be logged in to see the event details.
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <NavBar />
