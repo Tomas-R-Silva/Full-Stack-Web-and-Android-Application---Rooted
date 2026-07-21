@@ -37,13 +37,13 @@ public class EventAtributs{
 	public String getLocation() { return location; }
 	public void setLocation(String location) { this.location = location; }
 
-	public double getLatitude() { return zeroifnull(lat); }
-	public Double getLatitudenull() { return lat; }
-	public void setLatitude(double latitude) { this.lat = latitude; }
+	public double getLat() { return zeroifnull(lat); }
+	public Double getLatnull() { return lat; }
+	public void setLat(double lat) { this.lat = lat; }
 
-	public double getLongitude() { return zeroifnull(lng); }
-	public Double getLongitudenull() { return lng; }
-	public void setLongitude(double longitude) { this.lng = longitude; }
+	public double getLng() { return zeroifnull(lng); }
+	public Double getLngnull() { return lng; }
+	public void setLng(double lng) { this.lng = lng; }
 
 	public long getStartDate() { return zeroifnull(startDate); }
 	public Long getStartDatenull() { return startDate; }

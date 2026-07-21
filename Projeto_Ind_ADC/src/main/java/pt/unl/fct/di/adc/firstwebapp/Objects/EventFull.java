@@ -89,8 +89,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setDescription(Full.getString(entity,"description"));
 		event.setCategory(Full.getString(entity,"category"));
 		event.setLocation(Full.getString(entity,"location"));
-		event.setLatitude(Full.getDouble(entity,"latitude"));
-		event.setLongitude(Full.getDouble(entity,"longitude"));
+		event.setLat(Full.getDouble(entity,"lat"));
+		event.setLng(Full.getDouble(entity,"lng"));
 		event.setStartDate(Full.getLong(entity,"start_date") * TIME_DIVIDER);
 		event.setDurationMinutes(Full.getLong(entity,"duration_minutes"));
 		event.setOrganizerUsername(Full.getString(entity,"organizer_username"));
@@ -142,8 +142,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 				.set("description", this.getDescription())
 				.set("category", this.getCategory().name())
 				.set("location", this.getLocation())
-				.set("latitude", this.getLatitude())
-				.set("longitude", this.getLongitude())
+				.set("lat", this.getLat())
+				.set("lng", this.getLng())
 				.set("start_date", this.getStartDate()/ TIME_DIVIDER)
 				.set("duration_minutes", this.getDurationMinutes())
 				.set("organizer_username", this.getOrganizerUsername())
@@ -179,8 +179,8 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setOrganizerUsername(username);
 		event.setMaxAttendees(input.getMaxAttendees());
 		event.setMinAttendees(input.getMinAttendees());
-		event.setLatitude(input.getLatitude());
-		event.setLongitude(input.getLongitude());
+		event.setLat(input.getLat());
+		event.setLng(input.getLng());
 		event.setPublic(input.isPublic());
 		event.setStatus(Status.UPCOMING);
 		event.setCreatedAt(System.currentTimeMillis());

@@ -90,19 +90,8 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEvent(EventTokenRequest req) {
 		try {
+			// isPublic only gates joining (/attend) anyone can view an event's details.
 			EventFull entity = getEventEntity(req.getInput());
-
-			boolean isPublic = entity.isPublic();
-			if (!isPublic) {
-				// Private event must be authenticated
-				TokenFull token = AuthHelper.verifyToken(req);
-				UserFull user =AuthHelper.getUser(token);
-				if (!entity.isOwner(token) && !user.isRole(new Role[] {Role.ADMIN,Role.BOFFICER})) 
-					// Also allow attendees to see the event
-					if (!isAttending(req.getInput(), user))
-						ErrorException.trow(9905);
-			}
-
 			return ok(Map.of("event", entity.tomap()));
 
 		} catch (Exception e) {
@@ -119,31 +108,13 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listEvents(ListEventsRequest req) {
 		try {
-			boolean authenticated = false;
-			Role requesterRole = null;
 			ListEventsInput input =req.getInput();
-			if (req.getToken() != null && req.getToken().getJwt() != null) {
-				try {
-					TokenFull token = AuthHelper.verifyToken(req);
-					authenticated = true;
-					requesterRole = token.getRole();
-				} catch (ErrorException ignored) {
-					// Token invalid  treat as unauthenticated
-				}
-			}
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Event");
 
 			// Build filters
 			List<StructuredQuery.Filter> filters = new ArrayList<>(7);
 
-			// Unauthenticated users see only public events
-			if (!authenticated) {
-				filters.add(PropertyFilter.eq("is_public", true));
-			} else if (requesterRole != Role.ADMIN && requesterRole != Role.BOFFICER) {
-				// Regular users see public events and their own private events
-				filters.add(PropertyFilter.eq("is_public", true));
-			}
-
+			// The listing shows every event, public and private, to everyone. 
 			if (input.isAccessible() != null && input.isAccessible())
 				filters.add(PropertyFilter.eq("is_accessible", input.isAccessible()));
 
@@ -229,10 +200,10 @@ public class EventResources {
 				existing.setCategory(input.getCategory());
 			if (input.getLocation() != null && !input.getLocation().isBlank())
 				existing.setLocation(input.getLocation());
-			if (input.getLatitudenull() != null && !input.getLocation().isBlank())
-				existing.setLatitude(input.getLatitude());
-			if (input.getLongitudenull() != null && !input.getLocation().isBlank())
-				existing.setLongitude(input.getLongitude());
+			if (input.getLatnull() != null && !input.getLocation().isBlank())
+				existing.setLat(input.getLat());
+			if (input.getLngnull() != null && !input.getLocation().isBlank())
+				existing.setLng(input.getLng());
 			if (input.getStartDatenull() != null && input.getStartDate() > 0)
 				existing.setStartDate(input.getStartDate());
 			if (input.getDurationMinutesnull() != null && input.getDurationMinutes() > 0)
