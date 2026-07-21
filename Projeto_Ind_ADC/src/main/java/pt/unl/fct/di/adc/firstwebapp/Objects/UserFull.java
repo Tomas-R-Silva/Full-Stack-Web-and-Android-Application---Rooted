@@ -76,7 +76,7 @@ public class UserFull extends ShortUser implements Full{
 	public void setBorderID(String borderID) {this.borderID = (borderID!=null)?borderID:"";}
 	public long getPoints() {return points;}
 	private void setbasePoints(long points) {this.points = points;}
-
+	
 	public void setAvatar(String avatar){
 		String imageUrl;
 		try {
