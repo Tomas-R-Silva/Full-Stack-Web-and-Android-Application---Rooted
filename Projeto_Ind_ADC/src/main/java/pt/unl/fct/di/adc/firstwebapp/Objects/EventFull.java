@@ -186,7 +186,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		event.setCreatedAt(System.currentTimeMillis());
 		event.setSDG(input.getSDG());
 		event.setAccessible(input.isAccessible());
-		event.setpartner(Collections.emptyList());
+		event.setpartner(new ArrayList<String>());
 		event.setImageUrls(Collections.emptyList());
 		event.setAttendee(0);
 		event.isValid();
@@ -227,7 +227,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 		partners.remove(user.getUsername());
 	}
 
-	public void setpartner(List<String> partners) {this.partners=partners;}
+	private void setpartner(List<String> partners) {this.partners=partners;}
 	
 	public void addpartner(UserFull user) throws ErrorException {
 		if(partners.contains(user.getUsername()))
