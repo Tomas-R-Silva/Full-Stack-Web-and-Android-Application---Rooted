@@ -68,32 +68,50 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
   Future<void> _changeRole(String username, String currentRole) async {
     final List<String> roles = ['USER', 'BOFFICER', 'ADMIN', 'PARTNER'];
-    String? selectedRole = await showDialog<String>(
+    String localSelectedRole = currentRole;
+
+    final confirmedRole = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Change role for @$username'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: roles.map((r) => RadioListTile<String>(
-            title: Text(r),
-            value: r,
-            groupValue: currentRole,
-            onChanged: (val) => Navigator.pop(ctx, val),
-          )).toList(),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('Change role for @$username'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: roles.map((r) => RadioListTile<String>(
+              title: Text(r),
+              value: r,
+              groupValue: localSelectedRole,
+              onChanged: (val) {
+                if (val != null) {
+                  setDialogState(() => localSelectedRole = val);
+                }
+              },
+            )).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, localSelectedRole),
+              child: const Text('Change', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
         ),
       ),
     );
 
-    if (selectedRole != null && selectedRole != currentRole && _jwt != null) {
+    if (confirmedRole != null && confirmedRole != currentRole && _jwt != null) {
       try {
         await ApiService.changeUserRole(
           jwt: _jwt!,
           username: username,
-          newRole: selectedRole,
+          newRole: confirmedRole,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Role updated for @$username')),
+            SnackBar(content: Text('Role updated to $confirmedRole for @$username')),
           );
           _loadAll();
         }

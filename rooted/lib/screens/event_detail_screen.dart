@@ -8,7 +8,6 @@ import '../widgets/sdg_badge.dart';
 import '../widgets/accessibility_badge.dart';
 import '../widgets/attendees_bottom_sheet.dart';
 import '../widgets/partner_mark.dart';
-import '../widgets/partners_bottom_sheet.dart';
 import 'create_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -50,13 +49,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     _jwt = await SessionStorage.getJwt();
     _username = await SessionStorage.getUsername();
     _role = await SessionStorage.getRole();
-    
+
     // Fetch organizer role to show verified mark
     _fetchOrganizerRole();
-    
+
     // Refresh event data to ensure attendance status is current
     await _refreshEventData();
-    
+
     await _loadMessages();
     // Poll for new messages every 5 seconds
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _pollMessages());
@@ -182,18 +181,126 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  void _showPartners() {
+  Future<void> _addPartnerDialog() async {
     if (_jwt == null) return;
-    showModalBottomSheet(
+    final controller = TextEditingController();
+    final confirmed = await showDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => PartnersBottomSheet(
-        event: _event,
-        jwt: _jwt!,
-        onUpdate: _refreshEventData,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Partner'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter username',
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Add'),
+          ),
+        ],
       ),
     );
+
+    if (confirmed == true && controller.text.trim().isNotEmpty) {
+      final username = controller.text.trim();
+      try {
+        await ApiService.addPartner(
+          jwt: _jwt!,
+          eventId: _event['eventId'] as String,
+          username: username,
+        );
+        _refreshEventData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added $username as partner')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add partner: $e'), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _removePartnerDialog() async {
+    if (_jwt == null) return;
+    final partners = _event['partners'];
+    final List<String> partnerList = partners is List ? partners.map((e) => e.toString()).toList() : [];
+
+    if (partnerList.isEmpty) return;
+
+    String? selectedUsername;
+    if (partnerList.length == 1) {
+      selectedUsername = partnerList.first;
+    } else {
+      selectedUsername = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Remove Partner'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: partnerList.map((u) => ListTile(
+              title: Text(u, style: const TextStyle(fontWeight: FontWeight.w600)),
+              trailing: const Icon(Icons.remove_circle_outline, color: AppTheme.error, size: 20),
+              onTap: () => Navigator.pop(ctx, u),
+            )).toList(),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ],
+        ),
+      );
+    }
+
+    if (selectedUsername != null) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Confirm Removal'),
+          content: Text('Are you sure you want to remove $selectedUsername from this event?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Remove', style: TextStyle(color: AppTheme.error)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true) {
+        try {
+          await ApiService.removePartner(
+            jwt: _jwt!,
+            eventId: _event['eventId'] as String,
+            username: selectedUsername,
+          );
+          _refreshEventData();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Removed $selectedUsername from partners')),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to remove partner: $e'), backgroundColor: AppTheme.error),
+            );
+          }
+        }
+      }
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -255,7 +362,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           jwt: _jwt!, postId: post['postId'] as String);
       if (mounted) {
         setState(() => _posts.removeWhere(
-            (p) => p['postId'] == post['postId']));
+                (p) => p['postId'] == post['postId']));
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -274,7 +381,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   String _formatDate(dynamic epochSeconds) {
     if (epochSeconds == null) return '';
     final dt =
-        DateTime.fromMillisecondsSinceEpoch((epochSeconds as int) * 1000);
+    DateTime.fromMillisecondsSinceEpoch((epochSeconds as int) * 1000);
     return '${dt.day.toString().padLeft(2, '0')}/'
         '${dt.month.toString().padLeft(2, '0')}/'
         '${dt.year}  '
@@ -285,7 +392,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   String _formatDateShort(dynamic epochSeconds) {
     if (epochSeconds == null) return '';
     final dt =
-        DateTime.fromMillisecondsSinceEpoch((epochSeconds as int) * 1000);
+    DateTime.fromMillisecondsSinceEpoch((epochSeconds as int) * 1000);
     return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
@@ -338,33 +445,42 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ),
       body: Column(
         children: [
-          _buildEventInfo(),
-          const Divider(height: 1),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                children: [
+                  _buildEventInfo(),
+                  const Divider(height: 1),
 
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const Icon(Icons.forum_outlined, size: 18,
-                    color: AppTheme.textSecondary),
-                const SizedBox(width: 6),
-                const Text('Event Chat',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary)),
-                const Spacer(),
-                if (_loadingMessages)
-                  const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2)),
-              ],
+                  Padding(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.forum_outlined, size: 18,
+                            color: AppTheme.textSecondary),
+                        const SizedBox(width: 6),
+                        const Text('Event Chat',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textSecondary)),
+                        const Spacer(),
+                        if (_loadingMessages)
+                          const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+
+                  _buildMessageList(),
+                ],
+              ),
             ),
           ),
-          const Divider(height: 1),
-
-          Expanded(child: _buildMessageList()),
 
           if (!isClosed) _buildMessageInput(),
           if (isClosed) _buildClosedBanner(),
@@ -482,7 +598,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
                           imageUrls.length,
-                          (index) => Container(
+                              (index) => Container(
                             width: 8,
                             height: 8,
                             margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -510,7 +626,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   children: [
                     Container(
                       padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
                         color: _statusColor(_event['status'] as String?)
                             .withValues(alpha: 0.12),
@@ -528,7 +644,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     const SizedBox(width: 8),
                     Container(
                       padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(20),
@@ -571,7 +687,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     _event['location'] as String? ?? ''),
                 _infoRow(Icons.timer_outlined,
                     '${_event['durationMinutes'] ?? 0} minutes'),
-                
+
                 GestureDetector(
                   onTap: (_event['organizerUsername'] == _username || _role == 'ADMIN') ? _showAttendees : null,
                   child: Row(
@@ -594,7 +710,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ],
                   ),
                 ),
-                
+
                 // SDG and Accessibility Display
                 if ((_event['sdg'] != null && (_event['sdg'] as List).isNotEmpty) ||
                     (_event['accessible'] == true || _event['isAccessible'] == true)) ...[
@@ -619,6 +735,61 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
+                if (isOwnerOrAdmin) ...[
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Event Management',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _addPartnerDialog,
+                          icon: const Icon(Icons.person_add_outlined, size: 18),
+                          label: const Text('Add Partner'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            minimumSize: Size.zero,
+                            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: (_event['partners'] as List? ?? []).isEmpty ? null : _removePartnerDialog,
+                          icon: const Icon(Icons.person_remove_outlined, size: 18),
+                          label: const Text('Remove Partner'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            minimumSize: Size.zero,
+                            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _confirmDeleteEvent,
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      label: const Text('Delete Event'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.error,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        minimumSize: Size.zero,
+                        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 if (_event['organizerUsername'] != _username)
                   SizedBox(
                     width: double.infinity,
@@ -683,59 +854,52 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.handshake_outlined, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(Icons.handshake_outlined, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: partnerList.isEmpty
                 ? Text(
-                    'No partners yet',
-                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6)),
-                  )
+              'No partners yet',
+              style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6)),
+            )
                 : Wrap(
-                    spacing: 4,
-                    children: [
-                      Text('With ', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                      ...partnerList.asMap().entries.map((entry) {
-                        final name = entry.value;
-                        final isLast = entry.key == partnerList.length - 1;
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => UserProfileScreen(username: name)),
-                                );
-                              },
-                              child: Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
-                            if (!isLast) Text(', ', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                          ],
+              spacing: 4,
+              runSpacing: 2,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text('With ', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                ...partnerList.asMap().entries.expand((entry) {
+                  final name = entry.value;
+                  final isLast = entry.key == partnerList.length - 1;
+                  return [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => UserProfileScreen(username: name)),
                         );
-                      }),
-                    ],
-                  ),
-          ),
-          if (isOwnerOrAdmin)
-            TextButton(
-              onPressed: _showPartners,
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: const Text('Manage', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      },
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    if (!isLast) Text(', ', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  ];
+                }),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -961,7 +1125,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
     }
     return ListView.builder(
-      controller: _scrollController,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: _posts.length,
       itemBuilder: (context, index) => _buildBubble(_posts[index]),
@@ -993,7 +1158,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
           child: Column(
             crossAxisAlignment:
-                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               if (!isMe)
                 GestureDetector(
@@ -1083,15 +1248,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               backgroundColor: AppTheme.primary,
               child: _sendingMessage
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
                   : IconButton(
-                      icon: const Icon(Icons.send_rounded,
-                          color: Colors.white, size: 18),
-                      onPressed: _sendMessage,
-                    ),
+                icon: const Icon(Icons.send_rounded,
+                    color: Colors.white, size: 18),
+                onPressed: _sendMessage,
+              ),
             ),
           ],
         ),
@@ -1111,7 +1276,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               : 'This event has ended. The chat is now read-only.',
           textAlign: TextAlign.center,
           style:
-              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+          TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
         ),
       ),
     );

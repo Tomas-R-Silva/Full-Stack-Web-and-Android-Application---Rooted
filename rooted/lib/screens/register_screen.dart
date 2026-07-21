@@ -73,9 +73,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       final jwt = token['jwt']?.toString() ?? '';
+      if (jwt.isEmpty) {
+        throw ApiException('Registration succeeded but session token is missing.');
+      }
       final username = token['username']?.toString() ?? _usernameController.text.trim();
       final role = token['role']?.toString() ?? '';
-      final expiresAt = token['expiresAt'] as int?;
+      final expiresAt = token['expiresAt'];
 
       // After login, fetch the full user account to be consistent with LoginScreen
       String bio = '';
@@ -88,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       String borderId = '';
       int points = 0;
       try {
-        final profile = await ApiService.getUserAccount(jwt: jwt, username: username);
+        final profile = await ApiService.getUserAccount(jwt: jwt, username: username, redirectOnError: false);
         bio = profile['bio']?.toString() ?? '';
         email = profile['email']?.toString() ?? email;
         displayName = profile['display']?.toString() ?? username;
@@ -114,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ods: ods,
         borderId: borderId,
         points: points,
-        expiresAt: expiresAt,
+        expiresAt: ApiService.normalizeTimestamp(expiresAt),
       );
 
       if (mounted) {

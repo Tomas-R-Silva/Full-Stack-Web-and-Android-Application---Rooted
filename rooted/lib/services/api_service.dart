@@ -23,6 +23,11 @@ class ApiService {
   /// Cache for user roles to avoid redundant network calls.
   static final Map<String, String> _roleCache = {};
 
+  /// Invalidates the role cache for a specific user.
+  static void invalidateRoleCache(String username) {
+    _roleCache.remove(username);
+  }
+
   static const List<String> categories = [
     'Music',
     'Sports',
@@ -322,6 +327,9 @@ class ApiService {
 
   /// Clears local session and redirects to Login screen.
   static Future<void> forceLogout() async {
+    final jwt = await SessionStorage.getJwt();
+    if (jwt == null || jwt.isEmpty) return; // Already logged out or Guest
+
     await SessionStorage.clear();
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -411,12 +419,31 @@ class ApiService {
 
   static int normalizeTimestamp(dynamic value) {
     if (value == null) return 0;
-    int ts = (value as num).toInt();
+    num? n = value is num ? value : num.tryParse(value.toString());
+    if (n == null) return 0;
+    int ts = n.toInt();
     final magnitude = ts.abs();
-    if (magnitude > 1000000000000000) return ts ~/ 1000000000; // Nanoseconds -> Seconds
-    if (magnitude > 1000000000000) return ts ~/ 1000;       // Milliseconds -> Seconds
-    if (magnitude > 10000000000) return 0;
-    return ts;
+
+    if (magnitude == 0) return 0;
+
+    // 1. Huge values (> 10^15) are likely nanoseconds absolute.
+    if (magnitude > 1000000000000000) {
+      return ts ~/ 1000000000;
+    }
+
+    // 2. Very large values (> 10^12) are likely milliseconds absolute.
+    if (magnitude > 1000000000000) {
+      return ts ~/ 1000;
+    }
+
+    // 3. Values between 10^9 and 10^12 are likely seconds absolute (e.g., year 2001+).
+    if (magnitude > 1000000000) {
+      return ts;
+    }
+
+    // 4. Values below 10^9 are treated as relative durations in seconds.
+    // (Note: even 30 years in seconds is < 10^9).
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000) + ts;
   }
 
   /// Workaround for the current backend: EventResources#entityToMap puts the
@@ -564,6 +591,7 @@ class ApiService {
     List<int>? sdg,
     int pageSize = 50,
     String? cursor,
+    bool redirectOnError = false,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/events/list');
 
@@ -586,7 +614,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _normalizeEventPayload(_extractData(body, statusCode: response.statusCode));
+    return _normalizeEventPayload(_extractData(body, redirectOnError: redirectOnError, statusCode: response.statusCode));
   }
 
   /// Calls POST /rest/events/addpartner. Auth required Organizer or ADMIN.
@@ -1000,7 +1028,7 @@ class ApiService {
       return _roleCache[username];
     }
     try {
-      final user = await getUserAccount(jwt: jwt, username: username);
+      final user = await getUserAccount(jwt: jwt, username: username, redirectOnError: false);
       final role = user['role'] as String?;
       if (role != null) {
         _roleCache[username] = role;
@@ -1015,6 +1043,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getUserAccount({
     required String jwt,
     required String username,
+    bool redirectOnError = false,
   }) async {
     final uri = Uri.parse('$baseUrl/rest/user');
     final response = await http.post(
@@ -1026,7 +1055,7 @@ class ApiService {
       }),
     );
     final body = _parseBody(response.body);
-    return _normalizeUser(_extractData(body));
+    return _normalizeUser(_extractData(body, redirectOnError: redirectOnError, statusCode: response.statusCode));
   }
 
   /// Calls POST /rest/find. Auth required.
@@ -1113,12 +1142,15 @@ class ApiService {
         'token': {'jwt': jwt},
         'input': {
           'username': username,
-          'newrole': newRole,
+          'newRole': newRole,
         },
       }),
     );
     final body = _parseBody(response.body);
     _checkBodyError(body, statusCode: response.statusCode);
+
+    // Invalidate cache so UI components fetch the fresh role
+    invalidateRoleCache(username);
   }
 
   /// Calls POST /rest/changeuserpwd. Auth required Owner or ADMIN.
