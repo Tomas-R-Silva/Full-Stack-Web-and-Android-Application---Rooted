@@ -232,7 +232,7 @@ public class EventFull extends EventAtributsid implements Full,EventInputInterfa
 	public void addpartner(UserFull user) throws ErrorException {
 		if(partners.contains(user.getUsername()))
 			ErrorException.trow(9936);
-		partners.remove(user.getUsername());
+		partners.add(user.getUsername());
 	}
 	
 	// Reads the event's images as a mutable list of { id, url } maps. Also works with the
