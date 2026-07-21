@@ -544,7 +544,7 @@
     <span class="path">/events/list</span>
     <span class="tag tag-public">public</span>
   </div>
-  <p class="desc">All filters are optional. Without a token (or as a regular user) only public events are returned; ADMIN/BOFFICER see all. Paginated with a cursor.</p>
+  <p class="desc">All filters are optional. Returns every event — public and private — to anyone, with or without a token; <code>isPublic</code> only affects viewing full details via <code>/events/get</code> and joining via <code>/events/attend</code>, not this listing. Paginated with a cursor.</p>
   <div class="label">Request</div>
   <pre>{
   <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> },
