@@ -33,7 +33,6 @@ public class UserFull extends ShortUser implements Full{
 	private String country;
 	private Map<String, String> avatar;
 	private String bio;
-	private boolean isPublic;
 	private List<Long> ods;
 	private String borderID;
 	private long points;
@@ -62,8 +61,6 @@ public class UserFull extends ShortUser implements Full{
 	public void setBirth(long birth) {this.birth=birth;}
 	public long getBirth() {return birth;}
 	private void setCreation(long creation) {this.creation=creation;}
-	public boolean isPublic() { return isPublic; }
-	public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 	private void setbaseCategory(List<Category> category) {this.category=category;}
 	public void setbaseCategorystr(List<String> category) {this.category= (category!=null)?category.stream().map(v -> Category.valueof(v)).collect(Collectors.toList()):Collections.emptyList();}
 	public void setOld(List<String> old){this.old=old;}
@@ -115,7 +112,6 @@ public class UserFull extends ShortUser implements Full{
 		newuser.setDisplay(user.getUsername());
 		newuser.setCreation(System.currentTimeMillis());
 		newuser.setbaseCategorystr(user.getCategory());
-		newuser.setPublic(user.isPublic());
 		newuser.setCountry("");
 		newuser.setBirth(0);
 		newuser.setAvatar("");	
@@ -137,7 +133,6 @@ public class UserFull extends ShortUser implements Full{
 	}
 	public Map<String,Object> tobigmap(String display,Friendstatus friendshipstatus){
 		Map<String,Object> map=this.tomap();
-		map.put("isPublic", isPublic);
 		map.put("avatar", avatar);
 		map.put("oldnames",Full.list(old));
 		map.put("borderID",Full.string(borderID));
@@ -172,7 +167,6 @@ public class UserFull extends ShortUser implements Full{
 		newUser.set("user_creation_time", creation / TIME_DIVIDER);
 		newUser.set("birth_time", birth / TIME_DIVIDER);
 		newUser.set("country", Full.string(country));
-		newUser.set("is_public", isPublic);
 		newUser.set("user_bio", Full.string(bio));
 		newUser.set("old_display", Full.makeStringValueList(old));
 		newUser.set("category", Full.makeStringValueEnumList(category));
@@ -191,7 +185,6 @@ public class UserFull extends ShortUser implements Full{
 		user.setbasePassword(Full.getString(entity,"user_pwd"));
 		user.setRole(Full.getString(entity,"user_role"));
 		user.setBio(Full.getString(entity,"user_bio"));
-		user.setPublic(Full.getBoolean(entity,"is_public"));
 		user.setbaseDisplay(Full.getString(entity,"user_display"));
 		user.setCountry(Full.getString(entity,"country"));
 		user.setCreation(Full.getLong(entity,"user_creation_time")*TIME_DIVIDER);

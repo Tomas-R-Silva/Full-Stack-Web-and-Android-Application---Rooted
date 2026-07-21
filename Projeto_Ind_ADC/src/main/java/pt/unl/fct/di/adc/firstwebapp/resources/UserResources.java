@@ -1,10 +1,12 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -51,6 +53,7 @@ import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.TopSdgRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.TwoNameTokenRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
 
@@ -128,6 +131,48 @@ public class UserResources {
 				users.add(UserFull.fromdatabase(results.next()).tomap());
 			return buildresponse(Map.of("users", users));
 		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /topsdg  gamification leaderboard: top 20 users per SDG, ranked by
+	// their participation count in that SDG.
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/topsdg")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response topSdg(TopSdgRequest request) {
+		try {
+			int limit = 20;
+			if (request != null && request.getInput() != null
+					&& request.getInput().getLimit() != null && request.getInput().getLimit() > 0)
+				limit = request.getInput().getLimit();
+
+			QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder().setKind("User").build());
+			List<UserFull> users = new LinkedList<>();
+			while (results.hasNext())
+				users.add(UserFull.fromdatabase(results.next()));
+
+			int sdgCount = users.isEmpty() ? 0 : users.get(0).getOds().size();
+			Map<String, Object> topBySdg = new LinkedHashMap<>();
+			for (int i = 0; i < sdgCount; i++) {
+				final int idx = i;
+				List<Map<String, Object>> ranked = users.stream()
+						.filter(u -> u.getOds().get(idx) > 0)
+						.sorted((a, b) -> Long.compare(b.getOds().get(idx), a.getOds().get(idx)))
+						.limit(limit)
+						.map(u -> Map.<String, Object>of(
+								"username", u.getUsername(),
+								"display", (u.getDisplay() != null) ? u.getDisplay() : u.getUsername(),
+								"points", u.getOds().get(idx)))
+						.collect(Collectors.toList());
+				topBySdg.put(String.valueOf(i + 1), ranked);
+			}
+
+			return buildresponse(Map.of("topBySDG", topBySdg));
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -232,8 +277,7 @@ public class UserResources {
 	public Response findAccount(ShortUserTokenRequest request) {
 		try {
 			AuthHelper.verifyToken(request);
-			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User").
-					setFilter(PropertyFilter.eq("is_public", true));
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
 			List<Map<String,Object>> list=new ArrayList<>();
 			while(sessions.hasNext()) {
