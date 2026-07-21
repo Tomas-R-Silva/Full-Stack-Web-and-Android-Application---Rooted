@@ -90,19 +90,8 @@ public class EventResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEvent(EventTokenRequest req) {
 		try {
+			// isPublic only gates joining (/attend) anyone can view an event's details.
 			EventFull entity = getEventEntity(req.getInput());
-
-			boolean isPublic = entity.isPublic();
-			if (!isPublic) {
-				// Private event must be authenticated
-				TokenFull token = AuthHelper.verifyToken(req);
-				UserFull user =AuthHelper.getUser(token);
-				if (!entity.isOwner(token) && !user.isRole(new Role[] {Role.ADMIN,Role.BOFFICER})) 
-					// Also allow attendees to see the event
-					if (!isAttending(req.getInput(), user))
-						ErrorException.trow(9905);
-			}
-
 			return ok(Map.of("event", entity.tomap()));
 
 		} catch (Exception e) {
