@@ -4,8 +4,8 @@ import type {
   FriendProps,
 } from "../../utils/types";
 import type { RequestPostMessage } from "../../utils/types";
-import MessageRight from "../Forum-elements/MessageRight";
-import MessageLeft from "../Forum-elements/MessageLeft";
+import MessageRight from "./MessageRight";
+import MessageLeft from "./MessageLeft";
 import { useAuth } from "../AuthContext";
 import { useEffect, useState } from "react";
 import { ListMessages } from "../../api/auth";
@@ -33,7 +33,7 @@ function FriendsChat({ friend }: FriendProps) {
         setLoading(true);
       }
 
-      setError(null); //reset errors
+      setError(null);
 
       const token = sessionStorage.getItem("token");
       if (!token) {
@@ -60,10 +60,16 @@ function FriendsChat({ friend }: FriendProps) {
 
       console.log(res);
 
+      const sortedPosts = [...res.data.posts].sort(
+        (a, b) => a.createdAt - b.createdAt,
+      );
+
       if (cursor) {
-        setMessages((prev) => [...prev, ...res.data.posts]); //carregar mais => anteriores mais todos os restantes
+        setMessages((prev) =>
+          [...prev, ...sortedPosts].sort((a, b) => a.createdAt - b.createdAt),
+        );
       } else {
-        setMessages(res.data.posts);
+        setMessages(sortedPosts);
       }
 
       setNextCursor(res.data.nextCursor);
@@ -108,7 +114,7 @@ function FriendsChat({ friend }: FriendProps) {
       console.log(payload);
       const response = await PostMessage(payload);
       console.log(response);
-      //window.location.reload();
+      window.location.reload();
       if (response.status === 200) {
         notify("MESSAGE_POSTED");
       }
@@ -131,6 +137,7 @@ function FriendsChat({ friend }: FriendProps) {
           style={{
             maxHeight: "500px",
             overflowY: "auto",
+            background: "var(--color-white)",
           }}
         >
           {messages.length === 0 && (

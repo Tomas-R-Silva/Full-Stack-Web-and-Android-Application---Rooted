@@ -40,6 +40,26 @@ function Row3() {
       >
         in your phone & start enjoying it
       </p>
+      <div className="d-flex justify-content-center justify-content-md-start">
+        <button
+          style={{
+            marginTop: "20px",
+            padding: "10px 18px",
+            borderRadius: "8px",
+            border: "none",
+            background: "white",
+            color: "var(--color-green)",
+            fontWeight: 600,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+          onClick={() => console.log("Downloading...")}
+        >
+          Download App
+        </button>
+      </div>
     </div>
   );
 }

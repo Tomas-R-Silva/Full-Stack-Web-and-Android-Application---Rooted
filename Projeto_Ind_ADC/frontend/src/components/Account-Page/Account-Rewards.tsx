@@ -109,7 +109,7 @@ function AccountRewards() {
                 }}
               >
                 <img
-                  src={account_circle_w}
+                  src={user?.data.avatar.url ?? account_circle_w}
                   alt="Avatar"
                   style={{
                     width: "100%",
@@ -178,6 +178,11 @@ function AccountRewards() {
                   {user?.data.email || "Deleted account"}
                 </small>
               </div>
+            </div>
+
+            <div className="d-flex align-items-center gap-2 mt-4">
+              <h5 className="text-white mb-0">Points:</h5>
+              <span className="text-white">{user?.data.points} points</span>
             </div>
 
             <h5 className="text-white mt-4">SDG Borders:</h5>

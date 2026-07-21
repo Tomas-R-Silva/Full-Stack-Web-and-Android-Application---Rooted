@@ -1,17 +1,16 @@
 import NavBar from "../NavBar/NavBar";
 import { useState } from "react";
 import Activity from "./Activity";
-import Community from "./Community";
 import SDGs from "./SDGs";
 import ModerationUsers from "./Moderation-Users";
 import ModerationPartners from "./Moderation-Partners";
 import ModerationEvents from "./Moderation-Events";
 import { useNavigate } from "react-router-dom";
+import Footer from "../NavBar/Footer";
 
 function DashboardADM() {
   const dashboardItems = [
     "Activity",
-    "Community",
     "SDGs",
     "Moderation (Users)",
     "Moderation (Events)",
@@ -80,15 +79,15 @@ function DashboardADM() {
                 Admin Dashboard: {selected}
               </h2>
               {selected === dashboardItems[0] && <Activity />}
-              {selected === dashboardItems[1] && <Community />}
-              {selected === dashboardItems[2] && <SDGs />}
-              {selected === dashboardItems[3] && <ModerationUsers />}
-              {selected === dashboardItems[4] && <ModerationEvents />}
-              {selected === dashboardItems[5] && <ModerationPartners />}
+              {selected === dashboardItems[1] && <SDGs />}
+              {selected === dashboardItems[2] && <ModerationUsers />}
+              {selected === dashboardItems[3] && <ModerationEvents />}
+              {selected === dashboardItems[4] && <ModerationPartners />}
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

@@ -1,5 +1,5 @@
 import type { MessageDeleteResponse, MessageProps } from "../../utils/types";
-import replyAll from "../../assets/icons/reply_all.svg";
+import replyAll from "../../assets/icons/reply_all_w.svg";
 import close_w from "../../assets/icons/close_white.svg";
 import { DeleteMessage, getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
@@ -113,24 +113,15 @@ function MessageLeft(texts: MessageProps) {
           style={{
             maxWidth: "75%",
             width: "fit-content",
-            background:
-              texts.eventOrganizer === texts.authorUsername
-                ? "var(--color-gold)"
-                : "var(--color-white)",
-            color:
-              texts.eventOrganizer === texts.authorUsername
-                ? "var(--color-white)"
-                : "var(--color-green2)",
+            background: "var(--color-green)",
+            color: "var(--color-white)",
           }}
         >
           <div className="d-flex align-items-center justify-content-start mb-2">
             <small
               className="fw-bold mb-0"
               style={{
-                color:
-                  texts.eventOrganizer === texts.authorUsername
-                    ? "var(--color-white)"
-                    : "var(--color-green2)",
+                color: "var(--color-white)",
               }}
             >
               {user?.data.username || "Deleted User"}

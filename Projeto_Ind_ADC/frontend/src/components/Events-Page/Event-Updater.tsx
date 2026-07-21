@@ -33,6 +33,7 @@ import { useMapsPage } from "../../api/maps";
 import { usePlacesAutocomplete } from "../../api/places";
 import { useNotification } from "../NotificationContext";
 import accessible_w from "../../assets/icons/accessible_w.svg";
+import Footer from "../NavBar/Footer";
 
 type ErrorState = {
   [K in keyof RequestEventUpdate["input"]]: string;
@@ -63,6 +64,7 @@ function EventUpdater() {
   const [originalLocation, setOriginalLocation] = useState<string>("");
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
   const [selectedImages, setSelectedImages] = useState<(Image | string)[]>([]);
+  const [imagesChanged, setImagesChanged] = useState(false);
   const [formData, setFormData] = useState<RequestEventUpdate>({
     token: { jwt: "" },
     input: {
@@ -76,7 +78,7 @@ function EventUpdater() {
       maxAttendees: -1,
       minAttendees: -1,
       public: false,
-      isAccessible: false,
+      accessible: false,
       sdg: [],
       lat: null,
       lng: null,
@@ -93,13 +95,25 @@ function EventUpdater() {
     maxAttendees: "",
     minAttendees: "",
     public: "",
-    isAccessible: "",
+    accessible: "",
     sdg: "",
     lat: "",
     lng: "",
   });
 
   //========== Handles: Receber Input e Limpar erros ==========
+
+  const toDateTimeLocalValue = (timestamp: number | null | undefined) => {
+    if (!timestamp || timestamp <= 0) return "";
+
+    const date = new Date(timestamp);
+
+    const pad = (value: number) => String(value).padStart(2, "0");
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate(),
+    )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -108,14 +122,17 @@ function EventUpdater() {
   ) => {
     const { name, value, type } = e.target;
 
-    const newValue =
-      type === "checkbox"
-        ? (e.target as HTMLInputElement).checked
-        : type === "number"
-          ? value === ""
-            ? 0
-            : Number(value)
-          : value;
+    let newValue: string | number | boolean;
+
+    if (type === "checkbox") {
+      newValue = (e.target as HTMLInputElement).checked;
+    } else if (name === "startDate") {
+      newValue = value ? new Date(value).getTime() : -1;
+    } else if (type === "number") {
+      newValue = value === "" ? 0 : Number(value);
+    } else {
+      newValue = value;
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -136,6 +153,7 @@ function EventUpdater() {
 
     reader.onload = () => {
       setSelectedImages((prev) => [...prev, reader.result as string]);
+      setImagesChanged(true);
     };
 
     reader.readAsDataURL(file);
@@ -155,19 +173,27 @@ function EventUpdater() {
         return img !== image;
       }),
     );
+
+    setImagesChanged(true);
   };
 
   const selectCover = (image: Image | string) => {
     setSelectedImages((prev) => {
-      const rest = prev.filter((img) => {
-        if (typeof img === "string" && typeof image === "string")
-          return img !== image;
+      if (prev[0] === image) return prev;
 
-        if (typeof img !== "string" && typeof image !== "string")
+      const rest = prev.filter((img) => {
+        if (typeof img === "string" && typeof image === "string") {
+          return img !== image;
+        }
+
+        if (typeof img !== "string" && typeof image !== "string") {
           return img.id !== image.id;
+        }
 
         return img !== image;
       });
+
+      setImagesChanged(true);
 
       return [image, ...rest];
     });
@@ -358,8 +384,8 @@ function EventUpdater() {
       maxAttendees: "",
       minAttendees: "",
       public: "",
-      isAccessible: "",
-      SDG: "",
+      accessible: "",
+      sdg: "",
       lat: "",
       lng: "",
     };
@@ -408,12 +434,14 @@ function EventUpdater() {
     const hasErrors = Object.values(newErrors).some((error) => error !== "");
     if (hasErrors) return;
 
-    if (event?.imageUrls?.length) {
-      await handleImagesDelete();
-    }
+    if (imagesChanged) {
+      if (event?.imageUrls?.length) {
+        await handleImagesDelete();
+      }
 
-    if (selectedImages.length) {
-      await handleImagesUpload();
+      if (selectedImages.length) {
+        await handleImagesUpload();
+      }
     }
 
     try {
@@ -458,9 +486,11 @@ function EventUpdater() {
       const response = await updateEvent(payload);
       console.log(response);
       window.location.reload();
-      notify("EVENT_UPDATED");
+      if (response.status === 200) {
+        notify("EVENT_UPDATED");
+      }
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
@@ -494,7 +524,7 @@ function EventUpdater() {
       window.location.reload();
       notify("EVENT_CANCELED");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
@@ -528,7 +558,7 @@ function EventUpdater() {
       window.location.reload();
       notify("EVENT_DELETED");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
@@ -562,7 +592,7 @@ function EventUpdater() {
       window.location.reload();
       notify("EVENT_COMPLETED");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
@@ -606,7 +636,7 @@ function EventUpdater() {
         maxAttendees: event.maxAttendees,
         minAttendees: event.minAttendees,
         public: event.isPublic,
-        isAccessible: event.isAccessible ?? false,
+        accessible: event.isAccessible ?? false,
         sdg: event.SDG ?? [],
         lat: event.lat,
         lng: event.lng,
@@ -655,6 +685,8 @@ function EventUpdater() {
       }));
     },
   });
+
+  console.log(event);
 
   return (
     <>
@@ -754,10 +786,15 @@ function EventUpdater() {
               Date & Time
             </span>
             <input
-              type="date"
-              className="form-control"
-              placeholder={String(event?.startDate)}
+              type="datetime-local"
+              name="startDate"
+              className={`form-control ${errors.startDate ? "is-invalid" : ""}`}
+              value={toDateTimeLocalValue(formData.input.startDate)}
+              onChange={handleChange}
             />
+            {errors.startDate && (
+              <div className="invalid-feedback">{errors.startDate}</div>
+            )}
           </div>
 
           <div className="input-group mb-3">
@@ -855,9 +892,9 @@ function EventUpdater() {
             <div className="form-check">
               <input
                 type="checkbox"
-                name="isAccessible"
+                name="accessible"
                 className="form-check-input"
-                checked={formData.input.isAccessible ?? false}
+                checked={formData.input.accessible ?? false}
                 onChange={handleChange}
               />
               <label
@@ -1208,6 +1245,7 @@ function EventUpdater() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

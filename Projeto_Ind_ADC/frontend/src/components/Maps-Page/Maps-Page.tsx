@@ -5,6 +5,7 @@ import placeholder from "../../assets/images/placeholder.png";
 import type { FilterProps } from "../../utils/types";
 import accessible_w from "../../assets/icons/accessible_w.svg";
 import { sdgInfos } from "../../utils/sdgInfo";
+import Footer from "../NavBar/Footer";
 
 const MapsPage = () => {
   const mapsApiKey = import.meta.env.VITE_API_KEY;
@@ -30,11 +31,30 @@ const MapsPage = () => {
   const [nearYouEnabled, setNearYouEnabled] = useState(false);
   const [nearYouRadiusKm, setNearYouRadiusKm] = useState(10);
 
-  const filteredEvents = getFilteredEvents(nearYouEnabled, nearYouRadiusKm);
+  const filteredEvents = getFilteredEvents(
+    nearYouEnabled,
+    nearYouRadiusKm,
+    filter.category,
+    filter.sdg,
+    filter.status,
+    filter.isAccessible,
+  );
 
   useEffect(() => {
     renderVisibleMarkers(filteredEvents);
   }, [filteredEvents, renderVisibleMarkers]);
+
+  const clearFilters = () => {
+    setFilter({
+      category: null,
+      status: null,
+      organizerUsername: null,
+      isAccessible: null,
+      sdg: [],
+    });
+    setNearYouEnabled(false);
+    setNearYouRadiusKm(10);
+  };
 
   return (
     <>
@@ -56,8 +76,8 @@ const MapsPage = () => {
           className="rounded-4 p-3 my-4"
           style={{ background: "var(--color-green2)" }}
         >
-          <div className="row g-3 align-items-end">
-            <div className="col-lg-3 col-md-6">
+          <div className="d-flex flex-wrap align-items-end gap-3">
+            <div style={{ flex: "0 0 18%", minWidth: "200px" }}>
               <label
                 className="form-label fw-semibold"
                 style={{ color: "var(--color-white)" }}
@@ -86,7 +106,7 @@ const MapsPage = () => {
                   <>
                     <button
                       type="button"
-                      className="btn btn-sm"
+                      className="btn btn-sm fw-bold"
                       style={{
                         background: "var(--color-white)",
                         color: "var(--color-green)",
@@ -105,7 +125,7 @@ const MapsPage = () => {
                     </span>
                     <button
                       type="button"
-                      className="btn btn-sm"
+                      className="btn btn-sm fw-bold"
                       style={{
                         background: "var(--color-white)",
                         color: "var(--color-green)",
@@ -117,6 +137,171 @@ const MapsPage = () => {
                   </>
                 )}
               </div>
+            </div>
+
+            <div className="flex-fill" style={{ minWidth: "150px" }}>
+              <label
+                className="form-label fw-semibold"
+                style={{ color: "var(--color-white)" }}
+              >
+                Theme
+              </label>
+              <select
+                className="form-select"
+                value={filter.category ?? ""}
+                onChange={(e) =>
+                  setFilter((prev) => ({
+                    ...prev,
+                    category: e.target.value || null,
+                  }))
+                }
+              >
+                <option value="">All Themes</option>
+                <option value={"MUSIC"}>Music</option>
+                <option value={"SPORTS"}>Sports</option>
+                <option value={"TECH"}>Tech</option>
+                <option value={"ART"}>Art</option>
+                <option value={"FOOD"}>Food</option>
+                <option value={"BUSINESS"}>Business</option>
+                <option value={"COMMUNITY"}>Community</option>
+                <option value={"OTHER"}>Other</option>
+              </select>
+            </div>
+
+            <div className="flex-fill" style={{ minWidth: "150px" }}>
+              <label
+                className="form-label fw-semibold"
+                style={{ color: "var(--color-white)" }}
+              >
+                SDGs
+              </label>
+              <div className="dropdown w-100">
+                <button
+                  className="btn dropdown-toggle w-100 text-start"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  style={{ background: "var(--color-white)" }}
+                >
+                  {filter.sdg?.length
+                    ? `${filter.sdg.length} selected`
+                    : "Select SDGs"}
+                </button>
+
+                <ul
+                  className="dropdown-menu w-100 p-2"
+                  style={{ maxHeight: "300px", overflowY: "auto" }}
+                >
+                  {sdgInfos.map((sdg) => (
+                    <li key={sdg.id}>
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`map-sdg-${sdg.id}`}
+                          checked={filter.sdg?.includes(sdg.id) ?? false}
+                          onChange={(e) => {
+                            setFilter((prev) => {
+                              const newArray = e.target.checked
+                                ? [...(prev.sdg ?? []), sdg.id]
+                                : (prev.sdg ?? []).filter(
+                                    (id) => id !== sdg.id,
+                                  );
+
+                              return {
+                                ...prev,
+                                sdg: newArray.length > 0 ? newArray : null,
+                              };
+                            });
+                          }}
+                        />
+
+                        <label
+                          className="form-check-label"
+                          htmlFor={`map-sdg-${sdg.id}`}
+                        >
+                          {sdg.id} - {sdg.title}
+                        </label>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex-fill" style={{ minWidth: "150px" }}>
+              <label
+                className="form-label fw-semibold"
+                style={{ color: "var(--color-white)" }}
+              >
+                Status
+              </label>
+              <select
+                className="form-select"
+                value={filter.status ?? ""}
+                onChange={(e) =>
+                  setFilter((prev) => ({
+                    ...prev,
+                    status: e.target.value || null,
+                  }))
+                }
+              >
+                <option value="">All</option>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="ONGOING">Ongoing</option>
+                <option value="CANCELED">Canceled</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
+            </div>
+
+            <div className="flex-fill" style={{ minWidth: "120px" }}>
+              <label
+                className="form-label fw-semibold"
+                style={{ color: "var(--color-white)" }}
+              >
+                Accessibility
+              </label>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="mapWheelchairAccessible"
+                  checked={filter.isAccessible ?? false}
+                  onChange={(e) =>
+                    setFilter((prev) => ({
+                      ...prev,
+                      isAccessible: e.target.checked ? true : null,
+                    }))
+                  }
+                />
+                <label
+                  className="form-check-label"
+                  htmlFor="mapWheelchairAccessible"
+                >
+                  <img
+                    src={accessible_w}
+                    alt="Accessible"
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      cursor: "pointer",
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex-fill" style={{ minWidth: "100px" }}>
+              <button
+                className="btn w-100"
+                style={{
+                  color: "var(--color-green)",
+                  background: "var(--color-white)",
+                }}
+                onClick={clearFilters}
+              >
+                Clear
+              </button>
             </div>
           </div>
         </div>
@@ -231,6 +416,7 @@ const MapsPage = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </>
   );
 };

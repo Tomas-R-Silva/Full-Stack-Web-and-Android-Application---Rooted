@@ -73,6 +73,7 @@ function LogInStep1() {
       }
     } catch (err) {
       console.log(err);
+      notify("INVALID_CREDENTIALS");
     }
   };
 

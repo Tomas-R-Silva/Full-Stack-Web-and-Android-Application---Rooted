@@ -28,20 +28,30 @@ function EventsList({ filter }: EventsListProps) {
         setLoading(true);
       }
 
-      setError(null); //reset errors
+      setError(null);
 
-      //TODO change in order to have filters
-      const res: EventListResponse = await getEventList({
+      const token = sessionStorage.getItem("token");
+
+      const payload = {
         input: {
           category: filter.category || null,
           status: filter.status,
           organizerUsername: filter.organizerUsername,
           isAccessible: filter.isAccessible,
           sdg: filter.sdg || [],
-          pageSize: 12,
+          pageSize: 48,
           cursor: cursor ?? "",
         },
-      });
+        ...(token && {
+          token: {
+            jwt: token,
+          },
+        }),
+      };
+
+      console.log(payload);
+
+      const res: EventListResponse = await getEventList(payload);
 
       console.log(res.data.events);
 
@@ -107,8 +117,8 @@ function EventsList({ filter }: EventsListProps) {
                 onClick={() => loadEvents(nextCursor)}
                 disabled={loadingMore}
                 style={{
-                  background: "var(--color-green)",
-                  color: "var(--color-white)",
+                  background: "var(--color-white)",
+                  color: "var(--color-green)",
                 }}
               >
                 {loadingMore ? "A carregar..." : "Carregar mais"}

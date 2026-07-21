@@ -147,7 +147,7 @@ function NavBar() {
                     }}
                   >
                     <img
-                      src={account_circle}
+                      src={user?.data?.avatar?.url?.trim() || account_circle}
                       alt="Avatar"
                       style={{
                         width: "100%",

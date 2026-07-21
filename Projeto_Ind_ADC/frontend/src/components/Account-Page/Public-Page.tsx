@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { addNickName, getUser } from "../../api/auth";
+import { addNickName, getNickName, getUser } from "../../api/auth";
 import type {
   AddNicknameResponse,
+  GetNicknameResponse,
   UserInformationResponse,
 } from "../../utils/types";
 import NavBar from "../NavBar/NavBar";
@@ -18,6 +19,7 @@ import EventCard from "../Events-Page/Event-Card";
 import { addFriend, unfriend } from "../../api/auth";
 import verified from "../../assets/icons/verified_w.svg";
 import { useNotification } from "../NotificationContext";
+import Footer from "../NavBar/Footer";
 
 function PublicPage() {
   const { username } = useParams<{ username: string }>();
@@ -81,10 +83,11 @@ function PublicPage() {
         token: { jwt: token },
         input: {
           username: username,
-          newname: nickname,
+          newName: nickname,
         },
       });
       console.log(res.data.message);
+      window.location.reload();
       if (res.status === 200) {
         notify("NICKNAME_ADDED");
       }
@@ -92,10 +95,6 @@ function PublicPage() {
       console.error(err);
     }
   };
-
-  useEffect(() => {
-    loadUser();
-  }, []);
 
   const [events, setEvents] = useState<EventItem[]>([]); //Events got from the request
   const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
@@ -213,6 +212,33 @@ function PublicPage() {
     }
   };
 
+  const loadNickname = async (friend: string) => {
+    try {
+      const token = sessionStorage.getItem("token");
+
+      if (!token) {
+        console.log("User is not authenticated");
+        return;
+      }
+
+      if (!friend) {
+        console.log("Invalid username");
+        return;
+      }
+
+      const res: GetNicknameResponse = await getNickName({
+        token: { jwt: token },
+        input: { username: friend },
+      });
+
+      console.log(res);
+
+      setNickname(res.data.nickname ?? "");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const longToVisualDate = (date: number) => {
     return new Date(date).toLocaleString("en-GB", {
       day: "2-digit",
@@ -221,9 +247,35 @@ function PublicPage() {
     });
   };
 
+  const getProfileName = () => {
+    if (!user) return "";
+
+    const displayName = user.data.display || user.data.username;
+
+    if (user.data.friendship === "FRIENDS" && nickname.trim() !== "") {
+      return `${nickname.trim()}`;
+    }
+
+    return displayName;
+  };
+
   useEffect(() => {
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    loadUser();
+  }, [username]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.data.friendship === "FRIENDS") {
+      loadNickname(user.data.username);
+    } else {
+      setNickname("");
+    }
+  }, [user]);
 
   return (
     <>
@@ -234,19 +286,20 @@ function PublicPage() {
           style={{ background: "var(--color-white)" }}
         >
           <div
-            className="p-4 rounded-top-4"
+            className="p-3 p-md-4 rounded-top-4"
             style={{ background: "var(--color-green2)" }}
           >
-            <div className="d-flex align-items-center">
+            <div className="d-flex flex-column flex-lg-row align-items-center align-items-lg-center gap-4">
               <div
                 style={{
                   position: "relative",
                   width: "80px",
                   height: "80px",
+                  minWidth: "80px",
                 }}
               >
                 <img
-                  src={account_circle_w}
+                  src={user?.data?.avatar?.url?.trim() || account_circle_w}
                   alt="Avatar"
                   style={{
                     width: "100%",
@@ -272,48 +325,59 @@ function PublicPage() {
                 )}
               </div>
 
-              <div className="ms-4 flex-grow-1">
-                <h4 className="mb-0 text-white fw-bold">
-                  {user && user.data.display}
-                  {user?.data.role === "PARTNER" && (
-                    <img className="ms-1" src={verified} />
-                  )}
-                </h4>
-                <div className="text-white mt-2">
-                  {user && user.data.username}
+              <div className="text-center text-lg-start flex-grow-1 w-100">
+                <div className="row g-3 align-items-center">
+                  <div className="col-12 col-md-6 col-xl-3">
+                    <h4 className="mb-0 text-white fw-bold">
+                      {getProfileName()}
+
+                      {user?.data.role === "PARTNER" && (
+                        <img className="ms-1" src={verified} alt="Verified" />
+                      )}
+                    </h4>
+
+                    <div className="text-white mt-2">
+                      {user && user.data.username}
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-md-6 col-xl-3">
+                    <div className="text-white">Email:</div>
+                    <h6 className="mb-0 text-white text-break">
+                      {user && user.data.email}
+                    </h6>
+                  </div>
+
+                  <div className="col-12 col-md-6 col-xl-2">
+                    <div className="text-white">Role:</div>
+                    <h6 className="mb-0 text-white">
+                      {user && user.data.role}
+                    </h6>
+                  </div>
+
+                  <div className="col-12 col-md-6 col-xl-3">
+                    <div className="text-white">Member since:</div>
+                    <h6 className="mb-0 text-white">
+                      {user && longToVisualDate(user.data.creation_time)}
+                    </h6>
+                  </div>
                 </div>
               </div>
 
-              <div className="ms-4 flex-grow-1">
-                <div className="text-white ">Email:</div>
-                <h6 className="mb-0 text-white">{user && user.data.email}</h6>
-              </div>
-
-              <div className="ms-4 flex-grow-1">
-                <div className="text-white ">Role:</div>
-                <h6 className="mb-0 text-white">{user && user.data.role}</h6>
-              </div>
-
-              <div className="ms-4 flex-grow-1">
-                <div className="text-white ">Member since:</div>
-                <h6 className="mb-0 text-white">
-                  {user && longToVisualDate(user.data.creation_time)}
-                </h6>
-              </div>
-
-              <div className="d-flex gap-3">
+              <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-center justify-content-lg-end align-items-center">
                 {user && user.data.friendship === "SELF" && (
                   <img
                     src={settings_w}
                     alt="Settings"
                     onClick={() => navigate("/account/settings")}
                     style={{
-                      width: "70px",
-                      height: "70px",
+                      width: "55px",
+                      height: "55px",
                       cursor: "pointer",
                     }}
                   />
                 )}
+
                 {user && user.data.friendship === "NOT_FRIENDS" && (
                   <button
                     className="btn px-4"
@@ -326,8 +390,9 @@ function PublicPage() {
                     Add Friend
                   </button>
                 )}
+
                 {user && user.data.friendship === "FRIENDS" && (
-                  <div className="d-flex gap-2 align-items-center">
+                  <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 align-items-center justify-content-center">
                     <button
                       className="btn px-4"
                       style={{
@@ -359,7 +424,10 @@ function PublicPage() {
                           placeholder="Nickname"
                           value={nickname}
                           onChange={(e) => setNickname(e.target.value)}
-                          style={{ width: "180px" }}
+                          style={{
+                            width: "100%",
+                            maxWidth: "180px",
+                          }}
                         />
 
                         <button
@@ -376,6 +444,7 @@ function PublicPage() {
                     )}
                   </div>
                 )}
+
                 {user && user.data.friendship === "REQUEST_RECIVED" && (
                   <button
                     className="btn px-4"
@@ -388,6 +457,7 @@ function PublicPage() {
                     Accept Request
                   </button>
                 )}
+
                 {user && user.data.friendship === "REQUEST_SENT" && (
                   <button
                     className="btn px-4"
@@ -425,8 +495,8 @@ function PublicPage() {
             {user && user.data.oldnames && (
               <p className="mb-0">
                 {user.data.oldnames.length === 0
-                  ? "This user hasn't older names."
-                  : user.data.oldnames}
+                  ? "This user hasn't had any previous names."
+                  : user.data.oldnames.join(", ")}
               </p>
             )}
           </div>
@@ -442,7 +512,7 @@ function PublicPage() {
               <p className="mb-0">
                 {user.data.category.length === 0
                   ? "This user hasn't interests."
-                  : user.data.category}
+                  : user.data.category.join(", ")}
               </p>
             )}
           </div>
@@ -555,6 +625,7 @@ function PublicPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

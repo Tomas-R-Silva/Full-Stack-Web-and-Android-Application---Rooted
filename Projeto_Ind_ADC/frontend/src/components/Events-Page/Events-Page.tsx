@@ -7,6 +7,7 @@ import SDGslider from "../SDG-elements/SDG-slider";
 import EventsList from "./Events-List";
 import accessible_w from "../../assets/icons/accessible_w.svg";
 import { sdgInfos } from "../../utils/sdgInfo";
+import Footer from "../NavBar/Footer";
 
 function EventsPage() {
   //================= Hooks ===================
@@ -60,20 +61,6 @@ function EventsPage() {
           style={{ background: "var(--color-green2)" }}
         >
           <div className="row g-3 align-items-end">
-            <div className="col-lg-2 col-md-4">
-              <label
-                className="form-label fw-semibold"
-                style={{ color: "var(--color-white)" }}
-              >
-                Search Bar
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search..."
-              />
-            </div>
-
             <div className="col-lg-2 col-md-4">
               <label
                 className="form-label fw-semibold"
@@ -211,7 +198,7 @@ function EventsPage() {
               </select>
             </div>
 
-            <div className="col-lg-1 col-md-2">
+            <div className="col-lg-2 col-md-2">
               <label
                 className="form-label fw-semibold"
                 style={{ color: "var(--color-white)" }}
@@ -248,7 +235,7 @@ function EventsPage() {
               </div>
             </div>
 
-            <div className="col-lg-1 col-md-6 d-grid">
+            <div className="col-lg-2 col-md-6 d-grid">
               <button
                 className="btn"
                 style={{
@@ -273,6 +260,7 @@ function EventsPage() {
 
         <EventsList filter={filter} />
       </div>
+      <Footer />
       {showModal && <EventModal onClose={() => setShowModal(false)} />}
     </>
   );

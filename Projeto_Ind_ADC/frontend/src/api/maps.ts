@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getEventList } from "./auth";
-import type { FilterProps } from "../utils/types";
+import { getAuthSessions } from "./auth";
+import type { AuthSessionsResponse } from "../utils/types";
+import { getUser } from "./auth";
+import type { UserInformationResponse } from "../utils/types";
 
 declare global {
   interface Window {
@@ -142,7 +145,7 @@ export const useMapsPage = (mapsApiKey: string) => {
         <div>
           <h3>${event.title}</h3>
           <p>${event.location}</p>
-          
+          <a
             href="/events/${event.eventId}"
             class="btn btn-sm"
             style="background-color: var(--color-green); 
@@ -187,6 +190,10 @@ export const useMapsPage = (mapsApiKey: string) => {
   const getFilteredEvents = (
     nearYouEnabled: boolean,
     nearYouRadiusKm: number,
+    category: string | null,
+    sdg: number[] | null,
+    status: string | null,
+    isAccessible: boolean | null,
   ) => {
     return sortedEvents.filter((event) => {
       const matchesNearYou =
@@ -194,23 +201,40 @@ export const useMapsPage = (mapsApiKey: string) => {
         !hasGeolocation ||
         (event.distance != null &&
           event.distance >= 0 &&
-          event.distance <= nearYouRadiusKm / 1000);
+          event.distance <= nearYouRadiusKm * 1000);
+
+      const matchesCategory = !category || event.category === category;
+
+      const matchesSdg =
+        !sdg ||
+        sdg.length === 0 ||
+        (Array.isArray(event.SDG) &&
+          event.SDG.some((id: number) => sdg.includes(id)));
+
+      const matchesStatus = !status || event.status === status;
+
+      const matchesAccessible = !isAccessible || event.isAccessible === true;
 
       return (
-        matchesNearYou
+        matchesNearYou &&
+        matchesCategory &&
+        matchesSdg &&
+        matchesStatus &&
+        matchesAccessible
       );
     });
   };
 
   const renderEventMap = async (event: EventItem, container?: HTMLDivElement | null) => {
     const mapContainer = container ?? mapRef.current;
-    if (!mapContainer || !window.google || !hasValidCoords(event)) return;
+    if (!mapContainer || !window.google) return;
 
     let position: { lat: number; lng: number } | null = null;
 
     if (hasValidCoords(event)) {
       position = { lat: event.lat, lng: event.lng };
     } else if (event.location) {
+      // Should remove this in the future
       position = await geocodeAddress(event.location);
     }
     
@@ -244,7 +268,8 @@ export const useMapsPage = (mapsApiKey: string) => {
     });
   };
 
-    //========== Geocoding ==========
+  // Should remove this in the future
+  //========== Geocoding ==========
   const geocodeAddress = (
     address: string,
   ): Promise<{ lat: number; lng: number } | null> => {
@@ -343,6 +368,7 @@ export const useMapsPage = (mapsApiKey: string) => {
 
         const resolvedEvents = await Promise.all(
           eventsData.map(async (event) => {
+            // Should remove this in the future
             if (event.lat === 0 && event.lng === 0 && event.location) {
               const coords = await geocodeAddress(event.location);
               if (coords) {
@@ -365,11 +391,38 @@ export const useMapsPage = (mapsApiKey: string) => {
     };
 
     const initMap = async () => {
+      var coords = { lat: 0, lng: 0 };
+      try {
+        const token = sessionStorage.getItem("token");
+        if (!token) return;
+
+        const res: AuthSessionsResponse = await getAuthSessions({
+          token: { jwt: token },
+        });
+
+        const userToFind = res.data.tokens[0].username;
+
+        const res2: UserInformationResponse = await getUser({
+          token: { jwt: token },
+          input: {
+            username: userToFind,
+          },
+        });
+
+        const country = res2.data.country;
+        const possibleCoords = await geocodeAddress(country);
+        if (possibleCoords) {
+          coords = possibleCoords;
+        }
+      }catch (err) {
+        console.error(err);
+      }
+
       if (!mapRef.current || !window.google) return;
 
       const map = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 0, lng: 0 },
-        zoom: 3,
+        center: { lat: coords.lat, lng: coords.lng },
+        zoom: 2,
         mapTypeId: "hybrid",
         streetViewControl: false,
         fullscreenControl: false,

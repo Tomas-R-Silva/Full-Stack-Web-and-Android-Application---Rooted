@@ -101,8 +101,9 @@ export type RequestModAccount = {
     username:string,
     country: string,
     birth: number,
-    bio:string,
-    email:string,
+    bio: string,
+    avatar: string,
+    email: string,
     category: string[],
   }
 }
@@ -130,6 +131,7 @@ export type UserInformationResponse = {
     birth: number,
     display: string,
     bio: string,
+    avatar: Image,
     country: string,
     category: string[],
     oldnames: string[],
@@ -221,13 +223,23 @@ export type RequestAddNickname = {
   token: {jwt:string;}
   input: {
     username:string;
-    newname:string;
+    newName:string;
    }
 }
 
 export type AddNicknameResponse = {
   status: number,
   data: {message:string;}
+}
+
+export type RequestGetNickname = {
+  token: {jwt:string;}
+  input: {username:string;}
+}
+
+export type GetNicknameResponse = {
+  status: number,
+  data: {nickname:string;}
 }
 
 export type RequestUnfriend = {
@@ -289,6 +301,20 @@ export type TokenType = {
   role: string,
   issuedAt: number,
   expiresAt: number,
+}
+
+export type RequestTopSDG = {
+  
+}
+
+export type TopSDGResponse = {
+  status: number,
+  data: {topBySDG:Top[];}
+}
+
+export type Top = {
+  username: string,
+  value: number,
 }
 
 //========== EVENT ==========
@@ -388,7 +414,7 @@ export type RequestEventUpdate = {
     maxAttendees: number,
     minAttendees: number,
     public: boolean,
-    isAccessible?: boolean,
+    accessible?: boolean,
     sdg?: number[]
     lat: number | null,
     lng: number | null,
@@ -466,7 +492,9 @@ export type RequestEventAttend = {
 
 export type EventAttendResponse = {
   status: number,
-  data:{message: string},
+  data:{message: string,
+    status: string,
+  },
 }
 
 export type RequestJoinRequests = {
@@ -505,6 +533,19 @@ export type RequestEventUnattend = {
 }
 
 export type EventUnattendResponse = {
+  status: number,
+  data:{message: string},
+}
+
+export type RequestKickUser = {
+  token: {jwt:string;}
+  input: {
+    eventId: string,
+    username: string,
+  }
+}
+
+export type KickUserResponse = {
   status: number,
   data:{message: string},
 }
@@ -664,7 +705,7 @@ export type Post = {
 
 export type RequestMessageDelete = {
   token?: {jwt:string}
-  input: string,
+  input: {forumKey: string},
 }
 
 export type MessageDeleteResponse = {
