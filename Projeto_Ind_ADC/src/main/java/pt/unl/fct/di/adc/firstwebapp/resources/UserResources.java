@@ -18,6 +18,7 @@ import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StructuredQuery;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Transaction;
@@ -320,8 +321,8 @@ public class UserResources {
 
 			if(!user.isme(token))
 				Validator.unauthorized(token, new Role [] {Role.ADMIN});
+			deleteAllSessionsForUser(user.getUsername());
 
-			AuthHelper.querydelete("Session","user_name",user.getUsername());
 			return buildresponse(Map.of("message", "Logout successful"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -350,7 +351,7 @@ public class UserResources {
 			user.setRole(newRole);
 			datastore.update(user.toentity());
 			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
-			AuthHelper.querydelete("Session","user_name",user.getUsername());
+			deleteAllSessionsForUser(user.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -655,6 +656,20 @@ public class UserResources {
 			event.decAttendee();
 			datastore.update(event.toentity());
 			datastore.delete(attendace.getKey());
+		}
+	}
+
+	private void deleteAllSessionsForUser(String username) {
+		Query<Entity> query = Query.newEntityQueryBuilder()
+				.setKind("Session")
+				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
+				.build();
+
+		QueryResults<Entity> sessions = datastore.run(query);
+
+		while (sessions.hasNext()) {
+			Entity session = sessions.next();
+			datastore.delete(session.getKey());
 		}
 	}
 
