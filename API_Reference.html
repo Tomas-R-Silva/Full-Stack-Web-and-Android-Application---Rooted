@@ -42,7 +42,6 @@
   .tag-bofficer { background: #fef3e2; color: #b7770d; }
   .tag-auth { background: #e8f5e9; color: #2e7d32; }
   .tag-public { background: #e3f2fd; color: #1565c0; }
-  .tag-cron { background: #ede7f6; color: #4527a0; }
 
   .callout { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 14px 16px; margin: 16px 0 28px; font-size: 0.88rem; line-height: 1.6; }
   .callout code { background: #d6e4ff; color: #1e3a5f; padding: 1px 5px; border-radius: 3px; font-family: 'Courier New', monospace; }
@@ -632,6 +631,20 @@
 <div class="endpoint">
   <div class="endpoint-header">
     <span class="method">POST</span>
+    <span class="path">/events/complete</span>
+    <span class="tag tag-auth">auth required</span>
+    <span class="note">Organizer or ADMIN</span>
+  </div>
+  <p class="desc">Closes the event on demand: marks it COMPLETED, deletes its forum posts, and awards +1 SDG participation point per SDG to every attendee still enrolled. Rejected if the event is already CANCELLED or COMPLETED.</p>
+  <div class="label">Request</div>
+  <pre>{ <span class="key-str">"token"</span>: { <span class="key-str">"jwt"</span>: <span class="val-str">"eyJ..."</span> }, <span class="key-str">"input"</span>: { <span class="key-str">"eventId"</span>: <span class="val-str">"uuid"</span> } }</pre>
+  <div class="label out">Response</div>
+  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Event completed successfully"</span>, <span class="key-str">"postsDeleted"</span>: <span class="val-num">17</span> }}</pre>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">POST</span>
     <span class="path">/events/delete</span>
     <span class="tag tag-auth">auth required</span>
     <span class="note">Organizer or ADMIN</span>
@@ -960,17 +973,6 @@
   <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"message"</span>: <span class="val-str">"Post deleted successfully"</span> }}</pre>
 </div>
 
-<div class="endpoint">
-  <div class="endpoint-header">
-    <span class="method get">GET</span>
-    <span class="path">/forum/cleanup</span>
-    <span class="tag tag-cron">cron only</span>
-  </div>
-  <p class="desc">Called automatically by App Engine cron (every 10 min). Marks ended events as COMPLETED and deletes the forums of completed/cancelled events. Rejected (FORBIDDEN) unless the request carries the <code>X-AppEngine-Cron</code> header.</p>
-  <div class="label out">Response</div>
-  <pre>{<span class="key-str">"status"</span>: <span class="val-num">200</span>, <span class="key-str">"data"</span>: { <span class="key-str">"eventsClosed"</span>: <span class="val-num">2</span>, <span class="key-str">"postsDeleted"</span>: <span class="val-num">17</span> }}</pre>
-</div>
-
 <!-- ===================== FLOW ===================== -->
 <h2>Typical Test Flow</h2>
 <div class="flow">
@@ -1017,10 +1019,10 @@
     <tr><td>9936</td><td>Partner not in the event</td></tr>
     <tr><td>9937</td><td>Forum origen is invalid (event not found) / (not friendship)</td></tr>
     <tr><td>9938</td><td>not enough SDGs</td></tr>
-    <tr><td>9939</td><td>Cleanup forbidden</td></tr>
     <tr><td>9940</td><td>Cannot edit cancelled event</td></tr>
     <tr><td>9941</td><td>Wrong password</td></tr>
-    <tr><td>9942</td><td>User is not a partner</td></tr>    
+    <tr><td>9942</td><td>User is not a partner</td></tr>
+    <tr><td>9943</td><td>Event already closed (cancelled or completed)</td></tr>
   </table>
 </div>
 

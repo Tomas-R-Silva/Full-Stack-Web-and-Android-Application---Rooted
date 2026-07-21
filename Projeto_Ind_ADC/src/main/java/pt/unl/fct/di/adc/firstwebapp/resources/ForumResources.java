@@ -16,16 +16,12 @@ import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pt.unl.fct.di.adc.firstwebapp.Objects.AttendanceFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull.Status;
 import pt.unl.fct.di.adc.firstwebapp.Objects.EventInputInterface;
@@ -154,55 +150,6 @@ public class ForumResources {
 			datastore.delete(key);
 			return ok(Map.of("message", "Post deleted successfully"));
 
-		} catch (Exception e) {
-			return Error.fromexception(e);
-		}
-	}
-
-	// -------------------------------------------------------------------------
-	// GET /rest/forum/cleanup  (called by App Engine cron — see cron.xml)
-	// Finds events whose time has passed, marks them COMPLETED, and deletes
-	// their forum. Also clears the forum of any CANCELLED event.
-	// -------------------------------------------------------------------------
-	@GET
-	@Path("/cleanup")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response cleanup(@Context HttpServletRequest request) {
-		// App Engine strips this header from external requests, so its presence
-		// proves the call came from the cron service (or an admin).
-		if (request.getHeader("X-AppEngine-Cron") == null)
-			return Error.errorswitch(9939);
-
-		try {
-			int eventsClosed = 0,postsDeleted = 0;
-			QueryResults<Entity> events = datastore.run(Query.newEntityQueryBuilder().setKind("Event").build());
-
-			while (events.hasNext()) {
-				EventFull event = EventFull.fromdatabase(events.next());
-				if(event.getStarted() && event.isStatus(Status.UPCOMING))
-					event.setStatus(event.inLimit()?Status.ONGOING:Status.CANCELLED);
-				if(event.isStatus(Status.CANCELLED)) 
-					postsDeleted += AuthHelper.querydelete("ForumPost", "event_id", event.getEventId());
-				else if (event.getEnded() && !event.isStatus(Status.COMPLETED)){
-					postsDeleted += AuthHelper.querydelete("ForumPost", "event_id", event.getEventId());
-					event.setStatus(Status.COMPLETED);
-					datastore.update(event.toentity());
-					eventsClosed++;
-					// Gamification: on completion, award +1 point per SDG to every user still enrolled.
-					List<Long> sdgs = event.getSDG();
-					QueryResults<Entity> attendees = datastore.run(Query.newEntityQueryBuilder()
-							.setKind("Attendance")
-							.setFilter(PropertyFilter.eq("event_id", event.getEventId()))
-							.build());
-					while (attendees.hasNext()) {
-						UserFull attendee = AuthHelper.getUser(AttendanceFull.fromdatabase(attendees.next()).getUsername());
-						attendee.addParticipation(sdgs);
-						datastore.update(attendee.toentity());
-					}
-				}
-			}
-			Log.info("Forum cleanup: closed " + eventsClosed + " events, deleted " + postsDeleted + " posts");
-			return ok(Map.of("eventsClosed", eventsClosed, "postsDeleted", postsDeleted));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
