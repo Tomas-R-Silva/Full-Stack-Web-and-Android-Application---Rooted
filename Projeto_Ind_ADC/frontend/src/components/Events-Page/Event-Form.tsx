@@ -46,8 +46,8 @@ function EventForm() {
       public: false,
       accessible: false,
       sdg: [],
-      latitude: null,
-      longitude: null,
+      lat: null,
+      lng: null,
     },
   });
   const [errors, setErrors] = useState<ErrorState>({
@@ -62,8 +62,8 @@ function EventForm() {
     public: "",
     accessible: "",
     sdg: "",
-    latitude: "",
-    longitude: "",
+    lat: "",
+    lng: "",
   });
 
   //========== Receber Input e Limpar erros ==========
@@ -188,8 +188,8 @@ function EventForm() {
       public: "",
       accessible: "",
       sdg: "",
-      latitude: "",
-      longitude: "",
+      lat: "",
+      lng: "",
     };
 
     if (!formData.input.title) {
@@ -259,8 +259,8 @@ function EventForm() {
         ...formData,
         input: {
           ...formData.input,
-          latitude: position.lat,
-          longitude: position.lng,
+          lat: position.lat,
+          lng: position.lng,
         },
         token: {
           jwt: token,
@@ -731,7 +731,7 @@ function EventForm() {
               style={{ background: "var(--color-green2)" }}
               onClick={handleSubmit}
             >
-              Save Changes
+              Create Event
             </button>
           </div>
         </div>
