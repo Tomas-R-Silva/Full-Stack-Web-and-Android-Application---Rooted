@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getEventList } from "./auth";
-import { getAuthSessions } from "./auth";
-import type { AuthSessionsResponse } from "../utils/types";
 import { getUser } from "./auth";
 import type { UserInformationResponse } from "../utils/types";
 
@@ -333,10 +331,8 @@ export const useMapsPage = (mapsApiKey: string) => {
     const centerMapOnUser = (map: any) => {
       if (!navigator.geolocation) {
         console.warn("Navigator geolocation unavailable. Using default center.");
-        setMapCenter(map, { lat: 0, lng: 0 }, 3);
         return;
       }
-
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const userPos = {
@@ -350,7 +346,6 @@ export const useMapsPage = (mapsApiKey: string) => {
         () => {
           console.warn("Geolocation denied or unavailable. Using default center.");
           setHasGeolocation(false);
-          setMapCenter(map, { lat: 0, lng: 0 }, 3);
         },
         { timeout: 5000 },
       );
@@ -392,19 +387,16 @@ export const useMapsPage = (mapsApiKey: string) => {
 
     const initMap = async () => {
       var coords = { lat: 0, lng: 0 };
+      var zoom = 2;
       try {
         const token = sessionStorage.getItem("token");
-        if (token) {
-          const res: AuthSessionsResponse = await getAuthSessions({
-            token: { jwt: token },
-          });
+        const username = sessionStorage.getItem("username");
 
-          const userToFind = res.data.tokens[0].username;
-
+        if (token && username) {
           const res2: UserInformationResponse = await getUser({
             token: { jwt: token },
             input: {
-              username: userToFind,
+              username: username,
             },
           });
 
@@ -412,6 +404,7 @@ export const useMapsPage = (mapsApiKey: string) => {
           const possibleCoords = await geocodeAddress(country);
           if (possibleCoords) {
             coords = possibleCoords;
+            zoom = 4;
           }
         }
       } catch (err) {
@@ -422,7 +415,7 @@ export const useMapsPage = (mapsApiKey: string) => {
 
       const map = new window.google.maps.Map(mapRef.current, {
         center: { lat: coords.lat, lng: coords.lng },
-        zoom: 2,
+        zoom: zoom,
         mapTypeId: "hybrid",
         streetViewControl: false,
         fullscreenControl: false,
