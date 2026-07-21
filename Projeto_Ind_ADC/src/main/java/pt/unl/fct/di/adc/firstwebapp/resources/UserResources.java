@@ -166,7 +166,7 @@ public class UserResources {
 						.map(u -> Map.<String, Object>of(
 								"username", u.getUsername(),
 								"display", (u.getDisplay() != null) ? u.getDisplay() : u.getUsername(),
-								"points", u.getOds().get(idx)))
+										"points", u.getOds().get(idx)))
 						.collect(Collectors.toList());
 				topBySdg.put(String.valueOf(i + 1), ranked);
 			}
@@ -192,15 +192,15 @@ public class UserResources {
 
 			AuthHelper.querydelete("EventJoinRequest","requester",user.getUsername());
 			AuthHelper.querydelete("EventJoinRequest","organizer",user.getUsername());
-			
+
 			destroievents(user.getUsername());
-			
+
 			unattendevents(user.getUsername());
-			
+
 			becomeloner(user.getUsername());
 
 			AuthHelper.querydelete("ForumPost","author_username",user.getUsername());
-			
+
 			return buildresponse(Map.of("message", "Account deleted successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -343,9 +343,9 @@ public class UserResources {
 
 			Validator.unauthorized(token, 
 					(oldRole.equals(Role.ADMIN)||oldRole.equals(Role.BOFFICER)||
-					newRole.equals(Role.ADMIN)||newRole.equals(Role.BOFFICER))?
-							new Role[] {Role.ADMIN}:
-							new Role[] {Role.BOFFICER,Role.ADMIN});
+							newRole.equals(Role.ADMIN)||newRole.equals(Role.BOFFICER))?
+									new Role[] {Role.ADMIN}:
+										new Role[] {Role.BOFFICER,Role.ADMIN});
 
 			user.setRole(newRole);
 			datastore.update(user.toentity());
@@ -555,8 +555,11 @@ public class UserResources {
 			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
 			queryBuilder.setFilter(PropertyFilter.eq("accepted", true));
 			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
-			while(sessions.hasNext())
-				friends.add(FriendFull.fromdatabase(sessions.next()).otherfriend(username));
+			while(sessions.hasNext()) {
+				Map<String, Object> friend=FriendFull.fromdatabase(sessions.next()).otherfriend(username);
+				if(friend!=null)
+					friends.add(friend);
+			}
 			return buildresponse(Map.of("friends", friends));
 		} catch (Exception e){
 			return Error.fromexception(e);
@@ -616,10 +619,10 @@ public class UserResources {
 			AuthHelper.querydelete("ForumPost","event_id",event.getEventId());
 			datastore.delete(entity.getKey());
 		}
-	
-	
+
+
 	}
-	
+
 	private void becomeloner(String name) throws ErrorException {
 		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
 				.setKind("Friend")
@@ -640,7 +643,7 @@ public class UserResources {
 			datastore.delete(friend.getKey());
 		}
 	}
-	
+
 	public static void unattendevents(String username){
 		QueryResults<Entity> entitys = datastore.run(Query.newEntityQueryBuilder()
 				.setKind("Attendance")
