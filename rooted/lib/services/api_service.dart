@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'session_storage.dart';
@@ -89,7 +90,6 @@ class ApiService {
           'confirmation': password,
           'category': interests.map((c) => c.toUpperCase()).toList(),
           'role': role,
-          'public': true,
         }
       }),
     );
@@ -296,32 +296,55 @@ class ApiService {
   }) async {
     final uri = Uri.parse('$baseUrl/rest/modaccount');
 
-    // NOTE: the backend's ModAccountRequestInput.username field is actually
-    // used to set the display name (see UserResources#modifyAccount, which
-    // does `user.setDisplay(input.getUsername())`). It is NOT the account's
-    // login username, which can't be changed through this endpoint. If no
-    // new display name is given, fall back to the current username so the
-    // field isn't left null.
+    final requestBody = {
+      'token': {
+        'jwt': jwt,
+      },
+      'input': {
+        'username': displayName ?? username,
+        'email': email,
+        'bio': bio,
+        'category': categories?.map((c) => c.toUpperCase()).toList(),
+        'country': country,
+        'birth': birth,
+        'avatar': avatar,
+      }..removeWhere((k, v) => v == null)
+    };
+
+    // TEMP DEBUG — remove once the persistence issue is confirmed fixed.
+    // Avatar is a data: URI and can be huge, so it's redacted from the log.
+    developer.log(
+      'REQUEST body: ${jsonEncode({
+        ...requestBody,
+        'input': {
+          ...requestBody['input'] as Map,
+          if ((requestBody['input'] as Map).containsKey('avatar'))
+            'avatar': '<redacted, ${avatar?.length ?? 0} chars>',
+        },
+      })}',
+      name: 'ApiService.modifyAccount',
+    );
+
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'token': {
-          'jwt': jwt,
-        },
-        'input': {
-          'username': displayName ?? username,
-          'email': email,
-          'bio': bio,
-          'category': categories?.map((c) => c.toUpperCase()).toList(),
-          'country': country,
-          'birth': birth,
-          'avatar': avatar,
-        }..removeWhere((k, v) => v == null)
-      }),
+      body: jsonEncode(requestBody),
+    );
+
+    // TEMP DEBUG — remove once the persistence issue is confirmed fixed.
+    developer.log(
+      'RESPONSE statusCode: ${response.statusCode}, body: ${response.body}',
+      name: 'ApiService.modifyAccount',
     );
 
     final body = _parseBody(response.body);
+
+    // TEMP DEBUG — remove once the persistence issue is confirmed fixed.
+    developer.log(
+      'PARSED body: $body (empty map means response.body was not valid JSON)',
+      name: 'ApiService.modifyAccount',
+    );
+
     _checkBodyError(body, statusCode: response.statusCode);
   }
 
@@ -356,8 +379,12 @@ class ApiService {
 
   static void _checkBodyError(Map<String, dynamic> body, {bool redirectOnError = true, int? statusCode}) {
     final status = body['status'];
-    // 200 = ok, any 99xx = error.
-    if ((status != null && status != 200 && status != '200') || (statusCode == 401 || statusCode == 403)) {
+    final httpFailed = statusCode != null && (statusCode < 200 || statusCode >= 300);
+    // 200 = ok, any 99xx = error. Also treat any non-2xx HTTP status as an
+    // error even if the response body was empty/unparseable (e.g. a 500
+    // from the backend with an HTML error page instead of JSON) — otherwise
+    // _parseBody's fallback to {} makes a failed request look like success.
+    if ((status != null && status != 200 && status != '200') || httpFailed) {
       final dynamic data = body['data'];
       String message = 'Operation failed (status ${status ?? statusCode})';
 
