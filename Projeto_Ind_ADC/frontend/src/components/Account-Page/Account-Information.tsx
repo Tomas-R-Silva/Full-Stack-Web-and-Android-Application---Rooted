@@ -10,6 +10,7 @@ import { getUser } from "../../api/auth";
 import type { UserInformationResponse } from "../../utils/types";
 import { useNotification } from "../NotificationContext";
 import { countries } from "../../utils/countries";
+import { useNavigate } from "react-router-dom";
 
 type ErrorState = {
   [K in keyof RequestModAccount["input"]]: string;
@@ -17,8 +18,9 @@ type ErrorState = {
 
 function AccountInformation() {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const { username, role } = useAuth();
+  const { username, role, logout } = useAuth();
   const { notify } = useNotification();
+  const navigate = useNavigate();
   const [user, setUser] = useState<UserInformationResponse>();
   const [changingPassword, setChangingPassword] = useState(false);
   const [formData, setFormData] = useState<RequestModAccount>({
@@ -98,6 +100,8 @@ function AccountInformation() {
       if (response.status === 200) {
         notify("ACCOUNT_DELETED");
       }
+      logout();
+      navigate("/");
     } catch (err) {
       console.log("Something went wrong!");
     }
