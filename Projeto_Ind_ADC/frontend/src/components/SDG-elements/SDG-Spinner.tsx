@@ -39,10 +39,10 @@ function SDGspinner() {
       ref={wheelRef}
       style={{
         position: "absolute",
-        width: 300,
-        height: 300,
-        right: -350,
-        top: "20%",
+        width: "70%",
+        height: "70%",
+        right: -350, //Move X
+        top: "20%", // Move Y
         transformOrigin: "center",
       }}
     >

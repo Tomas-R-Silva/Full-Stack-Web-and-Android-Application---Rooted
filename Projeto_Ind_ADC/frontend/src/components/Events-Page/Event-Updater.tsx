@@ -524,7 +524,7 @@ function EventUpdater() {
       window.location.reload();
       notify("EVENT_CANCELED");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
@@ -558,7 +558,7 @@ function EventUpdater() {
       window.location.reload();
       notify("EVENT_DELETED");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 
@@ -592,7 +592,7 @@ function EventUpdater() {
       window.location.reload();
       notify("EVENT_COMPLETED");
     } catch (err) {
-      console.log("Something went wrong!");
+      console.log(err);
     }
   };
 

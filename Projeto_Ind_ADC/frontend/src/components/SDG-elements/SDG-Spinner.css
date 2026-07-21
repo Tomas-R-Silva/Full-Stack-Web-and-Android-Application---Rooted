@@ -1,8 +1,8 @@
 .spinner-wrapper {
-    position: relative;
-    width: 100%;
-    height: 766px;
-    overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: min(70vh, 700px);
+  overflow: visible;
 }
 
 @keyframes spin {
