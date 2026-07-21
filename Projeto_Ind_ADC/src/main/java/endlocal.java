@@ -14,18 +14,9 @@ public class endlocal {
 		//Thread.
 	
 		
-		AC a=AC.MY;
+		AC a=AC.BASE2;
 		switch(a) {
-		case MY->{
-			Long l=-4783236209826506000L;
-			
-			System.out.println(l);
-			//System.out.println(Long.toBinaryString(l));
-			
-			
-			
-			
-			System.out.println(System.currentTimeMillis());}
+		case MY->{}
 		case END->{findandkill(8080);findandkill(8081);System.out.println("DONE");}
 		case START->{new endlocal.Startdatabase().start();new endlocal.Startprogram().start();}
 		case BASE2->{findandkill(8080);findandkill(8081);System.out.println("KILLED");new endlocal.Startdatabase().start();}
