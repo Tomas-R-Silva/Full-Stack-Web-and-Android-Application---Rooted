@@ -37,16 +37,11 @@ function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a href="/about" className="text-white text-decoration-none">
-                    About Us
-                  </a>
-                </li>
-                <li>
                   <a
-                    href="/profile"
+                    href="/aboutus"
                     className="text-white text-decoration-none"
                   >
-                    Profile
+                    About Us
                   </a>
                 </li>
               </ul>
