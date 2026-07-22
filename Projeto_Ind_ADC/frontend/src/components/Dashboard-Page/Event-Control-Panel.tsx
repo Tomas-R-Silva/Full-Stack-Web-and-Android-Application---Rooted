@@ -344,7 +344,7 @@ function EventControlPanel({ event }: EventProps) {
         console.log("User is not authenticated");
         return;
       }
-      if (!partner || !event) {
+      if (!partnerToRemove || !event) {
         console.log("Invalid partenr or event");
         return;
       }

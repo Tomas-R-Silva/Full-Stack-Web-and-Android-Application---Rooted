@@ -349,8 +349,8 @@ function EventUpdater() {
         console.log("User is not authenticated");
         return;
       }
-      if (!partner || !event) {
-        console.log("Invalid partenr or event");
+      if (!partnerToRemove || !event) {
+        console.log("Invalid partner or event");
         return;
       }
 
