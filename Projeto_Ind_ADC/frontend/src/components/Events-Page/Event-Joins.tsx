@@ -270,62 +270,68 @@ function EventJoins() {
                       )}
 
                       {requests.length !== 0 &&
-                        requests.map((req) => (
-                          <div
-                            key={req.requester}
-                            className="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3 p-3 p-md-4 rounded mt-2"
-                            style={{
-                              width: "100%",
-                              backgroundColor: "var(--color-green2)",
-                              color: "var(--color-white)",
-                            }}
-                          >
-                            <div className="w-100">
-                              <div>
-                                <span className="fw-semibold">Username: </span>
-                                <span className="text-break">
-                                  {req.requester}
-                                </span>
+                        requests
+                          .filter(
+                            (req) => !event.partners?.includes(req.requester),
+                          )
+                          .map((req) => (
+                            <div
+                              key={req.requester}
+                              className="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3 p-3 p-md-4 rounded mt-2"
+                              style={{
+                                width: "100%",
+                                backgroundColor: "var(--color-green2)",
+                                color: "var(--color-white)",
+                              }}
+                            >
+                              <div className="w-100">
+                                <div>
+                                  <span className="fw-semibold">
+                                    Username:{" "}
+                                  </span>
+                                  <span className="text-break">
+                                    {req.requester}
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <span className="fw-semibold">
+                                    Requested At:{" "}
+                                  </span>
+                                  <span>{formatDate(req.requestedAt)}</span>
+                                </div>
                               </div>
 
-                              <div>
-                                <span className="fw-semibold">
-                                  Requested At:{" "}
-                                </span>
-                                <span>{formatDate(req.requestedAt)}</span>
+                              <div className="d-flex flex-row flex-sm-column gap-3 align-items-center">
+                                <img
+                                  src={personPin_w}
+                                  alt="View Profile"
+                                  onClick={() =>
+                                    navigate("/profile/" + req.requester)
+                                  }
+                                  style={{ cursor: "pointer", width: "24px" }}
+                                />
+
+                                <img
+                                  src={check_w}
+                                  alt="Accept"
+                                  onClick={() =>
+                                    handleRespond(req.requester, true)
+                                  }
+                                  style={{ cursor: "pointer", width: "24px" }}
+                                />
+
+                                <img
+                                  src={close_w}
+                                  alt="Decline"
+                                  onClick={() =>
+                                    handleRespond(req.requester, false)
+                                  }
+                                  style={{ cursor: "pointer", width: "24px" }}
+                                />
                               </div>
                             </div>
-
-                            <div className="d-flex flex-row flex-sm-column gap-3 align-items-center">
-                              <img
-                                src={personPin_w}
-                                alt="View Profile"
-                                onClick={() =>
-                                  navigate("/profile/" + req.requester)
-                                }
-                                style={{ cursor: "pointer", width: "24px" }}
-                              />
-
-                              <img
-                                src={check_w}
-                                alt="Accept"
-                                onClick={() =>
-                                  handleRespond(req.requester, true)
-                                }
-                                style={{ cursor: "pointer", width: "24px" }}
-                              />
-
-                              <img
-                                src={close_w}
-                                alt="Decline"
-                                onClick={() =>
-                                  handleRespond(req.requester, false)
-                                }
-                                style={{ cursor: "pointer", width: "24px" }}
-                              />
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                     </div>
                   </div>
                 )}

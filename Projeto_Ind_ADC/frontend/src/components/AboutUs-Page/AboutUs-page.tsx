@@ -66,7 +66,7 @@ function AboutUsPage() {
             <p className="text-white" style={{ textAlign: "justify" }}>
               We are 2Gather, a team of five students from the Faculty of
               Sciences and Technology of NOVA University Lisbon (FCT NOVA). Our
-              team consists of Artur Santos, Artur Suplenic, Eduardo Azeitona,
+              team consists of Artur Santos, Artur Supelnic, Eduardo Azeitona,
               Gonçalo Guerreiro, and Tomás Silva. Together, we developed ROOTED
               with the goal of encouraging sustainable community engagement and
               promoting the United Nations Sustainable Development Goals (SDGs)
