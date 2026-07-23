@@ -3,7 +3,7 @@ import NavBar from "../NavBar/NavBar";
 import type { FilterProps } from "../../utils/types";
 import EventModal from "./Event-Modal";
 import { useAuth } from "../AuthContext";
-import SDGslider from "../SDG-elements/SDG-Slider";
+import SDGslider from "../SDG-elements/SDG-slider";
 import EventsList from "./Events-List";
 import accessible_w from "../../assets/icons/accessible_w.svg";
 import { sdgInfos } from "../../utils/sdgInfo";

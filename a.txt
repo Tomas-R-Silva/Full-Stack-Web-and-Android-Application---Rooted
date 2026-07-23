@@ -1,0 +1,11 @@
+cmd
+
+cd C:\Users\Artur\Documents\Java\ADC\ADC-Final\Projeto_Ind_ADC
+
+mvn appengine:run
+
+
+mvn clean package appengine:run
+
+
+gcloud beta emulators datastore start No newline at end of file

@@ -17,7 +17,7 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   ];
 
   //========== Hook ==========
-  const [errors, setErrors] = useState({});
+  const [, setErrors] = useState({});
   const [showSignIn, setShowSignIn] = useState(false);
   const { notify } = useNotification();
   const [response, setResponse] = useState<any>(null);

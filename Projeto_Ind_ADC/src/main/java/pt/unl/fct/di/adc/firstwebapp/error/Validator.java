@@ -1,10 +1,9 @@
 package pt.unl.fct.di.adc.firstwebapp.error;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.Entity;
-import com.google.cloud.datastore.Key;
 
-import pt.unl.fct.di.adc.firstwebapp.model.Token;
-import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
 
 public class Validator {
 	public static void userNotFound(Entity[] users) throws ErrorException {
@@ -21,7 +20,7 @@ public class Validator {
 		ErrorException.trow(9905);
 	}
 
-	public static void unauthorized(Token tokenJson, Role[] allowed) throws ErrorException {
+	public static void unauthorized(TokenFull tokenJson, Role[] allowed) throws ErrorException {
 		unauthorized(tokenJson.getRole(),allowed);
 	}
 
@@ -35,34 +34,16 @@ public class Validator {
 		ErrorException.trow(9906);
 	}
 
-	public static void forbidden() throws ErrorException {
-		ErrorException.trow(9907);
-	}
-
-	public static void invalidToken(Entity entity , Token tokenJson) throws ErrorException {
-		if(entity == null ||
-				!entity.contains("token_id")||
-				!entity.contains("user_name")||
-				!entity.contains("role")||
-				!entity.contains("issued_at")||
-				!entity.contains("expires_at")||
-				!entity.getString("token_id").equals(tokenJson.getTokenId()) ||
-				!entity.getString("user_name").equals(tokenJson.getUsername()) ||
-				!entity.getString("role").equals(tokenJson.getUsername()) ||
-				entity.getLong("issued_at")!=tokenJson.getIssuedAt() ||
-				entity.getLong("expires_at")!=tokenJson.getExpiresAt())
+	// With JWT, signature and expiry are verified by JwtUtils.verify().
+	// This method just confirms the session entity exists (not revoked).
+	public static void invalidToken(Entity entity, TokenFull tokenJson) throws ErrorException {
+		if (entity == null)
 			ErrorException.trow(9903);
 	}
 
-	public static void tokenExpired(Entity entity,Key key) throws ErrorException {
-		long expiresAt = entity.getLong("expires_at");
-		if((System.currentTimeMillis() / 1000) > expiresAt) 
-			ErrorException.trow(9904,key);
-	}
-
-	public static void invalidToken(Token token) throws ErrorException {
+	public static void invalidToken(TokenFull token) throws ErrorException {
 		if(token == null ||
-				token.getTokenId() == null ||
+				token.getJwt() == null ||
 				token.getUsername() == null ||
 				token.getRole() == null ||
 				token.getIssuedAt() <=0 ||

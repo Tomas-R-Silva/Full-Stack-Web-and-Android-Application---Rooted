@@ -55,10 +55,13 @@ function EventsList({ filter }: EventsListProps) {
 
       console.log(res.data.events);
 
+      // The API may omit "events" (e.g. on an error response); default to [] so
+      // we never store undefined and crash on events.length in the render.
+      const fetched = res.data?.events ?? [];
       if (cursor) {
-        setEvents((prev) => [...prev, ...res.data.events]);
+        setEvents((prev) => [...prev, ...fetched]); //carregar mais => anteriores mais todos os restantes
       } else {
-        setEvents(res.data.events);
+        setEvents(fetched);
       }
 
       setNextCursor(res.data.nextCursor);

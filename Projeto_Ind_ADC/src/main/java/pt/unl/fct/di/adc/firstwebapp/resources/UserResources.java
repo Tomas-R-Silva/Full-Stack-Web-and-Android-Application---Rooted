@@ -1,21 +1,26 @@
 package pt.unl.fct.di.adc.firstwebapp.resources;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import com.google.cloud.Timestamp;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
+import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
+import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Transaction;
 
 import jakarta.ws.rs.Consumes;
@@ -24,36 +29,39 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;   // <-- THIS ONE
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.unl.fct.di.adc.firstwebapp.Objects.AttendanceFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.EventFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.FriendFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.TokenFull;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Friendstatus;
+import pt.unl.fct.di.adc.firstwebapp.Objects.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.Objects.UserFull;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.AuthHelper;
+import pt.unl.fct.di.adc.firstwebapp.Utilities.JWTToken;
 import pt.unl.fct.di.adc.firstwebapp.Utilities.ResponceBuilder;
 import pt.unl.fct.di.adc.firstwebapp.error.Error;
 import pt.unl.fct.di.adc.firstwebapp.error.ErrorException;
 import pt.unl.fct.di.adc.firstwebapp.error.Validator;
+import pt.unl.fct.di.adc.firstwebapp.model.ChangeBorderRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserPasswordRequest.PasswordInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole;
 import pt.unl.fct.di.adc.firstwebapp.model.ChangeUserRole.ChangeUserRoleInput;
-import pt.unl.fct.di.adc.firstwebapp.model.CreateAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.DeleteAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.LogOutRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest;
 import pt.unl.fct.di.adc.firstwebapp.model.LoginRequest.LoginRequestInput;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.Attributes;
 import pt.unl.fct.di.adc.firstwebapp.model.ModAccountRequest.ModAccountRequestInput;
-import pt.unl.fct.di.adc.firstwebapp.model.ShortUser;
-import pt.unl.fct.di.adc.firstwebapp.model.ShowSessionsRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.ShowUsersRequest;
-import pt.unl.fct.di.adc.firstwebapp.model.Token;
-import pt.unl.fct.di.adc.firstwebapp.model.User;
-import pt.unl.fct.di.adc.firstwebapp.model.User.Role;
+import pt.unl.fct.di.adc.firstwebapp.model.ShortUserTokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.TokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.TopSdgRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.TwoNameTokenRequest;
+import pt.unl.fct.di.adc.firstwebapp.model.UserRequest;
+
 
 @Path("/")
-public class UserResources{
-
-	private static final Datastore datastore = DatastoreOptions.newBuilder()
-			.setProjectId("adc-ind")
-			.build()
-			.getService();
+public class UserResources {
+	private static final Datastore datastore = DatastoreOptions.newBuilder().setProjectId(AuthHelper.PROJECT_ID).build().getService();
 
 	private static Logger Log = Logger.getLogger(UserResources.class.getName());
 
@@ -63,35 +71,24 @@ public class UserResources{
 	@Path("/createaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createAccount(CreateAccountRequest request) {
+	public Response createAccount(UserRequest request) {
 		Transaction txn = datastore.newTransaction();
 		try {
+
 			User user = request.getInput();
 			Log.info("Attempt to register user: " + user.getUsername());
-			if (!user.userValidation())
-				return Error.invalid_input();		
 
 			Key userKey = datastore.newKeyFactory().setKind("User").newKey(user.getUsername());
-			Entity existingUser = txn.get(userKey);
 
-			if (existingUser != null) ErrorException.trow(9901);
+			user.userValidation();
 
-			Entity newUser = Entity.newBuilder(userKey)
-					.set("user_name", user.getUsername())
-					.set("user_pwd", DigestUtils.sha512Hex(user.getPassword()))
-					.set("user_phone", user.getPhone())
-					.set("user_address", user.getAddress())
-					.set("user_role", user.getRole().name())
-					.set("user_creation_time", Timestamp.now())
-					.build();
+			if(txn.get(userKey) != null) ErrorException.trow(9901);
 
-			txn.put(newUser);
+			txn.put(UserFull.newuser(user,userKey).toentity());
 			txn.commit();
 
 			Log.info("User registered: " + user.getUsername());
-			return buildresponse(Map.of(
-					"username", user.getUsername(),
-					"role", user.getRole().name()));
+			return buildresponse(Map.of("message", "Account created"));
 
 		} catch (Exception e) {
 			txn.rollback();
@@ -107,36 +104,14 @@ public class UserResources{
 	public Response userLogin(LoginRequest request) {
 		try {
 			LoginRequestInput userToLog = request.getInput();
-
 			Log.info("Attempt to create userLogin: " + userToLog.getUsername());
-
-			Entity user = getUser(userToLog);
-
-			Validator.invalidCredencials(userToLog.getPassword(), user.getString("user_pwd"));
-
-			String tokenID = UUID.randomUUID().toString();
-			String userName = user.getKey().getName();
-			Role role = Role.valueof(user.getString("user_role"));
-			Token token = new Token(tokenID, userName, role);
-
-			Key sessionKey = datastore.newKeyFactory().setKind("Session").newKey(tokenID);
-
-			Entity sessionEntity = Entity.newBuilder(sessionKey)
-					.set("token_id", token.getTokenId())
-					.set("user_name", token.getUsername())
-					.set("role", token.getRole().toString())
-					.set("issued_at", token.getIssuedAt())
-					.set("expires_at", token.getExpiresAt()) // se quiseres expiração
-					.build();
-
-			datastore.put(sessionEntity);
-			return buildresponse(Map.of("token", Map.of(
-					"tokenId", tokenID,
-					"username", user.getString("user_name"),
-					"role", role.toString(),
-					"issuedAt", token.getIssuedAt(),
-					"expiresAt", token.getExpiresAt()
-					)));
+			UserFull user = AuthHelper.getUser(userToLog);
+			Validator.invalidCredencials(userToLog.getPassword(), user.getPassword());
+			String jwtString = JWTToken.createJWT(user.getUsername(), Map.of("role", user.getRole().name()));
+			DecodedJWT decoded = JWTToken.decodeUnsafe(jwtString);
+			TokenFull token =JWTToken.filltoken(datastore,jwtString,decoded);
+			datastore.put(token.toentity());
+			return buildresponse(Map.of("token", token.tomap()));
 		}catch(Exception e) {
 			return Error.fromexception(e);
 		}
@@ -147,28 +122,58 @@ public class UserResources{
 	@Path("/showusers")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUsers(ShowUsersRequest request) {
+	public Response showUsers(TokenRequest request) {
 		try {
-			Token tokenJson = request.getToken();
-			getToken(tokenJson);
-
-			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN, Role.BOFFICER});
-
-			Query<Entity> query = Query.newEntityQueryBuilder().setKind("User").build();
-
-			QueryResults<Entity> results = datastore.run(query);
-
-			List<Map<String, String>> users = new ArrayList<>();
-
-			while (results.hasNext()) {
-				Entity e = results.next();
-				users.add(Map.of(
-						"username", e.getString("user_name"),
-						"role", e.getString("user_role")
-						));
-			}
+			TokenFull token = AuthHelper.verifyToken(request);
+			Validator.unauthorized(token, new Role[] {Role.ADMIN, Role.BOFFICER});
+			QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder().setKind("User").build());
+			List<Map<String, Object>> users = new LinkedList<>();
+			while (results.hasNext()) 
+				users.add(UserFull.fromdatabase(results.next()).tomap());
 			return buildresponse(Map.of("users", users));
 		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// POST /topsdg  gamification leaderboard: top 20 users per SDG, ranked by
+	// their participation count in that SDG.
+	// -------------------------------------------------------------------------
+	@POST
+	@Path("/topsdg")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response topSdg(TopSdgRequest request) {
+		try {
+			int limit = 20;
+			if (request != null && request.getInput() != null
+					&& request.getInput().getLimit() != null && request.getInput().getLimit() > 0)
+				limit = request.getInput().getLimit();
+
+			QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder().setKind("User").build());
+			List<UserFull> users = new LinkedList<>();
+			while (results.hasNext())
+				users.add(UserFull.fromdatabase(results.next()));
+
+			int sdgCount = users.isEmpty() ? 0 : users.get(0).getOds().size();
+			Map<String, Object> topBySdg = new LinkedHashMap<>();
+			for (int i = 0; i < sdgCount; i++) {
+				final int idx = i;
+				List<Map<String, Object>> ranked = users.stream()
+						.filter(u -> u.getOds().get(idx) > 0)
+						.sorted((a, b) -> Long.compare(b.getOds().get(idx), a.getOds().get(idx)))
+						.limit(limit)
+						.map(u -> Map.<String, Object>of(
+								"username", u.getUsername(),
+								"display", (u.getDisplay() != null) ? u.getDisplay() : u.getUsername(),
+										"points", u.getOds().get(idx)))
+						.collect(Collectors.toList());
+				topBySdg.put(String.valueOf(i + 1), ranked);
+			}
+
+			return buildresponse(Map.of("topBySDG", topBySdg));
+		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
 	}
@@ -177,17 +182,29 @@ public class UserResources{
 	@Path("/deleteaccount")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteAccount(DeleteAccountRequest request){
+	public Response deleteAccount(ShortUserTokenRequest request){
 		try {
-			ShortUser userJson = request.getInput();
-			Token tokenJson = request.getToken();
-			Key userKeyToBeDeleted = getUser(userJson).getKey();	
-			getToken(tokenJson);
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			if(!user.isme(token))
+				Validator.unauthorized(token, new Role []{Role.ADMIN});
+			datastore.delete(user.getKey());
+			AuthHelper.querydelete("Session","user_name",user.getUsername());
 
-			Validator.unauthorized(tokenJson, new Role []{Role.ADMIN});
+			AuthHelper.querydelete("EventJoinRequest","requester",user.getUsername());
+			AuthHelper.querydelete("EventJoinRequest","organizer",user.getUsername());
 
-			datastore.delete(userKeyToBeDeleted);
-			deleteAllSessionsForUser(userJson.getUsername());
+			
+
+			unattendevents(user.getUsername());
+
+			becomeloner(user.getUsername());
+
+			AuthHelper.querydelete("ForumPost","author_username",user.getUsername());
+			
+			destroievents(user.getUsername());
+			
+			AuthHelper.querydelete("Event","organizer_username",user.getUsername());
 			return buildresponse(Map.of("message", "Account deleted successfully"));
 		}catch(Exception e) {
 			return Error.fromexception(e);
@@ -201,24 +218,84 @@ public class UserResources{
 	public Response modifyAccount(ModAccountRequest request) {
 		try {
 			ModAccountRequestInput input = request.getInput();
-			Attributes attributes = request.getInput().getAttributes();
-			String username = input.getUsername();
-			Token tokenJson = request.getToken();
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(input.getUsername());
+			if(!user.isme(token))
+				Validator.unauthorized(token, new Role []{Role.ADMIN});
+			if(input.getUsername()!=null&&!user.getDisplay().equals(input.getUsername())) 
+				user.setDisplay(input.getUsername());
+			if(input.getEmail()!=null&&!user.getEmail().equals(input.getEmail()))
+				user.setEmail(input.getEmail());	
+			if(input.getBio()!=null&&!user.getBio().equals(input.getBio()))
+				user.setBio(input.getBio());
+			if(input.getCategory()!=null)
+				user.setbaseCategorystr(input.getCategory());
+			if(input.getCountry()!=null&&!user.getCountry().equals(input.getCountry()))
+				user.setCountry(input.getCountry());
+			if(input.getBirth()!=null&&user.getBirth()!=input.getBirth())
+				user.setBirth(input.getBirth());
+			if(input.getAvatar()!=null && !input.getAvatar().isBlank())
+				user.setAvatar(input.getAvatar());
 
-			Entity user = getUser(username);
-			Entity token = getToken(tokenJson);
-
-			if (!token.getString("user_name").equals(username)) 
-				Validator.unauthorized(tokenJson, new Role[]{Role.BOFFICER,Role.ADMIN});
-
-			Entity updatedUser = Entity.newBuilder(user)
-					.set("user_address", attributes.getAddress())
-					.set("user_phone", attributes.getPhone())
-					.build();
-
-			datastore.put(updatedUser);
+			datastore.update(user.toentity());
 			return buildresponse(Map.of("message", "Updated successfully"));
 		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/user")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAccount(ShortUserTokenRequest request) {
+		try {
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			String displayname=user.getDisplay();
+			Friendstatus friendshipstatus;
+			if(user.isme(token)) 
+				friendshipstatus=Friendstatus.SELF;
+			else {
+				Entity friendent=datastore.get(FriendFull.getFriendKey(token,user));
+				if(friendent==null) 
+					friendshipstatus=Friendstatus.NOT_FRIENDS;
+				else {
+					FriendFull friend=FriendFull.fromdatabase(friendent);
+					if(friend.getAccepted()) {
+						friendshipstatus = Friendstatus.FRIENDS;
+						displayname = friend.getnickname(user);
+					}
+					else
+						friendshipstatus=(friend.getUsername1().equals(token.getUsername()))?
+								Friendstatus.REQUEST_SENT:Friendstatus.REQUEST_RECIVED;
+				}
+			}
+			return buildresponse(user.tobigmap(displayname,friendshipstatus));
+		}catch(Exception e) {return Error.fromexception(e);}
+	}
+
+	@POST
+	@Path("/find")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response findAccount(ShortUserTokenRequest request) {
+		try {
+			AuthHelper.verifyToken(request);
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("User");
+			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
+			List<Map<String,Object>> list=new ArrayList<>();
+			while(sessions.hasNext()) {
+				UserFull user=UserFull.fromdatabase(sessions.next());
+				if(user.getDisplay().contains(request.getInput().getUsername()))
+					list.add(user.tomap());
+			}
+			try {
+				Map<String, Object> user = AuthHelper.getUser(request.getInput()).tomap();
+				if(!list.contains(user)) list.add(user);
+			}catch(ErrorException e) {if(e.getStatus()!=9902)throw e;}
+			return buildresponse(Map.of("found",list));
+		} catch (Exception e){
 			return Error.fromexception(e);
 		}
 	}
@@ -227,19 +304,12 @@ public class UserResources{
 	@Path("/showuserrole")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showUserRole (ShowUsersRequest request){
+	public Response showUserRole(ShortUserTokenRequest request){
 		try{
-			ShortUser userJson = request.getInput();
-			Token tokenJson = request.getToken();
-			
-			Entity user = getUser(userJson.getUsername());
-			getToken(tokenJson);
-			
-			Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN, Role.BOFFICER});
-			return buildresponse(Map.of(
-					"username", user.getString("user_name"),
-					"role", user.getString("user_role")
-					));
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			Validator.unauthorized(token, new Role [] {Role.ADMIN, Role.BOFFICER});
+			return buildresponse(user.tomap());
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -249,18 +319,15 @@ public class UserResources{
 	@Path("/logout")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response logOut(LogOutRequest request){
+	public Response logOut(ShortUserTokenRequest request){
 		try{
-			ShortUser userJson = request.getInput();
-			Token tokenJson = request.getToken();
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
 
-			Entity user = getUser(userJson.getUsername());
-			Entity token = getToken(tokenJson);
+			if(!user.isme(token))
+				Validator.unauthorized(token, new Role [] {Role.ADMIN});
+			deleteAllSessionsForUser(user.getUsername());
 
-			if(!token.getString("user_name").equals(user.getString("user_name")))
-				Validator.unauthorized(tokenJson, new Role [] {Role.ADMIN});
-
-			deleteAllSessionsForUser(userJson.getUsername());
 			return buildresponse(Map.of("message", "Logout successful"));
 		} catch (Exception e) {
 			return Error.fromexception(e);
@@ -274,20 +341,39 @@ public class UserResources{
 	public Response changeUserRole(ChangeUserRole request) {
 		try{
 			ChangeUserRoleInput input = request.getInput();
-			Token tokenJson = request.getToken();
+			UserFull user = AuthHelper.getUser(input);
+			TokenFull token = AuthHelper.verifyToken(request);
+			Role oldRole = user.getRole(), newRole = Role.valueof(input.getNewrole());
+			if(oldRole.equals(newRole))
+				return buildresponse(Map.of("message", "Role is the same"));
 
-			Entity user = getUser(input.getUsername());
-			getToken(tokenJson);
+			Validator.unauthorized(token, 
+					(oldRole.equals(Role.ADMIN)||oldRole.equals(Role.BOFFICER)||
+							newRole.equals(Role.ADMIN)||newRole.equals(Role.BOFFICER))?
+									new Role[] {Role.ADMIN}:
+										new Role[] {Role.BOFFICER,Role.ADMIN});
 
-			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
-			Role newRole = Role.valueof(input.getNewrole());
-			Entity updatedUser = Entity.newBuilder(user)
-					.set("user_role", newRole.name())
-					.build();
-
-			datastore.put(updatedUser);
-			updateUserTokensRole(input.getUsername(),input.getNewrole());
+			user.setRole(newRole);
+			datastore.update(user.toentity());
+			// JWT role is embedded in the token — invalidate all sessions so user re-logs with new role
+			deleteAllSessionsForUser(user.getUsername());
 			return buildresponse(Map.of("message", "Role updated successfully"));
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/changeborder")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response changeBorder(ChangeBorderRequest request) {
+		try{
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(token);
+			user.setBorderID(request.getInput().getBorderID());
+			datastore.update(user.toentity());
+			return buildresponse(Map.of("message", "Border updated successfully", "borderID", user.getBorderID()));
 		} catch (Exception e) {
 			return Error.fromexception(e);
 		}
@@ -300,22 +386,39 @@ public class UserResources{
 	public Response changeUserPassword(ChangeUserPasswordRequest request) {
 		try{
 			PasswordInput input = request.getInput();
-			Token tokenJson = request.getToken();
-
-			Entity user = getUser(input.getUsername());
-			Entity token = getToken(tokenJson);
-
-			if(!token.getString("user_name").equals(user.getString("user_name")))
-				Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
-
+			UserFull user = AuthHelper.getUser(input.getUsername());
+			TokenFull token = AuthHelper.verifyToken(request);
+			if(!user.isme(token))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
-			if (!oldPwdHash.equals(user.getString("user_pwd"))) 
-				ErrorException.trow(9907);
+			if (!oldPwdHash.equals(user.getPassword())) 
+				ErrorException.trow(9941);
+			user.setPassword(input.getNewpassword());
+			datastore.update(user.toentity());
+			return buildresponse(Map.of("message", "Password changed successfully"));
 
-			Entity updatedUser = Entity.newBuilder(user)
-					.set("user_pwd", DigestUtils.sha512Hex(input.getNewpassword()))
-					.build();
-			datastore.put(updatedUser);
+		} catch (Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/forgotuserpwd")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response forgotUserPassword(ChangeUserPasswordRequest request) {
+		try{//TODO
+			PasswordInput input = request.getInput();
+
+			UserFull user = AuthHelper.getUser(input);
+			TokenFull token = AuthHelper.verifyToken(request);
+			if(!user.isme(token))
+				Validator.unauthorized(token, new Role[] {Role.ADMIN});
+			String oldPwdHash = DigestUtils.sha512Hex(input.getOldpassword());
+			if (!oldPwdHash.equals(user.getPassword())) 
+				ErrorException.trow(9941);
+			user.setPassword(input.getNewpassword());
+			datastore.update(user.toentity());
 			return buildresponse(Map.of("message", "Password changed successfully"));
 
 		} catch (Exception e) {
@@ -327,11 +430,10 @@ public class UserResources{
 	@Path("/showauthsessions")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response showAuthsessions (ShowSessionsRequest request){
+	public Response showAuthsessions(TokenRequest request){
 		try{
-			Token tokenJson = request.getToken();
-			getToken(tokenJson);
-			Validator.unauthorized(tokenJson, new Role[] {Role.ADMIN});
+			TokenFull token = AuthHelper.verifyToken(request);
+			Validator.unauthorized(token, new Role[] {Role.ADMIN});
 			return buildresponse(Map.of("tokens", getAllSessions()));
 
 		} catch (Exception e){
@@ -339,91 +441,239 @@ public class UserResources{
 		}
 	}	
 
-	private List<Map<String, Object>> getAllSessions (){
+	@POST
+	@Path("/endall")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response end() throws ErrorException{
+		QueryResults<Entity> sessions = datastore.run(Query.newEntityQueryBuilder().build());
+		while(sessions.hasNext())
+			datastore.delete(sessions.next().getKey());
+		return buildresponse(Map.of("message", "ALL DELETED"));
+	}
+
+	@POST
+	@Path("/addfriend")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addFriend(ShortUserTokenRequest request) throws ErrorException{
+		Transaction txn = datastore.newTransaction();
+		try{
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			Key friendKey = FriendFull.getFriendKey(token,user);
+			Entity existingfriend = txn.get(friendKey);
+
+			if (existingfriend == null) {
+				FriendFull friend=FriendFull.newfriends(token,user);
+				txn.put(friend.toentity());
+				txn.commit();
+				return buildresponse(Map.of("message", "Friend Request Sent"));
+			}
+			else {
+				FriendFull friend=FriendFull.fromdatabase(existingfriend);
+				if(friend.getAccepted()) 
+					ErrorException.trow(9926);
+				else if(friend.getUsername1().equals(token.getUsername()))
+					ErrorException.trow(9927);
+				else {
+					friend.acceptrecquest();
+					txn.update(friend.toentity());
+					txn.commit();
+
+				}
+			}
+			return buildresponse(Map.of("message", "Friend Request Accepted"));
+		} catch (Exception e){
+			txn.rollback();
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/addnickname")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addnickname(TwoNameTokenRequest request) throws ErrorException{
+		try{
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			FriendFull existingfriend = FriendFull.fromdatabase(datastore.get(FriendFull.getFriendKey(token,user)));
+			if(existingfriend == null || !existingfriend.getAccepted())
+				ErrorException.trow(9934);
+			if(existingfriend.getUsername1().equals(user.getUsername()))
+				existingfriend.setNickname1(request.getInput().getNewName());
+			else
+				existingfriend.setNickname2(request.getInput().getNewName());
+			datastore.update(existingfriend.toentity());
+			return buildresponse(Map.of("message", "Friend Nickname Set"));
+		} catch (Exception e){
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/getnickname")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getnickname(ShortUserTokenRequest request) throws ErrorException{
+		try{
+			TokenFull token = AuthHelper.verifyToken(request);
+			UserFull user = AuthHelper.getUser(request.getInput());
+			FriendFull existingfriend = FriendFull.fromdatabase(datastore.get(FriendFull.getFriendKey(token,user)));
+			if(existingfriend == null || !existingfriend.getAccepted())
+				ErrorException.trow(9934);
+			String nickname=existingfriend.getUsername1().equals(user.getUsername())?existingfriend.getNickname1():existingfriend.getNickname2();			
+			return buildresponse(Map.of("nickname",nickname));
+		} catch (Exception e){
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/unfriend")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response unfriend(ShortUserTokenRequest request){
+		try {
+			UserFull user = AuthHelper.getUser(request.getInput());
+			TokenFull token = AuthHelper.verifyToken(request);
+			FriendFull friend = FriendFull.fromdatabase(token, user);
+			if(friend==null)
+				ErrorException.trow(9934);
+			datastore.delete(friend.getKey());
+			String str= friend.formatkey();
+			AuthHelper.querydelete("ForumPost","friend_id",str);
+			return buildresponse(Map.of("message", "Friendship Ended"));
+		}catch(Exception e) {
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/showfriends")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response showFriends(ShortUserTokenRequest request){
+		try{
+			String username=AuthHelper.getUser(request.getInput()).getUsername();
+			AuthHelper.verifyToken(request);
+			List<Map<String, Object>> friends = new LinkedList<>();
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
+			queryBuilder.setFilter(PropertyFilter.eq("accepted", true));
+			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
+			while(sessions.hasNext()) {
+				Map<String, Object> friend=FriendFull.fromdatabase(sessions.next()).otherfriend(username);
+				if(friend!=null)
+					friends.add(friend);
+			}
+			return buildresponse(Map.of("friends", friends));
+		} catch (Exception e){
+			return Error.fromexception(e);
+		}
+	}
+
+	@POST
+	@Path("/showfriendrequests")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response showFriendRequests(TokenRequest request){
+		try{
+			TokenFull token = AuthHelper.verifyToken(request);
+			List<Map<String, Object>> friends = new LinkedList<>();
+			EntityQuery.Builder queryBuilder = Query.newEntityQueryBuilder().setKind("Friend");
+			queryBuilder.setFilter(CompositeFilter.and(
+					PropertyFilter.eq("accepted", false),
+					PropertyFilter.eq("username_2", token.getUsername())));
+			QueryResults<Entity> sessions = datastore.run(queryBuilder.build());
+			while(sessions.hasNext()) 
+				friends.add(FriendFull.fromdatabase(sessions.next()).cesiving());
+			return buildresponse(Map.of("friends", friends));
+		} catch (Exception e){
+			return Error.fromexception(e);
+		}
+	}
+
+	private List<Map<String, Object>> getAllSessions(){
 		Query<Entity> query = Query.newEntityQueryBuilder()
 				.setKind("Session")
 				.build();
 
 		QueryResults<Entity> sessions = datastore.run(query);
-		List<Map<String, Object>> tokensOutput = new ArrayList<>();
+		List<Map<String, Object>> tokensOutput = new LinkedList<>();
 
-		while(sessions.hasNext()){
-			Entity session = sessions.next();
-			tokensOutput.add(Map.of(
-					"tokenID", session.getString("token_id"),
-					"username", session.getString("user_name"),
-					"role", session.getString("role"),
-					"expiresAt", session.getLong("expires_at")
-					));
+		while(sessions.hasNext()) {
+			Entity session=sessions.next();
+			TokenFull token=TokenFull.fromdatabase(session);
+			if(token.isexpierd())
+				datastore.delete(session.getKey());
+			else
+				tokensOutput.add(token.tomap());
 		}
-
 		return tokensOutput;
 
 	}
 
-	private void deleteAllSessionsForUser(String username) {
+	private void destroievents(String name) {
 		Query<Entity> query = Query.newEntityQueryBuilder()
-				.setKind("Session")
-				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
+				.setKind("Event")
+				.setFilter(StructuredQuery.PropertyFilter.eq("organizer_username", name))
 				.build();
-
-		QueryResults<Entity> sessions = datastore.run(query);
-
-		while (sessions.hasNext()) {
-			Entity session = sessions.next();
-			datastore.delete(session.getKey());
+		QueryResults<Entity> results = datastore.run(query);
+		while (results.hasNext()) {
+			Entity entity=results.next();
+			datastore.delete(entity.getKey());
+			EventFull event = EventFull.fromdatabase(entity);
+			AuthHelper.querydelete("Attendance","event_id",event.getEventId());
+			AuthHelper.querydelete("ForumPost","event_id",event.getEventId());
 		}
 	}
 
-	private void updateUserTokensRole(String username, String newRole) {
-		Query<Entity> query = Query.newEntityQueryBuilder()
+	private void becomeloner(String name) throws ErrorException {
+		QueryResults<Entity> results = datastore.run(Query.newEntityQueryBuilder()
+				.setKind("Friend")
+				.setFilter(PropertyFilter.eq("username_1", name))
+				.build());
+		while (results.hasNext()) {
+			FriendFull friend = FriendFull.fromdatabase(results.next());
+			AuthHelper.querydelete("ForumPost","friend_id",friend.formatkey());
+			datastore.delete(friend.getKey());
+		}
+		results = datastore.run(Query.newEntityQueryBuilder()
+				.setKind("Friend")
+				.setFilter(PropertyFilter.eq("username_2", name))
+				.build());
+		while (results.hasNext()) {
+			FriendFull friend = FriendFull.fromdatabase(results.next());
+			AuthHelper.querydelete("ForumPost","friend_id",friend.formatkey());
+			datastore.delete(friend.getKey());
+		}
+	}
+
+	public static void unattendevents(String username){
+		QueryResults<Entity> entitys = datastore.run(Query.newEntityQueryBuilder()
+				.setKind("Attendance")
+				.setFilter(PropertyFilter.eq("username", username))
+				.build());
+		while(entitys.hasNext()) {
+			AttendanceFull attendace = AttendanceFull.fromdatabase(entitys.next());
+			EventFull event = EventFull.fromdatabase(attendace.getEvent());
+			event.decAttendee();
+			datastore.update(event.toentity());
+			datastore.delete(attendace.getKey());
+		}
+	}
+
+	private void deleteAllSessionsForUser(String username) {
+		QueryResults<Entity> sessions = datastore.run( Query.newEntityQueryBuilder()
 				.setKind("Session")
 				.setFilter(StructuredQuery.PropertyFilter.eq("user_name", username))
-				.build();
-
-		QueryResults<Entity> sessions = datastore.run(query);
-
-		//List<Entity> updatedSessions = new ArrayList<>();
-
-		while (sessions.hasNext()) {
-			Entity session = sessions.next();
-			Entity updated = Entity.newBuilder(session)
-					.set("role", newRole) // atualiza o role
-					.build();
-			datastore.put(updated);
-		}
+				.build());
+		while (sessions.hasNext()) 
+			datastore.delete(sessions.next().getKey());
 	}
 
 	private static Response buildresponse(Map<String,Object> map) {
-		return ResponceBuilder.constructor("success",map);
+		return ResponceBuilder.constructorsuccess(map);
 	}
-
-	private Entity getUser(ShortUser user) throws ErrorException{
-		return getUser(user.getUsername());
-	}
-
-	private Entity getUser(String username) throws ErrorException {
-		Key userKey = datastore.newKeyFactory().setKind("User").newKey(username);
-		Entity user = datastore.get(userKey);
-		Validator.userNotFound(new Entity[]{user});
-		return user;
-	}
-
-	private Entity getToken(Token tokenJson) throws ErrorException {
-		try {
-			Key tokenKey = datastore.newKeyFactory().setKind("Session").newKey(tokenJson.getTokenId());
-			Entity token = datastore.get(tokenKey);
-			Validator.invalidToken(token, tokenJson);
-			Validator.tokenExpired(token, tokenKey);
-			return token;
-		}catch(ErrorException e) {
-			datastore.delete(e.getKey());
-			throw e;
-		}
-
-	}
-
-
-
 
 }

@@ -1,4 +1,4 @@
-import SDGslider from "../SDG-elements/SDG-Slider";
+import SDGslider from "../SDG-elements/SDG-slider";
 
 function Row2() {
   return (

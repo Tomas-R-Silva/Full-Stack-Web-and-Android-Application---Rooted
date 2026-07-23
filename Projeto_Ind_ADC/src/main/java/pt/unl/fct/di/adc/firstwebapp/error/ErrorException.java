@@ -1,17 +1,15 @@
 package pt.unl.fct.di.adc.firstwebapp.error;
 
-import com.google.cloud.datastore.Key;
-
 public class ErrorException extends Exception{
 
 	private static final long serialVersionUID = 1L;
 	private final int status;
-	private final Key key;
+	private final Object ob;
 
-	public ErrorException(int status,Key key) {
+	public ErrorException(int status,Object ob) {
 		super();
 		this.status=status;
-		this.key=key;
+		this.ob=ob;
 	}
 	public ErrorException(int status) {
 		this(status,null);
@@ -20,11 +18,12 @@ public class ErrorException extends Exception{
 		return status;
 	}
 	
-	public Key getKey() {
-		return key;
+	public Object getdata() {
+		return ob;
 	}
-	public static void trow(int status, Key key) throws ErrorException {
-		throw new ErrorException(status,key);
+	
+	public static void trow(int status, Object ob) throws ErrorException {
+		throw new ErrorException(status,ob);
 	}
 	public static void trow(int valeu) throws ErrorException {
 		throw new ErrorException(valeu);
