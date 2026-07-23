@@ -107,6 +107,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         type: 'EVENT',
         id: _event['eventId'] as String,
         pageSize: 50,
+        redirectOnError: false,
       );
       final data  = result;
       final posts = (data['posts'] as List<dynamic>? ?? [])
@@ -135,6 +136,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         type: 'EVENT',
         id: _event['eventId'] as String,
         pageSize: 50,
+        redirectOnError: false,
       );
       final data  = result;
       final posts = (data['posts'] as List<dynamic>? ?? [])
