@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import type { StepProps } from "../../utils/types";
 import { registerUser } from "../../api/auth";
 import SignInModal from "./SignIn-Modal";
@@ -21,7 +20,6 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
   const [, setErrors] = useState({});
   const [showSignIn, setShowSignIn] = useState(false);
   const { notify } = useNotification();
-  const navigate = useNavigate();
   const [response, setResponse] = useState<any>(null);
 
   const handleChange = (value: string) => {
@@ -40,6 +38,7 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
     e.preventDefault();
     try {
       console.log(formData);
+      console.log(errors);
       const response = await registerUser(formData);
       setResponse(response);
       console.log(response);

@@ -97,17 +97,14 @@ function PublicPage() {
   };
 
   const [events, setEvents] = useState<EventItem[]>([]); //Events got from the request
-  const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
   const [loading, setLoading] = useState(false); //if the main page is being loaded
-  const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
+
   const [error, setError] = useState<string | null>(null);
 
   //============== Get the events =============
   const loadEvents = async (cursor?: string) => {
     try {
-      if (cursor) {
-        setLoadingMore(true);
-      } else {
+      if (!cursor) {
         setLoading(true);
       }
 
@@ -144,14 +141,11 @@ function PublicPage() {
       } else {
         setEvents(res.data.events);
       }
-
-      setNextCursor(res.data.nextCursor);
     } catch (err) {
       console.error(err);
       setError("Could not load the events.");
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 

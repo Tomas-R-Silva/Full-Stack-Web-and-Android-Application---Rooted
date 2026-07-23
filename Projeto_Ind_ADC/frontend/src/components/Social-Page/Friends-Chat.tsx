@@ -16,10 +16,6 @@ import { useNotification } from "../NotificationContext";
 function FriendsChat({ friend }: FriendProps) {
   const { isAuthenticated, username } = useAuth();
   const [messages, setMessages] = useState<Post[]>([]); //Events got from the request
-  const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
-  const [loading, setLoading] = useState(false); //if the main page is being loaded
-  const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
-  const [error, setError] = useState<string | null>(null);
   const [parentId, setParentId] = useState("");
   const [parentText, setParentText] = useState("");
   const [post, setPost] = useState("");
@@ -27,14 +23,6 @@ function FriendsChat({ friend }: FriendProps) {
 
   const loadFriendChat = async (cursor?: string) => {
     try {
-      if (cursor) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
-
-      setError(null);
-
       const token = sessionStorage.getItem("token");
       if (!token) {
         console.log("User is not authenticated");
@@ -71,14 +59,8 @@ function FriendsChat({ friend }: FriendProps) {
       } else {
         setMessages(sortedPosts);
       }
-
-      setNextCursor(res.data.nextCursor);
     } catch (err) {
       console.error(err);
-      setError("Could not load the freinds chats.");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
     }
   };
 

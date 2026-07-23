@@ -1,6 +1,4 @@
-import { useState } from "react";
 import EventForm from "./Event-Form";
-import EventUpdater from "./Event-Updater";
 
 function EventModal({ onClose }: { onClose: () => void }) {
   return (

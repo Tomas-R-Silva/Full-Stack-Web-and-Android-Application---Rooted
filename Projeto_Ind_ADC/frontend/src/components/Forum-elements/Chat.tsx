@@ -12,10 +12,6 @@ import { useNotification } from "../NotificationContext";
 function Chat({ event }: EventProps) {
   const { isAuthenticated, username } = useAuth();
   const [messages, setMessages] = useState<Post[]>([]); //Events got from the request
-  const [nextCursor, setNextCursor] = useState<string | undefined>(); //string means there is cursos to next page, undifined means there is no cursor
-  const [loading, setLoading] = useState(false); //if the main page is being loaded
-  const [loadingMore, setLoadingMore] = useState(false); //if all the events are being loaded
-  const [error, setError] = useState<string | null>(null);
   const { notify } = useNotification();
   const [parentId, setParentId] = useState("");
   const [parentText, setParentText] = useState("");
@@ -23,14 +19,6 @@ function Chat({ event }: EventProps) {
 
   const loadEventChat = async (eventId?: string, cursor?: string) => {
     try {
-      if (cursor) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
-
-      setError(null); //reset errors
-
       const token = sessionStorage.getItem("token");
       if (!token) {
         console.log("User is not authenticated");
@@ -67,14 +55,8 @@ function Chat({ event }: EventProps) {
       } else {
         setMessages(sortedPosts);
       }
-
-      setNextCursor(res.data.nextCursor);
     } catch (err) {
       console.error(err);
-      setError("Could not load the events.");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
     }
   };
 
