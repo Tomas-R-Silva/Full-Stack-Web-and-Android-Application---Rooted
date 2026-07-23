@@ -4,7 +4,6 @@ import '../widgets/auth_text_field.dart';
 import '../services/api_service.dart';
 import '../services/session_storage.dart';
 import 'register_screen.dart';
-import 'forgot_password_screen.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -147,8 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
               _buildHeader(),
               const SizedBox(height: 40),
               _buildForm(),
-              const SizedBox(height: 12),
-              _buildForgotPassword(),
               const SizedBox(height: 24),
               _buildLoginButton(),
               const SizedBox(height: 32),
@@ -222,21 +219,6 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildForgotPassword() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-          );
-        },
-        child: const Text('Forgot password?'),
       ),
     );
   }

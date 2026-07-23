@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'session_storage.dart';
+import '../services/session_storage.dart';
 import '../screens/login_screen.dart';
 
 /// Thrown when the backend returns a non-success response.
