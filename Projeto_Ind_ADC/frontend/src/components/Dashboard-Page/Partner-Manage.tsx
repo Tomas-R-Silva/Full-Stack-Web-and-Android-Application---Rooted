@@ -5,7 +5,6 @@ import { changeRole } from "../../api/auth";
 import { useNotification } from "../NotificationContext";
 
 function PartnerManage({ user }: UserProps) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [newRole, setNewRole] = useState(user.role);
   const { notify } = useNotification();
 
@@ -49,7 +48,6 @@ function PartnerManage({ user }: UserProps) {
 
   useEffect(() => {
     setNewRole(user.role);
-    setConfirmDelete(false);
   }, [user]);
 
   return (

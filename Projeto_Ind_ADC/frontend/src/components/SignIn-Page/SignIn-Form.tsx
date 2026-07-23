@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { RequestSignIn, SignInResponse } from "../../utils/types";
+import type { RequestSignIn } from "../../utils/types";
 import SignInStep1 from "./SignIn-Step1";
 import SignInStep2 from "./SignIn-Step2";
 import SignInStep3 from "./SignIn-Step3";

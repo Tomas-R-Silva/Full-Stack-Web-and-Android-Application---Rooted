@@ -89,6 +89,7 @@ function AccountAdminManage({ user }: UserProps) {
         },
       };
 
+      console.log(errors);
       console.log(payloadRole);
       const responseRole = await changeRole(payloadRole);
       console.log(responseRole);
