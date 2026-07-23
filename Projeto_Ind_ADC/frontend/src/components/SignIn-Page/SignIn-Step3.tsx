@@ -38,7 +38,6 @@ function SignInStep3({ formData, setFormData, onBack }: StepProps) {
     e.preventDefault();
     try {
       console.log(formData);
-      console.log(errors);
       const response = await registerUser(formData);
       setResponse(response);
       console.log(response);
