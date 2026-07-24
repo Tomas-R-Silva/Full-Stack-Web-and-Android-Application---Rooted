@@ -74,6 +74,8 @@ class _HomePageState extends State<HomePage> {
       _discoverIndex = 0;
     });
     try {
+      final userCategories = await SessionStorage.getCategory();
+
       final result = await ApiService.listEvents(
         jwt: _jwt,
         status: 'UPCOMING',
@@ -104,6 +106,14 @@ class _HomePageState extends State<HomePage> {
         // Discover: hide joined AND own
         events.removeWhere((e) => e['organizerUsername'] == _username);
         events.removeWhere((e) => e['_attending'] == true);
+
+        // Filter by user interests if they exist
+        if (userCategories.isNotEmpty) {
+          events.retainWhere((e) {
+            final eventCat = (e['category'] as String? ?? '').toUpperCase();
+            return userCategories.any((cat) => cat.toUpperCase() == eventCat);
+          });
+        }
       }
 
       // Sort by startDate ascending (soonest first)
