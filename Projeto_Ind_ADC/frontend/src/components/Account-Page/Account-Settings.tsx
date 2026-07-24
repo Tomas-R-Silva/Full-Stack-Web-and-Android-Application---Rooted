@@ -47,7 +47,7 @@ function AccountSettings() {
 
             {profileItems.map((item, i) => {
               if (i === 6 && role !== "ADMIN") return null;
-              if (i === 7 && role !== "BACKOFFICER") return null;
+              if (i === 7 && role !== "BOFFICER") return null;
 
               return (
                 <div
